@@ -157,6 +157,42 @@ actualización_de_la_creencia
 - **Esquema mínimo primero:** no formalizar una ontología antes de que los datos enseñen qué
   campos importan (evitar el pantano de la representación del conocimiento).
 
+### Pipeline interno: de señales a actualización de creencias (congelado)
+
+Dos entidades explícitas que antes estaban implícitas. Cada una justifica su existencia por una
+CAPACIDAD nueva, no por un nombre (se intentó rechazarlas contra la regla; sobrevivieron):
+
+- **Hypothesis** (tier de candidatas, efímero) ≠ **Belief** (tier promovido, tracked).
+  Capacidad: un **gate de promoción** que evita inundar el store de creencias con candidatas
+  diarias, y separa **generar** (muchas hipótesis) de **elegir** (la decisión). Un motor que
+  inventa y juzga sus propios inventos no tiene independencia.
+- **Opportunity** (output domain-agnostic) ≠ **Decision Record** (justificación + predicción).
+  Capacidad doble: (1) es el **boundary kernel→dominio** — el gemelo simétrico de Signal
+  (boundary dominio→kernel); el kernel emite una Opportunity, **nunca "un video"**. (2)
+  **Cardinalidad**: se surfacean muchas Opportunities y se decide perseguir 1-3 o ABSTENERSE;
+  las rechazadas existen como alternativas del Decision Record.
+
+Flujo (las creencias nacen en la APUESTA, no antes):
+
+```
+Signals  +  Beliefs existentes (recuperadas)
+    |
+    v
+Hypothesis Engine  -> hipótesis candidatas (muchas, efímeras)
+    |
+    v
+Decision Engine    -> Opportunities + Decision Record (perseguir top-k / ABSTENERSE)
+    |
+    v  (promoción del candidato elegido)
+Belief (tracked) + Prediction (falsable)
+    |
+    v
+Verification -> Belief Update (No Silent Learning)
+```
+
+Un Belief es una hipótesis que se ganó una apuesta. Los beliefs **informan** la decisión
+(pre-existentes, recuperados) **y nacen** de ella (apuestas nuevas).
+
 ### Identity Engine: detalles
 
 - **No auto-genera IP a escala** (diluiría la escasez que persigue). Es **canon-keeper +
