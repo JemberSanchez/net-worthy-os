@@ -3,6 +3,7 @@
 Comandos:
   python -m omega.cli ingest     # captura RSS -> SQLite (correr a diario)
   python -m omega.cli trends     # reporte de temas en alza/caída
+  python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli status     # estado de la base de conocimiento
 """
@@ -97,6 +98,47 @@ def cmd_hypotheses() -> None:
     print(">> Pega este texto en Claude para obtener las 3 propuestas (cero coste de API).")
 
 
+def cmd_signals() -> None:
+    """Corre todos los extractores-plugin sobre lo observado y guarda señales genéricas.
+
+    datos (dominio) -> extractores (dominio) -> señales (kernel). El kernel solo ve
+    pares (name, value) opacos.
+    """
+    from .extractors import load_extractors
+    from .reasoning import store as kstore, signals as sigstore
+
+    db.init()
+    con = kstore.connect(str(config.DB_PATH))
+    sigstore.init(con)
+    extractors = load_extractors()
+    print(f"Extractores cargados: {[e.name for e in extractors]}")
+
+    with db.connect() as dc:
+        rows = dc.execute("SELECT * FROM observed_content").fetchall()
+
+    inserted = 0
+    for r in rows:
+        asset = {"external_id": r["external_id"], "title": r["title"],
+                 "summary": r["summary"], "source": r["source"]}
+        for ext in extractors:
+            try:
+                sigs = ext.extract(asset)
+            except Exception as exc:  # noqa: BLE001 — un extractor no debe tumbar el pipeline
+                print(f"  [{ext.name}] error en un asset: {exc}")
+                continue
+            for s in sigs:
+                inserted += sigstore.add_signal(
+                    con, domain="content", asset_ref=r["external_id"], source=r["source"],
+                    observed_at=r["published_at"], extractor=ext.name,
+                    extractor_version=getattr(ext, "version", None), **s)
+
+    print(f"\n{inserted} señales nuevas | total: {sigstore.count_total(con)}")
+    print("Señales por tipo:")
+    for row in sigstore.count_by_name(con, "content"):
+        print(f"  {row['name']:<16} {row['n']}")
+    con.close()
+
+
 def cmd_status() -> None:
     db.init()
     print(f"Base de conocimiento: {db.count_total()} documentos observados")
@@ -107,6 +149,7 @@ def main(argv: list[str]) -> int:
     cmds = {
         "ingest": cmd_ingest,
         "trends": cmd_trends,
+        "signals": cmd_signals,
         "hypotheses": cmd_hypotheses,
         "status": cmd_status,
     }
