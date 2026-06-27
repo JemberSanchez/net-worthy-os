@@ -1,0 +1,15 @@
+{
+  "_comment": "Fuentes RSS semilla (gratis, sin API key). Edita libremente. Mezcla EN/ES a propósito: el mercado de contenido es mayormente en inglés, pero incluimos español para tu audiencia. Añade nichos que te interesen (tech, IA, virales, etc.).",
+  "feeds": [
+    {"source": "the_verge",        "url": "https://www.theverge.com/rss/index.xml"},
+    {"source": "techcrunch",       "url": "https://techcrunch.com/feed/"},
+    {"source": "ars_technica",     "url": "https://feeds.arstechnica.com/arstechnica/index"},
+    {"source": "wired",            "url": "https://www.wired.com/feed/rss"},
+    {"source": "hacker_news",      "url": "https://hnrss.org/frontpage"},
+    {"source": "reddit_popular",   "url": "https://www.reddit.com/r/popular/.rss"},
+    {"source": "reddit_videos",    "url": "https://www.reddit.com/r/videos/.rss"},
+    {"source": "google_news_ai",   "url": "https://news.google.com/rss/search?q=artificial+intelligence&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "google_news_es",   "url": "https://news.google.com/rss/search?q=inteligencia+artificial&hl=es&gl=ES&ceid=ES:es"},
+    {"source": "bbc_world",        "url": "https://feeds.bbci.co.uk/news/world/rss.xml"}
+  ]
+}

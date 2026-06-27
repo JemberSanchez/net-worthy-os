@@ -1,0 +1,9 @@
+# Content Intelligence OS — dependencias del MVP "El Analista"
+# Mantener mínimo y gratuito. Todo corre local con SQLite.
+feedparser>=6.0.11        # parseo RSS/Atom (puro Python, sin coste, sin API key)
+
+# --- Fases siguientes (descomentar cuando se validen / haya presupuesto) ---
+# google-api-python-client  # YouTube Data API v3 (key gratuita)
+# praw                      # Reddit API (OAuth gratuito)
+# scikit-learn              # TF-IDF + clustering cuando el term-momentum se quede corto
+# sentence-transformers     # embeddings locales (requiere torch; verificar wheels en py3.14)
