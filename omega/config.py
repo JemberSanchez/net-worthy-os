@@ -15,6 +15,13 @@ MIN_RECENT_DOC_FREQ = 3       # un término debe aparecer en >=3 documentos reci
 TOP_N = 15
 
 
+# Strategy Profile: pesos que el DOMINIO pasa al Decision Engine del kernel.
+# El kernel NO conoce el significado de estas features; solo hace el producto peso·feature.
+DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30}
+ABSTAIN_THRESHOLD = 0.50          # si el mejor score < umbral -> ABSTENERSE
+PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
+
+
 def load_feeds() -> list[dict]:
     data = json.loads(FEEDS_PATH.read_text(encoding="utf-8"))
     return [f for f in data.get("feeds", []) if "url" in f and "source" in f]

@@ -4,6 +4,7 @@ Comandos:
   python -m omega.cli ingest     # captura RSS -> SQLite (correr a diario)
   python -m omega.cli trends     # reporte de temas en alza/caída
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
+  python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli status     # estado de la base de conocimiento
 """
@@ -139,6 +140,38 @@ def cmd_signals() -> None:
     con.close()
 
 
+def cmd_decide() -> None:
+    """Flujo completo: señales -> hipótesis (dominio) -> decisión explicable (kernel).
+
+    datos reales -> Decision Record con razonamiento reconstruible. Sin API key.
+    """
+    from .reasoning import (store as kstore, signals as sigstore, hypotheses as hyp,
+                            opportunities as opp, decisions, decision_engine)
+    from .analyze import hypothesis_engine
+
+    db.init()
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (kstore, sigstore, hyp, opp, decisions):
+        mod.init(con)
+
+    # idempotencia del demo: descartar candidatas previas para no duplicar
+    con.execute("UPDATE hypothesis SET status='discarded' WHERE status='candidate' AND domain='content'")
+    con.commit()
+
+    created = hypothesis_engine.generate(con, domain="content")
+    print(f"Hypothesis Engine v0: {len(created)} hipótesis candidatas generadas.\n")
+
+    result = decision_engine.decide(
+        con, domain="content", weights=config.DECISION_WEIGHTS,
+        abstain_threshold=config.ABSTAIN_THRESHOLD,
+        horizon_days=config.PREDICTION_HORIZON_DAYS)
+
+    print("=" * 64)
+    print(decisions.render_explanation(decisions.explain(con, result["decision_id"])))
+    print("=" * 64)
+    con.close()
+
+
 def cmd_status() -> None:
     db.init()
     print(f"Base de conocimiento: {db.count_total()} documentos observados")
@@ -150,6 +183,7 @@ def main(argv: list[str]) -> int:
         "ingest": cmd_ingest,
         "trends": cmd_trends,
         "signals": cmd_signals,
+        "decide": cmd_decide,
         "hypotheses": cmd_hypotheses,
         "status": cmd_status,
     }
