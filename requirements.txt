@@ -1,6 +1,7 @@
 # Content Intelligence OS — dependencias del MVP "El Analista"
 # Mantener mínimo y gratuito. Todo corre local con SQLite.
 feedparser>=6.0.11        # parseo RSS/Atom (puro Python, sin coste, sin API key)
+anthropic>=0.112         # LLM para el director creativo (necesita ANTHROPIC_API_KEY; opcional, hay modo $0)
 
 # --- Fases siguientes (descomentar cuando se validen / haya presupuesto) ---
 # google-api-python-client  # YouTube Data API v3 (key gratuita)

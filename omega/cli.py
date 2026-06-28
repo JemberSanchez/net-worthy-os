@@ -7,6 +7,7 @@ Comandos:
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
   python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
   python -m omega.cli combine <sujeto>   # divergencia: k encuadres distintos de un sujeto
+  python -m omega.cli think <sujeto>     # el director PIENSA un sujeto (usa LLM si hay key)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli status     # estado de la base de conocimiento
 """
@@ -174,6 +175,34 @@ def cmd_decide() -> None:
     con.close()
 
 
+def cmd_think() -> None:
+    """Pone al director creativo a PENSAR un sujeto. Con ANTHROPIC_API_KEY usa el LLM real;
+    sin key, corre en modo $0 (export-prompt) y muestra qué pasos necesitarían un modelo."""
+    from .reasoning import store as kstore
+    from .creative import thinking
+    from .llm import get_llm, make_think_fn
+
+    subject = " ".join(sys.argv[2:]).strip() or "tiburones"
+    llm = get_llm()
+    print(f"LLM: {llm.name}\nSujeto: '{subject}'\n")
+
+    con = kstore.connect(str(config.DB_PATH))
+    session = thinking.ThinkingSession(con, think_fn=make_think_fn(llm, tier="smart"))
+    r = session.run(subject)
+
+    if r["executed_think_steps"] == 0:
+        print("Modo $0: 0 pasos de pensamiento ejecutados (estructura construida, inerte sin modelo).")
+        print(f"Pasos que un modelo ejecutaría: {r['pending_llm_steps']}")
+        print("\nPara que piense de verdad, define ANTHROPIC_API_KEY (ver README) y repite.")
+    else:
+        print(f"Pensó en {r['executed_think_steps']} pasos. Mejor ángulo:\n  {r['best']}\n")
+        print("Traza:")
+        for t in r["trace"]:
+            if t.get("status") == "done" and t["kind"] != "diverge" and t.get("output"):
+                print(f"  [{t['kind']}] {t['output'][:200]}")
+    con.close()
+
+
 def cmd_combine() -> None:
     """Operador de divergencia: k encuadres distintos de un sujeto, rankeados por novedad."""
     from .reasoning import store as kstore
@@ -226,6 +255,7 @@ def main(argv: list[str]) -> int:
         "decide": cmd_decide,
         "patterns": cmd_patterns,
         "combine": cmd_combine,
+        "think": cmd_think,
         "hypotheses": cmd_hypotheses,
         "status": cmd_status,
     }
