@@ -146,6 +146,26 @@ rechaza resultados sin significancia (no aprende de ruido). (2) Empezar por pack
 reintroducen confounding. (3) Los experimentos limpios viven en el packaging (commodity); sesgar
 hacia conocimiento que componga en juicio creativo (el moat).
 
+### La unidad de conocimiento: una PREGUNTA respondida (no un experimento)
+
+Un experimento es táctico y perecedero ("¿miniatura A o B?"). Una **pregunta** acumula muchos
+experimentos en un **principio reutilizable** ("amenaza visible > implícita, en terror/shorts").
+El activo final no es "1M de videos" — son "N preguntas respondidas". El CKB gana dos niveles:
+**preguntas abiertas** (la agenda de investigación, priorizada por valor) y **principios
+validados** (con contexto, confianza y nº de experimentos). [Construido: `creative/questions.py`.]
+
+Tres guards (sin ellos: principios confiados pero falsos):
+1. **Context-bound:** toda pregunta vive en un contexto; NO se agrupa evidencia entre contextos
+   (evita Simpson y la sobre-generalización).
+2. **Auditable:** cada evidencia declara qué experimento y qué polo ganó (No Silent Learning para
+   la abstracción) — no se infiere a posteriori.
+3. **Consistencia:** un principio se resuelve solo con evidencia suficiente Y consistente; 3-3 NO
+   es un principio, es una pregunta abierta.
+
+Matiz: el Question Engine NO sustituye al director como "protagonista" — cierra el bucle a más
+altura (mejores preguntas → mejor conocimiento → mejor director → mejores experimentos). El
+director sigue siendo quien convierte respuestas en activos. Son simbióticos, no jerárquicos.
+
 ## Principio rector
 
 > El sistema aprende observando el mercado **externo** (N grande). Su propia producción

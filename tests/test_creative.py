@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
 from omega.creative import (patterns, decisions, combinator, reasoning_loop,  # noqa: E402
-                            production, tradeoffs, experiments)
+                            production, tradeoffs, experiments, questions)
 
 
 class CreativeTest(unittest.TestCase):
@@ -352,6 +352,70 @@ class CreativeExperimentTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             experiments.record_result(self.con, experiment_id=eid, label="emocional",
                                       impressions=10, successes=20)  # successes > impressions
+
+
+class QuestionEngineTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        questions.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def _q(self, value=0.5):
+        return questions.ask(self.con, question="¿mostrar > sugerir en terror?",
+                             pole_a="show", pole_b="suggest",
+                             context={"genre": "horror", "format": "shorts"}, value=value)
+
+    def test_evidence_must_use_a_valid_pole(self):
+        qid = self._q()
+        with self.assertRaises(ValueError):
+            questions.record_evidence(self.con, qid, winning_pole="azul")  # no es un polo
+
+    def test_insufficient_evidence_stays_open(self):
+        qid = self._q()
+        for _ in range(3):
+            questions.record_evidence(self.con, qid, winning_pole="show")
+        r = questions.assess(self.con, qid, min_evidence=5)
+        self.assertEqual(r["status"], "open")
+        self.assertEqual(r["reason"], "evidencia insuficiente")
+
+    def test_conflicting_evidence_stays_open(self):
+        """Guard de consistencia: 3-3 NO es un principio, aunque haya muestra suficiente."""
+        qid = self._q()
+        for _ in range(3):
+            questions.record_evidence(self.con, qid, winning_pole="show")
+        for _ in range(3):
+            questions.record_evidence(self.con, qid, winning_pole="suggest")
+        r = questions.assess(self.con, qid, min_evidence=5, min_consistency=0.7)
+        self.assertEqual(r["status"], "open")
+        self.assertEqual(r["reason"], "evidencia en conflicto")
+
+    def test_strong_consistent_evidence_resolves_to_principle(self):
+        qid = self._q()
+        for _ in range(5):
+            questions.record_evidence(self.con, qid, winning_pole="show")
+        questions.record_evidence(self.con, qid, winning_pole="suggest")
+        r = questions.assess(self.con, qid, min_evidence=5, min_consistency=0.7)
+        self.assertEqual(r["status"], "resolved")
+        self.assertEqual(r["principle"], "show > suggest")
+        self.assertEqual(r["confidence"], 0.833)
+        self.assertEqual(r["context"], {"genre": "horror", "format": "shorts"})  # context-bound
+
+    def test_open_questions_prioritized_by_value(self):
+        low = questions.ask(self.con, question="q baja", pole_a="a", pole_b="b", value=0.2)
+        high = questions.ask(self.con, question="q alta", pole_a="a", pole_b="b", value=0.9)
+        agenda = [q["id"] for q in questions.open_questions(self.con)]
+        self.assertLess(agenda.index(high), agenda.index(low))  # la de mayor valor, primero
+
+    def test_validated_principles_lists_resolved(self):
+        qid = self._q()
+        for _ in range(5):
+            questions.record_evidence(self.con, qid, winning_pole="show")
+        questions.assess(self.con, qid, min_evidence=5)
+        principles = questions.validated_principles(self.con)
+        self.assertEqual(len(principles), 1)
+        self.assertEqual(principles[0]["principle"], "show > suggest")
 
 
 if __name__ == "__main__":
