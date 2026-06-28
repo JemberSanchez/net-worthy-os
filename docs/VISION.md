@@ -129,6 +129,23 @@ Principios (no módulos):
   algoritmo evolutivo cuya función de fitness (juzgar una idea no publicada) sería ficción.
 - **Seed del CKB desde craft** (Pixar, publicidad, neurociencia…) = bootstrap genérico, NO moat.
 
+### Cambio de perspectiva: el producto es un LABORATORIO creativo
+
+La unidad experimental NO es un video — es **una variable**. No publicamos videos, publicamos
+**experimentos**: misma pieza, variantes que aíslan UNA variable (miniatura/título/hook). Cada
+publicación responde una pregunta falsable ("¿hook emocional > misterioso para terror 60s?") =
+una predicción del Reasoning Engine. Eso da **atribución** (¿qué video funcionó? → ¿qué variante
+ganó?) y llena el CKB de **evidencia experimental** reutilizable, no de intuiciones generales.
+
+Esto disuelve el debate publicar-ya vs no-aprender-ruido: se publica pronto, pero cada publicación
+es un experimento con atribución. [Construido: `creative/experiments.py` con guard de significancia.]
+
+Caveats: (1) aislar la variable arregla el CONFOUNDING, no el PODER ESTADÍSTICO → `resolve()`
+rechaza resultados sin significancia (no aprende de ruido). (2) Empezar por packaging
+(miniatura/título: A/B nativo y gratis en YouTube); hook/intro exigen subir videos separados →
+reintroducen confounding. (3) Los experimentos limpios viven en el packaging (commodity); sesgar
+hacia conocimiento que componga en juicio creativo (el moat).
+
 ## Principio rector
 
 > El sistema aprende observando el mercado **externo** (N grande). Su propia producción

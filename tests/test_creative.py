@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
 from omega.creative import (patterns, decisions, combinator, reasoning_loop,  # noqa: E402
-                            production, tradeoffs)
+                            production, tradeoffs, experiments)
 
 
 class CreativeTest(unittest.TestCase):
@@ -302,6 +302,56 @@ class StopOptimizationTest(unittest.TestCase):
         iid = self._idea_with_scores([0.20, 0.40, 0.60, 0.80])
         r = reasoning_loop.should_stop(self.con, iid)
         self.assertFalse(r["stop"])  # aún sube 0.20 por paso
+
+
+class CreativeExperimentTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        experiments.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def _exp(self):
+        return experiments.design(
+            self.con, hypothesis="hook emocional > misterioso (terror 60s)", variable="hook",
+            context={"emotion": "fear", "duration": "60s"},
+            variants=[{"label": "emocional", "tags": ["empathy"]},
+                      {"label": "misterioso", "tags": ["curiosity_gap"]}])
+
+    def test_design_requires_two_variants(self):
+        with self.assertRaises(ValueError):
+            experiments.design(self.con, hypothesis="h", variable="hook",
+                               variants=[{"label": "solo"}])
+
+    def test_significant_result_declares_winner(self):
+        eid = self._exp()
+        experiments.record_result(self.con, experiment_id=eid, label="emocional",
+                                  impressions=1000, successes=100)   # 10%
+        experiments.record_result(self.con, experiment_id=eid, label="misterioso",
+                                  impressions=1000, successes=50)    # 5%
+        r = experiments.resolve(self.con, eid)
+        self.assertTrue(r["significant"])
+        self.assertEqual(r["winner"], "emocional")
+        self.assertEqual(r["status"], "resolved")
+
+    def test_underpowered_result_is_inconclusive(self):
+        """El guard estadístico: con muestra pequeña, NO se declara ganador (no se aprende ruido)."""
+        eid = self._exp()
+        experiments.record_result(self.con, experiment_id=eid, label="emocional",
+                                  impressions=50, successes=5)       # 10% pero N pequeño
+        experiments.record_result(self.con, experiment_id=eid, label="misterioso",
+                                  impressions=50, successes=4)       # 8%
+        r = experiments.resolve(self.con, eid)
+        self.assertFalse(r["significant"])
+        self.assertIsNone(r["winner"])
+        self.assertEqual(r["status"], "inconclusive")
+
+    def test_invalid_result_rejected(self):
+        eid = self._exp()
+        with self.assertRaises(ValueError):
+            experiments.record_result(self.con, experiment_id=eid, label="emocional",
+                                      impressions=10, successes=20)  # successes > impressions
 
 
 if __name__ == "__main__":
