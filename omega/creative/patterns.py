@@ -70,3 +70,22 @@ def list_patterns(con: sqlite3.Connection) -> list[sqlite3.Row]:
     return con.execute(
         "SELECT * FROM creative_pattern ORDER BY category, tag"
     ).fetchall()
+
+
+def advise(con: sqlite3.Connection, *, context: dict | None = None,
+           used_tags: list[str] | None = None) -> dict:
+    """CKB como MENTOR: participa en el razonamiento, no es solo una memoria que se consulta.
+
+    Para el contexto dado responde: qué patrones FUNCIONAN aquí, cuáles FALLAN, y qué queda por
+    PROBAR. Basado en calibración real (no opinión). Si aún no hay datos calibrados, lo dice — no
+    inventa consejo.
+    """
+    from .decisions import pattern_calibration  # import local: evita ciclo (decisions importa patterns)
+
+    cal = pattern_calibration(con, context_filter=context)
+    works = [c for c in cal if c["success_rate"] >= 0.6][:5]
+    fails = [c for c in cal if c["success_rate"] < 0.4][:5]
+    seen = {c["pattern"] for c in cal} | set(used_tags or [])
+    untested = sorted(vocabulary(con) - seen)[:8]
+    return {"calibrated": bool(cal), "works_here": works, "fails_here": fails,
+            "untested": untested}

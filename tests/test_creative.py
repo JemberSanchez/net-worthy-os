@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
-from omega.creative import patterns, decisions, combinator  # noqa: E402
+from omega.creative import patterns, decisions, combinator, reasoning_loop  # noqa: E402
 
 
 class CreativeTest(unittest.TestCase):
@@ -130,6 +130,61 @@ class CombinatorTest(unittest.TestCase):
                  for c in combinator.generate(self.con, "gatos", k=12)}
         # tras usar 'anime' para 'gatos', su novedad baja -> el sistema busca lo fresco
         self.assertLess(after["anime"], before["anime"])
+
+
+class ReasoningLoopTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        for mod in (patterns, decisions, reasoning_loop):
+            mod.init(self.con)
+        patterns.seed(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def test_idea_improves_through_the_loop(self):
+        # idea mediocre: 1 patrón de craft
+        idea = reasoning_loop.start(self.con, subject="tiburones",
+                                    content="Un video sobre tiburones",
+                                    tags=["curiosity_gap"])
+        # paso 'combine': más craft + novedad -> mejora y se acepta
+        r = reasoning_loop.advance(self.con, idea, step="combine",
+                                   content="Un tiburón en una piscina olímpica, como thriller",
+                                   tags=["curiosity_gap", "novel_combination", "tension"],
+                                   novelty=0.5)
+        self.assertTrue(r["accepted"])
+        self.assertGreater(r["delta"], 0)
+        imp = reasoning_loop.improvement(self.con, idea)
+        self.assertGreater(imp["final"], imp["initial"])
+        self.assertGreater(imp["improvement"], 0)
+
+    def test_weaker_version_is_not_accepted(self):
+        idea = reasoning_loop.start(self.con, subject="x", content="fuerte",
+                                    tags=["curiosity_gap", "twist", "stakes"], novelty=0.4)
+        r = reasoning_loop.advance(self.con, idea, step="refine",
+                                   content="aguada", tags=[])  # peor -> gate la rechaza
+        self.assertFalse(r["accepted"])
+        imp = reasoning_loop.improvement(self.con, idea)
+        self.assertEqual(imp["final"], imp["initial"])  # la mejor versión sigue siendo la inicial
+
+    def test_invalid_step_rejected(self):
+        idea = reasoning_loop.start(self.con, subject="x", content="c", tags=["twist"])
+        with self.assertRaises(ValueError):
+            reasoning_loop.advance(self.con, idea, step="vibes", content="c")
+
+    # --- CKB como mentor ----------------------------------------------------
+
+    def test_ckb_advises_from_calibration(self):
+        # sin datos: el mentor lo dice, no inventa
+        self.assertFalse(patterns.advise(self.con)["calibrated"])
+        # con un resultado real, 'curiosity_gap' aparece como lo que funciona aquí
+        decisions.record_decision(self.con, production_ref="v1", decision_type="hook",
+                                  choice="h", pattern_tags=["curiosity_gap"])
+        decisions.record_outcome(self.con, "v1", 1.0)
+        adv = patterns.advise(self.con, used_tags=["curiosity_gap"])
+        self.assertTrue(adv["calibrated"])
+        self.assertIn("curiosity_gap", [w["pattern"] for w in adv["works_here"]])
+        self.assertNotIn("curiosity_gap", adv["untested"])  # ya usado/calibrado
 
 
 if __name__ == "__main__":
