@@ -28,6 +28,8 @@ did have has had will would can could should may might must about into over unde
 before more most less least very just also than then once only own same so up out off
 www http https html com span href url link links comments submitted redd reddit item
 items article articles points user users amp nbsp via comment post posts read full
+all new one two three get got make made use used way ways thing things now today says
+say said back even still going know dont cant wont let us em new big top best
 de la el los las un una unos unas y o pero con sin por para en del al lo le su sus se
 es son era eran ser que como mas más este esta estos estas esto eso esa ese aqui aquí
 ya no si sí muy todo todos toda todas sobre entre cuando donde quien cual cuales hoy

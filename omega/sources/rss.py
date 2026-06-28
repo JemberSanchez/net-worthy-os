@@ -30,9 +30,13 @@ def _to_epoch(struct) -> int | None:
         return None
 
 
+# Reddit (y otros) bloquean el user-agent por defecto de feedparser -> usamos uno de navegador.
+_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+
+
 def fetch_feed(source: str, url: str) -> list[ContentItem]:
     now = int(time.time())
-    parsed = feedparser.parse(url)
+    parsed = feedparser.parse(url, agent=_UA)
     items: list[ContentItem] = []
     for e in parsed.entries:
         ext_id = e.get("id") or e.get("link") or e.get("title")

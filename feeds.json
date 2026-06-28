@@ -1,15 +1,18 @@
 {
-  "_comment": "Fuentes RSS semilla (gratis, sin API key). Edita libremente. Mezcla EN/ES a propósito: el mercado de contenido es mayormente en inglés, pero incluimos español para tu audiencia. Añade nichos que te interesen (tech, IA, virales, etc.).",
+  "_comment": "Nicho: Curiosidad / '¿qué pasaría si...?' / datos asombrosos, faceless, EN. Fuentes donde nace ese contenido viral (Reddit de curiosidad + ciencia + tech). Todo RSS gratis, sin API key. Edita libremente.",
   "feeds": [
-    {"source": "the_verge",        "url": "https://www.theverge.com/rss/index.xml"},
-    {"source": "techcrunch",       "url": "https://techcrunch.com/feed/"},
-    {"source": "ars_technica",     "url": "https://feeds.arstechnica.com/arstechnica/index"},
-    {"source": "wired",            "url": "https://www.wired.com/feed/rss"},
-    {"source": "hacker_news",      "url": "https://hnrss.org/frontpage"},
-    {"source": "reddit_popular",   "url": "https://www.reddit.com/r/popular/.rss"},
-    {"source": "reddit_videos",    "url": "https://www.reddit.com/r/videos/.rss"},
-    {"source": "google_news_ai",   "url": "https://news.google.com/rss/search?q=artificial+intelligence&hl=en-US&gl=US&ceid=US:en"},
-    {"source": "google_news_es",   "url": "https://news.google.com/rss/search?q=inteligencia+artificial&hl=es&gl=ES&ceid=ES:es"},
-    {"source": "bbc_world",        "url": "https://feeds.bbci.co.uk/news/world/rss.xml"}
+    {"source": "r_todayilearned",       "url": "https://www.reddit.com/r/todayilearned/.rss"},
+    {"source": "r_damnthatsinteresting","url": "https://www.reddit.com/r/Damnthatsinteresting/.rss"},
+    {"source": "r_interestingasfuck",   "url": "https://www.reddit.com/r/interestingasfuck/.rss"},
+    {"source": "r_beamazed",            "url": "https://www.reddit.com/r/BeAmazed/.rss"},
+    {"source": "r_nextlevel",           "url": "https://www.reddit.com/r/nextfuckinglevel/.rss"},
+    {"source": "r_space",               "url": "https://www.reddit.com/r/space/.rss"},
+    {"source": "r_futurology",          "url": "https://www.reddit.com/r/Futurology/.rss"},
+    {"source": "r_science",             "url": "https://www.reddit.com/r/science/.rss"},
+    {"source": "r_explainlikeimfive",   "url": "https://www.reddit.com/r/explainlikeimfive/.rss"},
+    {"source": "r_askreddit",           "url": "https://www.reddit.com/r/AskReddit/.rss"},
+    {"source": "gnews_science",         "url": "https://news.google.com/rss/search?q=science+discovery+OR+breakthrough&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "gnews_space",           "url": "https://news.google.com/rss/search?q=space+OR+universe+OR+NASA&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "hacker_news",           "url": "https://hnrss.org/frontpage"}
   ]
 }
