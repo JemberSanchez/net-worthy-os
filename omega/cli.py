@@ -5,6 +5,7 @@ Comandos:
   python -m omega.cli trends     # reporte de temas en alza/caída
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
+  python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli status     # estado de la base de conocimiento
 """
@@ -172,6 +173,27 @@ def cmd_decide() -> None:
     con.close()
 
 
+def cmd_patterns() -> None:
+    """Muestra el Creative Knowledge Base: el vocabulario controlado de patrones de craft."""
+    from .reasoning import store as kstore
+    from .creative import patterns
+
+    con = kstore.connect(str(config.DB_PATH))
+    patterns.init(con)
+    new = patterns.seed(con)
+    rows = patterns.list_patterns(con)
+    print(f"Creative Knowledge Base — {len(rows)} patrones ({new} nuevos)\n")
+    current = None
+    for r in rows:
+        if r["category"] != current:
+            current = r["category"]
+            print(f"[{current}]")
+        print(f"  {r['tag']:<18} {r['description']}")
+    print("\nToda decisión creativa debe justificarse con estos tags (no texto libre).")
+    print("Su tasa de éxito real se calibra con resultados publicados.")
+    con.close()
+
+
 def cmd_status() -> None:
     db.init()
     print(f"Base de conocimiento: {db.count_total()} documentos observados")
@@ -184,6 +206,7 @@ def main(argv: list[str]) -> int:
         "trends": cmd_trends,
         "signals": cmd_signals,
         "decide": cmd_decide,
+        "patterns": cmd_patterns,
         "hypotheses": cmd_hypotheses,
         "status": cmd_status,
     }
