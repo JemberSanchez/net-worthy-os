@@ -23,6 +23,32 @@ el sistema demuestra que decide mejor que un humano, el mismo kernel sirve para 
 branding, productos digitales u otros activos creativos (**visión, no alcance del MVP**). Si en
 10 años el medio dominante cambia, el corazón del sistema sigue teniendo sentido.
 
+## Foco actual: Producto 1 — Video Factory (validar + monetizar)
+
+La visión (domain-agnostic) no cambia; el FOCO de desarrollo a corto plazo sí: usar la
+inteligencia ya construida como cerebro de una fábrica de video automatizada, para validar la
+tecnología y generar ingresos. Dos capas:
+
+- **Capa 1 — Inteligencia (CONSTRUIDA):** oportunidades, decisión, explicabilidad, predict→verify.
+- **Capa 2 — Video Factory:** convierte una Opportunity en un video publicado.
+
+**Disciplina (decisiones de CTO):**
+- La Capa 2 NO son ~17 "engines". Se colapsa en: (a) **decisiones creativas** (brief→guion→
+  personaje) = inteligencia aplicada (parte del moat); (b) **generación cruda** (imagen/video/
+  voz/música) = UN adapter commodity, reemplazable; (c) **ensamblaje + publicación** = adapters;
+  (d) **Quality Gate** = detección de DEFECTOS (continuidad, manos, texto, sync), no predicción.
+- **"Viral Engine" = MATADO (otra vez).** Puntuar "Retención 9.0 / CTR esperado" sobre un video
+  no publicado es el Simulation Engine ya eliminado: predicción de rendimiento = ficción. Se
+  sustituye por el Quality Gate de defectos (sin números de rendimiento predichos).
+- **No invertir el 80% en generación:** es commodity; el moat está aguas arriba (qué crear) y
+  abajo (IP + audiencia). Generación = adapter fino, no fábrica de 17 piezas. Qué piezas merecen
+  existir lo dirá la EVIDENCIA, no el diseño de hoy.
+- **Camino $0:** el sistema produce un PAQUETE DE PRODUCCIÓN completo (guion, shotlist, hooks,
+  título, descripción, miniatura); el render es el último paso swappable (manual o API barata).
+  Director creativo autónomo sin quemar dinero antes de tener ingresos.
+- **Slice más fino primero:** UN video publicado de punta a punta, no 3/día perfectos. Cerrar el
+  bucle y verificar la predicción importa más que el volumen.
+
 ## Principio rector
 
 > El sistema aprende observando el mercado **externo** (N grande). Su propia producción
