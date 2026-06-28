@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
-from omega.creative import patterns, decisions, combinator, reasoning_loop  # noqa: E402
+from omega.creative import patterns, decisions, combinator, reasoning_loop, production  # noqa: E402
 
 
 class CreativeTest(unittest.TestCase):
@@ -185,6 +185,62 @@ class ReasoningLoopTest(unittest.TestCase):
         self.assertTrue(adv["calibrated"])
         self.assertIn("curiosity_gap", [w["pattern"] for w in adv["works_here"]])
         self.assertNotIn("curiosity_gap", adv["untested"])  # ya usado/calibrado
+
+
+    def test_propose_compares_options_and_picks_best(self):
+        idea = reasoning_loop.start(self.con, subject="x", content="base",
+                                    tags=["curiosity_gap"])
+        r = reasoning_loop.propose(self.con, idea, step="expand", options=[
+            {"content": "opción floja", "tags": ["curiosity_gap"]},
+            {"content": "opción fuerte",
+             "tags": ["curiosity_gap", "twist", "stakes", "novel_combination"], "novelty": 0.5},
+            {"content": "opción media", "tags": ["curiosity_gap", "twist"]},
+        ])
+        self.assertEqual(r["n_options"], 3)
+        self.assertTrue(r["improved"])
+        self.assertEqual(r["chosen"], "opción fuerte")  # eligió la mejor entre todas
+        imp = reasoning_loop.improvement(self.con, idea)
+        self.assertGreater(imp["final"], imp["initial"])
+
+
+class ProductionTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        for mod in (patterns, reasoning_loop, production):
+            mod.init(self.con)
+        patterns.seed(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def _component(self, name, tags, novelty=0.0):
+        return reasoning_loop.start(self.con, subject=name, content=name,
+                                    tags=tags, novelty=novelty)
+
+    def _build(self):
+        pid = production.create_production(self.con, subject="tiburones")
+        idea = self._component("idea", ["curiosity_gap", "novel_combination", "twist"], 0.5)  # fuerte
+        hook = self._component("hook", ["curiosity_gap"])                                      # débil
+        production.add_component(self.con, pid, component_type="idea", idea_id=idea)
+        production.add_component(self.con, pid, component_type="hook", idea_id=hook)
+        return pid
+
+    def test_bottleneck_is_the_weakest_component(self):
+        pid = self._build()
+        b = production.bottleneck(self.con, pid)
+        self.assertEqual(b["component_type"], "hook")
+        # calidad de la producción = eslabón más débil
+        self.assertEqual(production.production_quality(self.con, pid), b["score"])
+
+    def test_fixing_only_the_bottleneck_raises_quality(self):
+        pid = self._build()
+        before = production.production_quality(self.con, pid)
+        b = production.bottleneck(self.con, pid)
+        # rehace SOLO el cuello de botella (el hook), no toca la idea
+        reasoning_loop.advance(self.con, b["idea_id"], step="refine", content="hook mejor",
+                               tags=["curiosity_gap", "strong_hook_3s", "open_loop"])
+        after = production.production_quality(self.con, pid)
+        self.assertGreater(after, before)
 
 
 if __name__ == "__main__":

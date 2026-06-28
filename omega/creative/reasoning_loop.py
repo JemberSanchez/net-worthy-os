@@ -114,3 +114,36 @@ def improvement(con: sqlite3.Connection, idea_id: int) -> dict:
         "accepted": len(accepted),
         "path": [{"step": v["step"], "craft_score": v["craft_score"]} for v in accepted],
     }
+
+
+def propose(con: sqlite3.Connection, idea_id: int, *, step: str, options: list[dict],
+            now: int | None = None) -> dict:
+    """Genera MUCHAS versiones de un paso y las compara ENTRE SÍ (no contra la inicial),
+    quedándose con la mejor. Implementa 'expandir → comparar todas → elegir la mejor', que
+    evita los óptimos locales del avance greedy. options: [{content, tags, novelty}].
+    """
+    if step not in STEPS:
+        raise ValueError(f"step inválido: {step!r}")
+    if not options:
+        raise ValueError("propose necesita al menos una opción")
+    now = now or int(time.time())
+    last = _best_accepted(con, idea_id)
+    base = last["craft_score"] if last else 0.0
+    last_no = con.execute("SELECT MAX(version_no) AS m FROM idea_version WHERE idea_id=?",
+                          (idea_id,)).fetchone()["m"]
+    scored = sorted(
+        ({"opt": o, "score": craft_score(con, o.get("tags"), o.get("novelty", 0.0))}
+         for o in options),
+        key=lambda x: x["score"], reverse=True)
+    for i, s in enumerate(scored):
+        o = s["opt"]
+        accepted = 1 if (i == 0 and s["score"] > base) else 0
+        con.execute(
+            "INSERT INTO idea_version (idea_id, version_no, step, content, pattern_tags, novelty, "
+            "craft_score, accepted, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            (idea_id, last_no + 1 + i, step, o.get("content", ""), json.dumps(o.get("tags") or []),
+             o.get("novelty", 0.0), s["score"], accepted, now))
+    con.commit()
+    best = scored[0]
+    return {"n_options": len(options), "chosen_score": best["score"],
+            "chosen": best["opt"].get("content", ""), "improved": best["score"] > base}
