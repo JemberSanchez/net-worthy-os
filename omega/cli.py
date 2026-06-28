@@ -6,6 +6,7 @@ Comandos:
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
   python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
+  python -m omega.cli combine <sujeto>   # divergencia: k encuadres distintos de un sujeto
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli status     # estado de la base de conocimiento
 """
@@ -173,6 +174,23 @@ def cmd_decide() -> None:
     con.close()
 
 
+def cmd_combine() -> None:
+    """Operador de divergencia: k encuadres distintos de un sujeto, rankeados por novedad."""
+    from .reasoning import store as kstore
+    from .creative import combinator
+
+    subject = " ".join(sys.argv[2:]).strip() or "historia romana"
+    con = kstore.connect(str(config.DB_PATH))
+    combinator.init(con)
+    combos = combinator.generate(con, subject, k=6)
+    print(f"Divergencia sobre: '{subject}'  (k encuadres distintos, no el obvio)\n")
+    for c in combos:
+        flag = "  (encuadre por defecto)" if c["is_default"] else ""
+        print(f"  novedad {c['novelty']:<5}  {c['statement']}{flag}")
+    print("\nLa novedad decae con el uso: el sistema busca lo que nunca se combinó.")
+    con.close()
+
+
 def cmd_patterns() -> None:
     """Muestra el Creative Knowledge Base: el vocabulario controlado de patrones de craft."""
     from .reasoning import store as kstore
@@ -207,6 +225,7 @@ def main(argv: list[str]) -> int:
         "signals": cmd_signals,
         "decide": cmd_decide,
         "patterns": cmd_patterns,
+        "combine": cmd_combine,
         "hypotheses": cmd_hypotheses,
         "status": cmd_status,
     }

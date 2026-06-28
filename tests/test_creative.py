@@ -7,8 +7,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from omega.reasoning import store               # noqa: E402  (solo para abrir SQLite)
-from omega.creative import patterns, decisions  # noqa: E402
+from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
+from omega.creative import patterns, decisions, combinator  # noqa: E402
 
 
 class CreativeTest(unittest.TestCase):
@@ -100,6 +100,36 @@ class CreativeTest(unittest.TestCase):
                  decisions.pattern_calibration(self.con, context_filter={"emotion": "shock"})}
         self.assertEqual(awe["curiosity_gap"]["success_rate"], 1.0)
         self.assertEqual(shock["curiosity_gap"]["success_rate"], 0.0)
+
+
+class CombinatorTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        combinator.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def test_generates_k_distinct_combinations(self):
+        combos = combinator.generate(self.con, "historia romana", k=5)
+        self.assertEqual(len(combos), 5)
+        self.assertEqual(len({c["treatment"] for c in combos}), 5)  # todos distintos
+
+    def test_obvious_treatment_ranks_low(self):
+        # 'historia' -> default 'documentary' (cliché) debe quedar penalizado
+        combos = combinator.generate(self.con, "historia romana", k=12)
+        by_t = {c["treatment"]: c for c in combos}
+        self.assertTrue(by_t["documentary"]["is_default"])
+        self.assertLess(by_t["documentary"]["novelty"], by_t["anime"]["novelty"])
+
+    def test_used_combination_loses_novelty(self):
+        before = {c["treatment"]: c["novelty"]
+                  for c in combinator.generate(self.con, "gatos", k=12)}
+        combinator.record_use(self.con, "gatos", "anime")
+        after = {c["treatment"]: c["novelty"]
+                 for c in combinator.generate(self.con, "gatos", k=12)}
+        # tras usar 'anime' para 'gatos', su novedad baja -> el sistema busca lo fresco
+        self.assertLess(after["anime"], before["anime"])
 
 
 if __name__ == "__main__":
