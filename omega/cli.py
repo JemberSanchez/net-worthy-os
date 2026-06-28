@@ -8,6 +8,9 @@ Comandos:
   python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
   python -m omega.cli combine <sujeto>   # divergencia: k encuadres distintos de un sujeto
   python -m omega.cli think <sujeto>     # el director PIENSA un sujeto (usa LLM si hay key)
+  python -m omega.cli record-think [file]          # registra el resultado que te dio tu Claude
+  python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
+  python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli status     # estado de la base de conocimiento
 """
@@ -200,10 +203,20 @@ def cmd_think() -> None:
         for i, p in enumerate(session.pending, 1):
             lines.append(f"--- PASO {i} ---\n{p}\n")
         pack_path.write_text("\n".join(lines), encoding="utf-8")
+        # plantilla para devolver el resultado al sistema (puente de vuelta)
+        import json
+        tpl = {"subject": subject, "production_ref": "<id-unico-del-video>",
+               "decision_type": "angle",
+               "angle": "<pega aquí el ángulo elegido que te dio Claude>",
+               "pattern_tags": ["curiosity_gap", "novel_combination", "pattern_break"]}
+        (config.DATA_DIR / "think_result.template.json").write_text(
+            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8")
         print("Modo $0 (sin API key): el sistema NO puede pensar solo — pero tu Claude sí.")
         print(f"Paquete listo para pegar guardado en: {pack_path}\n")
         for i, p in enumerate(session.pending, 1):
             print(f"[PASO {i}] {p}\n")
+        print("Cuando Claude responda: copia data/think_result.template.json a "
+              "data/think_result.json, rellénalo y corre 'record-think'.")
     else:
         print(f"Pensó en {r['executed_think_steps']} pasos. Mejor ángulo:\n  {r['best']}\n")
         print("Traza:")
@@ -251,6 +264,90 @@ def cmd_patterns() -> None:
     con.close()
 
 
+def cmd_record_think() -> None:
+    """Puente de vuelta: registra en el sistema el resultado que pensó tu Claude (a mano, $0).
+
+    Lee data/think_result.json (o el archivo pasado como argumento) y guarda la decisión creativa
+    justificada con tags del CKB. Así el sistema acumula conocimiento aunque el pensar sea manual.
+    """
+    import json
+    from pathlib import Path
+    from .reasoning import store as kstore
+    from .creative import patterns, decisions
+
+    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "think_result.json")
+    if not path.exists():
+        print(f"No existe {path}. Corre 'think <sujeto>', copia la plantilla "
+              "data/think_result.template.json a data/think_result.json y rellénala.")
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    angle = (data.get("angle") or "").strip()
+    tags = data.get("pattern_tags") or []
+    ref = data.get("production_ref") or f"manual-{int(time.time())}"
+    if not angle or "<" in angle or not tags:
+        print("Faltan 'angle' o 'pattern_tags' (o quedó el placeholder). Rellena el JSON primero.")
+        return
+
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (patterns, decisions):
+        mod.init(con)
+    patterns.seed(con)
+    try:
+        decisions.record_decision(con, production_ref=ref, decision_type=data.get("decision_type", "angle"),
+                                  choice=angle, pattern_tags=tags)
+    except ValueError as exc:
+        print(f"Rechazado: {exc}")
+        print("Tags válidos del CKB:", ", ".join(sorted(patterns.vocabulary(con))))
+        con.close()
+        return
+    print(f"Registrado. produccion='{ref}', tags={tags}")
+    print(f"  Ángulo: {angle[:120]}")
+    print(f"\nCuando publiques el video, mide su rendimiento y corre:")
+    print(f"  python -m omega.cli record-outcome {ref} <0..1>")
+    con.close()
+
+
+def cmd_record_outcome() -> None:
+    """Tras publicar: registra el resultado MEDIDO (0..1) de una producción. Alimenta la calibración."""
+    from .reasoning import store as kstore
+    from .creative import patterns, decisions
+
+    if len(sys.argv) < 4:
+        print("Uso: record-outcome <production_ref> <success 0..1>")
+        return
+    ref, success = sys.argv[2], float(sys.argv[3])
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (patterns, decisions):
+        mod.init(con)
+    try:
+        decisions.record_outcome(con, ref, success)
+    except ValueError as exc:
+        print(f"Rechazado: {exc}")
+        con.close()
+        return
+    print(f"Resultado registrado: {ref} -> {success}. Corre 'learnings' para ver la calibración.")
+    con.close()
+
+
+def cmd_learnings() -> None:
+    """El moat visible: qué patrones de craft funcionan según resultados REALES (no opinión)."""
+    from .reasoning import store as kstore
+    from .creative import patterns, decisions
+
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (patterns, decisions):
+        mod.init(con)
+    cal = decisions.pattern_calibration(con)
+    if not cal:
+        print("Aún no hay aprendizaje calibrado. Registra decisiones (record-think) y, tras "
+              "publicar, resultados (record-outcome). Con suficientes datos aparecerán aquí.")
+    else:
+        print("Aprendizaje creativo (patrón -> tasa de éxito real, nº de producciones):\n")
+        for c in cal:
+            print(f"  {c['pattern']:<18} {c['success_rate']:.0%}   (n={c['n']})")
+    con.close()
+
+
 def cmd_status() -> None:
     db.init()
     print(f"Base de conocimiento: {db.count_total()} documentos observados")
@@ -266,6 +363,9 @@ def main(argv: list[str]) -> int:
         "patterns": cmd_patterns,
         "combine": cmd_combine,
         "think": cmd_think,
+        "record-think": cmd_record_think,
+        "record-outcome": cmd_record_outcome,
+        "learnings": cmd_learnings,
         "hypotheses": cmd_hypotheses,
         "status": cmd_status,
     }
