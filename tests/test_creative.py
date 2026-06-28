@@ -8,7 +8,8 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
-from omega.creative import patterns, decisions, combinator, reasoning_loop, production  # noqa: E402
+from omega.creative import (patterns, decisions, combinator, reasoning_loop,  # noqa: E402
+                            production, tradeoffs)
 
 
 class CreativeTest(unittest.TestCase):
@@ -241,6 +242,66 @@ class ProductionTest(unittest.TestCase):
                                tags=["curiosity_gap", "strong_hook_3s", "open_loop"])
         after = production.production_quality(self.con, pid)
         self.assertGreater(after, before)
+
+
+class TradeoffTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        tradeoffs.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def test_detects_conflicting_goals(self):
+        # intentar 'hook que revela pronto' Y 'guardar el giro' es una tensión
+        conflicts = tradeoffs.detect_conflicts(["strong_hook_3s", "twist", "curiosity_gap"])
+        pairs = {(c["a"], c["b"]) for c in conflicts}
+        self.assertIn(("strong_hook_3s", "twist"), pairs)
+
+    def test_no_conflict_when_goals_are_compatible(self):
+        self.assertEqual(tradeoffs.detect_conflicts(["curiosity_gap", "novel_combination"]), [])
+
+    def test_resolution_requires_a_reason(self):
+        with self.assertRaises(ValueError):
+            tradeoffs.record_resolution(self.con, ref="v1", kept="twist",
+                                        sacrificed="strong_hook_3s", reason="  ")
+
+    def test_resolution_is_logged(self):
+        rid = tradeoffs.record_resolution(self.con, ref="v1", kept="twist",
+                                          sacrificed="strong_hook_3s",
+                                          reason="el payoff vale más que un hook agresivo")
+        self.assertIsInstance(rid, int)
+
+
+class StopOptimizationTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        for mod in (patterns, reasoning_loop):
+            mod.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def _idea_with_scores(self, scores):
+        """Inserta una idea con versiones aceptadas de scores dados (test de la lógica de parada)."""
+        iid = self.con.execute("INSERT INTO idea (subject, created_at) VALUES ('x',0)").lastrowid
+        for n, sc in enumerate(scores):
+            self.con.execute(
+                "INSERT INTO idea_version (idea_id, version_no, step, content, pattern_tags, "
+                "novelty, craft_score, accepted, created_at) VALUES (?,?,?,?,?,?,?,1,0)",
+                (iid, n, "refine", "c", "[]", 0, sc))
+        self.con.commit()
+        return iid
+
+    def test_stops_on_diminishing_returns(self):
+        iid = self._idea_with_scores([0.32, 0.61, 0.78, 0.84, 0.85, 0.851])
+        r = reasoning_loop.should_stop(self.con, iid)
+        self.assertTrue(r["stop"])  # últimas mejoras 0.01 y 0.001 < 0.02
+
+    def test_keeps_going_while_improving(self):
+        iid = self._idea_with_scores([0.20, 0.40, 0.60, 0.80])
+        r = reasoning_loop.should_stop(self.con, iid)
+        self.assertFalse(r["stop"])  # aún sube 0.20 por paso
 
 
 if __name__ == "__main__":

@@ -147,3 +147,23 @@ def propose(con: sqlite3.Connection, idea_id: int, *, step: str, options: list[d
     best = scored[0]
     return {"n_options": len(options), "chosen_score": best["score"],
             "chosen": best["opt"].get("content", ""), "improved": best["score"] > base}
+
+
+def should_stop(con: sqlite3.Connection, idea_id: int, *, min_delta: float = 0.02,
+                patience: int = 2) -> dict:
+    """Stop Optimization: saber cuándo dejar de iterar también es inteligencia.
+
+    Si las últimas `patience` mejoras aceptadas son todas < min_delta, los rendimientos son
+    decrecientes: seguir cuesta tiempo/dinero y puede destruir frescura. Recomienda parar.
+    """
+    rows = con.execute(
+        "SELECT craft_score FROM idea_version WHERE idea_id=? AND accepted=1 ORDER BY version_no",
+        (idea_id,)).fetchall()
+    scores = [r["craft_score"] for r in rows]
+    if len(scores) < patience + 1:
+        return {"stop": False, "reason": "muy pronto para evaluar la meseta", "score": scores[-1] if scores else 0.0}
+    recent = [round(scores[i] - scores[i - 1], 4) for i in range(len(scores) - patience, len(scores))]
+    if all(d < min_delta for d in recent):
+        return {"stop": True, "score": scores[-1],
+                "reason": f"rendimientos decrecientes: últimas {patience} mejoras {recent}"}
+    return {"stop": False, "score": scores[-1], "reason": "aún mejora de forma significativa"}
