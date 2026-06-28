@@ -191,9 +191,19 @@ def cmd_think() -> None:
     r = session.run(subject)
 
     if r["executed_think_steps"] == 0:
-        print("Modo $0: 0 pasos de pensamiento ejecutados (estructura construida, inerte sin modelo).")
-        print(f"Pasos que un modelo ejecutaría: {r['pending_llm_steps']}")
-        print("\nPara que piense de verdad, define ANTHROPIC_API_KEY (ver README) y repite.")
+        # Modo $0: el sistema no piensa solo, pero TÚ tienes Claude. Exporta el paquete a pegar.
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        pack_path = config.DATA_DIR / "think_pack.txt"
+        lines = [f"# Paquete de pensamiento — sujeto: '{subject}'",
+                 "# Pega esto en tu Claude (claude.ai o Claude Code) y responde cada paso en orden.",
+                 "# Eso ES el pensamiento del sistema, hecho con tu cuenta, a coste $0.", ""]
+        for i, p in enumerate(session.pending, 1):
+            lines.append(f"--- PASO {i} ---\n{p}\n")
+        pack_path.write_text("\n".join(lines), encoding="utf-8")
+        print("Modo $0 (sin API key): el sistema NO puede pensar solo — pero tu Claude sí.")
+        print(f"Paquete listo para pegar guardado en: {pack_path}\n")
+        for i, p in enumerate(session.pending, 1):
+            print(f"[PASO {i}] {p}\n")
     else:
         print(f"Pensó en {r['executed_think_steps']} pasos. Mejor ángulo:\n  {r['best']}\n")
         print("Traza:")
