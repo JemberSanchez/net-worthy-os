@@ -7,6 +7,12 @@
 > crítica (ver [AUDIT.md](AUDIT.md) para el detalle del triage y las eliminaciones).
 > La próxima evolución debe venir de un sistema en funcionamiento con datos reales,
 > **no** de más diseño en abstracto. "Seguir hablando es procrastinar con elegancia."
+>
+> **HITO (fin del diseño $0):** el espacio de diseño a coste cero y sin publicar está AGOTADO.
+> Se construyó la estructura del pensamiento creativo (`creative/thinking.py`) y se demostró que
+> es INERTE sin un LLM (0 pasos ejecutados a $0). Todo avance real ahora requiere salir del $0:
+> (a) un LLM para el pensar profundo, y/o (b) publicar para validar los proxies contra la
+> realidad. 58 tests verdes. La decisión siguiente es operativa/presupuestaria, no de diseño.
 
 ---
 

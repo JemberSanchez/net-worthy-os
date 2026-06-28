@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.reasoning import store                           # noqa: E402  (solo para abrir SQLite)
 from omega.creative import (patterns, decisions, combinator, reasoning_loop,  # noqa: E402
-                            production, tradeoffs, experiments, questions)
+                            production, tradeoffs, experiments, questions, thinking)
 
 
 class CreativeTest(unittest.TestCase):
@@ -416,6 +416,30 @@ class QuestionEngineTest(unittest.TestCase):
         principles = questions.validated_principles(self.con)
         self.assertEqual(len(principles), 1)
         self.assertEqual(principles[0]["principle"], "show > suggest")
+
+
+class ThinkingTest(unittest.TestCase):
+    def setUp(self):
+        self.con = store.connect(":memory:")
+
+    def tearDown(self):
+        self.con.close()
+
+    def test_without_a_model_it_is_inert(self):
+        """A $0 (sin think_fn) la sesión construye la ESTRUCTURA pero no ejecuta pensamiento."""
+        s = thinking.ThinkingSession(self.con, think_fn=None)
+        r = s.run("tiburones")
+        self.assertEqual(r["executed_think_steps"], 0)
+        self.assertGreater(r["pending_llm_steps"], 0)
+        self.assertIn("inerte", r["note"])
+
+    def test_with_a_model_it_thinks(self):
+        """Con un think_fn (el LLM), los pasos creativos se ejecutan de verdad."""
+        s = thinking.ThinkingSession(self.con, think_fn=lambda prompt: "un ángulo concreto")
+        r = s.run("tiburones", max_rounds=2)
+        self.assertGreater(r["executed_think_steps"], 0)
+        self.assertEqual(r["pending_llm_steps"], 0)
+        self.assertEqual(r["best"], "un ángulo concreto")
 
 
 if __name__ == "__main__":
