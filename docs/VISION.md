@@ -49,6 +49,34 @@ tecnología y generar ingresos. Dos capas:
 - **Slice más fino primero:** UN video publicado de punta a punta, no 3/día perfectos. Cerrar el
   bucle y verificar la predicción importa más que el volumen.
 
+**Refinamiento — la monetización está EN el bucle (no es efecto secundario):**
+
+```
+Opportunity → Creative Intelligence → Generación → Quality → Publicar → Monetizar → Aprender → ↺
+```
+(la monetización es señal de feedback; por N pequeño y umbrales, resuelve LENTO — está en el
+bucle, pero no enseña rápido al principio).
+
+**Capa 2 = 5 módulos** (no 17 engines):
+1. **Intelligence** — lo ya construido (sources, signals, hypothesis, decision, beliefs).
+2. **Creative Intelligence** — el director autónomo: qué historia / personaje / emoción / hook /
+   ritmo / duración / plataforma / CTA. (Inteligencia aplicada = parte del moat.)
+3. **Generation Pipeline** — adapter reemplazable (script→prompts→imagen→video→voz→audio→subs→edición).
+4. **Quality System** — MIDE calidad técnica objetiva; NO predice éxito.
+5. **Distribution** — miniatura / título / descripción / hashtags / programación / analytics.
+
+**Principio de calidad (la línea exacta):** legítimo todo lo MEDIBLE sobre el artefacto (manos,
+texto ilegible, continuidad, drift de personaje, sync, frames corruptos, resolución, subtítulos);
+ficción todo lo que requiere REACCIÓN de la audiencia (CTR, retención, viralidad). La frontera:
+¿se mide sobre el archivo o necesita que alguien lo vea? Caveat: detectores fáciles (resolución,
+frames, audio, subs) primero; difíciles (manos, consistencia de personaje) según maduren.
+
+**El diferenciador real = el bucle de AUTOCORRECCIÓN:** generar → revisar → corregir la parte
+rota → revisar → publicar solo si pasa el estándar. Más difícil de copiar que un buen render.
+
+**Reframe:** no es una fábrica de generación; es un **director creativo autónomo cuya salida es
+un activo monetizable** (no un archivo de video).
+
 ## Principio rector
 
 > El sistema aprende observando el mercado **externo** (N grande). Su propia producción
