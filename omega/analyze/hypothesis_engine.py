@@ -30,14 +30,25 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
     rising = {x["term"]: x["momentum"] for x in mom["rising"]}
     declining = {x["term"] for x in mom["declining"]}
 
+    # palabras ya cubiertas por una FRASE candidata fuerte -> el token suelto se omite
+    # (p.ej. con 'prime day' presente, se descartan 'prime' y 'day' por separado)
+    covered: set[str] = set()
+    for term in rising:
+        if " " in term and prevalence.get(term, 0) >= min_prevalence:
+            covered.update(term.split())
+
     created: list[int] = []
     for term, m in rising.items():
         p = prevalence.get(term, 0)
         if p < min_prevalence:
             continue
+        is_phrase = " " in term
+        if not is_phrase and term in covered:
+            continue  # token suelto redundante: una frase ya lo representa mejor
         contradiction = 1.0 if term in declining else 0.0
-        # confianza heurística v0: modesta y honesta con datos escasos
-        conf = max(0.05, min(0.80, 0.45 + 0.08 * m - 0.20 * contradiction))
+        # confianza heurística v0: modesta; las frases (más específicas) reciben un plus
+        conf = max(0.05, min(0.80, 0.45 + 0.08 * m - 0.20 * contradiction
+                             + (0.10 if is_phrase else 0.0)))
         evidence = {
             "features": {"momentum": round(m, 3), "prevalence": p, "contradiction": contradiction},
             "signals": [{"name": "theme", "value": term, "count": p}],

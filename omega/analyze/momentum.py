@@ -36,13 +36,24 @@ ya no si sí muy todo todos toda todas sobre entre cuando donde quien cual cuale
 _TOKEN = re.compile(r"[a-záéíóúñü0-9][a-záéíóúñü0-9'\-]+", re.IGNORECASE)
 
 
+def _content(tok: str) -> bool:
+    return len(tok) >= 3 and tok not in _STOP and not tok.isdigit()
+
+
 def _terms(text: str) -> set[str]:
-    """Conjunto de términos (unigramas) de un documento, en minúsculas, sin stopwords."""
+    """Unigramas + bigramas de palabras de contenido ADYACENTES.
+
+    Así emergen temas reales como 'prime day' o 'amazon prime' en vez de tokens sueltos
+    ('day', 'prime', 'amazon'). El bigrama solo se forma si ambas palabras son de contenido
+    y están pegadas en el texto (sin stopword en medio)."""
+    raw = _TOKEN.findall(text.lower())
     out: set[str] = set()
-    for tok in _TOKEN.findall(text.lower()):
-        if len(tok) < 3 or tok in _STOP or tok.isdigit():
+    for i, tok in enumerate(raw):
+        if not _content(tok):
             continue
         out.add(tok)
+        if i + 1 < len(raw) and _content(raw[i + 1]):
+            out.add(f"{tok} {raw[i + 1]}")
     return out
 
 
