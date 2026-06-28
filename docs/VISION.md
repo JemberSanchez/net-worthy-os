@@ -109,6 +109,26 @@ Reglas duras (la creatividad NO está exenta de la epistemología):
 desde el Identity store, para que puedan persistir entre videos y volverse activo (series, merch,
 licencias). NO se construye un Character Engine hoy; se diseña para que sea posible.
 
+### Metodología creativa (el edge de orquestación) y sus principios
+
+Concesión: la orquestación importa más de lo dicho — mismo modelo, proceso distinto, resultado
+radicalmente distinto. Matiz: la metodología (forma del pipeline) es **copiable** → es un edge de
+6-12 meses; el moat DURABLE sigue siendo la **memoria calibrada** que consume/produce. Metodología
+= motor; memoria calibrada = combustible que no se compra.
+
+Principios (no módulos):
+- **Divergence before Convergence:** nunca aceptar la primera buena idea; generar muchas primero.
+- **Never Optimize Too Early:** el crítico no aparece en la exploración; primero explorar, después
+  evaluar — nunca a la vez (si no, todo se vuelve blando).
+- **CKB multi-dimensional:** un patrón no tiene UNA tasa de éxito, sino tasas CONDICIONADAS por
+  emoción/audiencia/duración/plataforma (memoria creativa, no tabla). [Construido: `pattern_calibration(context_filter=…)`]
+- **Memoria de proceso:** guardar CÓMO se llegó a una gran idea (qué combinación, qué preguntas,
+  qué se descartó, qué crítica mejoró más). No Silent Learning aplicado al proceso creativo.
+- **Los parámetros de la metodología son HIPÓTESIS:** "50 ideas > 10", "search evolutivo > simple"
+  son falsables → se calibran contra resultados reales, NO se asumen. Evita quemar dinero en un
+  algoritmo evolutivo cuya función de fitness (juzgar una idea no publicada) sería ficción.
+- **Seed del CKB desde craft** (Pixar, publicidad, neurociencia…) = bootstrap genérico, NO moat.
+
 ## Principio rector
 
 > El sistema aprende observando el mercado **externo** (N grande). Su propia producción

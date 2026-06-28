@@ -25,6 +25,11 @@ CREATE TABLE IF NOT EXISTS production_outcome (
     success        REAL    NOT NULL,        -- 0..1 (medido tras publicar; NO predicho)
     measured_at    INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS production_context (
+    production_ref TEXT    PRIMARY KEY,      -- contexto: emoción, audiencia, duración, plataforma...
+    context        TEXT    NOT NULL,         -- json genérico
+    updated_at     INTEGER NOT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_cd_prod ON creative_decision(production_ref);
 """
 
@@ -67,19 +72,42 @@ def record_outcome(con: sqlite3.Connection, production_ref: str, success: float,
     con.commit()
 
 
-def pattern_calibration(con: sqlite3.Connection, min_n: int = 1) -> list[dict]:
-    """Por cada patrón: tasa de éxito real de las decisiones que lo invocaron.
+def record_context(con: sqlite3.Connection, production_ref: str, context: dict,
+                   now: int | None = None) -> None:
+    """Contexto de una producción (emoción, audiencia, duración, plataforma...).
 
-    Aquí aparece el aprendizaje creativo: 'curiosity_gap -> 0.81', 'shock -> 0.44'. Solo cuenta
-    producciones con resultado medido (predict→verify aplicado a la creatividad).
+    Es lo que vuelve el CKB MULTI-DIMENSIONAL: un patrón no tiene una tasa de éxito, sino tasas
+    condicionadas por contexto ('curiosity_gap con emoción=awe -> 0.9').
+    """
+    now = now or int(time.time())
+    con.execute(
+        "INSERT OR REPLACE INTO production_context (production_ref, context, updated_at) "
+        "VALUES (?,?,?)", (production_ref, json.dumps(context), now),
+    )
+    con.commit()
+
+
+def pattern_calibration(con: sqlite3.Connection, *, context_filter: dict | None = None,
+                        min_n: int = 1) -> list[dict]:
+    """Tasa de éxito real por patrón, opcionalmente CONDICIONADA por contexto.
+
+    Sin filtro: 'curiosity_gap -> 0.81'. Con context_filter={'emotion':'awe'}: la tasa de
+    curiosity_gap SOLO en producciones con esa emoción. Esto es el CKB como memoria creativa
+    multi-dimensional, no una tabla plana. Solo cuenta producciones con resultado MEDIDO.
     """
     rows = con.execute(
-        "SELECT cd.pattern_tags, po.success FROM creative_decision cd "
-        "JOIN production_outcome po ON po.production_ref = cd.production_ref"
+        "SELECT cd.pattern_tags, po.success, pc.context "
+        "FROM creative_decision cd "
+        "JOIN production_outcome po ON po.production_ref = cd.production_ref "
+        "LEFT JOIN production_context pc ON pc.production_ref = cd.production_ref"
     ).fetchall()
 
     agg: dict[str, list[float]] = {}
     for r in rows:
+        if context_filter:
+            ctx = json.loads(r["context"]) if r["context"] else {}
+            if any(ctx.get(k) != v for k, v in context_filter.items()):
+                continue
         for tag in json.loads(r["pattern_tags"]):
             agg.setdefault(tag, []).append(r["success"])
 

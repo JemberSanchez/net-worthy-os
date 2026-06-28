@@ -76,6 +76,31 @@ class CreativeTest(unittest.TestCase):
                                   choice="hook", pattern_tags=["twist"])
         self.assertEqual(decisions.pattern_calibration(self.con), [])
 
+    # --- CKB multi-dimensional: la tasa de un patrón depende del CONTEXTO ----
+
+    def test_conditional_calibration_by_context(self):
+        # mismo patrón (curiosity_gap), distinto resultado segun la emoción del video
+        decisions.record_decision(self.con, production_ref="a", decision_type="hook",
+                                  choice="h", pattern_tags=["curiosity_gap"])
+        decisions.record_outcome(self.con, "a", 1.0)
+        decisions.record_context(self.con, "a", {"emotion": "awe", "duration": "short"})
+
+        decisions.record_decision(self.con, production_ref="b", decision_type="hook",
+                                  choice="h", pattern_tags=["curiosity_gap"])
+        decisions.record_outcome(self.con, "b", 0.0)
+        decisions.record_context(self.con, "b", {"emotion": "shock", "duration": "short"})
+
+        # global: curiosity_gap = 0.5
+        overall = {c["pattern"]: c for c in decisions.pattern_calibration(self.con)}
+        self.assertEqual(overall["curiosity_gap"]["success_rate"], 0.5)
+        # condicionado a emoción=awe -> 1.0; a emoción=shock -> 0.0 (memoria multi-dimensional)
+        awe = {c["pattern"]: c for c in
+               decisions.pattern_calibration(self.con, context_filter={"emotion": "awe"})}
+        shock = {c["pattern"]: c for c in
+                 decisions.pattern_calibration(self.con, context_filter={"emotion": "shock"})}
+        self.assertEqual(awe["curiosity_gap"]["success_rate"], 1.0)
+        self.assertEqual(shock["curiosity_gap"]["success_rate"], 0.0)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
