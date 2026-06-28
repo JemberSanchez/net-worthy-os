@@ -77,6 +77,38 @@ rota → revisar → publicar solo si pasa el estándar. Más difícil de copiar
 **Reframe:** no es una fábrica de generación; es un **director creativo autónomo cuya salida es
 un activo monetizable** (no un archivo de video).
 
+### Creative Intelligence: el verdadero diferenciador (v0 simple, moat por calibración)
+
+El sistema no crea videos — crea **IDEAS**. La ventaja no es renderizar mejor; es **pensar
+mejor**. ("No hagas un video de tiburones; ¿y si un tiburón apareciera en una piscina
+olímpica?") Obsesión rectora: no "¿es tendencia?" sino **"¿por qué alguien NO podría dejar de
+ver esto?"**
+
+Procesos internos (no módulos nuevos):
+`Opportunity → Idea Generation → Idea Ranking → Story → Story Critique → Story Improvement →
+Hook Generation → Hook Ranking → Thumbnail Concept → Packaging → Production Package`.
+Incluye **ingeniería narrativa explícita** (hook→curiosidad→escalada→recompensa→nuevo
+misterio→…→twist→final), no solo "el guion".
+
+Reglas duras (la creatividad NO está exenta de la epistemología):
+- **Generar idea = LLM** (aquí sí es la herramienta correcta: combinaciones novedosas; al
+  contrario que el Hypothesis Engine, donde bastan las reglas). Generar es divergente y barato.
+- **Rankear idea ≠ predecir vistas** (sería el Viral Engine otra vez). Se rankea por (a)
+  propiedades MEDIBLES de craft (conflicto claro, curiosity gap, novedad, twist) y (b)
+  CALIBRACIÓN acumulada. Cada elección creativa se registra como creencia falsable ("esta
+  estructura retiene") y se verifica contra videos reales. Creative Intelligence es el mayor
+  CONSUMIDOR del bucle predict→verify, no una excepción.
+- **El moat = Creative Intelligence × Reasoning Engine.** Un director creativo sin memoria
+  calibrada = un LLM con un buen prompt = replicable en un fin de semana. v0 = director GENÉRICO
+  competente (heurísticas de craft + LLM); el director DIFERENCIADO, calibrado a tu audiencia,
+  COMPONE con el tiempo. No hay moat creativo el día 1.
+- **Coste $0:** pasos LLM acotados; modo "exportar prompt" (como el comando `hypotheses`) hasta
+  que haya presupuesto.
+
+**Personajes como activo persistente:** el Production Package referencia personajes/IP por ID
+desde el Identity store, para que puedan persistir entre videos y volverse activo (series, merch,
+licencias). NO se construye un Character Engine hoy; se diseña para que sea posible.
+
 ## Principio rector
 
 > El sistema aprende observando el mercado **externo** (N grande). Su propia producción
