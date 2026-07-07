@@ -1,18 +1,17 @@
 {
-  "_comment": "Nicho: Curiosidad / '¿qué pasaría si...?' / datos asombrosos, faceless, EN. Fuentes donde nace ese contenido viral (Reddit de curiosidad + ciencia + tech). Todo RSS gratis, sin API key. Edita libremente.",
+  "_comment": "NICHO: Finanzas / inversiones / crypto (faceless, EN). El nicho mejor pagado (RPM $10-40). Fuentes gratis: Google News (mercados/crypto/economía) + feeds crypto nativos + finanzas + Reddit. Sin API key. Edita libremente.",
   "feeds": [
-    {"source": "r_todayilearned",       "url": "https://www.reddit.com/r/todayilearned/.rss"},
-    {"source": "r_damnthatsinteresting","url": "https://www.reddit.com/r/Damnthatsinteresting/.rss"},
-    {"source": "r_interestingasfuck",   "url": "https://www.reddit.com/r/interestingasfuck/.rss"},
-    {"source": "r_beamazed",            "url": "https://www.reddit.com/r/BeAmazed/.rss"},
-    {"source": "r_nextlevel",           "url": "https://www.reddit.com/r/nextfuckinglevel/.rss"},
-    {"source": "r_space",               "url": "https://www.reddit.com/r/space/.rss"},
-    {"source": "r_futurology",          "url": "https://www.reddit.com/r/Futurology/.rss"},
-    {"source": "r_science",             "url": "https://www.reddit.com/r/science/.rss"},
-    {"source": "r_explainlikeimfive",   "url": "https://www.reddit.com/r/explainlikeimfive/.rss"},
-    {"source": "r_askreddit",           "url": "https://www.reddit.com/r/AskReddit/.rss"},
-    {"source": "gnews_science",         "url": "https://news.google.com/rss/search?q=science+discovery+OR+breakthrough&hl=en-US&gl=US&ceid=US:en"},
-    {"source": "gnews_space",           "url": "https://news.google.com/rss/search?q=space+OR+universe+OR+NASA&hl=en-US&gl=US&ceid=US:en"},
-    {"source": "hacker_news",           "url": "https://hnrss.org/frontpage"}
+    {"source": "gnews_markets",  "url": "https://news.google.com/rss/search?q=stock+market+OR+investing+OR+%22S%26P+500%22&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "gnews_crypto",   "url": "https://news.google.com/rss/search?q=bitcoin+OR+ethereum+OR+cryptocurrency&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "gnews_economy",  "url": "https://news.google.com/rss/search?q=economy+OR+inflation+OR+%22interest+rates%22+OR+Fed&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "gnews_personalfinance", "url": "https://news.google.com/rss/search?q=%22personal+finance%22+OR+%22how+to+invest%22+OR+retirement&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "cointelegraph",  "url": "https://cointelegraph.com/rss"},
+    {"source": "coindesk",       "url": "https://www.coindesk.com/arc/outboundfeeds/rss/"},
+    {"source": "yahoo_finance",  "url": "https://finance.yahoo.com/news/rssindex"},
+    {"source": "marketwatch",    "url": "http://feeds.marketwatch.com/marketwatch/topstories/"},
+    {"source": "r_investing",        "url": "https://www.reddit.com/r/investing/.rss"},
+    {"source": "r_stocks",           "url": "https://www.reddit.com/r/stocks/.rss"},
+    {"source": "r_cryptocurrency",   "url": "https://www.reddit.com/r/CryptoCurrency/.rss"},
+    {"source": "r_wallstreetbets",   "url": "https://www.reddit.com/r/wallstreetbets/.rss"}
   ]
 }
