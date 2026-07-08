@@ -36,6 +36,17 @@ CREATE TABLE IF NOT EXISTS theme_demand (
     example     TEXT,
     scanned_at  INTEGER NOT NULL          -- epoch: cuándo se midió esta demanda
 );
+
+-- Historial de demanda (append-only, un registro por término y escaneo). A diferencia de
+-- theme_demand (snapshot del presente), esto ACUMULA en el tiempo para medir MOMENTUM de demanda:
+-- ¿la demanda de un tema SUBE entre escaneos? = adelantarse a la ola, no llegar al pico.
+CREATE TABLE IF NOT EXISTS theme_demand_history (
+    scanned_at  INTEGER NOT NULL,
+    term        TEXT    NOT NULL,
+    total_views INTEGER NOT NULL,
+    videos      INTEGER NOT NULL,
+    PRIMARY KEY (scanned_at, term)
+);
 """
 
 
@@ -107,6 +118,43 @@ def upsert_theme_demand(rows: list[dict], scanned_at: int) -> int:
     with connect() as con:
         con.executemany(sql, payload)
     return len(payload)
+
+
+def append_theme_demand_history(rows: list[dict], scanned_at: int) -> int:
+    """Añade el snapshot actual al historial (append-only). Alimenta el momentum de demanda."""
+    if not rows:
+        return 0
+    sql = ("INSERT OR REPLACE INTO theme_demand_history (scanned_at, term, total_views, videos) "
+           "VALUES (:scanned_at, :term, :total_views, :videos)")
+    payload = [{"scanned_at": scanned_at, "term": r["term"],
+                "total_views": r["total_views"], "videos": r["videos"]} for r in rows]
+    with connect() as con:
+        con.executemany(sql, payload)
+    return len(payload)
+
+
+def fetch_demand_momentum() -> dict[str, float]:
+    """log2(vistas_ahora / vistas_escaneo_anterior) por término, entre los DOS últimos escaneos.
+
+    Mide si la DEMANDA de un tema SUBE (indicador adelantado). Con <2 escaneos -> {} (momentum 0,
+    igual que el momentum de RSS necesita baseline). Un término nuevo respecto al escaneo previo
+    puntúa alto: demanda emergente = justo lo que queremos detectar antes que el resto."""
+    import math
+    try:
+        with connect() as con:
+            scans = [r["scanned_at"] for r in con.execute(
+                "SELECT DISTINCT scanned_at FROM theme_demand_history "
+                "ORDER BY scanned_at DESC LIMIT 2").fetchall()]
+            if len(scans) < 2:
+                return {}
+            latest, prev = scans[0], scans[1]
+            cur = {r["term"]: r["total_views"] for r in con.execute(
+                "SELECT term, total_views FROM theme_demand_history WHERE scanned_at=?", (latest,))}
+            old = {r["term"]: r["total_views"] for r in con.execute(
+                "SELECT term, total_views FROM theme_demand_history WHERE scanned_at=?", (prev,))}
+    except sqlite3.OperationalError:
+        return {}
+    return {term: round(math.log2((v + 1) / (old.get(term, 0) + 1)), 3) for term, v in cur.items()}
 
 
 def clear_theme_demand() -> None:

@@ -39,10 +39,28 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
     rising = {x["term"]: x["momentum"] for x in mom["rising"]}
     declining = {x["term"] for x in mom["declining"]}
 
-    # DEMANDA real (vistas de YouTube), cacheada por 'youtube-scan'. Vacío -> demand=0 (idéntico
-    # al comportamiento previo). Normalizamos por el máximo del cache -> feature en [0, 1].
-    demand = db.fetch_theme_demand()
+    # DEMANDA real (vistas de YouTube), cacheada por 'youtube-scan'. Vacío -> features 0 (idéntico
+    # al comportamiento previo). Tres señales de audiencia, todas normalizadas a [0, 1]:
+    #   demand = vistas totales    -> cuánta atención mueve el tema (aggregate).
+    #   gap    = vistas por video  -> #3 HUECO: mucha demanda en pocos videos = desabastecido =
+    #            oportunidad de ENTRAR (adelantarse a lo desatendido, no seguir lo saturado).
+    #   demand_momentum = log2 del cambio de demanda entre escaneos -> #2: la demanda SUBE =
+    #            indicador adelantado (entrar en la ola, no en el pico). Necesita >=2 escaneos.
+    demand_rows = db.fetch_theme_demand_full()
+    demand = {r["term"]: r["total_views"] for r in demand_rows}
+    avg_views = {r["term"]: r["avg_views"] for r in demand_rows}
     max_demand = max(demand.values(), default=0)
+    max_avg = max(avg_views.values(), default=0)
+    dmom = db.fetch_demand_momentum()
+
+    def _demand_feats(term: str) -> tuple[int, float, float, float]:
+        d_views = demand.get(term, 0)
+        d_norm = round(d_views / max_demand, 3) if max_demand else 0.0
+        gap = round(avg_views.get(term, 0) / max_avg, 3) if max_avg else 0.0
+        # cap del momentum a [-2, 2] (=<=1/4x .. >=4x): más allá de 4x ya es "claramente caliente";
+        # evita que un término nuevo por variación de muestreo (ratio enorme) domine el score.
+        dm = max(-2.0, min(2.0, dmom.get(term, 0.0)))
+        return d_views, d_norm, gap, dm
 
     # palabras ya cubiertas por una FRASE candidata fuerte -> el token suelto se omite
     # (p.ej. con 'prime day' presente, se descartan 'prime' y 'day' por separado)
@@ -63,8 +81,7 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
         if not is_phrase and term in covered:
             continue  # token suelto redundante: una frase ya lo representa mejor
         contradiction = 1.0 if term in declining else 0.0
-        d_views = demand.get(term, 0)
-        d_norm = round(d_views / max_demand, 3) if max_demand else 0.0
+        d_views, d_norm, gap, dm = _demand_feats(term)
         # confianza heurística v0: modesta; las frases (más específicas) reciben un plus
         conf = max(0.05, min(0.80, 0.45 + 0.08 * m - 0.20 * contradiction
                              + (0.10 if is_phrase else 0.0)))
@@ -72,9 +89,14 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
                   f"momentum {round(m, 2)} (en alza)"]
         if d_views:
             for_ev.append(f"demanda real: {d_views:,} vistas en YouTube (nicho)")
+        if gap >= 0.5:
+            for_ev.append(f"hueco: {avg_views.get(term, 0):,} vistas/video (poca oferta, mucha demanda)")
+        if dm > 0.1:
+            for_ev.append(f"demanda EN ALZA: momentum {dm} entre escaneos (adelantarse)")
         evidence = {
             "features": {"momentum": round(m, 3), "prevalence": p,
-                         "contradiction": contradiction, "demand": d_norm},
+                         "contradiction": contradiction, "demand": d_norm,
+                         "gap": gap, "demand_momentum": dm},
             "signals": [{"name": "theme", "value": term, "count": p}],
             "for": for_ev,
             "against": ([f"'{term}' también aparece en temas en declive (señal mixta)"]
@@ -91,7 +113,7 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
     # genérico ('news', 'live'); una frase específica de alta demanda SÍ es un tema real.
     if max_demand:
         added = 0
-        for row in db.fetch_theme_demand_full():
+        for row in demand_rows:
             if added >= demand_top_k:
                 break
             term = row["term"]
@@ -101,7 +123,7 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
                 continue
             if row["videos"] < demand_min_videos:     # anti-ruido: >=N videos distintos
                 continue
-            d_norm = round(row["total_views"] / max_demand, 3)
+            d_views, d_norm, gap, dm = _demand_feats(term)
             if d_norm < demand_min_norm:              # descarta la cola débil
                 continue
             m = rising.get(term, 0.0)                 # si además sube en RSS, lo aprovechamos
@@ -109,13 +131,19 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
             # confianza base mayor que un token RSS suelto: una frase con demanda real es
             # una candidata fuerte por sí misma (la feature 'demand' aporta el resto del score).
             conf = max(0.05, min(0.85, 0.50 + 0.08 * m - 0.20 * contradiction))
+            for_ev = [f"demanda real: {row['total_views']:,} vistas en YouTube (nicho)",
+                      f"tema específico (frase) presente en {row['videos']} videos distintos"]
+            if gap >= 0.5:
+                for_ev.append(f"hueco: {avg_views.get(term, 0):,} vistas/video (poca oferta, mucha demanda)")
+            if dm > 0.1:
+                for_ev.append(f"demanda EN ALZA: momentum {dm} entre escaneos (adelantarse)")
+            for_ev.append(f"ej.: {row['example']}" if row["example"] else "originado por demanda")
             evidence = {
                 "features": {"momentum": round(m, 3), "prevalence": prevalence.get(term, 0),
-                             "contradiction": contradiction, "demand": d_norm},
+                             "contradiction": contradiction, "demand": d_norm,
+                             "gap": gap, "demand_momentum": dm},
                 "signals": [{"name": "youtube_demand", "value": term, "count": row["videos"]}],
-                "for": [f"demanda real: {row['total_views']:,} vistas en YouTube (nicho)",
-                        f"tema específico (frase) presente en {row['videos']} videos distintos",
-                        f"ej.: {row['example']}" if row["example"] else "originado por demanda"],
+                "for": for_ev,
                 "against": ([f"'{term}' también aparece en temas en declive (señal mixta)"]
                             if contradiction else
                             ["origen: demanda de audiencia, no presencia editorial (a validar)"]),

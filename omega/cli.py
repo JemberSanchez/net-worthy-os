@@ -131,6 +131,7 @@ def cmd_youtube_scan() -> None:
     scanned_at = int(time.time())
     db.clear_theme_demand()  # snapshot del presente: fuera los términos del basket anterior
     saved = db.upsert_theme_demand(rows, scanned_at)
+    db.append_theme_demand_history(rows, scanned_at)  # acumula para el momentum de demanda
     print(f"\n{n} videos únicos analizados | {saved} temas con demanda cacheados.")
     print("\nTop temas por vistas reales (lo que 'decide' ahora premia):")
     for r in rows[:12]:

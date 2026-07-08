@@ -134,6 +134,43 @@ class DemandCacheTest(unittest.TestCase):
         self.assertNotIn("share market", cache)  # el término stale NO sobrevive al re-escaneo
 
 
+class DemandMomentumTest(unittest.TestCase):
+    """#2: momentum de demanda entre escaneos (necesita >=2; con 1, no hay señal)."""
+
+    def setUp(self):
+        import tempfile
+        from omega import config, db
+        self.config, self.db = config, db
+        self._saved = config.DB_PATH
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
+        self._tmp.close()
+        config.DB_PATH = self._tmp.name
+        db.init()
+
+    def tearDown(self):
+        self.config.DB_PATH = self._saved
+        os.unlink(self._tmp.name)
+
+    def test_single_scan_has_no_momentum(self):
+        self.db.append_theme_demand_history(
+            [{"term": "build wealth", "total_views": 1_000_000, "videos": 5}], scanned_at=1000)
+        self.assertEqual(self.db.fetch_demand_momentum(), {})  # sin baseline, sin señal
+
+    def test_rising_demand_is_positive_new_term_is_high(self):
+        # escaneo 1 (baseline)
+        self.db.append_theme_demand_history([
+            {"term": "build wealth", "total_views": 1_000_000, "videos": 5},
+        ], scanned_at=1000)
+        # escaneo 2: 'build wealth' duplica; 'ai stocks' es NUEVO (demanda emergente)
+        self.db.append_theme_demand_history([
+            {"term": "build wealth", "total_views": 2_000_000, "videos": 6},
+            {"term": "ai stocks", "total_views": 3_000_000, "videos": 4},
+        ], scanned_at=2000)
+        mom = self.db.fetch_demand_momentum()
+        self.assertAlmostEqual(mom["build wealth"], 1.0, places=1)  # log2(2M/1M) ~ 1.0 (duplicó)
+        self.assertGreater(mom["ai stocks"], 5)                     # término nuevo -> momentum alto
+
+
 class DemandFeatureInScoreTest(unittest.TestCase):
     """La feature 'demand' es genérica para el kernel: con peso >0, más demanda -> más score."""
 

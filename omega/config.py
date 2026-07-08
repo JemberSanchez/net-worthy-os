@@ -37,10 +37,14 @@ TOP_N = 15
 
 # Strategy Profile: pesos que el DOMINIO pasa al Decision Engine del kernel.
 # El kernel NO conoce el significado de estas features; solo hace el producto peso·feature.
-#   demand = vistas reales de YouTube (0..1 normalizado). Peso alto A PROPÓSITO: la demanda de
-#   audiencia manda sobre la mera presencia en titulares (que apenas suma). Es el arreglo al
-#   detector de temas débil que daba tokens genéricos como 'million'.
-DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30, "demand": 0.40}
+#   demand          = vistas totales de YouTube (0..1). Cuánta atención mueve el tema.
+#   gap             = vistas por video (0..1). #3 HUECO: mucha demanda + poca oferta = entrar
+#                     en lo DESATENDIDO, no seguir lo saturado. "Adelantarse" a lo desabastecido.
+#   demand_momentum = log2 del cambio de demanda entre escaneos. #2: demanda SUBIENDO = indicador
+#                     adelantado (entrar en la ola, no en el pico). Necesita >=2 escaneos.
+# Pesos altos en demanda A PROPÓSITO: la audiencia manda sobre la mera presencia en titulares.
+DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30,
+                    "demand": 0.35, "gap": 0.20, "demand_momentum": 0.15}
 ABSTAIN_THRESHOLD = 0.50          # si el mejor score < umbral -> ABSTENERSE
 PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
 
