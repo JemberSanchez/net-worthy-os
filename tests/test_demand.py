@@ -117,5 +117,61 @@ class DemandFeatureInScoreTest(unittest.TestCase):
         self.assertAlmostEqual(s_high - s_low, 0.40 * 0.9, places=4)
 
 
+class DemandOriginatesHypothesisTest(unittest.TestCase):
+    """B: la demanda de YouTube ORIGINA hipótesis (frases), no solo pondera las de RSS.
+
+    Sin RSS (observed_content vacío), una frase de alta demanda debe volverse hipótesis; un
+    token suelto genérico de más demanda NO (solo se originan frases: los tokens los cubre RSS)."""
+
+    def setUp(self):
+        import tempfile
+        from omega import config, db
+        from omega.reasoning import signals as sigstore
+        self.config, self.db = config, db
+        self._saved = config.DB_PATH
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
+        self._tmp.close()
+        config.DB_PATH = self._tmp.name
+        db.init()  # observed_content (vacío -> sin momentum RSS) + theme_demand
+        self.con = store.connect(":memory:")
+        for mod in (store, hypotheses, sigstore):
+            mod.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+        self.config.DB_PATH = self._saved
+        os.unlink(self._tmp.name)
+
+    def test_high_demand_phrase_originates_but_generic_token_does_not(self):
+        from omega.analyze import hypothesis_engine
+        self.db.upsert_theme_demand([
+            {"term": "michael saylor", "total_views": 2_000_000, "videos": 5,
+             "avg_views": 400_000, "examples": ["Saylor speaks at BTC Prague"]},
+            {"term": "news", "total_views": 3_000_000, "videos": 10,  # más demanda, pero suelto
+             "avg_views": 300_000, "examples": ["market news today"]},
+        ], scanned_at=1000)
+
+        hypothesis_engine.generate(self.con, domain="content")
+        statements = [c["statement"] for c in hypotheses.list_candidates(self.con, "content")]
+
+        self.assertTrue(any("michael saylor" in s for s in statements))  # frase -> se origina
+        self.assertFalse(any("'news'" in s for s in statements))         # token suelto -> no
+
+    def test_weak_demand_phrase_below_floor_is_skipped(self):
+        from omega.analyze import hypothesis_engine
+        self.db.upsert_theme_demand([
+            {"term": "big topic", "total_views": 1_000_000, "videos": 4,
+             "avg_views": 250_000, "examples": ["big topic"]},
+            {"term": "tiny phrase", "total_views": 50_000, "videos": 2,  # <15% del máximo
+             "avg_views": 25_000, "examples": ["tiny phrase"]},
+        ], scanned_at=1000)
+
+        hypothesis_engine.generate(self.con, domain="content")
+        statements = [c["statement"] for c in hypotheses.list_candidates(self.con, "content")]
+
+        self.assertTrue(any("big topic" in s for s in statements))
+        self.assertFalse(any("tiny phrase" in s for s in statements))  # cola débil descartada
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -24,8 +24,16 @@ def _theme_prevalence(con: sqlite3.Connection, domain: str) -> dict[str, int]:
 
 
 def generate(con: sqlite3.Connection, *, domain: str = "content",
-             min_prevalence: int = 3, now: int | None = None) -> list[int]:
-    """Genera hipótesis candidatas. Devuelve los ids creados."""
+             min_prevalence: int = 3, demand_top_k: int = 8,
+             demand_min_videos: int = 2, demand_min_norm: float = 0.15,
+             now: int | None = None) -> list[int]:
+    """Genera hipótesis candidatas de DOS orígenes y devuelve los ids creados:
+
+    1. PRESENCIA (RSS): temas prevalentes y en alza en titulares (ponderados por demanda).
+    2. DEMANDA (YouTube): frases específicas que mueven muchas vistas AUNQUE RSS no las levante.
+       Este segundo origen ataca la raíz del detector débil: RSS solo produce tokens genéricos;
+       las frases de alta demanda ('stock market', 'michael saylor') son temas reales.
+    """
     prevalence = _theme_prevalence(con, domain)
     mom = compute_momentum()
     rising = {x["term"]: x["momentum"] for x in mom["rising"]}
@@ -44,6 +52,9 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
             covered.update(term.split())
 
     created: list[int] = []
+    created_terms: set[str] = set()
+
+    # --- Origen 1: PRESENCIA editorial (RSS), ponderada por demanda ---
     for term, m in rising.items():
         p = prevalence.get(term, 0)
         if p < min_prevalence:
@@ -73,4 +84,47 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
             con, domain=domain, statement=f"Demanda creciente en torno a '{term}'",
             confidence=round(conf, 3), evidence=evidence, now=now)
         created.append(hid)
+        created_terms.add(term)
+
+    # --- Origen 2: DEMANDA (YouTube ORIGINA temas, no solo pondera) ---
+    # Solo FRASES (bigramas): el espacio de tokens sueltos ya lo cubre RSS y ahí está el ruido
+    # genérico ('news', 'live'); una frase específica de alta demanda SÍ es un tema real.
+    if max_demand:
+        added = 0
+        for row in db.fetch_theme_demand_full():
+            if added >= demand_top_k:
+                break
+            term = row["term"]
+            if " " not in term:                       # solo frases
+                continue
+            if term in created_terms:                 # ya la levantó RSS: no duplicar
+                continue
+            if row["videos"] < demand_min_videos:     # anti-ruido: >=N videos distintos
+                continue
+            d_norm = round(row["total_views"] / max_demand, 3)
+            if d_norm < demand_min_norm:              # descarta la cola débil
+                continue
+            m = rising.get(term, 0.0)                 # si además sube en RSS, lo aprovechamos
+            contradiction = 1.0 if term in declining else 0.0
+            # confianza base mayor que un token RSS suelto: una frase con demanda real es
+            # una candidata fuerte por sí misma (la feature 'demand' aporta el resto del score).
+            conf = max(0.05, min(0.85, 0.50 + 0.08 * m - 0.20 * contradiction))
+            evidence = {
+                "features": {"momentum": round(m, 3), "prevalence": prevalence.get(term, 0),
+                             "contradiction": contradiction, "demand": d_norm},
+                "signals": [{"name": "youtube_demand", "value": term, "count": row["videos"]}],
+                "for": [f"demanda real: {row['total_views']:,} vistas en YouTube (nicho)",
+                        f"tema específico (frase) presente en {row['videos']} videos distintos",
+                        f"ej.: {row['example']}" if row["example"] else "originado por demanda"],
+                "against": ([f"'{term}' también aparece en temas en declive (señal mixta)"]
+                            if contradiction else
+                            ["origen: demanda de audiencia, no presencia editorial (a validar)"]),
+            }
+            hid = hypotheses.create_hypothesis(
+                con, domain=domain, statement=f"Demanda creciente en torno a '{term}'",
+                confidence=round(conf, 3), evidence=evidence, now=now)
+            created.append(hid)
+            created_terms.add(term)
+            added += 1
+
     return created

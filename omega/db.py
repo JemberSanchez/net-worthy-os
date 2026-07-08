@@ -119,6 +119,19 @@ def fetch_theme_demand() -> dict[str, int]:
     return {r["term"]: r["total_views"] for r in rows}
 
 
+def fetch_theme_demand_full() -> list[dict]:
+    """Filas completas del cache de demanda (term, vistas, nº videos, media, ejemplo), desc por
+    vistas. Para que el Hypothesis Engine ORIGINE hipótesis desde frases de alta demanda."""
+    try:
+        with connect() as con:
+            rows = con.execute(
+                "SELECT term, total_views, videos, avg_views, example "
+                "FROM theme_demand ORDER BY total_views DESC").fetchall()
+    except sqlite3.OperationalError:
+        return []
+    return [dict(r) for r in rows]
+
+
 def theme_demand_scanned_at() -> int | None:
     """Epoch del último escaneo de demanda (para saber si el cache está fresco). None si no hay."""
     try:
