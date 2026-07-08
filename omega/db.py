@@ -47,6 +47,15 @@ CREATE TABLE IF NOT EXISTS theme_demand_history (
     videos      INTEGER NOT NULL,
     PRIMARY KEY (scanned_at, term)
 );
+
+-- Videos crudos del último escaneo (snapshot). Guardar título+vistas permite la ADYACENCIA (#1):
+-- qué OTROS temas ven quienes ven un tema dado (co-ocurrencia en títulos, ponderada por vistas).
+CREATE TABLE IF NOT EXISTS scanned_video (
+    video_id   TEXT    PRIMARY KEY,
+    title      TEXT    NOT NULL,
+    views      INTEGER NOT NULL,
+    scanned_at INTEGER NOT NULL
+);
 """
 
 
@@ -155,6 +164,29 @@ def fetch_demand_momentum() -> dict[str, float]:
     except sqlite3.OperationalError:
         return {}
     return {term: round(math.log2((v + 1) / (old.get(term, 0) + 1)), 3) for term, v in cur.items()}
+
+
+def replace_scanned_videos(videos: list[dict], scanned_at: int) -> int:
+    """Reemplaza el snapshot de videos crudos (DELETE + insert). Base de la adyacencia (#1)."""
+    with connect() as con:
+        con.execute("DELETE FROM scanned_video")
+        if videos:
+            con.executemany(
+                "INSERT OR REPLACE INTO scanned_video (video_id, title, views, scanned_at) "
+                "VALUES (:video_id, :title, :views, :scanned_at)",
+                [{"video_id": v["video_id"], "title": v["title"],
+                  "views": v["views"], "scanned_at": scanned_at} for v in videos])
+    return len(videos)
+
+
+def fetch_scanned_videos() -> list[dict]:
+    """Videos crudos del último escaneo (title + views). Para computar temas adyacentes."""
+    try:
+        with connect() as con:
+            rows = con.execute("SELECT title, views FROM scanned_video").fetchall()
+    except sqlite3.OperationalError:
+        return []
+    return [dict(r) for r in rows]
 
 
 def clear_theme_demand() -> None:

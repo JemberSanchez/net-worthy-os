@@ -44,14 +44,29 @@ class ThemeDemandTest(unittest.TestCase):
         saved = yt.fetch_recent
         yt.fetch_recent = lambda q, **kw: calls[q]
         try:
-            rows, n = demand.scan_nicho(["q1", "q2"], days=30, max_results=25)
+            rows, videos = demand.scan_nicho(["q1", "q2"], days=30, max_results=25)
         finally:
             yt.fetch_recent = saved
-        self.assertEqual(n, 2)  # x (dedupe) + y
+        self.assertEqual(len(videos), 2)  # x (dedupe) + y
         by_term = {r["term"]: r for r in rows}
         # 'ethereum' aparece en x e y -> 2 videos, 500+200 vistas (x no se dobla)
         self.assertEqual(by_term["ethereum"]["videos"], 2)
         self.assertEqual(by_term["ethereum"]["total_views"], 700)
+
+    def test_related_finds_adjacent_topics_by_co_occurrence(self):
+        # audiencia de 'bitcoin': dos videos lo emparejan con 'ethereum', uno con 'gold'
+        videos = [
+            _video("a", "Bitcoin and Ethereum both pumping", 1000),
+            _video("b", "Why Bitcoin beats Ethereum long term", 2000),
+            _video("c", "Bitcoin vs gold as a hedge", 500),
+        ]
+        rows = demand.related("bitcoin", videos, min_together=2)
+        terms = [r["term"] for r in rows]
+        self.assertIn("ethereum", terms)      # co-ocurre en 2 videos -> adyacente
+        self.assertNotIn("gold", terms)       # solo 1 video -> bajo el umbral
+        self.assertNotIn("bitcoin", terms)    # el propio root no se lista
+        eth = next(r for r in rows if r["term"] == "ethereum")
+        self.assertEqual(eth["views"], 3000)  # 1000 + 2000 (vistas de los videos donde co-ocurre)
 
 
 class EnglishFilterTest(unittest.TestCase):

@@ -5,6 +5,7 @@ Comandos:
   python -m omega.cli trends     # reporte de temas en alza/caída
   python -m omega.cli youtube <query>   # demanda REAL: qué temas mueven vistas (YouTube API)
   python -m omega.cli youtube-scan      # barre el nicho y CACHEA demanda -> alimenta 'decide'
+  python -m omega.cli related <tema>    # temas ADYACENTES: qué más ve esa audiencia (#1)
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
   python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
@@ -122,7 +123,7 @@ def cmd_youtube_scan() -> None:
     for q in queries:
         print(f"  · {q}")
     try:
-        rows, n = demand.scan_nicho(queries, days=30, max_results=25)
+        rows, videos = demand.scan_nicho(queries, days=30, max_results=25)
     except youtube.YouTubeError as exc:
         print(f"\nError de YouTube API: {exc}")
         print("Revisa YOUTUBE_API_KEY en .env y que la API esté habilitada.")
@@ -132,11 +133,38 @@ def cmd_youtube_scan() -> None:
     db.clear_theme_demand()  # snapshot del presente: fuera los términos del basket anterior
     saved = db.upsert_theme_demand(rows, scanned_at)
     db.append_theme_demand_history(rows, scanned_at)  # acumula para el momentum de demanda
-    print(f"\n{n} videos únicos analizados | {saved} temas con demanda cacheados.")
+    db.replace_scanned_videos(videos, scanned_at)     # videos crudos para la adyacencia (related)
+    print(f"\n{len(videos)} videos únicos analizados | {saved} temas con demanda cacheados.")
     print("\nTop temas por vistas reales (lo que 'decide' ahora premia):")
     for r in rows[:12]:
         print(f"  {r['total_views']:>12,}  {r['term']:<24} (en {r['videos']} videos)")
     print("\nListo. Corre 'python -m omega.cli decide' para decidir ponderando esta demanda.")
+
+
+def cmd_related() -> None:
+    """ADYACENCIA (#1): qué OTROS temas ve la audiencia que ve un tema dado. El input de datos a
+    la reflexión creativa: 'si ven X, también les interesa Y'. Adelantarse = servir esa adyacencia
+    desatendida con un ángulo inesperado. Necesita un 'youtube-scan' previo (videos crudos)."""
+    from .analyze import demand
+
+    db.init()
+    root = " ".join(sys.argv[2:]).strip()
+    if not root:
+        print("Uso: related <tema>   (ej: related \"build wealth\")")
+        return
+    videos = db.fetch_scanned_videos()
+    if not videos:
+        print("No hay videos escaneados. Corre 'youtube-scan' primero.")
+        return
+    rows = demand.related(root, videos)
+    print(f"Temas ADYACENTES a '{root}' — lo que TAMBIÉN ve esa audiencia:\n")
+    if not rows:
+        print("  (sin co-ocurrencias suficientes; usa un tema presente en el último escaneo)")
+        return
+    for r in rows:
+        print(f"  {r['views']:>12,}  {r['term']:<24} (juntos en {r['together']} videos)")
+    print("\nInput a la reflexión creativa: si ven el tema, también les interesa esto.")
+    print("Adelantarse = servir esta adyacencia DESATENDIDA con un ángulo inesperado (think).")
 
 
 def cmd_hypotheses() -> None:
@@ -428,6 +456,7 @@ def main(argv: list[str]) -> int:
         "trends": cmd_trends,
         "youtube": cmd_youtube,
         "youtube-scan": cmd_youtube_scan,
+        "related": cmd_related,
         "signals": cmd_signals,
         "decide": cmd_decide,
         "patterns": cmd_patterns,
