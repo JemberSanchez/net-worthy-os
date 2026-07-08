@@ -203,13 +203,20 @@
     GOLD: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
       +'<circle cx="50" cy="50" r="50" fill="#0A1A14"/>'+nPaths('#D8B25A','#F4F6F3')+'</svg>',
     BANNER: '<svg viewBox="0 0 2048 1152" xmlns="http://www.w3.org/2000/svg">'
-      +'<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E241B"/><stop offset="1" stop-color="#081410"/></linearGradient></defs>'
+      +'<defs>'
+      +'<linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#144433"/><stop offset="0.55" stop-color="#0B231A"/><stop offset="1" stop-color="#06110C"/></linearGradient>'
+      +'<radialGradient id="glow" cx="0.5" cy="0.52" r="0.55"><stop offset="0" stop-color="#1F9E6E" stop-opacity="0.20"/><stop offset="1" stop-color="#1F9E6E" stop-opacity="0"/></radialGradient>'
+      +'</defs>'
       +'<rect width="2048" height="1152" fill="url(#bg)"/>'
+      /* ambient "market rising" motif — full width, low opacity, keeps center clean */
+      +'<g opacity="0.09" stroke="#9FB5AA" stroke-width="1.4" fill="none"><line x1="0" y1="470" x2="2048" y2="470"/><line x1="0" y1="650" x2="2048" y2="650"/><line x1="0" y1="830" x2="2048" y2="830"/></g>'
+      +'<polyline points="0,900 250,860 460,720 680,775 900,585 1150,620 1360,445 1600,495 1820,320 2048,270" fill="none" stroke="#D8B25A" stroke-width="4" opacity="0.13" stroke-linejoin="round" stroke-linecap="round"/>'
+      +'<ellipse cx="1024" cy="560" rx="640" ry="360" fill="url(#glow)"/>'
       /* stacked lockup, centered in YouTube safe area */
       +'<g transform="translate(964,430) scale(1.2)">'
       +'<circle cx="50" cy="50" r="50" fill="#0A1A14"/>'+nPaths('#F4F6F3','#D8B25A')+'</g>'
       +'<text x="1024" y="626" text-anchor="middle" font-family="Georgia,serif" font-weight="600" font-size="86" fill="#F4F6F3" letter-spacing="6">NET WORTHY</text>'
-      +'<rect x="874" y="656" width="300" height="3" fill="#D8B25A" opacity="0.85"/>'
+      +'<rect x="854" y="656" width="340" height="4" rx="2" fill="#D8B25A" opacity="0.92"/>'
       +'<text x="1024" y="704" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="30" letter-spacing="12" fill="#8DA298">WEALTH, EXPLAINED PLAINLY</text>'
       +'</svg>'
   };
