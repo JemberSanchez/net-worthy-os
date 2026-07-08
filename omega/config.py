@@ -46,12 +46,20 @@ PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
 
 # Búsquedas que definen el NICHO en YouTube (finanzas/inversiones/crypto, audiencia EN).
 # 'youtube-scan' las barre para medir qué temas mueven vistas reales. ~100 unidades/query.
+#
+# PRINCIPIO DE DISEÑO (aprendido): evitar framings de CATEGORÍA/STREAM ('today', 'live', 'news',
+# 'tips', 'for beginners') -> arrastran directos en vivo con títulos genéricos ('live updates').
+# Preferir framings de NARRATIVA/ENTIDAD/EVENTO (análisis con tesis, empresas/tickers, nombres
+# propios, eventos macro, forecast) -> emergen frases-HISTORIA, no frases-categoría. Siguen siendo
+# áreas de descubrimiento amplias, no una historia concreta (eso lo descubre la demanda).
 YOUTUBE_NICHE_QUERIES = [
-    "stock market today",
-    "crypto news",
-    "investing for beginners",
-    "bitcoin analysis",
-    "personal finance tips",
+    "stock market analysis",           # análisis con tesis (no stream "live today")
+    "best stocks to buy now",          # saca empresas/tickers concretos
+    "bitcoin price prediction",        # crypto forward-looking, con historia
+    "warren buffett investing",        # personalidad -> temas específicos
+    "federal reserve interest rates",  # macro/evento con narrativa
+    "housing market forecast",         # real estate/macro, no "today"
+    "how to build wealth",             # personal finance aspiracional (faceless-friendly)
 ]
 
 

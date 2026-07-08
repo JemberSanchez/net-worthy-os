@@ -109,6 +109,16 @@ def upsert_theme_demand(rows: list[dict], scanned_at: int) -> int:
     return len(payload)
 
 
+def clear_theme_demand() -> None:
+    """Vacía el cache de demanda. Un escaneo es un SNAPSHOT del presente, no un acumulado: si se
+    cambian las queries del nicho, los términos del basket viejo NO deben sobrevivir y contaminar."""
+    try:
+        with connect() as con:
+            con.execute("DELETE FROM theme_demand")
+    except sqlite3.OperationalError:
+        pass  # tabla aún no creada -> nada que limpiar
+
+
 def fetch_theme_demand() -> dict[str, int]:
     """{término: vistas_totales}. Tolerante: si aún no se ha escaneado, devuelve {} (no rompe decide)."""
     try:

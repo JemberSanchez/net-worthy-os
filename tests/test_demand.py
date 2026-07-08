@@ -86,6 +86,20 @@ class DemandCacheTest(unittest.TestCase):
         self.assertEqual(self.db.fetch_theme_demand(), {"bitcoin": 999})
         self.assertEqual(self.db.theme_demand_scanned_at(), 2000)
 
+    def test_clear_removes_stale_terms_from_old_query_basket(self):
+        # snapshot 1: basket viejo deja 'share market' (ruido de streams)
+        self.db.upsert_theme_demand(
+            [{"term": "share market", "total_views": 6_000_000, "videos": 16, "avg_views": 375_000,
+              "examples": ["Zee Business Live"]}], scanned_at=1000)
+        # snapshot 2: basket nuevo -> se limpia primero, luego se escribe lo fresco
+        self.db.clear_theme_demand()
+        self.db.upsert_theme_demand(
+            [{"term": "build wealth", "total_views": 4_000_000, "videos": 8, "avg_views": 500_000,
+              "examples": ["How to build wealth"]}], scanned_at=2000)
+        cache = self.db.fetch_theme_demand()
+        self.assertIn("build wealth", cache)
+        self.assertNotIn("share market", cache)  # el término stale NO sobrevive al re-escaneo
+
 
 class DemandFeatureInScoreTest(unittest.TestCase):
     """La feature 'demand' es genérica para el kernel: con peso >0, más demanda -> más score."""
