@@ -1,0 +1,167 @@
+<title>Net Worthy — Brand Assets</title>
+<style>
+  :root{
+    --ink:#0C1F1A; --paper:#F4F6F3; --emerald:#1F9E6E; --gold:#C8A24B; --sage:#8AA79B;
+    --bg:#EEF1EC; --surface:#F8FAF7; --line:#D6DDD4; --text:#16241F; --muted:#5C6B63;
+    --accent:#1F7E58; --accent-2:#A9812E; --shadow:0 1px 2px rgba(12,31,26,.06),0 10px 34px rgba(12,31,26,.09);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0A130F; --surface:#0F1D17; --line:#213029; --text:#EAF0EB; --muted:#93A69C;
+    --accent:#3BC58C; --accent-2:#D8B25A; --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 44px rgba(0,0,0,.5);}}
+  :root[data-theme="light"]{--bg:#EEF1EC;--surface:#F8FAF7;--line:#D6DDD4;--text:#16241F;--muted:#5C6B63;--accent:#1F7E58;--accent-2:#A9812E;--shadow:0 1px 2px rgba(12,31,26,.06),0 10px 34px rgba(12,31,26,.09);}
+  :root[data-theme="dark"]{--bg:#0A130F;--surface:#0F1D17;--line:#213029;--text:#EAF0EB;--muted:#93A69C;--accent:#3BC58C;--accent-2:#D8B25A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 44px rgba(0,0,0,.5);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:920px;margin:0 auto;padding:52px 24px 80px;}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-2);font-weight:700;margin:0 0 12px;}
+  h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:clamp(34px,6vw,54px);line-height:1.03;letter-spacing:-.01em;margin:0 0 8px;}
+  .lede{font-size:17px;color:var(--muted);max-width:60ch;margin:0;}
+  .lede strong{color:var(--text);font-weight:600;}
+  h2{font-family:Georgia,serif;font-weight:600;font-size:23px;margin:56px 0 4px;}
+  h2 + .sub{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:64ch;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px;}
+  .hero{display:flex;flex-wrap:wrap;gap:32px;align-items:center;}
+  .hero .show{display:flex;gap:18px;align-items:flex-end;}
+  .av{width:132px;height:132px;border-radius:50%;overflow:hidden;box-shadow:0 8px 24px rgba(12,31,26,.22);}
+  .av.sm{width:48px;height:48px;box-shadow:0 3px 8px rgba(12,31,26,.3);}
+  .av svg,.chip svg{display:block;width:100%;height:100%;}
+  .cap{font-size:11px;color:var(--muted);text-align:center;margin-top:7px;letter-spacing:.03em;}
+  .hero .txt{flex:1;min-width:240px;}
+  .hero .txt p{margin:0 0 14px;color:var(--muted);font-size:14.5px;max-width:44ch;}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;}
+  button{font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);
+    background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:8px 15px;transition:transform .06s ease,border-color .15s ease;}
+  button:hover{border-color:var(--accent);}
+  button:active{transform:translateY(1px);}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  button .d{color:var(--muted);font-weight:500;}
+  .grid2{display:grid;grid-template-columns:1fr;gap:18px;} @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr;}}
+  .banner{border-radius:14px;overflow:hidden;border:1px solid var(--line);}
+  .banner svg{display:block;width:100%;height:auto;}
+  .palette{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;} @media(min-width:640px){.palette{grid-template-columns:repeat(4,1fr);}}
+  .sw{border-radius:12px;border:1px solid var(--line);overflow:hidden;background:var(--surface);}
+  .sw .fill{height:64px;} .sw .m{padding:9px 11px;} .sw .n{font-size:12.5px;font-weight:600;} .sw .h{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .note{margin-top:14px;font-size:13px;color:var(--muted);}
+  .steps{margin:56px 0 0;padding:24px 26px;border:1px dashed var(--line);border-radius:16px;background:var(--surface);}
+  .steps h3{margin:0 0 10px;font-family:Georgia,serif;font-weight:600;font-size:18px;}
+  .steps ol{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;} .steps li{margin:6px 0;} .steps b{color:var(--text);}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:100px;font-size:13.5px;font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);transition:opacity .25s ease,transform .25s ease;pointer-events:none;z-index:9;}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Net Worthy · Brand assets</p>
+    <h1>Descarga y sube.</h1>
+    <p class="lede"><strong>El sistema final, listo.</strong> Cada botón exporta un PNG al tamaño exacto que pide la plataforma. Un clic → a subir.</p>
+  </header>
+
+  <h2>Foto de perfil — The Ascending N</h2>
+  <p class="sub">Una N en negrita con la flecha dorada que despega: <em>net worth, subiendo</em>. Una sola letra sobrevive a 48&nbsp;px; la flecha dice &ldquo;arriba&rdquo; sin palabras. Es el avatar en todas las plataformas.</p>
+  <div class="card hero">
+    <div class="show">
+      <div><div class="av" id="slot-av"></div><div class="cap">tamaño real perfil</div></div>
+      <div><div class="av sm" id="slot-av-sm"></div><div class="cap">48&nbsp;px (comentarios)</div></div>
+    </div>
+    <div class="txt">
+      <p>Colorway oscuro (recomendado). Descárgalo en el tamaño que pida cada sitio:</p>
+      <div class="btns">
+        <button data-svg="AV_INK" data-w="800" data-h="800" data-name="networthy-avatar-800.png">YouTube <span class="d">800×800</span></button>
+        <button data-svg="AV_INK" data-w="1080" data-h="1080" data-name="networthy-avatar-1080.png">IG · TikTok · FB <span class="d">1080</span></button>
+        <button data-svg="AV_INK" data-w="400" data-h="400" data-name="networthy-avatar-400.png">Pequeño <span class="d">400</span></button>
+        <button data-svg="AV_PAPER" data-w="800" data-h="800" data-name="networthy-avatar-light-800.png">Versión clara <span class="d">800</span></button>
+      </div>
+    </div>
+  </div>
+
+  <h2>Ícono / favicon — The Climb</h2>
+  <p class="sub">Tres barras que ascienden, la más alta en oro. Cero letras = máxima legibilidad en lo más pequeño. Úsalo como favicon del sitio o ícono secundario.</p>
+  <div class="card hero">
+    <div class="show">
+      <div><div class="av" id="slot-fav"></div><div class="cap">ícono</div></div>
+      <div><div class="av sm" id="slot-fav-sm"></div><div class="cap">48&nbsp;px</div></div>
+    </div>
+    <div class="txt">
+      <p>Para pestaña del navegador y usos mini:</p>
+      <div class="btns">
+        <button data-svg="FAV" data-w="512" data-h="512" data-name="networthy-icon-512.png">Ícono <span class="d">512</span></button>
+        <button data-svg="FAV" data-w="48" data-h="48" data-name="networthy-favicon-48.png">Favicon <span class="d">48</span></button>
+      </div>
+    </div>
+  </div>
+
+  <h2>Banner del canal</h2>
+  <p class="sub">Wordmark serif (autoridad) + el tagline que hace la confianza que el juego de palabras no puede. Todo dentro del área segura de YouTube (2048×1152).</p>
+  <div class="card">
+    <div class="banner" id="slot-banner"></div>
+    <div class="btns" style="margin-top:16px;">
+      <button data-svg="BANNER" data-w="2048" data-h="1152" data-name="networthy-banner-2048x1152.png">Banner YouTube <span class="d">2048×1152</span></button>
+    </div>
+  </div>
+
+  <h2>Paleta — &ldquo;Green felt &amp; brass&rdquo;</h2>
+  <p class="sub">El verde del tapete del dinero y el oro de la moneda, apagados para leer moderno y no casino. Úsala en miniaturas y gráficos para que todo se vea del mismo sistema.</p>
+  <div class="palette">
+    <div class="sw"><div class="fill" style="background:#0C1F1A"></div><div class="m"><div class="n">Evergreen Ink</div><div class="h">#0C1F1A</div></div></div>
+    <div class="sw"><div class="fill" style="background:#1F9E6E"></div><div class="m"><div class="n">Growth</div><div class="h">#1F9E6E</div></div></div>
+    <div class="sw"><div class="fill" style="background:#C8A24B"></div><div class="m"><div class="n">Brass</div><div class="h">#C8A24B</div></div></div>
+    <div class="sw"><div class="fill" style="background:#F4F6F3"></div><div class="m"><div class="n">Warm Paper</div><div class="h">#F4F6F3</div></div></div>
+  </div>
+
+  <div class="steps">
+    <h3>Cómo ponerlos (2 min)</h3>
+    <ol>
+      <li><b>Avatar:</b> descarga <b>YouTube 800×800</b> → YouTube Studio → Personalización → Perfil → Foto → subir.</li>
+      <li><b>Banner:</b> descarga <b>2048×1152</b> → misma pantalla, sección Banner → subir.</li>
+      <li><b>Otras redes:</b> usa el PNG <b>1080</b> para TikTok, Instagram y Facebook (mismo avatar en las 4).</li>
+      <li>Si un botón no descarga (por permisos del visor), abre este archivo <b>marca/export.html</b> directo en Chrome y funciona.</li>
+    </ol>
+  </div>
+</div>
+
+<div id="toast">Descargando…</div>
+
+<script>
+  const SVG = {
+    AV_INK: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#0C1F1A"/><g fill="#F4F6F3"><rect x="22" y="32" width="12" height="36" rx="2"/><rect x="48" y="32" width="12" height="36" rx="2"/><polygon points="22,32 34,32 60,68 48,68"/></g><path d="M63 45 L82 24 M82 24 L72 24 M82 24 L82 34" fill="none" stroke="#C8A24B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    AV_PAPER: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#F4F6F3"/><g fill="#12241F"><rect x="22" y="32" width="12" height="36" rx="2"/><rect x="48" y="32" width="12" height="36" rx="2"/><polygon points="22,32 34,32 60,68 48,68"/></g><path d="M63 45 L82 24 M82 24 L72 24 M82 24 L82 34" fill="none" stroke="#1F9E6E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    FAV: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#0C1F1A"/><rect x="26" y="54" width="13" height="19" rx="2.5" fill="#F4F6F3"/><rect x="43.5" y="42" width="13" height="31" rx="2.5" fill="#F4F6F3"/><rect x="61" y="28" width="13" height="45" rx="2.5" fill="#C8A24B"/></svg>`,
+    BANNER: `<svg viewBox="0 0 2048 1152" xmlns="http://www.w3.org/2000/svg"><rect width="2048" height="1152" fill="#0C1F1A"/><g opacity="0.10" fill="#1F9E6E"><rect x="1610" y="648" width="66" height="120" rx="10"/><rect x="1696" y="568" width="66" height="200" rx="10"/><rect x="1782" y="474" width="66" height="294" rx="10"/></g><text x="1024" y="548" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="600" font-size="132" fill="#F4F6F3" letter-spacing="8">NET WORTHY</text><path d="M1392 486 L1452 426 M1452 426 L1424 426 M1452 426 L1452 454" fill="none" stroke="#C8A24B" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><text x="1024" y="648" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="38" letter-spacing="15" fill="#8AA79B">WEALTH, EXPLAINED PLAINLY</text></svg>`
+  };
+  function put(id,key){var el=document.getElementById(id); if(el) el.innerHTML=SVG[key];}
+  put('slot-av','AV_INK'); put('slot-av-sm','AV_INK');
+  put('slot-fav','FAV'); put('slot-fav-sm','FAV');
+  put('slot-banner','BANNER');
+
+  var toast=document.getElementById('toast');
+  function ping(msg){toast.textContent=msg;toast.classList.add('on');setTimeout(function(){toast.classList.remove('on');},1600);}
+
+  function raster(key,w,h,name){
+    var markup=SVG[key].replace('<svg ', '<svg width="'+w+'" height="'+h+'" ');
+    var blob=new Blob([markup],{type:'image/svg+xml;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var img=new Image();
+    img.onload=function(){
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      var ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(b){
+        var u=URL.createObjectURL(b);var a=document.createElement('a');
+        a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(function(){URL.revokeObjectURL(u);},1500);
+        ping('Descargado: '+name);
+      },'image/png');
+    };
+    img.onerror=function(){ping('Abre marca/export.html en Chrome para descargar');};
+    img.src=url;
+  }
+  document.querySelectorAll('button[data-svg]').forEach(function(b){
+    b.addEventListener('click',function(){
+      raster(b.dataset.svg, parseInt(b.dataset.w,10), parseInt(b.dataset.h,10), b.dataset.name);
+    });
+  });
+</script>
