@@ -12,6 +12,7 @@ búsquedas diarias, de sobra para este uso.
 from __future__ import annotations
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -21,6 +22,33 @@ import urllib.request
 from .. import config  # noqa: F401  (import por efecto secundario: _load_dotenv)
 
 _API = "https://www.googleapis.com/youtube/v3"
+
+# Rangos Unicode de alfabetos NO latinos (árabe, índicos, tamil, CJK, kana, hangul, tailandés).
+# Red secundaria: si el título está escrito en uno de estos, no es contenido en inglés.
+_NON_LATIN = re.compile(
+    r"[؀-ۿऀ-ॿঀ-৿਀-੿଀-୿஀-௿"
+    r"ఀ-౿ഀ-ൿ฀-๿぀-ヿ㐀-鿿가-힯]")
+
+
+# Idiomas que se auto-etiquetan en el título en alfabeto latino (shorts de "motivación" que
+# declaran su lengua). Patrón observado que se cuela pese al filtro de alfabeto/idioma declarado.
+_LANG_NAME = re.compile(
+    r"\b(tamil|hindi|telugu|kannada|malayalam|marathi|bhojpuri|punjabi|urdu|bangla|bengali|"
+    r"gujarati|odia|sinhala|nepali|pinoy|tagalog|filipino)\b", re.IGNORECASE)
+
+
+def _is_english(video: dict) -> bool:
+    """True si el video es inglés. El TÍTULO manda: si se delata (alfabeto no-latino o nombre de
+    idioma auto-declarado como 'Tamil Motivation'), se descarta AUNQUE declare audio 'en' — muchos
+    canales mislabelan su audio. Solo si el título no se delata se usa el idioma declarado como
+    segundo filtro. Cierra la fuga de contenido no-EN que baja el RPM y ensucia la señal."""
+    title = video.get("title", "")
+    if _NON_LATIN.search(title) or _LANG_NAME.search(title):
+        return False  # el título delata no-inglés: no confiar en una etiqueta de audio mentida
+    lang = (video.get("language") or "").lower()
+    if lang:
+        return lang.startswith("en")
+    return True
 
 
 class YouTubeError(RuntimeError):
@@ -53,7 +81,8 @@ def search_video_ids(query: str, published_after: str | None = None,
                      max_results: int = 25, order: str = "viewCount") -> list[str]:
     """IDs de videos que matchean la búsqueda. order='viewCount' -> más vistos primero."""
     params = {"part": "id", "q": query, "type": "video", "order": order,
-              "maxResults": min(max_results, 50), "relevanceLanguage": "en"}
+              "maxResults": min(max_results, 50), "relevanceLanguage": "en",
+              "regionCode": "US"}  # localiza a EE.UU.: recorta contenido de otros mercados en origen
     if published_after:
         params["publishedAfter"] = published_after  # RFC3339, p.ej. 2026-06-07T00:00:00Z
     data = _get("search", params)
@@ -74,6 +103,7 @@ def video_stats(ids: list[str]) -> list[dict]:
                 "title": sn.get("title", ""),
                 "channel": sn.get("channelTitle", ""),
                 "published_at": sn.get("publishedAt", ""),
+                "language": sn.get("defaultAudioLanguage") or sn.get("defaultLanguage") or "",
                 "views": int(st.get("viewCount", 0) or 0),
                 "likes": int(st.get("likeCount", 0) or 0),
                 "comments": int(st.get("commentCount", 0) or 0),
@@ -83,13 +113,18 @@ def video_stats(ids: list[str]) -> list[dict]:
 
 
 def fetch_recent(query: str, days: int = 30, max_results: int = 25,
-                 order: str = "viewCount") -> list[dict]:
-    """Videos recientes de una búsqueda con sus vistas reales, ordenados por vistas desc."""
+                 order: str = "viewCount", english_only: bool = True) -> list[dict]:
+    """Videos recientes de una búsqueda con sus vistas reales, ordenados por vistas desc.
+
+    english_only (por defecto): descarta contenido no-inglés. El nicho paga por audiencia EN
+    (RPM alto); el contenido en otros idiomas ensucia la señal y diluye el RPM."""
     published_after = None
     if days:
         published_after = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                         time.gmtime(time.time() - days * 86400))
     ids = search_video_ids(query, published_after, max_results, order)
     stats = video_stats(ids)
+    if english_only:
+        stats = [v for v in stats if _is_english(v)]
     stats.sort(key=lambda v: v["views"], reverse=True)
     return stats

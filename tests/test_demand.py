@@ -54,6 +54,39 @@ class ThemeDemandTest(unittest.TestCase):
         self.assertEqual(by_term["ethereum"]["total_views"], 700)
 
 
+class EnglishFilterTest(unittest.TestCase):
+    """Filtro de idioma: solo contenido EN (protege RPM y limpia la señal)."""
+
+    def test_declared_non_english_audio_is_dropped_even_with_latin_title(self):
+        import omega.sources.youtube as yt
+        # título en alfabeto latino pero audio declarado tamil -> fuera (el caso 'tamil motivation')
+        v = {"title": "5 Smart Money Habits That Build Wealth | Tamil motivation", "language": "ta"}
+        self.assertFalse(yt._is_english(v))
+
+    def test_non_latin_title_without_declared_lang_is_dropped(self):
+        import omega.sources.youtube as yt
+        self.assertFalse(yt._is_english({"title": "स्टॉक मार्केट क्रैश", "language": ""}))  # hindi
+        self.assertFalse(yt._is_english({"title": "股票市场分析", "language": ""}))          # chino
+
+    def test_self_declared_language_name_in_latin_title_is_dropped(self):
+        import omega.sources.youtube as yt
+        # el patrón que se colaba: título latino, sin idioma declarado, pero dice "Tamil Motivation"
+        v = {"title": "Money Never Stays? 5 Habits to Build Wealth | Tamil Motivation #shorts",
+             "language": ""}
+        self.assertFalse(yt._is_english(v))
+
+    def test_title_betrayal_beats_mislabeled_english_audio(self):
+        import omega.sources.youtube as yt
+        # canal que MISLABELA su audio como 'en' pero el título dice Tamil -> el título manda
+        v = {"title": "5 Habits to Build Wealth | Tamil Motivation #tamilshorts", "language": "en"}
+        self.assertFalse(yt._is_english(v))
+
+    def test_english_passes(self):
+        import omega.sources.youtube as yt
+        self.assertTrue(yt._is_english({"title": "How to Build Wealth in 2026", "language": "en-US"}))
+        self.assertTrue(yt._is_english({"title": "Stock Market Crash Explained", "language": ""}))
+
+
 class DemandCacheTest(unittest.TestCase):
     def setUp(self):
         # DB temporal aislada: repuntamos config.DB_PATH a un archivo en memoria por proceso
