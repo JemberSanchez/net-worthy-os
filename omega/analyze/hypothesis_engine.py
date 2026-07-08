@@ -11,6 +11,7 @@ from __future__ import annotations
 import sqlite3
 
 from .momentum import compute as compute_momentum
+from .monetization import monetization_score, rpm_prior
 from ..reasoning import hypotheses
 from .. import db
 
@@ -85,6 +86,7 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
         # confianza heurística v0: modesta; las frases (más específicas) reciben un plus
         conf = max(0.05, min(0.80, 0.45 + 0.08 * m - 0.20 * contradiction
                              + (0.10 if is_phrase else 0.0)))
+        monet = monetization_score(term)
         for_ev = [f"'{term}' aparece en {p} items observados",
                   f"momentum {round(m, 2)} (en alza)"]
         if d_views:
@@ -93,10 +95,11 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
             for_ev.append(f"hueco: {avg_views.get(term, 0):,} vistas/video (poca oferta, mucha demanda)")
         if dm > 0.1:
             for_ev.append(f"demanda EN ALZA: momentum {dm} entre escaneos (adelantarse)")
+        for_ev.append(f"RPM sub-nicho ~${rpm_prior(term)} (prior de monetización)")
         evidence = {
             "features": {"momentum": round(m, 3), "prevalence": p,
                          "contradiction": contradiction, "demand": d_norm,
-                         "gap": gap, "demand_momentum": dm},
+                         "gap": gap, "demand_momentum": dm, "monetization": monet},
             "signals": [{"name": "theme", "value": term, "count": p}],
             "for": for_ev,
             "against": ([f"'{term}' también aparece en temas en declive (señal mixta)"]
@@ -131,17 +134,21 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
             # confianza base mayor que un token RSS suelto: una frase con demanda real es
             # una candidata fuerte por sí misma (la feature 'demand' aporta el resto del score).
             conf = max(0.05, min(0.85, 0.50 + 0.08 * m - 0.20 * contradiction))
+            example = row["example"] or ""
+            monet_text = f"{term} {example}"
+            monet = monetization_score(monet_text)
             for_ev = [f"demanda real: {row['total_views']:,} vistas en YouTube (nicho)",
                       f"tema específico (frase) presente en {row['videos']} videos distintos"]
             if gap >= 0.5:
                 for_ev.append(f"hueco: {avg_views.get(term, 0):,} vistas/video (poca oferta, mucha demanda)")
             if dm > 0.1:
                 for_ev.append(f"demanda EN ALZA: momentum {dm} entre escaneos (adelantarse)")
-            for_ev.append(f"ej.: {row['example']}" if row["example"] else "originado por demanda")
+            for_ev.append(f"RPM sub-nicho ~${rpm_prior(monet_text)} (prior de monetización)")
+            for_ev.append(f"ej.: {example}" if example else "originado por demanda")
             evidence = {
                 "features": {"momentum": round(m, 3), "prevalence": prevalence.get(term, 0),
                              "contradiction": contradiction, "demand": d_norm,
-                             "gap": gap, "demand_momentum": dm},
+                             "gap": gap, "demand_momentum": dm, "monetization": monet},
                 "signals": [{"name": "youtube_demand", "value": term, "count": row["videos"]}],
                 "for": for_ev,
                 "against": ([f"'{term}' también aparece en temas en declive (señal mixta)"]

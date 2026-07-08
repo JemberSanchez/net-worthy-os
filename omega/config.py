@@ -42,9 +42,11 @@ TOP_N = 15
 #                     en lo DESATENDIDO, no seguir lo saturado. "Adelantarse" a lo desabastecido.
 #   demand_momentum = log2 del cambio de demanda entre escaneos. #2: demanda SUBIENDO = indicador
 #                     adelantado (entrar en la ola, no en el pico). Necesita >=2 escaneos.
-# Pesos altos en demanda A PROPÓSITO: la audiencia manda sobre la mera presencia en titulares.
+#   monetization    = RPM del sub-nicho (0..1). Rentabilidad, NO viralidad: no todas las vistas
+#                     valen igual en $. Prior declarado (se corrige con RPM real medido). Peso par
+#                     con demand A PROPÓSITO: el dinero pesa tanto como la atención.
 DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30,
-                    "demand": 0.35, "gap": 0.20, "demand_momentum": 0.15}
+                    "demand": 0.30, "gap": 0.15, "demand_momentum": 0.15, "monetization": 0.30}
 ABSTAIN_THRESHOLD = 0.50          # si el mejor score < umbral -> ABSTENERSE
 PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
 

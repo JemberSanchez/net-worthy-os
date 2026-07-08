@@ -102,6 +102,26 @@ class EnglishFilterTest(unittest.TestCase):
         self.assertTrue(yt._is_english({"title": "Stock Market Crash Explained", "language": ""}))
 
 
+class MonetizationTest(unittest.TestCase):
+    """Valor por nicho (RPM): no todas las vistas valen igual en dinero."""
+
+    def test_high_rpm_subniches_beat_crypto(self):
+        from omega.analyze import monetization as mon
+        self.assertGreater(mon.rpm_prior("best tax software for retirement"),
+                           mon.rpm_prior("bitcoin price prediction"))
+        self.assertEqual(mon.rpm_prior("cheap car insurance quotes"), 70)   # ultra
+        self.assertEqual(mon.rpm_prior("dogecoin to the moon"), 8)          # crypto/volátil
+
+    def test_unknown_topic_gets_niche_baseline(self):
+        from omega.analyze import monetization as mon
+        self.assertEqual(mon.rpm_prior("some random title"), 12)  # baseline
+
+    def test_score_is_normalized_0_1(self):
+        from omega.analyze import monetization as mon
+        self.assertAlmostEqual(mon.monetization_score("mortgage refinance"), 1.0, places=2)
+        self.assertLess(mon.monetization_score("crypto news"), 0.2)
+
+
 class DemandCacheTest(unittest.TestCase):
     def setUp(self):
         # DB temporal aislada: repuntamos config.DB_PATH a un archivo en memoria por proceso
