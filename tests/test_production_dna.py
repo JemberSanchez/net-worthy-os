@@ -65,6 +65,19 @@ class ProductionDnaTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             production_dna.dna_calibration(self.con, "b_roll")  # no está en la whitelist
 
+    def test_efficiency_success_per_hour(self):
+        # dos videos: mismo éxito, distinto coste -> el más barato rinde más por hora
+        for ref, edit_h in [("cheap", 3.0), ("expensive", 12.0)]:
+            production_dna.record_dna(self.con, production_ref=ref, blocks=[])
+            production_dna.record_cost(self.con, production_ref=ref, research_hours=1.0,
+                                       script_hours=1.0, edit_hours=edit_h)
+            decisions.record_outcome(self.con, ref, 0.8)
+        eff = {e["production_ref"]: e for e in production_dna.efficiency(self.con)}
+        self.assertEqual(eff["cheap"]["total_hours"], 5.0)      # 1+1+3
+        self.assertEqual(eff["expensive"]["total_hours"], 14.0)  # 1+1+12
+        self.assertGreater(eff["cheap"]["success_per_hour"],
+                           eff["expensive"]["success_per_hour"])  # mismo éxito, menos horas -> gana
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

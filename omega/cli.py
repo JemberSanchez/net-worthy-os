@@ -14,7 +14,8 @@ Comandos:
   python -m omega.cli record-think [file]          # registra el resultado que te dio tu Claude
   python -m omega.cli record-dna [file]            # registra el ADN de produccion de un video
   python -m omega.cli record-analytics [file]      # registra CTR/AVD/retencion tras publicar
-  python -m omega.cli dna                          # dataset de ADN + calibracion por dimension
+  python -m omega.cli record-cost [file]           # registra horas/coste de producir el video
+  python -m omega.cli dna                          # dataset de ADN + calibracion + rendimiento/hora
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
@@ -459,9 +460,33 @@ def cmd_record_analytics() -> None:
     production_dna.init(con)
     production_dna.record_analytics(
         con, production_ref=d["production_ref"], ctr=d.get("ctr"), avd_pct=d.get("avd_pct"),
-        retention_avg=d.get("retention_avg"), traffic_source=d.get("traffic_source"),
-        retention_by_block=d.get("retention_by_block"))
+        retention_avg=d.get("retention_avg"), views=d.get("views"),
+        traffic_source=d.get("traffic_source"), retention_by_block=d.get("retention_by_block"))
     print(f"Analíticas registradas: {d['production_ref']}.")
+    con.close()
+
+
+def cmd_record_cost() -> None:
+    """Registra el COSTE de producir un video (horas + $ IA + tiempo a publicar). Lee
+    data/production_cost.json. Habilita 'rendimiento por hora de trabajo' en 'dna'."""
+    import json
+    from pathlib import Path
+    from .reasoning import store as kstore
+    from .creative import production_dna
+
+    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "production_cost.json")
+    if not path.exists():
+        print(f"No existe {path}. Crea un JSON con: production_ref, research_hours, script_hours, "
+              "edit_hours, ai_cost_usd, time_to_publish_h.")
+        return
+    d = json.loads(path.read_text(encoding="utf-8"))
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    production_dna.record_cost(
+        con, production_ref=d["production_ref"], research_hours=d.get("research_hours"),
+        script_hours=d.get("script_hours"), edit_hours=d.get("edit_hours"),
+        ai_cost_usd=d.get("ai_cost_usd"), time_to_publish_h=d.get("time_to_publish_h"))
+    print(f"Coste registrado: {d['production_ref']}.")
     con.close()
 
 
@@ -493,8 +518,17 @@ def cmd_dna() -> None:
             print(f"    {c['value']:<16} {c['success_rate']:.0%}  (n={c['n']}){flag}")
     if not any_data:
         print("  (aún sin resultados medidos: registra outcomes y vuelve)")
+
+    eff = production_dna.efficiency(con)
+    if eff:
+        print("\n--- Rendimiento por esfuerzo (éxito por hora de trabajo, CRUDO) ---")
+        for e in eff:
+            sph = f"{e['success_per_hour']}" if e["success_per_hour"] is not None else "s/h?"
+            print(f"    {e['production_ref']:<42} {e['success']:.2f} éxito / {e['total_hours']}h = {sph}")
+
     print("\n[!] La gráfica dice DÓNDE, no POR QUÉ. Con pocos videos cada dimensión co-varía con")
     print("    b-roll/voz/música (confounding). Aísla la variable (experiments) antes de concluir.")
+    print(f"    Hito: 10 videos instrumentados antes de tratar un patrón como hipótesis. Vas por {len(rows)}.")
     con.close()
 
 
@@ -560,6 +594,7 @@ def main(argv: list[str]) -> int:
         "record-think": cmd_record_think,
         "record-dna": cmd_record_dna,
         "record-analytics": cmd_record_analytics,
+        "record-cost": cmd_record_cost,
         "dna": cmd_dna,
         "record-outcome": cmd_record_outcome,
         "learnings": cmd_learnings,

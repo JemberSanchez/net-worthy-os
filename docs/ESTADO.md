@@ -116,10 +116,16 @@ python -m omega.cli learnings           # qué patrones funcionan (el moat visib
 
 ## 9. Decisiones pendientes del usuario
 
-1. **Automatizar `ingest` + `youtube-scan` a diario** (Programador de Windows) → baselines con señal.
-2. **Cerrar UN bucle de punta a punta** (producir + publicar + `record-outcome`) → primera gota
-   del moat. **Es el paso que convierte "arquitectura bonita" en "sistema que aprende".**
+1. **PRODUCIR Y PUBLICAR el video #1** (build-wealth, paquete listo en `docs/guiones/`) → primera
+   fila real del dataset. **Es el único trabajo que queda; el código está congelado (ver POLÍTICA).**
+2. **Automatizar `ingest` + `youtube-scan` a diario** (Programador de Windows) → baselines con señal.
 3. `ANTHROPIC_API_KEY` de pago → automatiza `think`. Solo si el bucle manual demuestra valor.
+
+> **POLÍTICA DE INGENIERÍA ADOPTADA (`docs/POLITICA.md`):** el motor creativo está CONGELADO. No
+> se añade ninguna feature nueva salvo que un experimento publicado revele una limitación concreta.
+> **Hito actual: 10 videos instrumentados** (ADN + resultado + coste). Progreso = filas del dataset,
+> no commits. Instrumentación lista: `record-dna`, `record-cost`, `record-analytics`, `record-outcome`,
+> `dna`. No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
 ## 10. Dónde quedamos (última sesión)
 

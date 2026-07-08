@@ -35,9 +35,21 @@ CREATE TABLE IF NOT EXISTS production_analytics (
     ctr                REAL,                -- click-through de la miniatura (0..1)
     avd_pct            REAL,                -- average view duration como % del video (0..1)
     retention_avg      REAL,                -- retención media (0..1)
+    views              INTEGER,             -- vistas absolutas (para horas-vistas = views*avd)
     traffic_source     TEXT,                -- browse | suggested | search | shorts | external ...
     retention_by_block TEXT,               -- json: {block: retention_pct}
     measured_at        INTEGER NOT NULL
+);
+-- COSTE de aprendizaje: cuánto costó producir este video. Sin esto no puedes optimizar el
+-- RENDIMIENTO POR UNIDAD DE ESFUERZO (horas vistas por hora de trabajo) — clave para una fábrica.
+CREATE TABLE IF NOT EXISTS production_cost (
+    production_ref     TEXT    PRIMARY KEY,
+    research_hours     REAL,
+    script_hours       REAL,
+    edit_hours         REAL,
+    ai_cost_usd        REAL,
+    time_to_publish_h  REAL,                -- horas de calendario idea -> publicado
+    recorded_at        INTEGER NOT NULL
 );
 """
 
@@ -71,17 +83,52 @@ def record_dna(con: sqlite3.Connection, *, production_ref: str, blocks: list[dic
 
 def record_analytics(con: sqlite3.Connection, *, production_ref: str, ctr: float | None = None,
                      avd_pct: float | None = None, retention_avg: float | None = None,
-                     traffic_source: str | None = None,
+                     views: int | None = None, traffic_source: str | None = None,
                      retention_by_block: dict | None = None, now: int | None = None) -> None:
     """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome."""
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_analytics (production_ref, ctr, avd_pct, retention_avg, "
-        "traffic_source, retention_by_block, measured_at) VALUES (?,?,?,?,?,?,?)",
-        (production_ref, ctr, avd_pct, retention_avg, traffic_source,
+        "views, traffic_source, retention_by_block, measured_at) VALUES (?,?,?,?,?,?,?,?)",
+        (production_ref, ctr, avd_pct, retention_avg, views, traffic_source,
          json.dumps(retention_by_block, ensure_ascii=False) if retention_by_block else None, now),
     )
     con.commit()
+
+
+def record_cost(con: sqlite3.Connection, *, production_ref: str, research_hours: float | None = None,
+                script_hours: float | None = None, edit_hours: float | None = None,
+                ai_cost_usd: float | None = None, time_to_publish_h: float | None = None,
+                now: int | None = None) -> None:
+    """Registra el COSTE de producir un video. Habilita el rendimiento por unidad de esfuerzo."""
+    now = now or int(time.time())
+    con.execute(
+        "INSERT OR REPLACE INTO production_cost (production_ref, research_hours, script_hours, "
+        "edit_hours, ai_cost_usd, time_to_publish_h, recorded_at) VALUES (?,?,?,?,?,?,?)",
+        (production_ref, research_hours, script_hours, edit_hours, ai_cost_usd,
+         time_to_publish_h, now),
+    )
+    con.commit()
+
+
+def efficiency(con: sqlite3.Connection) -> list[dict]:
+    """Rendimiento por esfuerzo: para cada video con coste + resultado, éxito por hora de trabajo.
+
+    CRUDO a propósito (proxy): 'éxito/hora' hasta que se registren horas-vistas absolutas. Responde
+    la pregunta que un canal normal no puede: ¿qué produce más valor por hora invertida?"""
+    rows = con.execute(
+        "SELECT c.production_ref, c.research_hours, c.script_hours, c.edit_hours, po.success "
+        "FROM production_cost c JOIN production_outcome po ON po.production_ref = c.production_ref"
+    ).fetchall()
+    out = []
+    for r in rows:
+        total_h = sum(x for x in (r["research_hours"], r["script_hours"], r["edit_hours"]) if x)
+        out.append({"production_ref": r["production_ref"], "total_hours": round(total_h, 1),
+                    "success": r["success"],
+                    "success_per_hour": round(r["success"] / total_h, 3) if total_h else None})
+    out.sort(key=lambda x: (x["success_per_hour"] is not None, x["success_per_hour"] or 0),
+             reverse=True)
+    return out
 
 
 def fetch_dna(con: sqlite3.Connection, production_ref: str) -> dict | None:
