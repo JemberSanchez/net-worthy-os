@@ -1,0 +1,121 @@
+"""Tests de la integración de DEMANDA (YouTube) en el flujo de decisión.
+
+No llaman a la red: monkeypatch de la fuente YouTube. Validan: agregación por vistas, dedupe
+entre queries, round-trip del cache en SQLite, tolerancia a cache vacío, y que la feature
+'demand' entra en el score del kernel (una demanda alta gana a una baja, todo lo demás igual).
+"""
+from __future__ import annotations
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from omega.analyze import demand  # noqa: E402
+from omega.reasoning import decision_engine, hypotheses, store  # noqa: E402
+
+
+def _video(vid, title, views):
+    return {"video_id": vid, "title": title, "views": views, "channel": "c",
+            "published_at": "", "likes": 0, "comments": 0, "url": f"https://youtu.be/{vid}"}
+
+
+class ThemeDemandTest(unittest.TestCase):
+    def test_aggregates_views_per_term_and_filters_singletons(self):
+        videos = [
+            _video("a", "Bitcoin crash explained", 100),
+            _video("b", "Bitcoin rally incoming", 300),   # 'bitcoin' en 2 videos -> cuenta
+            _video("c", "Gold is boring", 50),            # 'gold' en 1 -> se filtra (min_videos=2)
+        ]
+        rows = demand.theme_demand(videos, min_videos=2)
+        by_term = {r["term"]: r for r in rows}
+        self.assertIn("bitcoin", by_term)
+        self.assertEqual(by_term["bitcoin"]["total_views"], 400)
+        self.assertEqual(by_term["bitcoin"]["videos"], 2)
+        self.assertNotIn("gold", by_term)  # aparece en un solo video -> ruido descartado
+
+    def test_scan_nicho_dedupes_videos_across_queries(self):
+        # el mismo video "x" sale en dos búsquedas -> debe contarse UNA vez
+        calls = {"q1": [_video("x", "Ethereum staking guide", 500)],
+                 "q2": [_video("x", "Ethereum staking guide", 500),
+                        _video("y", "Ethereum merge recap", 200)]}
+        orig = demand.__dict__.get("youtube")
+        import omega.sources.youtube as yt
+        saved = yt.fetch_recent
+        yt.fetch_recent = lambda q, **kw: calls[q]
+        try:
+            rows, n = demand.scan_nicho(["q1", "q2"], days=30, max_results=25)
+        finally:
+            yt.fetch_recent = saved
+        self.assertEqual(n, 2)  # x (dedupe) + y
+        by_term = {r["term"]: r for r in rows}
+        # 'ethereum' aparece en x e y -> 2 videos, 500+200 vistas (x no se dobla)
+        self.assertEqual(by_term["ethereum"]["videos"], 2)
+        self.assertEqual(by_term["ethereum"]["total_views"], 700)
+
+
+class DemandCacheTest(unittest.TestCase):
+    def setUp(self):
+        # DB temporal aislada: repuntamos config.DB_PATH a un archivo en memoria por proceso
+        import tempfile
+        from omega import config, db
+        self.config, self.db = config, db
+        self._saved_path = config.DB_PATH
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
+        self._tmp.close()
+        config.DB_PATH = self._tmp.name
+        db.init()
+
+    def tearDown(self):
+        self.config.DB_PATH = self._saved_path
+        os.unlink(self._tmp.name)
+
+    def test_empty_cache_is_tolerant(self):
+        # antes de escanear, fetch devuelve {} y no rompe (decide sigue funcionando)
+        self.assertEqual(self.db.fetch_theme_demand(), {})
+
+    def test_upsert_and_fetch_round_trip_and_replace(self):
+        rows = [{"term": "bitcoin", "total_views": 400, "videos": 2, "avg_views": 200,
+                 "examples": ["Bitcoin crash"]}]
+        self.db.upsert_theme_demand(rows, scanned_at=1000)
+        self.assertEqual(self.db.fetch_theme_demand(), {"bitcoin": 400})
+        # re-escanear reemplaza (no acumula) el mismo término
+        self.db.upsert_theme_demand(
+            [{"term": "bitcoin", "total_views": 999, "videos": 3, "avg_views": 333,
+              "examples": []}], scanned_at=2000)
+        self.assertEqual(self.db.fetch_theme_demand(), {"bitcoin": 999})
+        self.assertEqual(self.db.theme_demand_scanned_at(), 2000)
+
+
+class DemandFeatureInScoreTest(unittest.TestCase):
+    """La feature 'demand' es genérica para el kernel: con peso >0, más demanda -> más score."""
+
+    def setUp(self):
+        self.con = store.connect(":memory:")
+        for mod in (store, hypotheses):
+            mod.init(self.con)
+
+    def tearDown(self):
+        self.con.close()
+
+    def _cand(self, term, demand_norm):
+        return hypotheses.create_hypothesis(
+            self.con, domain="content", statement=f"Demanda creciente en torno a '{term}'",
+            confidence=0.45, evidence={"features": {"momentum": 0.0, "prevalence": 5,
+                                                     "contradiction": 0.0, "demand": demand_norm}})
+
+    def test_higher_demand_wins_all_else_equal(self):
+        weights = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30, "demand": 0.40}
+        low = self.con.execute("SELECT * FROM hypothesis WHERE id=?",
+                               (self._cand("low", 0.1),)).fetchone()
+        high = self.con.execute("SELECT * FROM hypothesis WHERE id=?",
+                                (self._cand("high", 1.0),)).fetchone()
+        s_low, _ = decision_engine.score(low, weights)
+        s_high, _ = decision_engine.score(high, weights)
+        self.assertGreater(s_high, s_low)
+        # la diferencia debe ser exactamente el peso · (1.0 - 0.1) = 0.36
+        self.assertAlmostEqual(s_high - s_low, 0.40 * 0.9, places=4)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

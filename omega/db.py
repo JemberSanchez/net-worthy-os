@@ -24,6 +24,18 @@ CREATE TABLE IF NOT EXISTS observed_content (
 );
 CREATE INDEX IF NOT EXISTS idx_obs_published ON observed_content(published_at);
 CREATE INDEX IF NOT EXISTS idx_obs_source    ON observed_content(source);
+
+-- Cache de DEMANDA real por tema (vistas de YouTube). Separado de observed_content a
+-- propósito: son señales distintas (presencia editorial vs demanda de audiencia) y NO deben
+-- mezclarse en el conteo de momentum. 'decide' lee esta tabla offline; 'youtube-scan' la llena.
+CREATE TABLE IF NOT EXISTS theme_demand (
+    term        TEXT    PRIMARY KEY,
+    total_views INTEGER NOT NULL,
+    videos      INTEGER NOT NULL,
+    avg_views   INTEGER NOT NULL,
+    example     TEXT,
+    scanned_at  INTEGER NOT NULL          -- epoch: cuándo se midió esta demanda
+);
 """
 
 
@@ -73,3 +85,45 @@ def fetch_between(start_epoch: int, end_epoch: int) -> list[sqlite3.Row]:
 def count_total() -> int:
     with connect() as con:
         return con.execute("SELECT COUNT(*) AS n FROM observed_content").fetchone()["n"]
+
+
+# --- Cache de demanda (YouTube) ---
+
+def upsert_theme_demand(rows: list[dict], scanned_at: int) -> int:
+    """Reemplaza la demanda cacheada por término (INSERT OR REPLACE). Devuelve nº de temas."""
+    if not rows:
+        return 0
+    sql = (
+        "INSERT OR REPLACE INTO theme_demand "
+        "(term, total_views, videos, avg_views, example, scanned_at) "
+        "VALUES (:term, :total_views, :videos, :avg_views, :example, :scanned_at)"
+    )
+    payload = [{
+        "term": r["term"], "total_views": r["total_views"], "videos": r["videos"],
+        "avg_views": r["avg_views"],
+        "example": (r["examples"][0] if r.get("examples") else ""),
+        "scanned_at": scanned_at,
+    } for r in rows]
+    with connect() as con:
+        con.executemany(sql, payload)
+    return len(payload)
+
+
+def fetch_theme_demand() -> dict[str, int]:
+    """{término: vistas_totales}. Tolerante: si aún no se ha escaneado, devuelve {} (no rompe decide)."""
+    try:
+        with connect() as con:
+            rows = con.execute("SELECT term, total_views FROM theme_demand").fetchall()
+    except sqlite3.OperationalError:
+        return {}  # tabla aún no creada -> sin demanda, comportamiento idéntico al previo
+    return {r["term"]: r["total_views"] for r in rows}
+
+
+def theme_demand_scanned_at() -> int | None:
+    """Epoch del último escaneo de demanda (para saber si el cache está fresco). None si no hay."""
+    try:
+        with connect() as con:
+            r = con.execute("SELECT MAX(scanned_at) AS t FROM theme_demand").fetchone()
+    except sqlite3.OperationalError:
+        return None
+    return r["t"] if r and r["t"] is not None else None

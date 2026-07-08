@@ -12,6 +12,7 @@ import sqlite3
 
 from .momentum import compute as compute_momentum
 from ..reasoning import hypotheses
+from .. import db
 
 
 def _theme_prevalence(con: sqlite3.Connection, domain: str) -> dict[str, int]:
@@ -30,6 +31,11 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
     rising = {x["term"]: x["momentum"] for x in mom["rising"]}
     declining = {x["term"] for x in mom["declining"]}
 
+    # DEMANDA real (vistas de YouTube), cacheada por 'youtube-scan'. Vacío -> demand=0 (idéntico
+    # al comportamiento previo). Normalizamos por el máximo del cache -> feature en [0, 1].
+    demand = db.fetch_theme_demand()
+    max_demand = max(demand.values(), default=0)
+
     # palabras ya cubiertas por una FRASE candidata fuerte -> el token suelto se omite
     # (p.ej. con 'prime day' presente, se descartan 'prime' y 'day' por separado)
     covered: set[str] = set()
@@ -46,14 +52,20 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
         if not is_phrase and term in covered:
             continue  # token suelto redundante: una frase ya lo representa mejor
         contradiction = 1.0 if term in declining else 0.0
+        d_views = demand.get(term, 0)
+        d_norm = round(d_views / max_demand, 3) if max_demand else 0.0
         # confianza heurística v0: modesta; las frases (más específicas) reciben un plus
         conf = max(0.05, min(0.80, 0.45 + 0.08 * m - 0.20 * contradiction
                              + (0.10 if is_phrase else 0.0)))
+        for_ev = [f"'{term}' aparece en {p} items observados",
+                  f"momentum {round(m, 2)} (en alza)"]
+        if d_views:
+            for_ev.append(f"demanda real: {d_views:,} vistas en YouTube (nicho)")
         evidence = {
-            "features": {"momentum": round(m, 3), "prevalence": p, "contradiction": contradiction},
+            "features": {"momentum": round(m, 3), "prevalence": p,
+                         "contradiction": contradiction, "demand": d_norm},
             "signals": [{"name": "theme", "value": term, "count": p}],
-            "for": [f"'{term}' aparece en {p} items observados",
-                    f"momentum {round(m, 2)} (en alza)"],
+            "for": for_ev,
             "against": ([f"'{term}' también aparece en temas en declive (señal mixta)"]
                         if contradiction else []),
         }

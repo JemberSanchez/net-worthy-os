@@ -37,3 +37,18 @@ def theme_demand(videos: list[dict], min_videos: int = 2) -> list[dict]:
 
     rows.sort(key=lambda r: r["total_views"], reverse=True)
     return rows
+
+
+def scan_nicho(queries: list[str], days: int = 30, max_results: int = 25) -> tuple[list[dict], int]:
+    """Barre varias búsquedas del nicho, DEDUPLICA videos entre queries y agrega la demanda.
+
+    Devuelve (ranking_de_temas, nº_videos_únicos). Un mismo video que aparece en dos búsquedas
+    cuenta una sola vez (dedupe por video_id) para no inflar la demanda."""
+    from ..sources import youtube  # import local: demand no depende de la red salvo aquí
+
+    seen: dict[str, dict] = {}
+    for q in queries:
+        for v in youtube.fetch_recent(q, days=days, max_results=max_results):
+            seen[v["video_id"]] = v
+    videos = list(seen.values())
+    return theme_demand(videos), len(videos)

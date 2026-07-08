@@ -4,6 +4,7 @@ Comandos:
   python -m omega.cli ingest     # captura RSS -> SQLite (correr a diario)
   python -m omega.cli trends     # reporte de temas en alza/caída
   python -m omega.cli youtube <query>   # demanda REAL: qué temas mueven vistas (YouTube API)
+  python -m omega.cli youtube-scan      # barre el nicho y CACHEA demanda -> alimenta 'decide'
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
   python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
@@ -105,6 +106,35 @@ def cmd_youtube() -> None:
         print(f"  {r['total_views']:>12,}  {r['term']:<24} "
               f"(en {r['videos']} videos, media {r['avg_views']:,})")
     print("\nEsto es DEMANDA (vistas reales), no volumen editorial. El detector de temas serio.")
+
+
+def cmd_youtube_scan() -> None:
+    """Sensor de DEMANDA del nicho: barre varias búsquedas, agrega vistas por tema y las CACHEA.
+
+    A partir de aquí 'decide' pondera por demanda real (feature 'demand'), no solo por presencia
+    en titulares. Corre esto como el 'ingest' de YouTube: cada cierto tiempo, no en cada decide."""
+    from .sources import youtube
+    from .analyze import demand
+
+    db.init()
+    queries = config.YOUTUBE_NICHE_QUERIES
+    print(f"Escaneando demanda del nicho en YouTube ({len(queries)} búsquedas)...")
+    for q in queries:
+        print(f"  · {q}")
+    try:
+        rows, n = demand.scan_nicho(queries, days=30, max_results=25)
+    except youtube.YouTubeError as exc:
+        print(f"\nError de YouTube API: {exc}")
+        print("Revisa YOUTUBE_API_KEY en .env y que la API esté habilitada.")
+        return
+
+    scanned_at = int(time.time())
+    saved = db.upsert_theme_demand(rows, scanned_at)
+    print(f"\n{n} videos únicos analizados | {saved} temas con demanda cacheados.")
+    print("\nTop temas por vistas reales (lo que 'decide' ahora premia):")
+    for r in rows[:12]:
+        print(f"  {r['total_views']:>12,}  {r['term']:<24} (en {r['videos']} videos)")
+    print("\nListo. Corre 'python -m omega.cli decide' para decidir ponderando esta demanda.")
 
 
 def cmd_hypotheses() -> None:
@@ -395,6 +425,7 @@ def main(argv: list[str]) -> int:
         "ingest": cmd_ingest,
         "trends": cmd_trends,
         "youtube": cmd_youtube,
+        "youtube-scan": cmd_youtube_scan,
         "signals": cmd_signals,
         "decide": cmd_decide,
         "patterns": cmd_patterns,
