@@ -68,6 +68,16 @@ class ThemeDemandTest(unittest.TestCase):
         eth = next(r for r in rows if r["term"] == "ethereum")
         self.assertEqual(eth["views"], 3000)  # 1000 + 2000 (vistas de los videos donde co-ocurre)
 
+    def test_related_matches_words_not_substrings(self):
+        # root 'car' NO debe excluir 'cards' (contiene 'car' como subcadena, no como palabra)
+        videos = [
+            _video("a", "car loans and credit cards explained", 1000),
+            _video("b", "best car deals and credit cards", 2000),
+        ]
+        terms = [r["term"] for r in demand.related("car", videos, min_together=2)]
+        self.assertIn("cards", terms)   # antes se excluía por 'car' in 'cards' (bug de subcadena)
+        self.assertNotIn("car", terms)  # el root sí se excluye
+
 
 class EnglishFilterTest(unittest.TestCase):
     """Filtro de idioma: solo contenido EN (protege RPM y limpia la señal)."""

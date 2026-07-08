@@ -60,6 +60,7 @@ def related(root: str, videos: list[dict], top_k: int = 12, min_together: int = 
     'si la audiencia ve X, también le interesa Y'. Adelantarse = servir esa adyacencia desatendida.
     """
     root = root.lower().strip()
+    root_words = set(root.split())  # match a NIVEL DE PALABRA, no subcadena ('ai' no debe pegar en 'retail')
     co_views: dict[str, int] = defaultdict(int)
     co_n: dict[str, int] = defaultdict(int)
     for v in videos:
@@ -67,7 +68,8 @@ def related(root: str, videos: list[dict], top_k: int = 12, min_together: int = 
         if root not in terms:
             continue
         for t in terms:
-            if t == root or root in t or t in root:  # fuera el propio root y sus sub/superstrings
+            # fuera el propio root y cualquier término que comparta una palabra con él
+            if t == root or (root_words & set(t.split())):
                 continue
             co_views[t] += v.get("views", 0)
             co_n[t] += 1

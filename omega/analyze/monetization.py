@@ -23,7 +23,7 @@ RPM_TIERS = {
          "side hustle", "financial freedom", "build wealth", "money habits", "net worth"],
     # volátil/bajo + riesgo de políticas ($4-12): crypto
     8:  ["crypto", "cryptocurrency", "bitcoin", "btc", "ethereum", "eth", "altcoin", "altcoins",
-         "memecoin", "nft", "defi", "xrp", "dogecoin", "solana", "ipo"],
+         "memecoin", "nft", "defi", "xrp", "dogecoin", "solana"],
 }
 
 # keyword -> rpm, las frases largas primero (match específico gana a palabra suelta)
