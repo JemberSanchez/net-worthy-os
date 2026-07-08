@@ -3,8 +3,10 @@
 feedparser>=6.0.11        # parseo RSS/Atom (puro Python, sin coste, sin API key)
 anthropic>=0.112         # LLM para el director creativo (necesita ANTHROPIC_API_KEY; opcional, hay modo $0)
 
+# YouTube Data API v3 ya está integrado (omega/sources/youtube.py) SIN dependencias:
+# usa urllib de la stdlib. Solo necesita YOUTUBE_API_KEY en .env (cuota gratuita).
+
 # --- Fases siguientes (descomentar cuando se validen / haya presupuesto) ---
-# google-api-python-client  # YouTube Data API v3 (key gratuita)
 # praw                      # Reddit API (OAuth gratuito)
 # scikit-learn              # TF-IDF + clustering cuando el term-momentum se quede corto
 # sentence-transformers     # embeddings locales (requiere torch; verificar wheels en py3.14)

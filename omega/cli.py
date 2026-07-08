@@ -3,6 +3,7 @@
 Comandos:
   python -m omega.cli ingest     # captura RSS -> SQLite (correr a diario)
   python -m omega.cli trends     # reporte de temas en alza/caída
+  python -m omega.cli youtube <query>   # demanda REAL: qué temas mueven vistas (YouTube API)
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
   python -m omega.cli patterns   # muestra el Creative Knowledge Base (vocabulario de craft)
@@ -69,6 +70,41 @@ def cmd_trends() -> None:
         print("  (sin señal todavía)")
     for x in r["declining"]:
         print(f"  {x['momentum']:>6}  {x['term']:<22} (docs: {x['prior_df']}->{x['recent_df']})")
+
+
+def cmd_youtube() -> None:
+    """Señal de DEMANDA REAL: qué videos de finanzas consiguen vistas y qué temas las mueven.
+
+    A diferencia de 'trends' (presencia en artículos), esto usa las VISTAS reales de YouTube:
+    el detector de temas serio. Necesita YOUTUBE_API_KEY en .env (cuota gratuita)."""
+    from .sources import youtube
+    from .analyze import demand
+
+    query = " ".join(sys.argv[2:]).strip() or "stock market investing"
+    print(f"YouTube — demanda real para: '{query}'  (últimos 30 días, orden por vistas)\n")
+    try:
+        videos = youtube.fetch_recent(query, days=30, max_results=25)
+    except youtube.YouTubeError as exc:
+        print(f"Error de YouTube API: {exc}")
+        print("Revisa que YOUTUBE_API_KEY esté en .env y que la API esté habilitada en el proyecto.")
+        return
+    if not videos:
+        print("Sin resultados para esa búsqueda.")
+        return
+
+    print("--- TOP VIDEOS POR VISTAS ---")
+    for v in videos[:12]:
+        print(f"  {v['views']:>12,}  {v['title'][:64]}")
+        print(f"                {v['channel']}  |  {v['url']}")
+
+    print("\n--- TEMAS QUE MUEVEN VISTAS (suma de vistas por término del título) ---")
+    ranked = demand.theme_demand(videos)
+    if not ranked:
+        print("  (pocos títulos para agregar; sube max_results o prueba otra query)")
+    for r in ranked[:15]:
+        print(f"  {r['total_views']:>12,}  {r['term']:<24} "
+              f"(en {r['videos']} videos, media {r['avg_views']:,})")
+    print("\nEsto es DEMANDA (vistas reales), no volumen editorial. El detector de temas serio.")
 
 
 def cmd_hypotheses() -> None:
@@ -358,6 +394,7 @@ def main(argv: list[str]) -> int:
     cmds = {
         "ingest": cmd_ingest,
         "trends": cmd_trends,
+        "youtube": cmd_youtube,
         "signals": cmd_signals,
         "decide": cmd_decide,
         "patterns": cmd_patterns,
