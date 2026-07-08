@@ -12,6 +12,9 @@ Comandos:
   python -m omega.cli combine <sujeto>   # divergencia: k encuadres distintos de un sujeto
   python -m omega.cli think <sujeto>     # el director PIENSA un sujeto (usa LLM si hay key)
   python -m omega.cli record-think [file]          # registra el resultado que te dio tu Claude
+  python -m omega.cli record-dna [file]            # registra el ADN de produccion de un video
+  python -m omega.cli record-analytics [file]      # registra CTR/AVD/retencion tras publicar
+  python -m omega.cli dna                          # dataset de ADN + calibracion por dimension
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
@@ -403,6 +406,98 @@ def cmd_record_think() -> None:
     con.close()
 
 
+def cmd_record_dna() -> None:
+    """Registra el ADN de producción de un video (el 'cómo se hizo'), ANTES de publicar. Así el
+    primer video ya entra instrumentado al dataset — no se pierde la señal por bloque."""
+    import json
+    from pathlib import Path
+    from .reasoning import store as kstore
+    from .creative import production_dna
+
+    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "production_dna.json")
+    if not path.exists():
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        tpl = {"production_ref": "<id-del-video>",
+               "hook_type": "story|question|contrarian|stat|shock",
+               "story_type": "personal|character|case_study|none",
+               "cta_type": "session|subscribe|comment|none",
+               "length_s": 450,
+               "blocks": [{"block": "hook", "technique": "two_men_story", "length_s": 35},
+                          {"block": "proof", "technique": "compound_curve", "length_s": 135}]}
+        (config.DATA_DIR / "production_dna.template.json").write_text(
+            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"No existe {path}. Plantilla escrita en production_dna.template.json — "
+              "rellénala, renómbrala a production_dna.json y reintenta.")
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    production_dna.record_dna(
+        con, production_ref=data["production_ref"], blocks=data.get("blocks", []),
+        hook_type=data.get("hook_type"), story_type=data.get("story_type"),
+        cta_type=data.get("cta_type"), length_s=data.get("length_s"))
+    print(f"ADN registrado: {data['production_ref']} — {len(data.get('blocks', []))} bloques "
+          f"(hook={data.get('hook_type')}, story={data.get('story_type')}, cta={data.get('cta_type')}).")
+    print("Tras publicar y medir: record-analytics + record-outcome, y luego 'dna'.")
+    con.close()
+
+
+def cmd_record_analytics() -> None:
+    """Registra las analíticas MEDIDAS tras publicar (CTR/AVD/retención/fuente). El 'qué pasó'."""
+    import json
+    from pathlib import Path
+    from .reasoning import store as kstore
+    from .creative import production_dna
+
+    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "production_analytics.json")
+    if not path.exists():
+        print(f"No existe {path}. Crea un JSON con: production_ref, ctr, avd_pct, retention_avg, "
+              "traffic_source, retention_by_block.")
+        return
+    d = json.loads(path.read_text(encoding="utf-8"))
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    production_dna.record_analytics(
+        con, production_ref=d["production_ref"], ctr=d.get("ctr"), avd_pct=d.get("avd_pct"),
+        retention_avg=d.get("retention_avg"), traffic_source=d.get("traffic_source"),
+        retention_by_block=d.get("retention_by_block"))
+    print(f"Analíticas registradas: {d['production_ref']}.")
+    con.close()
+
+
+def cmd_dna() -> None:
+    """Muestra el dataset de ADN de producción + calibración por dimensión (con guard de rigor)."""
+    from .reasoning import store as kstore
+    from .creative import production_dna, decisions
+
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (production_dna, decisions):
+        mod.init(con)
+    rows = production_dna.list_dna(con)
+    print(f"Dataset de ADN de producción: {len(rows)} videos instrumentados\n")
+    for r in rows:
+        print(f"  {r['production_ref']}")
+        print(f"    hook={r['hook_type']} | story={r['story_type']} | cta={r['cta_type']} | "
+              f"{r['block_count']} bloques | {r['length_s']}s")
+
+    print("\n--- Calibración por dimensión (solo con resultado medido) ---")
+    any_data = False
+    for dim in ("hook_type", "story_type", "cta_type"):
+        cal = production_dna.dna_calibration(con, dim)
+        if not cal:
+            continue
+        any_data = True
+        print(f"\n  [{dim}]")
+        for c in cal:
+            flag = "  ⚠ PROVISIONAL (n bajo, posible ruido)" if c["provisional"] else ""
+            print(f"    {c['value']:<16} {c['success_rate']:.0%}  (n={c['n']}){flag}")
+    if not any_data:
+        print("  (aún sin resultados medidos: registra outcomes y vuelve)")
+    print("\n[!] La gráfica dice DÓNDE, no POR QUÉ. Con pocos videos cada dimensión co-varía con")
+    print("    b-roll/voz/música (confounding). Aísla la variable (experiments) antes de concluir.")
+    con.close()
+
+
 def cmd_record_outcome() -> None:
     """Tras publicar: registra el resultado MEDIDO (0..1) de una producción. Alimenta la calibración."""
     from .reasoning import store as kstore
@@ -463,6 +558,9 @@ def main(argv: list[str]) -> int:
         "combine": cmd_combine,
         "think": cmd_think,
         "record-think": cmd_record_think,
+        "record-dna": cmd_record_dna,
+        "record-analytics": cmd_record_analytics,
+        "dna": cmd_dna,
         "record-outcome": cmd_record_outcome,
         "learnings": cmd_learnings,
         "hypotheses": cmd_hypotheses,
