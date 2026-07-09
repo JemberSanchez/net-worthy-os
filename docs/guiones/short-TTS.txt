@@ -13,23 +13,36 @@ incluso si cancelas la suscripcion luego.
 Alternativas gratis CON derechos: Google Cloud TTS o Piper (peor calidad).
 
 ===========================================================================
-!! NO USES BRIAN: las voces "Default" MUEREN el 31-dic-2026
+VOZ ELEGIDA: "B — el que te cuenta la verdad"  (Voice Design, permanente)
+   blunt money mentor · 32-38 · intimo, directo, esceptico, con filo
+   NO usar Brian ni ninguna voz Default: expiran el 31-dic-2026.
 ===========================================================================
-ElevenLabs retira todas sus voces Default esa fecha. La voz es la IDENTIDAD
-de un canal faceless: si caduca, tus videos nuevos suenan a otro canal.
-Ademas Adam/Brian/Antoni son las voces mas sobreexplotadas de internet.
-Permanentes: Voice Library, Cloned y Voice Design.
--> Elige tu voz con el protocolo de docs/guiones/voice-test.txt ANTES de esto.
 
 ===========================================================================
 AJUSTES ELEVENLABS  (modelo Eleven Multilingual v2)
-   stability 40 · similarity 75 · style 20 · speaker boost ON · speed 1.0
-   (stability alta = monotona; similarity >80 = artefactos; style alto = falso)
+   PUNTO DE PARTIDA:  stability 40 · similarity 75 · style 20
+                      speaker boost ON · speed 1.0
+   Ajusta de 5 en 5, UN dial cada vez:
+     suena plana, monotona ............ BAJA stability a 35
+     cambia de caracter a mitad ....... SUBE stability a 45-50
+     no se le nota el filo/la ironia .. SUBE style a 25-30
+     suena teatral, sobreactuada ...... BAJA style a 10-15
+     metalica, con artefactos ......... BAJA similarity a 70
 ===========================================================================
 
-PEGA SOLO EL BLOQUE DE ABAJO. Ya lleva los numeros escritos como se pronuncian
-("S and P five hundred", no "S&P 500") porque el TTS los lee mal en cifras.
-Los guiones largos (—) y los puntos fuerzan las micro-pausas antes de cada cifra.
+PEGA SOLO EL BLOQUE DE ABAJO, DE UNA VEZ (una sola generacion = tono
+consistente). Ya lleva los numeros escritos como se pronuncian ("S and P five
+hundred", no "S&P 500") porque el TTS lee mal simbolos y cifras.
+Los guiones largos (—) fuerzan las micro-pausas antes de cada cifra.
+
+TRAMPAS DE PRONUNCIACION — escucha estas cuatro y nada mas:
+  1. "five A M"        -> debe sonar "faiv ei em", NO "faiv am".
+                          Si falla, cambia por: "five in the morning"
+  2. "S and P"         -> debe sonar "es and pi". Si falla: "S. and P."
+  3. "America's five hundred biggest companies" -> antes ponia "U S companies"
+                          y el TTS lo leia como la palabra "us" (nosotros).
+  4. "four hundred and thirty thousand" -> tiene que PESAR, no leerse de
+                          corrido. Es el climax. Si corre, baja speed a 0.95.
 
 ---------------------------------------------------------------------------
 
@@ -39,7 +52,7 @@ Here's why: habits don't build wealth. Assets do.
 
 An asset is anything that pays you, or grows, while you sleep. A habit costs you time. An asset buys it back.
 
-Watch. Five hundred a month into an S and P five hundred fund — the five hundred biggest U S companies. Historically? Ten percent a year. Seven, after inflation.
+Watch. Five hundred a month into an S and P five hundred fund — America's five hundred biggest companies. Historically? Ten percent a year. Seven, after inflation.
 
 You put in a hundred eighty grand. You walk away with around six hundred and ten thousand.
 
