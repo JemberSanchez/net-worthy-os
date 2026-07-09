@@ -49,7 +49,11 @@
 `$180,000. Gap $429,985. El guion anterior decía "$420,000": no salía de ninguna convención.]`
 
 ### SEG 5 · WHERE HABITS DO WIN (4:30–5:20) — honestidad = confianza
-> *"Now I'm not telling you habits are useless — that would be dumb, and anyone who tells you to burn your budget is selling something. Here's the honest version: habits are the fuel line to the engine. That five-dollar coffee, skipped and redirected into an asset, becomes almost eighteen thousand dollars in ten years. The habit didn't build that. The habit just fed the asset faster. So the rule is simple: a habit is only worth what it buys you in ownership."*
+> *"Now I'm not telling you habits are useless — that would be dumb, and anyone who tells you to burn your budget is selling something. Here's the honest version: habits are the fuel line to the engine. Skip the five-dollar coffee for ten years and you've saved about eighteen thousand dollars. Put that same five dollars into an asset instead, and you have about twenty-six thousand. The habit saved eighteen. The asset made the other eight — while you slept. The habit didn't build that. The habit just fed the asset faster. So the rule is simple: a habit is only worth what it buys you in ownership."*
+
+`[CIFRA VERIFICADA: $5/día = $152.08/mes. Guardado 10 años: $18,250 (= 5×365×10, SIN invertir).`
+`Invertido al 7% real: $26,323. El guion anterior vendía los $18k como resultado del ACTIVO —`
+`justo el error que este video denuncia. El contraste 18k vs 26k es además mejor guion.]`
 
 ### SEG 6 · THE TRAP (5:20–6:20) — nuevo open loop
 > *"But there's a catch, and it catches smart people the hardest. It's spending that feels like investing. The upgraded car you 'needed for work.' The three-hundred-dollar course you never finished. The gadget that was going to make you rich. They feel like progress. But an asset puts money into your pocket; a liability quietly takes it out — wearing the costume of an investment. So before you buy anything you're calling an investment, ask one question: does this pay me back, or do I pay for it forever? If you can't answer in one sentence, it's not an asset. It's a bill with better marketing."*
@@ -110,6 +114,7 @@
 > pantalla. El botón **"Frame final (PNG)"** exporta la miniatura variante B. Los números se
 > calculan de la serie mensual real, no están escritos a mano.
 - **Compound curve:** `animated line chart, flat grey "contributions" line vs exploding green "total" curve, counter ticking from $0 to ~$610,000 over 4 seconds, labels "You paid: $180k" and "You keep: ~$610k", clean fintech style, dark bg`
+- **Coffee split (SEG 5):** `two stacks of coins side by side, left labeled "SAVED $18,250" grey, right labeled "INVESTED $26,323" green and taller, the difference glowing gold`
 - **Marcus vs Dylan bars:** `two vertical bars racing up over 30 years timeline, Marcus bar stays low (grey), Dylan bar rockets (gold), end labels "$0" vs "$1M+"`
 - **Asset vs liability:** `split animation, left "ASSET" with green arrow of coins flowing INTO a wallet, right "LIABILITY" with red arrow of coins flowing OUT, icons: index fund, house, business vs car, course, gadget`
 

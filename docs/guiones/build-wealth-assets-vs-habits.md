@@ -67,7 +67,7 @@ Caption: "Not financial advice · illustrative · ~7% real (after inflation)".
 *Retención: lista numerada (cerebro adora listas) → "should make you angry" (emoción) → el gráfico compuesto ES el clímax visual.*
 
 ### SEG 5 — WHERE HABITS *DO* WIN (4:00–5:00) · honestidad = confianza
-> "Now, I'm not telling you to throw away every good habit. That would be dumb. Here's the honest version: habits are not the enemy. They're the *fuel line* to the engine. Skipping that daily coffee doesn't build wealth — but redirected into an asset, that same five dollars a day becomes almost eighteen thousand dollars in ten years. The habit didn't do that. The habit just *fed the asset faster.*
+> "Now, I'm not telling you to throw away every good habit. That would be dumb. Here's the honest version: habits are not the enemy. They're the *fuel line* to the engine. Skip that daily five-dollar coffee for ten years and you've saved about eighteen thousand dollars. Put the same five dollars into an asset instead, and you have about twenty-six thousand. The habit saved the eighteen. The asset made the other eight — while you slept. The habit didn't build that. The habit just *fed the asset faster.*
 > So the rule is simple: every habit is only worth what it buys you in ownership. Discipline that buys assets is a superpower. Discipline that just sits in a savings account, losing to inflation, is a trap."
 
 *[Visual: coffee → arrow → asset icon → "$5/day → ~$18k/10yr"]*
