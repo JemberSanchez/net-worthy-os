@@ -5,7 +5,7 @@ from ..analyze.momentum import _terms
 
 class ThemeExtractor:
     name = "theme"
-    version = "0.2.0"  # v0.2: incluye bigramas; frases primero
+    version = "0.2.1"  # v0.2.1: stopwords de contracciones/formato + apóstrofe tipográfico
 
     def extract(self, asset: dict) -> list[dict]:
         # frases (bigramas) antes que palabras sueltas -> temas reales, no tokens

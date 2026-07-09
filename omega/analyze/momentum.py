@@ -20,6 +20,10 @@ from collections import defaultdict
 from .. import config, db
 
 # Stopwords mínimas EN + ES. Ampliar según ruido observado.
+# OJO: el tokenizador CONSERVA el apóstrofe -> las contracciones van CON apóstrofe ("i'm";
+# "dont" a secas nunca matchea un token). Ruido observado 2026-07-09: "i'm" fue #2 de demanda
+# (9.1M vistas) y "daily" casi gana decide. Contracciones y palabras de FORMATO (daily/live/news)
+# son función, no tema; los posesivos de entidad (buffett's, fed's) SÍ pasan: son señal real.
 _STOP = set("""
 a an the of to in on for and or but with from by at as is are was were be been being
 this that these those it its it's they them their there here what which who whom how
@@ -30,6 +34,12 @@ www http https html com span href url link links comments submitted redd reddit 
 items article articles points user users amp nbsp via comment post posts read full
 all new one two three get got make made use used way ways thing things now today says
 say said back even still going know dont cant wont let us em new big top best
+i'm i've i'll i'd you're you've you'll you'd we're we've we'll they're they've they'll
+he's she's that's there's here's what's who's let's it'll don't doesn't didn't isn't
+aren't wasn't weren't won't wouldn't couldn't shouldn't can't ain't
+already daily weekly monthly live news breaking update updates while amid despite according
+monday tuesday wednesday thursday friday saturday sunday
+reuters bloomberg tradingview cnbc marketwatch coindesk cointelegraph forbes wsj barron's
 de la el los las un una unos unas y o pero con sin por para en del al lo le su sus se
 es son era eran ser que como mas más este esta estos estas esto eso esa ese aqui aquí
 ya no si sí muy todo todos toda todas sobre entre cuando donde quien cual cuales hoy
@@ -48,7 +58,9 @@ def _terms(text: str) -> set[str]:
     Así emergen temas reales como 'prime day' o 'amazon prime' en vez de tokens sueltos
     ('day', 'prime', 'amazon'). El bigrama solo se forma si ambas palabras son de contenido
     y están pegadas en el texto (sin stopword en medio)."""
-    raw = _TOKEN.findall(text.lower())
+    # Apóstrofe tipográfico (’) -> ASCII ('): sin esto "don’t" se parte en el token falso "don"
+    # y las contracciones esquivan las stopwords.
+    raw = _TOKEN.findall(text.lower().replace("’", "'"))
     out: set[str] = set()
     for i, tok in enumerate(raw):
         if not _content(tok):

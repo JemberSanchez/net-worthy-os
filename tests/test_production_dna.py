@@ -43,6 +43,20 @@ class ProductionDnaTest(unittest.TestCase):
         self.assertAlmostEqual(r["ctr"], 0.06)
         self.assertEqual(r["traffic_source"], "browse")
 
+    def test_analytics_rejects_percent_style_input(self):
+        # YouTube Studio muestra "CTR 4.5%": teclear 4.5 debe RECHAZARSE, no envenenar el dataset
+        production_dna.record_dna(self.con, production_ref="v1", blocks=[])
+        with self.assertRaises(ValueError):
+            production_dna.record_analytics(self.con, production_ref="v1", ctr=4.5)
+        with self.assertRaises(ValueError):
+            production_dna.record_analytics(self.con, production_ref="v1", avd_pct=52.0)
+        with self.assertRaises(ValueError):
+            production_dna.record_analytics(
+                self.con, production_ref="v1", retention_by_block={"hook": 85.0})
+        # y la fila NO debe haberse guardado a medias
+        r = self.con.execute("SELECT COUNT(*) AS n FROM production_analytics").fetchone()
+        self.assertEqual(r["n"], 0)
+
     def test_dna_calibration_groups_by_dimension_and_needs_outcome(self):
         # dos videos story + uno stat; solo cuentan los que tienen outcome medido
         for ref, hook in [("a", "story"), ("b", "story"), ("c", "stat")]:

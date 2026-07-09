@@ -8,6 +8,42 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from omega.extractors import load_extractors           # noqa: E402
 from omega.reasoning import store, signals             # noqa: E402
+from omega.analyze.momentum import _terms               # noqa: E402
+
+
+class TokenizerNoiseTest(unittest.TestCase):
+    """El ruido observado el 2026-07-09 no debe volver: contracciones y palabras de formato
+    NO son temas ('i'm' llegó a #2 de demanda con 9.1M vistas; 'daily' casi gana decide)."""
+
+    def test_contractions_are_not_terms(self):
+        terms = _terms("Top Stocks I'm Buying Now — Don't Miss These")
+        self.assertNotIn("i'm", terms)
+        self.assertNotIn("don't", terms)
+        self.assertNotIn("i'm buying", terms)   # el bigrama con contracción tampoco
+        self.assertIn("stocks", terms)           # el contenido real sí queda
+        self.assertIn("buying", terms)
+
+    def test_typographic_apostrophe_normalized(self):
+        # "don’t" (apóstrofe U+2019) no debe producir el token falso "don"
+        terms = _terms("Don’t Buy This ETF — I’m Selling")
+        self.assertNotIn("don", terms)
+        self.assertNotIn("don't", terms)
+        self.assertNotIn("i'm", terms)
+        self.assertIn("etf", terms)
+        self.assertIn("selling", terms)
+
+    def test_entity_possessives_survive(self):
+        # los posesivos de entidad son señal real, no ruido
+        terms = _terms("Warren Buffett's Warning About the Fed's Rate Cuts")
+        self.assertIn("buffett's", terms)
+        self.assertIn("fed's", terms)
+        self.assertIn("warren buffett's", terms)
+
+    def test_format_words_are_not_terms(self):
+        terms = _terms("Daily Live Stock Market News Update")
+        for noise in ("daily", "live", "news", "update"):
+            self.assertNotIn(noise, terms)
+        self.assertIn("stock market", terms)
 
 
 class ExtractorsTest(unittest.TestCase):

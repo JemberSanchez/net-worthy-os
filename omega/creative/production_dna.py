@@ -85,7 +85,22 @@ def record_analytics(con: sqlite3.Connection, *, production_ref: str, ctr: float
                      avd_pct: float | None = None, retention_avg: float | None = None,
                      views: int | None = None, traffic_source: str | None = None,
                      retention_by_block: dict | None = None, now: int | None = None) -> None:
-    """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome."""
+    """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome.
+
+    GUARD de captura-en-origen: ctr/avd_pct/retention_avg son FRACCIONES [0,1], pero YouTube
+    Studio las muestra como porcentaje ("CTR 4.5%"). Sin este guard, teclear 4.5 envenenaría el
+    dataset en silencio y la calibración con n bajo quedaría basura sin aviso."""
+    for field, val in (("ctr", ctr), ("avd_pct", avd_pct), ("retention_avg", retention_avg)):
+        if val is not None and not (0.0 <= val <= 1.0):
+            raise ValueError(f"{field}={val} fuera de [0,1]. Es FRACCIÓN, no porcentaje: "
+                             f"si YouTube Studio dice '{val}%', registra {val}/100.")
+    if views is not None and views < 0:
+        raise ValueError(f"views={views} no puede ser negativo")
+    if retention_by_block:
+        bad = {k: v for k, v in retention_by_block.items() if not (0.0 <= float(v) <= 1.0)}
+        if bad:
+            raise ValueError(f"retention_by_block fuera de [0,1]: {bad}. "
+                             "Son fracciones (85% -> 0.85).")
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_analytics (production_ref, ctr, avd_pct, retention_avg, "

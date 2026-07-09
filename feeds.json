@@ -4,7 +4,7 @@
     {"source": "gnews_markets",  "url": "https://news.google.com/rss/search?q=stock+market+OR+investing+OR+%22S%26P+500%22&hl=en-US&gl=US&ceid=US:en"},
     {"source": "gnews_crypto",   "url": "https://news.google.com/rss/search?q=bitcoin+OR+ethereum+OR+cryptocurrency&hl=en-US&gl=US&ceid=US:en"},
     {"source": "gnews_economy",  "url": "https://news.google.com/rss/search?q=economy+OR+inflation+OR+%22interest+rates%22+OR+Fed&hl=en-US&gl=US&ceid=US:en"},
-    {"source": "gnews_personalfinance", "url": "https://news.google.com/rss/search?q=%22personal+finance%22+OR+%22how+to+invest%22+OR+retirement&hl=en-US&gl=US&ceid=US:en"},
+    {"source": "gnews_personalfinance", "url": "https://news.google.com/rss/search?q=%22personal+finance%22+OR+%22how+to+invest%22+OR+%22retirement+savings%22+OR+%22retirement+planning%22+OR+401k&hl=en-US&gl=US&ceid=US:en"},
     {"source": "cointelegraph",  "url": "https://cointelegraph.com/rss"},
     {"source": "coindesk",       "url": "https://www.coindesk.com/arc/outboundfeeds/rss/"},
     {"source": "yahoo_finance",  "url": "https://finance.yahoo.com/news/rssindex"},
