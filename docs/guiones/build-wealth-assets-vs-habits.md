@@ -15,13 +15,17 @@
 | 0:00 | "Skip the coffee. Wake up at 5 a.m. Budget every dollar. You've done it all — and you're still broke." | Slam text: **HABITS WON'T MAKE YOU RICH**. Quick cuts: alarm, coffee, spreadsheet | Cold open acusatorio, cero intro. Nombra SUS hábitos → se ve reflejado |
 | 0:07 | "Here's why: habits don't build wealth. Assets do." | **HABITS ❌  ASSETS ✅** | Afirmación tajante = pattern break. Abre el gap |
 | 0:12 | "An asset is anything that pays you or grows while you sleep. A habit costs you time. An asset buys it back." | Split: reloj vaciándose vs gráfica subiendo | Definición en 1 frase = claridad = confianza |
-| 0:20 | "Watch. Five hundred a month into a simple index fund. Thirty years. Around seven percent a year, historically." | **$500/mo × 30 yrs @ ~7%** (nota: illustrative) | "Watch" = micro-promesa. Números concretos = credibilidad |
-| 0:28 | "You put in a hundred eighty grand. You walk away with around six hundred and ten thousand." | **Paid in: $180k → End: ~$610k** contador animado (usa `curva-compuesta.html`) | El salto visual es el pico dopamina |
-| 0:34 | "That extra four hundred and thirty thousand? You didn't earn it. Your asset did — while you slept." | **+$430,000 (you slept)** | Reencuadre emocional: el dinero trabajó, no tú |
-| 0:40 | "Habits make you disciplined. Assets make you rich. Full breakdown up top." | **The 3 assets → full video** flecha arriba | Cierre memorable + CTA al largo |
+| 0:20 | "Watch. Five hundred a month into an S&P 500 fund — the five hundred biggest US companies. Historically? Ten percent a year. Seven, after inflation." | **$500/mo · S&P 500 · 30 yrs** + nota pequeña "10% nominal → ~7% real" | Nombrar el índice = concreción. Dar LAS DOS cifras = autoridad: demuestras que sabes la diferencia que ningún gurú explica |
+| 0:29 | "You put in a hundred eighty grand. You walk away with around six hundred and ten thousand." | **Paid in: $180k → End: ~$610k** contador animado (usa `curva-compuesta.html`) | El salto visual es el pico dopamina |
+| 0:35 | "That extra four hundred and thirty thousand? You didn't earn it. Your asset did — while you slept." | **+$430,000 (you slept)** | Reencuadre emocional: el dinero trabajó, no tú |
+| 0:41 | "Habits make you disciplined. Assets make you rich. Could you do fifty a month? Comment below. Full breakdown up top." | **Could YOU do $50/mo?** + flecha arriba | Pregunta CON ANCLA y casi binaria = muchos comentarios = empuje del algoritmo. Va al final: a mitad sería un tiempo muerto que cuesta retención |
 
-**Notas Short:** subtítulos quemados SIEMPRE (85% ve sin sonido). Música percusiva sube en 0:28.
-Corte cada 1.5–2.5s. Caption: "Not financial advice · illustrative 7% historical avg".
+**Notas Short:** subtítulos quemados SIEMPRE (85% ve sin sonido). Música percusiva sube en 0:29.
+Corte cada 1.5–2.5s. Duración ~48s (cabe de sobra en los 60s de un Short).
+Caption: "Not financial advice · illustrative · ~7% real (after inflation)".
+
+> **PROHIBIDO decir que el S&P es "sólido" o "seguro".** Cayó **-57%** entre 2007 y 2009. Nombrar el
+> índice está bien (no es un ticker "para comprar"); calificarlo de seguro es lo que te desmonetiza.
 
 ---
 
@@ -50,12 +54,13 @@ Corte cada 1.5–2.5s. Caption: "Not financial advice · illustrative 7% histori
 
 ### SEG 4 — THE 3 ASSETS + THE MATH (2:00–4:00) · el pico de valor
 > "So which machines actually work? Roughly ninety percent of self-made wealth comes down to three.
-> **One: index funds.** Instead of betting on one company, you own a tiny slice of the five hundred biggest ones at once. Historically, that basket has returned around seven percent a year after inflation. Boring. And boring is exactly why it works.
+> **One: index funds.** Instead of betting on one company, you own a tiny slice of the five hundred biggest ones at once — that basket has a name: the S&P 500. Since 1957 it has returned about ten percent a year. But inflation eats roughly three of that, so what you actually keep is closer to seven. Boring. And boring is exactly why it works.
+> And no, it isn't safe. It fell fifty-seven percent between 2007 and 2009. It has always recovered — but 'always has' is not 'always will'. That's the deal you're taking.
 > **Two: real estate** — or if you don't have a down payment, REITs, which let you own a slice of property for the price of a coffee. It pays rent, and it tends to rise with inflation instead of getting eaten by it.
 > **Three: ownership** — equity in a business. Your own side project, or shares of companies you believe in. The highest risk, and the highest ceiling.
 > Now here's the part that should make you angry you weren't taught it in school. Watch what *one* of these does with a small, boring habit attached to it."
 
-> "Five hundred dollars a month. A simple index fund. Thirty years. Around seven percent, historically. Over those thirty years you personally put in a hundred and eighty thousand dollars. But you don't end with a hundred and eighty thousand. You end with **around six hundred and ten thousand.**
+> "Five hundred dollars a month. One S&P 500 index fund. Thirty years. Seven percent a year, after inflation. Over those thirty years you personally put in a hundred and eighty thousand dollars. But you don't end with a hundred and eighty thousand. You end with **around six hundred and ten thousand** — and that's in today's money, not funny future dollars.
 > Look at that gap. Four hundred and thirty thousand dollars you never worked for. Your asset made it — compounding, quietly, while you were asleep, on vacation, living your life. *That* is what a habit can never do alone, and what an asset does by design."
 
 *[Visual: 3 icons build in. Then a compound curve animates: flat line of contributions vs exploding total. Label: "$180k in → ~$610k out · illustrative, ~7%/yr". Animación ya hecha: `curva-compuesta.html`.]*

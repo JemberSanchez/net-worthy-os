@@ -73,6 +73,10 @@
   El video sale en <code>.webm</code> (VP9), que CapCut de escritorio importa sin problema.
   Si tu editor lo rechaza, súbelo tal cual a CapCut web o conviértelo a MP4.
   Los números se calculan de verdad a partir de los parámetros — no están escritos a mano.
+  <br><br>
+  <strong>Durante los ~8s de grabación deja esta pestaña al frente.</strong> Si cambias de pestaña,
+  el navegador congela la animación y el video saldría a saltos: en ese caso se aborta y
+  <em>no</em> se descarga nada, en vez de colarte un clip malo.
 </p>
 
 <script>
@@ -131,9 +135,9 @@ function layout(W,H){
     x0: W*mx,   x1: W - W*mx,       // área de dibujo de las curvas
     fx0: W*0.09, fx1: W - W*0.09,   // columnas del bloque final
     yTop:  H*(land ? 0.285 : 0.225),
-    yBot:  H*(land ? 0.665 : 0.735),
+    yBot:  H*(land ? 0.655 : 0.735),
     head:  H*(land ? 0.070 : 0.085),
-    foot:  H*(land ? 0.770 : 0.815),
+    foot:  H*(land ? 0.755 : 0.815),   // el aviso legal ahora son 2 líneas: hace falta el hueco
     ff:    land ? 0.75 : 1.0,     // factor de compresión del bloque final
     s: Math.min(W,H)/1080,
   };
@@ -183,9 +187,10 @@ function drawFrame(t){
         align:'center', alpha:aGrid*0.9, spacing:6*s});
 
   const {pmt, years, rate} = params();
-  text(`${money(pmt)}/MONTH · ${years} YEARS · ${(rate*100).toFixed(0)}% A YEAR`,
+  const rPct = +(rate*100).toFixed(1);
+  text(`${money(pmt)}/MONTH · S&P 500 · ${years} YEARS · ${rPct}% AFTER INFLATION`,
        W/2, L.head + 44*s, {size:23*s, weight:600, color:P.paper,
-       align:'center', alpha:aGrid*0.45, spacing:3*s});
+       align:'center', alpha:aGrid*0.45, spacing:2*s});
 
   // ---- rejilla + eje Y (en 16:9 el gráfico es bajo: menos líneas o se apelotonan)
   const step = (L.yBot - L.yTop) < 500 ? 200000 : 100000;
@@ -307,22 +312,31 @@ function drawFrame(t){
          {size:25*f, weight:500, color:P.paper, align:'center', alpha:aLabel*0.72});
   }
 
-  // ---- aviso YMYL (siempre visible: protege la monetización)
-  text('Illustrative. ~7% historical average, before taxes & fees. Not financial advice.',
-       W/2, H - 42*s, {size:18*s, color:P.paper, align:'center', alpha:aGrid*0.42});
+  // ---- aviso YMYL (siempre visible: protege la monetización). Dos líneas: si en pantalla se
+  // afirma un retorno REAL, hay que declarar de dónde sale el nominal, o el número no cuadra.
+  text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
+       W/2, H - 74*s, {size:18*s, color:P.paper, align:'center', alpha:aGrid*0.42});
+  text('S&P 500 has returned ≈10%/yr nominal since 1957 · Not financial advice',
+       W/2, H - 40*s, {size:18*s, color:P.paper, align:'center', alpha:aGrid*0.42});
 }
 
 // ---------- reproducción ----------
 let raf = null;
-function animate(onDone, stopAt){
-  cancelAnimationFrame(raf);
-  const t0 = performance.now();
-  (function loop(){
-    const t = (performance.now() - t0)/1000;
-    drawFrame(Math.min(t, T_END));
-    if (t < (stopAt || T_END)) raf = requestAnimationFrame(loop);
-    else if (onDone) onDone();
-  })();
+/** Corre la animación hasta stopAt y resuelve con el nº de frames dibujados
+ *  (el contador es lo que delata una grabación estrangulada). */
+function animate(stopAt = T_END){
+  return new Promise(resolve => {
+    cancelAnimationFrame(raf);
+    const t0 = performance.now();
+    let frames = 0;
+    (function loop(){
+      const t = (performance.now() - t0)/1000;
+      drawFrame(Math.min(t, T_END));
+      frames++;
+      if (t < stopAt) raf = requestAnimationFrame(loop);
+      else resolve(frames);
+    })();
+  });
 }
 
 // ---------- formato ----------
@@ -344,7 +358,7 @@ function download(blob, name){
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-document.getElementById('play').onclick = () => animate();
+document.getElementById('play').onclick = () => { statusEl.textContent = ''; animate(); };
 
 document.getElementById('png').onclick = () => {
   drawFrame(T_END);
@@ -363,27 +377,46 @@ const MIMES = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
  *    WebM de ~110 bytes (solo cabecera, cero frames).
  *  - el respiro antes de stop(): parar en el mismo tick que el último frame corta al
  *    encoder antes de que vuelque lo pendiente. */
-const TIMESLICE = 200, FLUSH_MS = 300;
+const TIMESLICE = 200, FLUSH_MS = 300, MIN_FPS = 24;
 
 async function record(){
   const mime = MIMES.find(m => MediaRecorder.isTypeSupported(m));
   if (!mime) throw new Error('Ningún formato WebM soportado en este navegador.');
+  // Si la pestaña no está al frente, el navegador estrangula requestAnimationFrame y el vídeo
+  // sale a saltos. Se detecta y se aborta: un clip malo pasaría desapercibido hasta CapCut.
+  if (document.hidden) throw new Error('la pestaña está en segundo plano. Ponla al frente y reintenta.');
+  let seFueAlFondo = false;
+  const vigilante = () => { if (document.hidden) seFueAlFondo = true; };
+  document.addEventListener('visibilitychange', vigilante);
 
-  const stream = canvas.captureStream(60);
-  const rec = new MediaRecorder(stream, {mimeType: mime, videoBitsPerSecond: 12_000_000});
-  const chunks = [];
-  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-  const stopped = new Promise(r => rec.onstop = r);
+  try {
+    const stream = canvas.captureStream(60);
+    const rec = new MediaRecorder(stream, {mimeType: mime, videoBitsPerSecond: 12_000_000});
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(r => rec.onstop = r);
 
-  rec.start(TIMESLICE);
-  await new Promise(done => animate(done, T_STOP));
-  await new Promise(r => setTimeout(r, FLUSH_MS));
-  rec.stop();
-  await stopped;
+    rec.start(TIMESLICE);
+    const frames = await animate(T_STOP);
+    await new Promise(r => setTimeout(r, FLUSH_MS));
+    rec.stop();
+    await stopped;
 
-  const blob = new Blob(chunks, {type:'video/webm'});
-  if (blob.size < 5000) throw new Error(`grabación vacía (${blob.size} bytes)`);
-  return blob;
+    if (seFueAlFondo) throw new Error(
+      'cambiaste de pestaña durante la grabación: el navegador congela la animación y el vídeo ' +
+      'sale a saltos. Reintenta sin tocar nada.');
+
+    const fps = frames / T_STOP;
+    if (fps < MIN_FPS) throw new Error(
+      `solo ${fps.toFixed(0)} fps capturados (se esperan ~60). Cierra pestañas pesadas y reintenta.`);
+
+    const blob = new Blob(chunks, {type:'video/webm'});
+    if (blob.size < 5000) throw new Error(`grabación vacía (${blob.size} bytes).`);
+    blob.fps = Math.round(fps);
+    return blob;
+  } finally {
+    document.removeEventListener('visibilitychange', vigilante);
+  }
 }
 
 document.getElementById('rec').onclick = async () => {
@@ -393,13 +426,13 @@ document.getElementById('rec').onclick = async () => {
   }
   const buttons = document.querySelectorAll('button');
   buttons.forEach(b => b.disabled = true);
-  statusEl.textContent = 'Grabando… no cambies de pestaña (~8s).';
+  statusEl.textContent = 'Grabando ~8s… deja esta pestaña al frente y no toques nada.';
   try {
     const blob = await record();
     download(blob, `net-worthy-curva-compuesta-${canvas.width}x${canvas.height}.webm`);
-    statusEl.textContent = `Listo: ${Math.round(blob.size/1024)} KB descargados. Arrástralo a CapCut.`;
+    statusEl.textContent = `Listo: ${Math.round(blob.size/1024)} KB a ${blob.fps} fps. Arrástralo a CapCut.`;
   } catch (err) {
-    statusEl.textContent = 'Error al grabar: ' + err.message;
+    statusEl.textContent = '⚠ No se descargó nada — ' + err.message;
   } finally {
     buttons.forEach(b => b.disabled = false);
   }

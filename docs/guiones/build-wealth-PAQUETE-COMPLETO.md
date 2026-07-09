@@ -38,11 +38,11 @@
 
 ### SEG 4 · THE 3 ASSETS + THE MATH (2:15–4:30) — CLÍMAX
 > *"Ninety percent of self-made wealth comes down to three assets.*
-> *One: index funds. Instead of betting on one company, you own a slice of the five hundred biggest at once. Historically, around seven percent a year after inflation. Boring — and boring is why it works.*
+> *One: index funds. Instead of betting on one company, you own a slice of the five hundred biggest at once — that basket has a name: the S&P 500. Since 1957 it's returned about ten percent a year. Inflation eats roughly three of that, so what you keep is closer to seven. Boring — and boring is why it works. And no, it isn't safe: it fell fifty-seven percent in 2008. It has always recovered. "Always has" is not "always will" — that's the deal you're taking.*
 > *Two: real estate. And before you say you can't afford it — REITs let you own a piece of property for the price of a coffee. It pays you rent, and it rises with inflation instead of getting eaten by it.*
 > *Three — and this is the one nobody expects — ownership. Equity. A slice of a business, or your own. Highest risk, highest ceiling. This is the one that turned Dylan from comfortable into wealthy.*
-> *Now here's the number that made me angry I wasn't taught it in school. Same fifty… no — let's be fair, let's give Marcus's discipline to an asset. Five hundred a month. One index fund. Thirty years. Seven percent.*
-> *You put in a hundred and eighty thousand dollars of your own money. But you don't walk away with a hundred and eighty thousand. You walk away with around six hundred and ten thousand. Look at that gap — four hundred and thirty thousand dollars you never worked a single hour for. Your asset made it while you slept. THAT is what Marcus's discipline never did alone. Same discipline, plus an engine, and the whole story changes."*
+> *Now here's the number that made me angry I wasn't taught it in school. Same fifty… no — let's be fair, let's give Marcus's discipline to an asset. Five hundred a month. One S&P 500 index fund. Thirty years. Seven percent, after inflation.*
+> *You put in a hundred and eighty thousand dollars of your own money. But you don't walk away with a hundred and eighty thousand. You walk away with around six hundred and ten thousand — and that's in today's money, not funny future dollars. Look at that gap — four hundred and thirty thousand dollars you never worked a single hour for. Your asset made it while you slept. THAT is what Marcus's discipline never did alone. Same discipline, plus an engine, and the whole story changes."*
 
 `[La curva compuesta se DIBUJA en vivo — clímax visual + emocional. Resuelve el open loop de Marcus/Dylan.]`
 `[CIFRA VERIFICADA: $500/mes, 360 meses, 7% nominal capitalizado mensual → $609,985. Aportado`
@@ -135,9 +135,13 @@ Principios: 1 emoción, ≤3 palabras, contraste alto, legible en móvil pequeñ
 Two men earned the exact same salary for 30 years. One retired broke. The other retired a
 millionaire. The difference wasn't discipline, budgeting, or waking up at 5 a.m. — it was the
 difference between HABITS and ASSETS. In this video we break down what wealth actually is, the
-3 assets behind ~90% of self-made wealth (index funds, real estate/REITs, and ownership), the
-compound math that turns $500/month into ~$610,000, and the "investment trap" that catches smart
-people. If you've been doing everything right and still feel broke, this reframes everything.
+3 assets behind ~90% of self-made wealth (S&P 500 index funds, real estate/REITs, and ownership),
+the compound math that turns $500/month into ~$610,000, and the "investment trap" that catches
+smart people. If you've been doing everything right and still feel broke, this reframes everything.
+
+Note on the numbers: the S&P 500 has returned ~10%/yr nominal since 1957, but inflation eats
+roughly 3 of that — so we model 7% REAL. The $609,985 figure is in today's purchasing power,
+not inflated future dollars. And no, index funds are not "safe": the S&P fell 57% in 2007-09.
 
 ⏱️ Chapters:
 0:00 Two men, same salary
@@ -155,7 +159,7 @@ average, before taxes/fees). Do your own research.
 ```
 
 ## 9) TAGS / KEYWORDS
-`build wealth, how to build wealth, assets vs liabilities, passive income, index funds for beginners, how to invest, financial freedom, money habits, compound interest, wealth building 2026, personal finance, how to get rich, investing for beginners, REITs explained, rich vs poor mindset`
+`build wealth, how to build wealth, assets vs liabilities, passive income, index funds for beginners, s&p 500 index fund, how to invest, financial freedom, money habits, compound interest, real vs nominal returns, wealth building 2026, personal finance, how to get rich, investing for beginners, REITs explained, rich vs poor mindset`
 
 ## 10) COMENTARIO FIJADO (genera discusión = señal de engagement)
 > *"Be honest: are you more of a Marcus (disciplined saver) or a Dylan (asset owner) right now? And what's the FIRST asset you'd buy with $500? 👇"*
@@ -164,6 +168,10 @@ average, before taxes/fees). Do your own research.
 ## 11) CTA / SESSION TIME
 - CTA final NO es "suscríbete" a secas — es "míralo en este otro video" (mantiene la sesión en YouTube = el algoritmo premia).
 - End screen: el video "3 index funds compared" (que aún no existe → es tu siguiente producción, cierra el bucle de contenido).
+- **Candidato fuerte a video #2** (salió de auditar la cifra de este): *"Why your million dollars
+  won't be a million dollars"* — al 10% nominal, $500/mes × 30 años = **$1,130,244**… que en dinero
+  de hoy son **~$465,600**. Todo el nicho enseña el número nominal y calla la inflación. Es el
+  mismo gancho de este video (te vendieron algo incompleto) aplicado a su propia promesa.
 - Pide el suscribir en el minuto ~4:30 (justo tras el pico de valor, cuando la confianza es máxima), no al inicio.
 
 ## 12) CHECKLIST YMYL (proteger monetización)
@@ -173,13 +181,21 @@ average, before taxes/fees). Do your own research.
       mensual → **$609,985** (aportado $180,000, gap **$429,985**). Con 7% *efectivo anual* daría
       $584,726 / gap $404,726. Se usa la convención nominal/mensual: es la de las calculadoras de
       interés compuesto públicas, así que el espectador que te verifique llega al mismo número.
-- [ ] NO tickers específicos "para comprar" (index fund = categoría, OK).
+- [ ] NO tickers específicos "para comprar" (index fund = categoría, OK). **Nombrar el índice
+      "S&P 500" SÍ está permitido** — es un índice, no una recomendación de compra. Lo prohibido
+      es "compra VOO/SPY".
+- [x] **NUNCA decir que el S&P es "sólido", "seguro" o "no puede fallar".** Cayó **-57%** entre
+      2007 y 2009. El guion lo dice explícitamente ("no, it isn't safe... 'always has' is not
+      'always will'"). Conceder el riesgo genera MÁS confianza que ocultarlo, y protege el canal.
+- [x] **Nominal vs real:** si dices "10% histórico" tienes que decir "≈7% tras inflación", o el
+      número final ($609,985) no cuadra. Las dos cifras juntas = autoridad; una sola = trampa.
+      (S&P 500 desde 1957: ~10,4–10,7% nominal, ~6,5–6,8% real.)
 - [ ] Sin promesas de retorno garantizado; lenguaje "historically / tends to / can".
 - [ ] Sin lenguaje que YouTube marque como "get rich quick".
 - [ ] Fuentes verificables si citas datos (retornos S&P, RPM, etc.).
 
 ## 13) ADAPTACIÓN MULTIPLATAFORMA
-- **Short/Reel/TikTok (45s):** solo hook + curva compuesta + cierre (ver guion Short). Vertical 9:16, subtítulos grandes centrados, gancho en el frame 1.
+- **Short/Reel/TikTok (~48s):** solo hook + curva compuesta + cierre (ver guion Short). Vertical 9:16, subtítulos grandes centrados, gancho en el frame 1. Cierra con la pregunta-ancla **"Could you do $50 a month?"** (casi binaria → muchos comentarios → alcance).
 - **Facebook:** mismo Short; añade 1 línea de texto en el post ("Same salary, opposite result 👇"). FB premia el texto del post.
 - **Instagram Reel:** igual que TikTok; usa 3–5 hashtags, no 15.
 - **YouTube Short como embudo:** al final "full breakdown on my channel" → tráfico al largo (donde está el RPM).
