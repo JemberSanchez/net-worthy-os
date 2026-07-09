@@ -2,8 +2,19 @@ NET WORTHY — SHORT 45s "Habits vs Assets"
 ref: build-wealth-assets-vs-habits-2026-07
 
 ===========================================================================
+!! ANTES DE GENERAR: NECESITAS EL PLAN STARTER ($5/mes)
+===========================================================================
+El plan GRATIS de ElevenLabs no da licencia comercial, prohibe canales
+monetizados, obliga a poner "elevenlabs.io" en el TITULO del video, y marca
+el audio con watermark. Los derechos se conceden AL GENERAR: lo que hagas en
+gratis no gana derechos aunque pagues despues -> habria que regenerarlo.
+Lo generado con plan de pago conserva derechos comerciales para siempre,
+incluso si cancelas la suscripcion luego.
+Alternativas gratis CON derechos: Google Cloud TTS o Piper (peor calidad).
+
+===========================================================================
 AJUSTES ELEVENLABS  (voz Brian · modelo Multilingual v2)
-   stability 50 · similarity 75 · style 35 · speaker boost ON
+   stability 50 · similarity 75 · style 35 · speaker boost ON · speed 1.0
 ===========================================================================
 
 PEGA SOLO EL BLOQUE DE ABAJO. Ya lleva los numeros escritos como se pronuncian

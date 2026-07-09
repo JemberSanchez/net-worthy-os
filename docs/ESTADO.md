@@ -61,9 +61,13 @@ Tests: `python -m unittest discover -s tests -q`.
   b-roll, YMYL): **`docs/guiones/build-wealth-PAQUETE-COMPLETO.md`**.
 - Registrado: `creative_decision` + `production_dna` con ref **`build-wealth-assets-vs-habits-2026-07`**.
 
-## 7. PRODUCCIÓN — stack gratis recomendado (ver memoria [[production-stack]])
+## 7. PRODUCCIÓN — stack (ver memoria [[production-stack]])
 - **Voz:** ElevenLabs — voz **Brian**, modelo **Multilingual v2**, stability 50 / similarity 75 /
-  style 35 / speaker boost ON. (Guion del Short listo para TTS ya entregado.)
+  style 35 / speaker boost ON. Guion listo para TTS en `docs/guiones/short-TTS.txt`.
+  ⚠️ **REQUIERE plan Starter ($5/mes)**: el gratis no da licencia comercial, prohíbe canales
+  monetizados y exige "elevenlabs.io" en el título. Los derechos se conceden AL GENERAR, así que
+  el audio hecho en gratis NO se legaliza pagando después. Alternativas gratis con derechos:
+  Google Cloud TTS / Piper (peor calidad).
 - **Edición:** CapCut (subtítulos auto). **B-roll:** Pexels/Pixabay. **Miniatura:** Canva.
   **Música:** YouTube Audio Library. **IA imagen:** Ideogram/Bing.
 - Nota MCP: en sesiones no-interactivas Claude **no** puede conectar/usar MCPs (OAuth). ElevenLabs
