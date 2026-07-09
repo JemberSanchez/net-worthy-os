@@ -79,7 +79,9 @@ CONGELADO (docs/POLITICA.md), hito = 10 videos instrumentados.
 Camino más barato = el **Short de 45s** (hook Marcus vs Dylan) para probar el gancho:
 ```
 1. Voz    → ElevenLabs (Brian, ajustes de §7), pega el guion del Short → MP3
-2. Editor → CapCut: voz + b-roll Pexels + subtítulos + animación curva ($180k→$600k) + música
+2. Editor → CapCut: voz + b-roll Pexels + subtítulos + animación curva + música
+     La curva YA está hecha: abre `docs/guiones/curva-compuesta.html` en Chrome →
+     "Grabar y descargar video" → .webm 9:16 (y "Frame final PNG" = miniatura B). $180k→$610k.
 3. Publica → Short en YouTube + cross-post TikTok/IG/FB
 4. Mide y cierra el bucle (PRIMER dato real del sistema):
      python -m omega.cli record-analytics   (CTR/retención)
@@ -87,8 +89,10 @@ Camino más barato = el **Short de 45s** (hook Marcus vs Dylan) para probar el g
      python -m omega.cli record-outcome build-wealth-assets-vs-habits-2026-07 <0..1>
      python -m omega.cli dna
 ```
-Pendiente opcional que Claude puede generar sin conectores: la **animación de la curva compuesta**
-(HTML con la marca, para grabar en pantalla). Es el único visual "difícil" del guion.
+~~Pendiente: animación de la curva.~~ **HECHA** (2026-07-09): `docs/guiones/curva-compuesta.html`
+— se auto-graba a `.webm` (9:16 y 16:9) y exporta PNG de miniatura. Verificada en navegador.
+De paso se corrigió una cifra falsa del guion: el gap NO era $420k sino **$429,985** ($609,985
+final, no ~$600k). Convención: 7% nominal capitalizado mensual.
 
 ## 10. Cómo arrancar el nuevo chat
 *"Lee docs/ESTADO.md y CLAUDE.md. Vamos a producir el primer video (build-wealth, Short). Ayúdame

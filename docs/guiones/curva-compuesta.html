@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Net Worthy — Curva compuesta (exportable a video)</title>
+<style>
+  :root{
+    --ink:#0A1A14; --growth:#1F9E6E; --brass:#D8B25A; --paper:#F4F6F3; --grey:#5C6E64;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:24px; background:#07120E; color:var(--paper);
+    font:15px/1.5 "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+  }
+  h1{font-size:18px; font-weight:600; margin:0; letter-spacing:.02em}
+  h1 small{color:var(--grey); font-weight:400; display:block; font-size:13px; margin-top:4px}
+  #stage{
+    border:1px solid #1d2f27; border-radius:10px; overflow:hidden; line-height:0;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+  }
+  canvas{display:block; max-height:66vh; max-width:100%; height:auto; width:auto}
+  .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center}
+  button{
+    background:var(--growth); color:#04120C; border:0; border-radius:7px;
+    padding:10px 16px; font-weight:650; font-size:14px; cursor:pointer;
+    font-family:inherit; transition:filter .15s;
+  }
+  button:hover:not(:disabled){filter:brightness(1.12)}
+  button:disabled{opacity:.45; cursor:not-allowed}
+  button.ghost{background:transparent; color:var(--paper); border:1px solid #2b4238}
+  button.brass{background:var(--brass); color:#1a1204}
+  button.on{outline:2px solid var(--brass); outline-offset:2px}
+  .params{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; color:var(--grey); font-size:13px}
+  .params label{display:flex; align-items:center; gap:6px}
+  .params input{
+    width:74px; background:#0d1c16; border:1px solid #23382e; color:var(--paper);
+    border-radius:5px; padding:6px 8px; font:inherit; font-size:13px;
+  }
+  #status{min-height:20px; font-size:13px; color:var(--brass); text-align:center}
+  .note{max-width:620px; color:var(--grey); font-size:12.5px; text-align:center; line-height:1.6}
+  .note code{background:#0d1c16; padding:1px 5px; border-radius:4px; color:var(--paper)}
+</style>
+</head>
+<body>
+
+<h1>Curva compuesta — Net Worthy
+  <small>Se graba desde el canvas y se descarga como video. No hace falta grabar pantalla.</small>
+</h1>
+
+<div class="params">
+  <label>Aporte/mes $ <input id="pmt" type="number" value="500" min="1" step="50"></label>
+  <label>Años <input id="years" type="number" value="30" min="1" max="60"></label>
+  <label>Retorno %/año <input id="rate" type="number" value="7" min="0" max="30" step="0.5"></label>
+</div>
+
+<div class="row">
+  <button id="f916" class="ghost on">9:16 · Short</button>
+  <button id="f169" class="ghost">16:9 · Largo</button>
+</div>
+
+<div id="stage"><canvas id="c" width="1080" height="1920"></canvas></div>
+
+<div class="row">
+  <button id="play">▶ Reproducir</button>
+  <button id="rec">⏺ Grabar y descargar video</button>
+  <button id="png" class="brass">⬇ Frame final (PNG · miniatura)</button>
+</div>
+
+<div id="status"></div>
+
+<p class="note">
+  El video sale en <code>.webm</code> (VP9), que CapCut de escritorio importa sin problema.
+  Si tu editor lo rechaza, súbelo tal cual a CapCut web o conviértelo a MP4.
+  Los números se calculan de verdad a partir de los parámetros — no están escritos a mano.
+</p>
+
+<script>
+const P = { ink:'#0A1A14', growth:'#1F9E6E', brass:'#D8B25A', paper:'#F4F6F3', grey:'#5C6E64' };
+
+// --- Línea de tiempo de la animación (segundos) ---
+const T_GRID  = 0.5;   // fade in de ejes
+const T_DRAW  = 5.0;   // las curvas terminan de dibujarse
+const T_PUNCH = 5.6;   // golpe del número final + aparece el área del gap
+const T_LABEL = 6.2;   // entran las etiquetas finales
+const T_END   = 7.4;   // hold final
+const T_STOP  = 7.7;   // se corta la grabación
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+
+const money = v => '$' + Math.round(v).toLocaleString('en-US');
+const lerp = (a,b,t) => a + (b-a)*t;
+const clamp01 = t => Math.max(0, Math.min(1, t));
+
+function params(){
+  const pmt   = Math.max(1, +document.getElementById('pmt').value   || 500);
+  const years = Math.max(1, +document.getElementById('years').value || 30);
+  const rate  = Math.max(0, +document.getElementById('rate').value  || 7) / 100;
+  return {pmt, years, rate};
+}
+
+/** Serie mensual real: 7% nominal capitalizado mensualmente (convención de las
+ *  calculadoras de interés compuesto). El saldo se compone y luego entra el aporte. */
+function series(){
+  const {pmt, years, rate} = params();
+  const n = years*12, r = rate/12;
+  const total = [], contrib = [];
+  let bal = 0;
+  for (let i=1; i<=n; i++){
+    bal = bal*(1+r) + pmt;
+    total.push(bal);
+    contrib.push(pmt*i);
+  }
+  return {total, contrib, n, years,
+          finalTotal: total[n-1], finalContrib: contrib[n-1],
+          gap: total[n-1] - contrib[n-1]};
+}
+
+/** En 16:9 sobra ancho y falta ALTO: el gráfico se acorta y el bloque final se compacta (ff),
+ *  o el subtítulo del gap acabaría pisando el aviso legal del borde inferior. */
+function layout(W,H){
+  const land = W > H;
+  return {
+    x0: W*0.09, x1: W - W*0.09,
+    yTop:  H*(land ? 0.30  : 0.255),
+    yBot:  H*(land ? 0.66  : 0.685),
+    head:  H*(land ? 0.075 : 0.095),
+    foot:  H*(land ? 0.76  : 0.765),
+    ff:    land ? 0.80 : 1.0,     // factor de compresión del bloque final
+    s: Math.min(W,H)/1080,
+  };
+}
+
+function font(px, weight){ return `${weight||400} ${px}px "Segoe UI", Inter, system-ui, sans-serif`; }
+
+function text(str, x, y, {size=40, weight=400, color=P.paper, align='left', alpha=1, spacing=0}={}){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.font = font(size, weight);
+  ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
+  try { ctx.letterSpacing = spacing + 'px'; } catch(e){}
+  ctx.fillText(str, x, y);
+  ctx.restore();
+}
+
+/** Dibuja el frame en el instante t. Es PURA: mismo t -> mismo frame (por eso el PNG funciona). */
+function drawFrame(t){
+  const W = canvas.width, H = canvas.height;
+  const L = layout(W,H), s = L.s;
+  const D = series();
+  const maxY = D.finalTotal * 1.10;
+
+  const px = i => lerp(L.x0, L.x1, i/(D.n-1));
+  const py = v => lerp(L.yBot, L.yTop, v/maxY);
+
+  // ---- fondo
+  ctx.fillStyle = P.ink;
+  ctx.fillRect(0,0,W,H);
+  const g = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, Math.max(W,H)*0.75);
+  g.addColorStop(0, 'rgba(31,158,110,0.09)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  const aGrid  = clamp01(t / T_GRID);
+  const pDraw  = clamp01((t - T_GRID) / (T_DRAW - T_GRID));
+  const aGap   = clamp01((t - T_DRAW) / (T_PUNCH - T_DRAW));
+  const aLabel = clamp01((t - T_PUNCH) / (T_LABEL - T_PUNCH));
+  const idx    = Math.max(0, Math.floor(pDraw * (D.n-1)));
+
+  // ---- marca
+  text('NET WORTHY', W/2, L.head, {size:26*s, weight:700, color:P.brass,
+        align:'center', alpha:aGrid*0.9, spacing:6*s});
+
+  const {pmt, years, rate} = params();
+  text(`${money(pmt)}/MONTH · ${years} YEARS · ${(rate*100).toFixed(0)}% A YEAR`,
+       W/2, L.head + 42*s, {size:23*s, weight:600, color:P.paper,
+       align:'center', alpha:aGrid*0.45, spacing:3*s});
+
+  // ---- rejilla + eje Y
+  ctx.save();
+  ctx.globalAlpha = aGrid*0.5;
+  ctx.strokeStyle = '#1E362C'; ctx.lineWidth = Math.max(1, 1.5*s);
+  for (let v=100000; v<=maxY; v+=100000){
+    const y = py(v);
+    ctx.beginPath(); ctx.moveTo(L.x0, y); ctx.lineTo(L.x1, y); ctx.stroke();
+    text('$'+(v/1000)+'k', L.x0 - 14*s, y + 8*s,
+         {size:21*s, color:P.grey, align:'right', alpha:1});
+  }
+  ctx.beginPath(); ctx.moveTo(L.x0, L.yBot); ctx.lineTo(L.x1, L.yBot);
+  ctx.strokeStyle = '#2B4238'; ctx.lineWidth = Math.max(1, 2*s); ctx.stroke();
+  ctx.restore();
+
+  // ---- eje X (años cada 5)
+  for (let yr=0; yr<=D.years; yr+=5){
+    const i = Math.min(D.n-1, yr*12);
+    text(String(yr), px(i), L.yBot + 34*s,
+         {size:20*s, color:P.grey, align:'center', alpha:aGrid*0.75});
+  }
+  text('YEARS', (L.x0+L.x1)/2, L.yBot + 66*s,
+       {size:18*s, weight:600, color:P.grey, align:'center', alpha:aGrid*0.55, spacing:3*s});
+
+  // ---- área del gap (entre las dos curvas)
+  if (aGap > 0){
+    ctx.save();
+    ctx.globalAlpha = aGap * 0.20;
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(D.total[0]));
+    for (let i=1; i<=idx; i++) ctx.lineTo(px(i), py(D.total[i]));
+    for (let i=idx; i>=0; i--) ctx.lineTo(px(i), py(D.contrib[i]));
+    ctx.closePath();
+    ctx.fillStyle = P.brass; ctx.fill();
+    ctx.restore();
+  }
+
+  // ---- línea de aportes (gris, plana)
+  ctx.save();
+  ctx.globalAlpha = aGrid;
+  ctx.strokeStyle = P.grey; ctx.lineWidth = Math.max(2, 5*s);
+  ctx.setLineDash([14*s, 10*s]); ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(px(0), py(D.contrib[0]));
+  for (let i=1; i<=idx; i++) ctx.lineTo(px(i), py(D.contrib[i]));
+  ctx.stroke();
+  ctx.restore();
+
+  // ---- curva compuesta (verde, con glow)
+  ctx.save();
+  ctx.globalAlpha = aGrid;
+  ctx.strokeStyle = P.growth; ctx.lineWidth = Math.max(3, 9*s);
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.shadowColor = 'rgba(31,158,110,0.85)'; ctx.shadowBlur = 34*s;
+  ctx.beginPath(); ctx.moveTo(px(0), py(D.total[0]));
+  for (let i=1; i<=idx; i++) ctx.lineTo(px(i), py(D.total[i]));
+  ctx.stroke();
+  ctx.restore();
+
+  // ---- punto que avanza
+  if (aGrid > 0.9){
+    const cx = px(idx), cy = py(D.total[idx]);
+    ctx.save();
+    ctx.shadowColor = P.growth; ctx.shadowBlur = 30*s;
+    ctx.fillStyle = P.paper;
+    ctx.beginPath(); ctx.arc(cx, cy, 11*s, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // ---- contador grande (con golpe al terminar)
+  const shown = D.total[idx];
+  let scale = 1;
+  if (t > T_DRAW && t < T_PUNCH) scale = 1 + 0.13*Math.sin(Math.PI*((t-T_DRAW)/(T_PUNCH-T_DRAW)));
+  ctx.save();
+  ctx.translate(W/2, L.head + 132*s);
+  ctx.scale(scale, scale);
+  ctx.shadowColor = 'rgba(31,158,110,0.5)'; ctx.shadowBlur = 26*s;
+  text(money(shown), 0, 0, {size:96*s, weight:800, color:P.paper, align:'center', alpha:aGrid});
+  ctx.restore();
+
+  const yrNow = Math.min(D.years, Math.floor(idx/12) + 1);
+  text(pDraw >= 1 ? 'AFTER ' + D.years + ' YEARS' : 'YEAR ' + yrNow,
+       W/2, L.head + 172*s, {size:22*s, weight:600, color:P.brass,
+       align:'center', alpha:aGrid*0.85, spacing:4*s});
+
+  // ---- etiquetas finales
+  if (aLabel > 0){
+    const f = s * L.ff;  // el bloque final se compacta en 16:9
+    const yA = L.foot, colL = L.x0 + (L.x1-L.x0)*0.02, colR = L.x1 - (L.x1-L.x0)*0.02;
+
+    text('YOU PAID IN', colL, yA, {size:22*f, weight:600, color:P.grey,
+          align:'left', alpha:aLabel, spacing:2*f});
+    text(money(D.finalContrib), colL, yA + 52*f, {size:52*f, weight:700,
+          color:P.grey, align:'left', alpha:aLabel});
+
+    text('YOU WALK AWAY WITH', colR, yA, {size:22*f, weight:600, color:P.growth,
+          align:'right', alpha:aLabel, spacing:2*f});
+    text(money(D.finalTotal), colR, yA + 52*f, {size:52*f, weight:700,
+          color:P.growth, align:'right', alpha:aLabel});
+
+    ctx.save();
+    ctx.globalAlpha = aLabel;
+    ctx.strokeStyle = 'rgba(216,178,90,0.35)'; ctx.lineWidth = Math.max(1,1.5*s);
+    ctx.beginPath(); ctx.moveTo(colL, yA + 88*f); ctx.lineTo(colR, yA + 88*f); ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(216,178,90,0.55)'; ctx.shadowBlur = 22*s;
+    text(money(D.gap), W/2, yA + 162*f, {size:74*f, weight:800,
+          color:P.brass, align:'center', alpha:aLabel});
+    ctx.restore();
+    text('you never worked a single hour for', W/2, yA + 202*f,
+         {size:25*f, weight:500, color:P.paper, align:'center', alpha:aLabel*0.72});
+  }
+
+  // ---- aviso YMYL (siempre visible: protege la monetización)
+  text('Illustrative. ~7% historical average, before taxes & fees. Not financial advice.',
+       W/2, H - 42*s, {size:18*s, color:P.paper, align:'center', alpha:aGrid*0.42});
+}
+
+// ---------- reproducción ----------
+let raf = null;
+function animate(onDone, stopAt){
+  cancelAnimationFrame(raf);
+  const t0 = performance.now();
+  (function loop(){
+    const t = (performance.now() - t0)/1000;
+    drawFrame(Math.min(t, T_END));
+    if (t < (stopAt || T_END)) raf = requestAnimationFrame(loop);
+    else if (onDone) onDone();
+  })();
+}
+
+// ---------- formato ----------
+function setFormat(w,h,btn){
+  canvas.width = w; canvas.height = h;
+  document.querySelectorAll('#f916,#f169').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  drawFrame(T_END);
+}
+document.getElementById('f916').onclick = e => setFormat(1080,1920, e.target);
+document.getElementById('f169').onclick = e => setFormat(1920,1080, e.target);
+
+// ---------- descargas ----------
+function download(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+document.getElementById('play').onclick = () => animate();
+
+document.getElementById('png').onclick = () => {
+  drawFrame(T_END);
+  canvas.toBlob(b => {
+    download(b, `net-worthy-curva-${canvas.width}x${canvas.height}.png`);
+    statusEl.textContent = 'PNG descargado (sirve de miniatura variante B).';
+  }, 'image/png');
+};
+
+const MIMES = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+
+/** Graba la animación y devuelve el Blob.
+ *
+ *  Dos detalles NO opcionales, aprendidos a base de obtener un archivo vacío:
+ *  - start(TIMESLICE): sin timeslice el encoder puede no emitir ni un cluster y sale un
+ *    WebM de ~110 bytes (solo cabecera, cero frames).
+ *  - el respiro antes de stop(): parar en el mismo tick que el último frame corta al
+ *    encoder antes de que vuelque lo pendiente. */
+const TIMESLICE = 200, FLUSH_MS = 300;
+
+async function record(){
+  const mime = MIMES.find(m => MediaRecorder.isTypeSupported(m));
+  if (!mime) throw new Error('Ningún formato WebM soportado en este navegador.');
+
+  const stream = canvas.captureStream(60);
+  const rec = new MediaRecorder(stream, {mimeType: mime, videoBitsPerSecond: 12_000_000});
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(r => rec.onstop = r);
+
+  rec.start(TIMESLICE);
+  await new Promise(done => animate(done, T_STOP));
+  await new Promise(r => setTimeout(r, FLUSH_MS));
+  rec.stop();
+  await stopped;
+
+  const blob = new Blob(chunks, {type:'video/webm'});
+  if (blob.size < 5000) throw new Error(`grabación vacía (${blob.size} bytes)`);
+  return blob;
+}
+
+document.getElementById('rec').onclick = async () => {
+  if (typeof MediaRecorder === 'undefined'){
+    statusEl.textContent = 'Tu navegador no soporta MediaRecorder. Usa Chrome o Edge.';
+    return;
+  }
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(b => b.disabled = true);
+  statusEl.textContent = 'Grabando… no cambies de pestaña (~8s).';
+  try {
+    const blob = await record();
+    download(blob, `net-worthy-curva-compuesta-${canvas.width}x${canvas.height}.webm`);
+    statusEl.textContent = `Listo: ${Math.round(blob.size/1024)} KB descargados. Arrástralo a CapCut.`;
+  } catch (err) {
+    statusEl.textContent = 'Error al grabar: ' + err.message;
+  } finally {
+    buttons.forEach(b => b.disabled = false);
+  }
+};
+
+drawFrame(T_END);
+</script>
+</body>
+</html>

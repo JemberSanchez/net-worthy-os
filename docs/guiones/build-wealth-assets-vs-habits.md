@@ -3,7 +3,8 @@
 > Faceless, EN, evergreen. Narración TTS/voz + texto en pantalla + b-roll. Ritmo: rápido, sin
 > relleno. Regla de oro: cada línea abre curiosidad o paga una; nunca ambas cosas a medias.
 > Disclaimer "Not financial advice" fijo en descripción + on-screen a los ~0:05 del largo.
-> Cifras: supuesto declarado (7% anual histórico ilustrativo). VERIFICAR antes de publicar.
+> Cifras VERIFICADAS (2026-07-09): $500/mes × 360 meses × 7% nominal capitalizado mensual →
+> **$609,985** final, $180,000 aportado, gap **$429,985**. (Antes decía $600k/$420k: mal.)
 
 ---
 
@@ -15,8 +16,8 @@
 | 0:07 | "Here's why: habits don't build wealth. Assets do." | **HABITS ❌  ASSETS ✅** | Afirmación tajante = pattern break. Abre el gap |
 | 0:12 | "An asset is anything that pays you or grows while you sleep. A habit costs you time. An asset buys it back." | Split: reloj vaciándose vs gráfica subiendo | Definición en 1 frase = claridad = confianza |
 | 0:20 | "Watch. Five hundred a month into a simple index fund. Thirty years. Around seven percent a year, historically." | **$500/mo × 30 yrs @ ~7%** (nota: illustrative) | "Watch" = micro-promesa. Números concretos = credibilidad |
-| 0:28 | "You put in a hundred eighty grand. You walk away with around six hundred thousand." | **Paid in: $180k → End: ~$600k** contador animado | El salto visual es el pico dopamina |
-| 0:34 | "That extra four hundred twenty thousand? You didn't earn it. Your asset did — while you slept." | **+$420,000 (you slept)** | Reencuadre emocional: el dinero trabajó, no tú |
+| 0:28 | "You put in a hundred eighty grand. You walk away with around six hundred and ten thousand." | **Paid in: $180k → End: ~$610k** contador animado (usa `curva-compuesta.html`) | El salto visual es el pico dopamina |
+| 0:34 | "That extra four hundred and thirty thousand? You didn't earn it. Your asset did — while you slept." | **+$430,000 (you slept)** | Reencuadre emocional: el dinero trabajó, no tú |
 | 0:40 | "Habits make you disciplined. Assets make you rich. Full breakdown up top." | **The 3 assets → full video** flecha arriba | Cierre memorable + CTA al largo |
 
 **Notas Short:** subtítulos quemados SIEMPRE (85% ve sin sonido). Música percusiva sube en 0:28.
@@ -54,10 +55,10 @@ Corte cada 1.5–2.5s. Caption: "Not financial advice · illustrative 7% histori
 > **Three: ownership** — equity in a business. Your own side project, or shares of companies you believe in. The highest risk, and the highest ceiling.
 > Now here's the part that should make you angry you weren't taught it in school. Watch what *one* of these does with a small, boring habit attached to it."
 
-> "Five hundred dollars a month. A simple index fund. Thirty years. Around seven percent, historically. Over those thirty years you personally put in a hundred and eighty thousand dollars. But you don't end with a hundred and eighty thousand. You end with **around six hundred thousand.**
-> Look at that gap. Four hundred and twenty thousand dollars you never worked for. Your asset made it — compounding, quietly, while you were asleep, on vacation, living your life. *That* is what a habit can never do alone, and what an asset does by design."
+> "Five hundred dollars a month. A simple index fund. Thirty years. Around seven percent, historically. Over those thirty years you personally put in a hundred and eighty thousand dollars. But you don't end with a hundred and eighty thousand. You end with **around six hundred and ten thousand.**
+> Look at that gap. Four hundred and thirty thousand dollars you never worked for. Your asset made it — compounding, quietly, while you were asleep, on vacation, living your life. *That* is what a habit can never do alone, and what an asset does by design."
 
-*[Visual: 3 icons build in. Then a compound curve animates: flat line of contributions vs exploding total. Label: "$180k in → ~$600k out · illustrative, ~7%/yr".]*
+*[Visual: 3 icons build in. Then a compound curve animates: flat line of contributions vs exploding total. Label: "$180k in → ~$610k out · illustrative, ~7%/yr". Animación ya hecha: `curva-compuesta.html`.]*
 *Retención: lista numerada (cerebro adora listas) → "should make you angry" (emoción) → el gráfico compuesto ES el clímax visual.*
 
 ### SEG 5 — WHERE HABITS *DO* WIN (4:00–5:00) · honestidad = confianza

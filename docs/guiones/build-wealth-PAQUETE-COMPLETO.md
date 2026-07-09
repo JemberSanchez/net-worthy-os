@@ -42,9 +42,11 @@
 > *Two: real estate. And before you say you can't afford it — REITs let you own a piece of property for the price of a coffee. It pays you rent, and it rises with inflation instead of getting eaten by it.*
 > *Three — and this is the one nobody expects — ownership. Equity. A slice of a business, or your own. Highest risk, highest ceiling. This is the one that turned Dylan from comfortable into wealthy.*
 > *Now here's the number that made me angry I wasn't taught it in school. Same fifty… no — let's be fair, let's give Marcus's discipline to an asset. Five hundred a month. One index fund. Thirty years. Seven percent.*
-> *You put in a hundred and eighty thousand dollars of your own money. But you don't walk away with a hundred and eighty thousand. You walk away with around six hundred thousand. Look at that gap — four hundred and twenty thousand dollars you never worked a single hour for. Your asset made it while you slept. THAT is what Marcus's discipline never did alone. Same discipline, plus an engine, and the whole story changes."*
+> *You put in a hundred and eighty thousand dollars of your own money. But you don't walk away with a hundred and eighty thousand. You walk away with around six hundred and ten thousand. Look at that gap — four hundred and thirty thousand dollars you never worked a single hour for. Your asset made it while you slept. THAT is what Marcus's discipline never did alone. Same discipline, plus an engine, and the whole story changes."*
 
 `[La curva compuesta se DIBUJA en vivo — clímax visual + emocional. Resuelve el open loop de Marcus/Dylan.]`
+`[CIFRA VERIFICADA: $500/mes, 360 meses, 7% nominal capitalizado mensual → $609,985. Aportado`
+`$180,000. Gap $429,985. El guion anterior decía "$420,000": no salía de ninguna convención.]`
 
 ### SEG 5 · WHERE HABITS DO WIN (4:30–5:20) — honestidad = confianza
 > *"Now I'm not telling you habits are useless — that would be dumb, and anyone who tells you to burn your budget is selling something. Here's the honest version: habits are the fuel line to the engine. That five-dollar coffee, skipped and redirected into an asset, becomes almost eighteen thousand dollars in ten years. The habit didn't build that. The habit just fed the asset faster. So the rule is simple: a habit is only worth what it buys you in ownership."*
@@ -81,9 +83,9 @@
 - **Ritmo de corte:** largo = nuevo plano/zoom/texto cada 3–5s; short = cada 1.5–2.5s. Nunca plano estático hablando > 4s.
 - **0:00:** hard cut sin logo/intro. Texto que SLAM entra con un golpe de sonido (whoosh + bass hit).
 - **Personajes (Marcus/Dylan):** dos siluetas/íconos con nombre en pantalla; color frío para Marcus, cálido para Dylan.
-- **SEG 4 la curva:** zoom-in lento mientras se dibuja; el número final ($600k) entra con punch + partícula. Este es el frame que más se re-ve — hazlo el más pulido.
-- **Zooms:** micro-zoom (punch-in) en cada frase clave ("assets do", "ownership", "$420,000").
-- **SFX:** tick suave al aparecer cada cifra; "cha-ching" sutil solo en el $600k; swoosh en transiciones.
+- **SEG 4 la curva:** zoom-in lento mientras se dibuja; el número final ($610k) entra con punch + partícula. Este es el frame que más se re-ve — hazlo el más pulido. (Ya viene con punch en `curva-compuesta.html`.)
+- **Zooms:** micro-zoom (punch-in) en cada frase clave ("assets do", "ownership", "$430,000").
+- **SFX:** tick suave al aparecer cada cifra; "cha-ching" sutil solo en el $610k; swoosh en transiciones.
 - **Texto en pantalla:** palabras clave quemadas SIEMPRE (85% ve en mute), keyword en color de acento.
 - **Música:** lo-fi/corporate sutil; sube en SEG 4 (clímax), baja en SEG 5 (confianza/calma), vuelve en cierre.
 - **B-roll:** cambia mínimo cada 5s; nunca dejar el mismo clip 2 frases seguidas.
@@ -103,7 +105,11 @@
 10. `Person calmly setting up an automatic transfer on a phone banking app, clean UI, hopeful morning light`
 
 ## 5) PROMPTS DE ANIMACIÓN (After Effects / motion / plantilla)
-- **Compound curve:** `animated line chart, flat grey "contributions" line vs exploding green "total" curve, counter ticking from $0 to ~$600,000 over 4 seconds, labels "You paid: $180k" and "You keep: ~$600k", clean fintech style, dark bg`
+> **La compound curve YA ESTÁ HECHA:** abre `docs/guiones/curva-compuesta.html` en Chrome/Edge y
+> pulsa **"Grabar y descargar video"** → `.webm` (9:16 o 16:9) listo para CapCut. Sin grabar
+> pantalla. El botón **"Frame final (PNG)"** exporta la miniatura variante B. Los números se
+> calculan de la serie mensual real, no están escritos a mano.
+- **Compound curve:** `animated line chart, flat grey "contributions" line vs exploding green "total" curve, counter ticking from $0 to ~$610,000 over 4 seconds, labels "You paid: $180k" and "You keep: ~$610k", clean fintech style, dark bg`
 - **Marcus vs Dylan bars:** `two vertical bars racing up over 30 years timeline, Marcus bar stays low (grey), Dylan bar rockets (gold), end labels "$0" vs "$1M+"`
 - **Asset vs liability:** `split animation, left "ASSET" with green arrow of coins flowing INTO a wallet, right "LIABILITY" with red arrow of coins flowing OUT, icons: index fund, house, business vs car, course, gadget`
 
@@ -112,14 +118,15 @@
 ## 6) MINIATURA (2 variantes, diseñadas por CTR)
 Principios: 1 emoción, ≤3 palabras, contraste alto, legible en móvil pequeño, curiosidad + tensión.
 - **A (comparación):** split vertical. Izq gris: cerdito-hucha + "5 A.M." tachado. Der dorado: casa+gráfica subiendo. Texto enorme: **"HABITS ≠ RICH"**. Cara/emoji shock opcional en esquina.
-- **B (número + gap):** fondo oscuro, curva verde disparada, texto gigante **"$180K → $600K"** y debajo pequeño en rojo **"while you slept"**. Flecha señalando el salto.
+- **B (número + gap):** fondo oscuro, curva verde disparada, texto gigante **"$180K → $610K"** y debajo pequeño en rojo **"while you slept"**. Flecha señalando el salto.
+  *(El botón "Frame final (PNG)" de `curva-compuesta.html` te da esta imagen ya renderizada.)*
 - **Test:** sube con A; si CTR < 4% a las 48h, cambia a B (YouTube permite cambiar miniatura sin perder el video).
 
 ## 7) TÍTULOS (A/B — 5 variantes, ordenadas por fuerza)
 1. `Why Your Money Habits Will Never Make You Rich`
 2. `Two Men, Same Salary — One Retired Broke (Here's Why)`
 3. `You're Building Wealth Wrong (Habits vs Assets)`
-4. `The $420,000 Difference No One Taught You`
+4. `The $430,000 Difference No One Taught You`
 5. `Stop Budgeting. Start Owning. (The Truth About Wealth)`
 > Empieza con 1 o 2. YouTube deja probar título; si CTR bajo a las 24–48h, rota al siguiente.
 
@@ -129,7 +136,7 @@ Two men earned the exact same salary for 30 years. One retired broke. The other 
 millionaire. The difference wasn't discipline, budgeting, or waking up at 5 a.m. — it was the
 difference between HABITS and ASSETS. In this video we break down what wealth actually is, the
 3 assets behind ~90% of self-made wealth (index funds, real estate/REITs, and ownership), the
-compound math that turns $500/month into ~$600,000, and the "investment trap" that catches smart
+compound math that turns $500/month into ~$610,000, and the "investment trap" that catches smart
 people. If you've been doing everything right and still feel broke, this reframes everything.
 
 ⏱️ Chapters:
@@ -162,7 +169,10 @@ average, before taxes/fees). Do your own research.
 ## 12) CHECKLIST YMYL (proteger monetización)
 - [ ] "Not financial advice" en descripción + on-screen ~0:05.
 - [ ] Cifras con supuesto declarado ("≈7% historical, before taxes/fees, illustrative").
-- [ ] Recalcular el número: $500/mo × 360 × 7% → verificar ≈ $600k (aportado $180k).
+- [x] **Recalcular el número (HECHO 2026-07-09):** $500/mo × 360 meses × 7% nominal capitalizado
+      mensual → **$609,985** (aportado $180,000, gap **$429,985**). Con 7% *efectivo anual* daría
+      $584,726 / gap $404,726. Se usa la convención nominal/mensual: es la de las calculadoras de
+      interés compuesto públicas, así que el espectador que te verifique llega al mismo número.
 - [ ] NO tickers específicos "para comprar" (index fund = categoría, OK).
 - [ ] Sin promesas de retorno garantizado; lenguaje "historically / tends to / can".
 - [ ] Sin lenguaje que YouTube marque como "get rich quick".
