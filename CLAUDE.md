@@ -31,9 +31,13 @@ Hito actual: **10 videos instrumentados**. Progreso = filas del dataset, no comm
 No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
 ## Estado actual
-Sistema construido, auditado, sin bugs que afecten decisiones (87 tests). `production_outcome = 0`:
-el moat está vacío hasta el primer video. Idea lista: build-wealth "assets vs habits"
-(guion completo en docs/guiones/). **El único pendiente real es PRODUCIR Y PUBLICAR el video #1.**
+Sistema construido, auditado, sin bugs que afecten decisiones (87 tests, DB reseteada limpia).
+`decide` ya pondera por DINERO (feature monetization/RPM), no solo vistas. `production_outcome = 0`:
+el moat está vacío hasta el primer video. **Marca hecha y EN VIVO** (Net Worthy @networthytv; kit en
+`marca/`). Primer video decidido, empaquetado e instrumentado: build-wealth "assets vs habits", ref
+`build-wealth-assets-vs-habits-2026-07` (paquete en `docs/guiones/build-wealth-PAQUETE-COMPLETO.md`).
+Producción: stack gratis (ElevenLabs voz Brian + CapCut + Pexels). **El único pendiente real es
+PRODUCIR Y PUBLICAR el video #1** (empezar por el Short de 45s). Detalle de todo en `docs/ESTADO.md`.
 
 ## Docs (leer al retomar)
 `docs/ESTADO.md` (traspaso) · `docs/VISION.md` (arquitectura congelada) · `docs/POLITICA.md` ·
