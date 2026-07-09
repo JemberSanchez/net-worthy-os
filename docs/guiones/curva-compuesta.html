@@ -70,8 +70,8 @@
 <div id="status"></div>
 
 <p class="note">
-  El video sale en <code>.webm</code> (VP9), que CapCut de escritorio importa sin problema.
-  Si tu editor lo rechaza, súbelo tal cual a CapCut web o conviértelo a MP4.
+  El video sale en <code>.mp4</code> (H.264), que CapCut importa siempre. Si tu navegador no
+  supiera grabar MP4, cae automáticamente a <code>.webm</code>.
   Los números se calculan de verdad a partir de los parámetros — no están escritos a mano.
   <br><br>
   <strong>Durante los ~8s de grabación deja esta pestaña al frente.</strong> Si cambias de pestaña,
@@ -368,7 +368,46 @@ document.getElementById('png').onclick = () => {
   }, 'image/png');
 };
 
-const MIMES = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+// MP4/H.264 PRIMERO: CapCut de escritorio a veces rechaza el WebM/VP9. WebM queda de respaldo.
+const MIMES = ['video/mp4;codecs=avc1.640028', 'video/mp4;codecs=avc1.42E01E', 'video/mp4',
+               'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+const extDe = mime => mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+
+/** MediaRecorder.isTypeSupported() MIENTE: en máquinas sin codificador H.264 devuelve true para
+ *  'video/mp4' y luego no emite ni un byte. No se le pregunta: se le hace grabar 400ms y se mira
+ *  si salió algo. El resultado se cachea. */
+let mimeElegido = null;
+
+async function produceDatos(mime){
+  try {
+    const rec = new MediaRecorder(canvas.captureStream(60),
+                                  {mimeType: mime, videoBitsPerSecond: 2_000_000});
+    let bytes = 0;
+    rec.ondataavailable = e => { bytes += e.data.size; };
+    const stopped = new Promise(r => rec.onstop = r);
+    rec.start(100);
+    await new Promise(res => {
+      const t0 = performance.now();
+      (function loop(){
+        drawFrame(((performance.now() - t0)/1000) % T_END);
+        performance.now() - t0 < 400 ? requestAnimationFrame(loop) : res();
+      })();
+    });
+    await new Promise(r => setTimeout(r, 200));
+    rec.stop();
+    await stopped;
+    return bytes > 0;
+  } catch (e) { return false; }
+}
+
+async function elegirMime(){
+  if (mimeElegido) return mimeElegido;
+  for (const m of MIMES){
+    if (!MediaRecorder.isTypeSupported(m)) continue;
+    if (await produceDatos(m)) { mimeElegido = m; return m; }
+  }
+  throw new Error('ni MP4 ni WebM producen vídeo en este navegador. Prueba Chrome o Edge.');
+}
 
 /** Graba la animación y devuelve el Blob.
  *
@@ -380,11 +419,10 @@ const MIMES = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
 const TIMESLICE = 200, FLUSH_MS = 300, MIN_FPS = 24;
 
 async function record(){
-  const mime = MIMES.find(m => MediaRecorder.isTypeSupported(m));
-  if (!mime) throw new Error('Ningún formato WebM soportado en este navegador.');
   // Si la pestaña no está al frente, el navegador estrangula requestAnimationFrame y el vídeo
   // sale a saltos. Se detecta y se aborta: un clip malo pasaría desapercibido hasta CapCut.
   if (document.hidden) throw new Error('la pestaña está en segundo plano. Ponla al frente y reintenta.');
+  const mime = await elegirMime();
   let seFueAlFondo = false;
   const vigilante = () => { if (document.hidden) seFueAlFondo = true; };
   document.addEventListener('visibilitychange', vigilante);
@@ -410,9 +448,10 @@ async function record(){
     if (fps < MIN_FPS) throw new Error(
       `solo ${fps.toFixed(0)} fps capturados (se esperan ~60). Cierra pestañas pesadas y reintenta.`);
 
-    const blob = new Blob(chunks, {type:'video/webm'});
+    const blob = new Blob(chunks, {type: mime.split(';')[0]});
     if (blob.size < 5000) throw new Error(`grabación vacía (${blob.size} bytes).`);
     blob.fps = Math.round(fps);
+    blob.ext = extDe(mime);
     return blob;
   } finally {
     document.removeEventListener('visibilitychange', vigilante);
@@ -429,8 +468,8 @@ document.getElementById('rec').onclick = async () => {
   statusEl.textContent = 'Grabando ~8s… deja esta pestaña al frente y no toques nada.';
   try {
     const blob = await record();
-    download(blob, `net-worthy-curva-compuesta-${canvas.width}x${canvas.height}.webm`);
-    statusEl.textContent = `Listo: ${Math.round(blob.size/1024)} KB a ${blob.fps} fps. Arrástralo a CapCut.`;
+    download(blob, `net-worthy-curva-compuesta-${canvas.width}x${canvas.height}.${blob.ext}`);
+    statusEl.textContent = `Listo: ${blob.ext.toUpperCase()}, ${Math.round(blob.size/1024)} KB a ${blob.fps} fps. Arrástralo a CapCut.`;
   } catch (err) {
     statusEl.textContent = '⚠ No se descargó nada — ' + err.message;
   } finally {
