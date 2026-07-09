@@ -1,0 +1,82 @@
+CREAR LA VOZ DE NET WORTHY CON VOICE DESIGN
+Objetivo: una voz UNICA y PERMANENTE. No alquilada, no caducable, no la de todos.
+
+===========================================================================
+DONDE ESTA
+===========================================================================
+Voces  ->  Mis voces  ->  Añadir una nueva voz  ->  Voice Design
+(en tu barra izquierda: "Voces", luego el boton "+")
+
+Escribes un PROMPT (como es la voz) + un TEXTO DE MUESTRA (que dice).
+Le das a Generar -> te devuelve TRES voces distintas -> te quedas con una.
+
+COSTE: solo se cobran los caracteres del texto de muestra, UNA vez, aunque
+por detras genere las tres muestras. Con ~200 chars por intento, los 10.000
+gratis te dan para ~50 intentos. Experimenta sin miedo.
+
+OJO: cada voz que GUARDAS ocupa un "voice slot", y el numero de slots depende
+del plan. No guardes las tres: guarda la que gane.
+
+===========================================================================
+LA FORMULA DEL PROMPT (esta es la que recomienda ElevenLabs)
+===========================================================================
+   1. Idioma y variante regional   (explicito, o la voz "deriva" de acento)
+   2. Genero + edad
+   3. Nivel de calidad de audio
+   4. Persona                      (2-5 palabras)
+   5. Emocion                      (2-3 adjetivos)
+   6. Una o dos frases sobre timbre, ritmo y entrega
+
+REGLAS:
+ - NO uses la palabra "accent" para hablar de entonacion (la confunde).
+ - NO uses palabras de efectos: "reverb", "echo", "radio filter". No sirven.
+ - Cuanto mas granular el prompt, mas fiel el resultado.
+ - El texto de muestra debe REFORZAR el prompt, no contradecirlo. Si pides
+   una voz intima y le das un texto de subasta, sale un churro.
+ - Textos de muestra LARGOS dan resultados mas estables y expresivos.
+
+===========================================================================
+LOS TRES PROMPTS — pruebalos en este orden
+===========================================================================
+
+--- A · "EL ANALISTA"  (mi apuesta: encaja con "Wealth, explained plainly")
+American English, General American. Male, 38-45. High audio quality. Persona: seasoned financial analyst. Emotion: calm, assured, quietly intense. Warm low-mid timbre with a dry, unhurried delivery; lands hard on numbers and lets short pauses breathe. Conversational, never announcer-like.
+
+--- B · "EL QUE TE CUENTA LA VERDAD"  (mas intimo, mas filo, ideal para Shorts)
+American English, General American. Male, 32-38. High audio quality. Persona: blunt money mentor. Emotion: direct, skeptical, wry. Mid-range timbre, close and intimate, slightly clipped consonants; sounds like he is telling you something he probably should not. Steady pace that slows down on key figures.
+
+--- C · "EL DOCUMENTALISTA"  (mas grave y solemne, mejor para el video largo)
+American English, General American. Male, 45-52. High audio quality. Persona: documentary narrator. Emotion: measured, grave, curious. Deep resonant chest voice, slow deliberate pacing, precise diction; leaves space after each revelation.
+
+===========================================================================
+TEXTO DE MUESTRA — EL MISMO EN LOS TRES (o no estas comparando prompts)
+===========================================================================
+
+Skip the coffee. Wake up at five A M. Budget every dollar. You've done it all — and you're still broke. That extra four hundred and thirty thousand? You didn't earn it. Your asset did — while you slept.
+
+(Por que este: mete el gancho, el peso de una cifra grande y un final intimo
+ "while you slept". Si una voz resuelve estos tres, resuelve el canal entero.)
+
+===========================================================================
+LOS DOS DIALES
+===========================================================================
+GUIDANCE SCALE  = cuanto obedece al prompt.
+   Alto  -> te da lo que pediste, pero si el prompt es raro, suena peor.
+   Bajo  -> mas creativo, mas natural, menos fiel.
+   Empieza en el medio. Si te ignora la descripcion, SUBELO.
+   Si suena metalico o con artefactos, BAJALO.
+
+LOUDNESS = volumen de la voz generada. Dejalo neutro; el volumen se arregla
+   en CapCut, y grabarla muy alta te mete distorsion que ya no se quita.
+
+===========================================================================
+DESPUES DE ELEGIR
+===========================================================================
+1. Guarda SOLO la ganadora (ocupa slot). Nombrala "Net Worthy - <persona>".
+2. Pasala por el test completo: docs/guiones/voice-test.txt
+   (los 9 criterios, sobre todo el TEST DEL MOVIL y el PESO DE LA CIFRA).
+3. Afina stability/style CON ESA VOZ: empieza en stability 40 / similarity 75
+   / style 20 y muevete de 5 en 5. Cada voz responde distinto.
+4. PAGA Starter ($5) y REGENERA el audio final del guion.
+   La voz diseñada es permanente, pero los DERECHOS COMERCIALES se conceden
+   en el momento de generar el audio. Lo hecho en gratis no se legaliza luego.
