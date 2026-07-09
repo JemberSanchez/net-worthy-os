@@ -119,16 +119,22 @@ function series(){
 }
 
 /** En 16:9 sobra ancho y falta ALTO: el gráfico se acorta y el bloque final se compacta (ff),
- *  o el subtítulo del gap acabaría pisando el aviso legal del borde inferior. */
+ *  o el subtítulo del gap acabaría pisando el aviso legal del borde inferior.
+ *  El gráfico es el protagonista: se lleva ~50% del alto en vertical. El bloque final baja
+ *  hasta casi el aviso legal — si no, queda un vacío enorme y la composición se desfonda. */
 function layout(W,H){
   const land = W > H;
+  // El gráfico se estrecha en 16:9 (mx): a lo ancho de 1920 la exponencial se aplana y se
+  // pierde el "visual payoff". El bloque de texto usa el ancho completo (fx0/fx1), no el mx.
+  const mx = land ? 0.20 : 0.09;
   return {
-    x0: W*0.09, x1: W - W*0.09,
-    yTop:  H*(land ? 0.30  : 0.255),
-    yBot:  H*(land ? 0.66  : 0.685),
-    head:  H*(land ? 0.075 : 0.095),
-    foot:  H*(land ? 0.76  : 0.765),
-    ff:    land ? 0.80 : 1.0,     // factor de compresión del bloque final
+    x0: W*mx,   x1: W - W*mx,       // área de dibujo de las curvas
+    fx0: W*0.09, fx1: W - W*0.09,   // columnas del bloque final
+    yTop:  H*(land ? 0.285 : 0.225),
+    yBot:  H*(land ? 0.665 : 0.735),
+    head:  H*(land ? 0.070 : 0.085),
+    foot:  H*(land ? 0.770 : 0.815),
+    ff:    land ? 0.75 : 1.0,     // factor de compresión del bloque final
     s: Math.min(W,H)/1080,
   };
 }
@@ -152,7 +158,8 @@ function drawFrame(t){
   const W = canvas.width, H = canvas.height;
   const L = layout(W,H), s = L.s;
   const D = series();
-  const maxY = D.finalTotal * 1.10;
+  // 1.18 de aire arriba: con 1.10 el punto final quedaba a 35px del techo en 16:9 (lo rozaba)
+  const maxY = D.finalTotal * 1.18;
 
   const px = i => lerp(L.x0, L.x1, i/(D.n-1));
   const py = v => lerp(L.yBot, L.yTop, v/maxY);
@@ -177,18 +184,21 @@ function drawFrame(t){
 
   const {pmt, years, rate} = params();
   text(`${money(pmt)}/MONTH · ${years} YEARS · ${(rate*100).toFixed(0)}% A YEAR`,
-       W/2, L.head + 42*s, {size:23*s, weight:600, color:P.paper,
+       W/2, L.head + 44*s, {size:23*s, weight:600, color:P.paper,
        align:'center', alpha:aGrid*0.45, spacing:3*s});
 
-  // ---- rejilla + eje Y
+  // ---- rejilla + eje Y (en 16:9 el gráfico es bajo: menos líneas o se apelotonan)
+  const step = (L.yBot - L.yTop) < 500 ? 200000 : 100000;
   ctx.save();
   ctx.globalAlpha = aGrid*0.5;
   ctx.strokeStyle = '#1E362C'; ctx.lineWidth = Math.max(1, 1.5*s);
-  for (let v=100000; v<=maxY; v+=100000){
+  for (let v=step; v<=maxY; v+=step){
     const y = py(v);
     ctx.beginPath(); ctx.moveTo(L.x0, y); ctx.lineTo(L.x1, y); ctx.stroke();
+    // alpha:aGrid, no 1: text() PISA el globalAlpha del save() de fuera, así que con alpha
+    // fijo las etiquetas salían a plena opacidad en el frame 0 sin fundirse con la rejilla.
     text('$'+(v/1000)+'k', L.x0 - 14*s, y + 8*s,
-         {size:21*s, color:P.grey, align:'right', alpha:1});
+         {size:23*s, color:P.grey, align:'right', alpha:aGrid});
   }
   ctx.beginPath(); ctx.moveTo(L.x0, L.yBot); ctx.lineTo(L.x1, L.yBot);
   ctx.strokeStyle = '#2B4238'; ctx.lineWidth = Math.max(1, 2*s); ctx.stroke();
@@ -198,29 +208,33 @@ function drawFrame(t){
   for (let yr=0; yr<=D.years; yr+=5){
     const i = Math.min(D.n-1, yr*12);
     text(String(yr), px(i), L.yBot + 34*s,
-         {size:20*s, color:P.grey, align:'center', alpha:aGrid*0.75});
+         {size:22*s, color:P.grey, align:'center', alpha:aGrid*0.75});
   }
   text('YEARS', (L.x0+L.x1)/2, L.yBot + 66*s,
-       {size:18*s, weight:600, color:P.grey, align:'center', alpha:aGrid*0.55, spacing:3*s});
+       {size:19*s, weight:600, color:P.grey, align:'center', alpha:aGrid*0.55, spacing:3*s});
 
-  // ---- área del gap (entre las dos curvas)
+  // ---- área del gap (entre las dos curvas). Degradado, no plano: con brass al 20% uniforme
+  // el relleno salía marrón oliva sobre el fondo verde en vez de dorado.
   if (aGap > 0){
     ctx.save();
-    ctx.globalAlpha = aGap * 0.20;
+    ctx.globalAlpha = aGap;
     ctx.beginPath();
     ctx.moveTo(px(0), py(D.total[0]));
     for (let i=1; i<=idx; i++) ctx.lineTo(px(i), py(D.total[i]));
     for (let i=idx; i>=0; i--) ctx.lineTo(px(i), py(D.contrib[i]));
     ctx.closePath();
-    ctx.fillStyle = P.brass; ctx.fill();
+    const gg = ctx.createLinearGradient(0, L.yTop, 0, L.yBot);
+    gg.addColorStop(0, 'rgba(216,178,90,0.34)');
+    gg.addColorStop(1, 'rgba(216,178,90,0.07)');
+    ctx.fillStyle = gg; ctx.fill();
     ctx.restore();
   }
 
-  // ---- línea de aportes (gris, plana)
+  // ---- línea de aportes (plana). Es LA MITAD de la comparación: tiene que leerse.
   ctx.save();
   ctx.globalAlpha = aGrid;
-  ctx.strokeStyle = P.grey; ctx.lineWidth = Math.max(2, 5*s);
-  ctx.setLineDash([14*s, 10*s]); ctx.lineCap='round';
+  ctx.strokeStyle = '#9AACA2'; ctx.lineWidth = Math.max(2, 6*s);
+  ctx.setLineDash([16*s, 11*s]); ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(px(0), py(D.contrib[0]));
   for (let i=1; i<=idx; i++) ctx.lineTo(px(i), py(D.contrib[i]));
   ctx.stroke();
@@ -252,7 +266,7 @@ function drawFrame(t){
   let scale = 1;
   if (t > T_DRAW && t < T_PUNCH) scale = 1 + 0.13*Math.sin(Math.PI*((t-T_DRAW)/(T_PUNCH-T_DRAW)));
   ctx.save();
-  ctx.translate(W/2, L.head + 132*s);
+  ctx.translate(W/2, L.head + 140*s);
   ctx.scale(scale, scale);
   ctx.shadowColor = 'rgba(31,158,110,0.5)'; ctx.shadowBlur = 26*s;
   text(money(shown), 0, 0, {size:96*s, weight:800, color:P.paper, align:'center', alpha:aGrid});
@@ -260,13 +274,13 @@ function drawFrame(t){
 
   const yrNow = Math.min(D.years, Math.floor(idx/12) + 1);
   text(pDraw >= 1 ? 'AFTER ' + D.years + ' YEARS' : 'YEAR ' + yrNow,
-       W/2, L.head + 172*s, {size:22*s, weight:600, color:P.brass,
+       W/2, L.head + 186*s, {size:22*s, weight:600, color:P.brass,
        align:'center', alpha:aGrid*0.85, spacing:4*s});
 
   // ---- etiquetas finales
   if (aLabel > 0){
     const f = s * L.ff;  // el bloque final se compacta en 16:9
-    const yA = L.foot, colL = L.x0 + (L.x1-L.x0)*0.02, colR = L.x1 - (L.x1-L.x0)*0.02;
+    const yA = L.foot, colL = L.fx0, colR = L.fx1;
 
     text('YOU PAID IN', colL, yA, {size:22*f, weight:600, color:P.grey,
           align:'left', alpha:aLabel, spacing:2*f});
