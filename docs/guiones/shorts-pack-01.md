@@ -5,10 +5,30 @@
 > retención de los primeros 3s mide el gancho y nada más. Eso es lo que `omega/creative/experiments.py`
 > exige antes de concluir nada. Con n=1 por tipo esto es PROVISIONAL: no concluyas, acumula.
 
-**Voz:** la tuya (Voice Design B, "el que te cuenta la verdad").
-**Ajustes:** stability 40 · similarity 75 · style 20 · boost ON · speed 1.0 · Multilingual v2.
 **Formato:** 1080x1920, 30 fps, subtítulos quemados, corte cada 1.5–2.5s.
 **Cifras verificadas:** $609,985 final · $180,000 aportado · gap $429,985 · café: $18,250 ahorrado vs $26,323 invertido.
+
+### VOZ — opciones gratis CON derechos comerciales (verificado 2026-07-09)
+| Opción | Comercial gratis | Calidad | Fricción |
+|---|---|---|---|
+| **CapCut TTS** | Sí (según CapCut; no verificado en el ToS) | Decente, suena genérica | Cero |
+| **Google Cloud TTS** | **Sí** — el free tier es promoción de facturación, misma licencia | Muy buena | Cuenta + tarjeta |
+| **Kokoro-82M** | Sí (Apache 2.0) | Buena, #1 TTS Arena | Instalación local |
+| ~~Azure Speech F0~~ | **NO** — "evaluación y pruebas" | — | — |
+| ~~ElevenLabs Free~~ | **NO** — sin licencia comercial | — | — |
+
+Google: 1M chars/mes gratis (WaveNet) · 4M (Standard). Un Short = ~700 chars.
+Meta final: ElevenLabs Starter ($5) + la voz de Voice Design B ("el que te cuenta la verdad"),
+ajustes stability 40 · similarity 75 · style 20 · boost ON · speed 1.0 · Multilingual v2.
+
+### ⚠️ ANOTA EL MOTOR DE VOZ O EL MOAT NACE CONTAMINADO
+Si los 5 Shorts salen con una voz y el #6 con otra, **sus retenciones no son comparables**.
+No hace falta tocar el motor: `production_dna.blocks` es JSON libre. Añade siempre un bloque:
+```json
+{"block": "voice", "technique": "capcut_tts", "length_s": 0}
+```
+(o `google_wavenet`, `kokoro_82m`, `elevenlabs_voicedesign_b`). Cuando cambies de motor, el dataset
+lo sabe y `dna` no mezclará peras con manzanas.
 
 ---
 
