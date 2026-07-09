@@ -1,0 +1,59 @@
+NET WORTHY — SHORT 45s "Habits vs Assets"
+ref: build-wealth-assets-vs-habits-2026-07
+
+===========================================================================
+AJUSTES ELEVENLABS  (voz Brian · modelo Multilingual v2)
+   stability 50 · similarity 75 · style 35 · speaker boost ON
+===========================================================================
+
+PEGA SOLO EL BLOQUE DE ABAJO. Ya lleva los numeros escritos como se pronuncian
+("S and P five hundred", no "S&P 500") porque el TTS los lee mal en cifras.
+Los guiones largos (—) y los puntos fuerzan las micro-pausas antes de cada cifra.
+
+---------------------------------------------------------------------------
+
+Skip the coffee. Wake up at five A M. Budget every dollar. You've done it all — and you're still broke.
+
+Here's why: habits don't build wealth. Assets do.
+
+An asset is anything that pays you, or grows, while you sleep. A habit costs you time. An asset buys it back.
+
+Watch. Five hundred a month into an S and P five hundred fund — the five hundred biggest U S companies. Historically? Ten percent a year. Seven, after inflation.
+
+You put in a hundred eighty grand. You walk away with around six hundred and ten thousand.
+
+That extra four hundred and thirty thousand? You didn't earn it. Your asset did — while you slept.
+
+Habits make you disciplined. Assets make you rich. Could you do fifty a month? Comment below. Full breakdown up top.
+
+---------------------------------------------------------------------------
+
+===========================================================================
+MONTAJE (CapCut) — donde va cada cosa
+===========================================================================
+0:00-0:07  Slam text "HABITS WON'T MAKE YOU RICH". Cortes rapidos: despertador,
+           cafe, hoja de calculo. Golpe de sonido (whoosh + bass) en el frame 1.
+0:07-0:12  "HABITS (X)   ASSETS (V)"  — pattern break.
+0:12-0:20  Split: reloj vaciandose vs grafica subiendo.
+0:20-0:29  Texto: "$500/mo · S&P 500 · 30 yrs" + nota chica "10% nominal -> ~7% real".
+0:29-0:41  >>> AQUI ENTRA net-worthy-curva-compuesta-1080x1920.webm <<<
+           La musica sube justo cuando arranca la curva. El contador es el pico.
+0:41-0:48  "Could YOU do $50/mo?" + flecha arriba. Cierra con el logo 0.5s.
+
+Subtitulos quemados SIEMPRE (85% ve en mute). Corte cada 1.5-2.5s.
+Caption del post: "Not financial advice · illustrative · ~7% real (after inflation)"
+
+===========================================================================
+NO DECIR NUNCA (protege la monetizacion — YMYL)
+===========================================================================
+- Que el S&P es "solido", "seguro" o "no puede fallar". Cayo 57% en 2007-09.
+- El 10% nominal SIN decir el 7% real, o el numero final no cuadra.
+- Ningun ticker concreto para comprar (VOO/SPY). Nombrar el indice si vale.
+
+===========================================================================
+TRAS PUBLICAR — cerrar el bucle (el primer dato real del sistema)
+===========================================================================
+   python -m omega.cli record-analytics     (ctr/avd/retencion como FRACCION 0..1)
+   python -m omega.cli record-cost          (horas invertidas)
+   python -m omega.cli record-outcome build-wealth-assets-vs-habits-2026-07 <0..1>
+   python -m omega.cli dna
