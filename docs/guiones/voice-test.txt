@@ -1,0 +1,62 @@
+TEST DE VOZ — Net Worthy
+Objetivo: elegir LA voz del canal en ~15 min, sin quemar creditos.
+
+===========================================================================
+POR QUE ESTE TEXTO Y NO EL GUION ENTERO
+===========================================================================
+Son los TRES compases mas dificiles del Short. Si una voz los pasa, pasa
+todo lo demas. ~370 caracteres: caben 5 voces en 1.850 de tus 10.000 gratis.
+
+AJUSTES IDENTICOS EN LAS 5 (si cambias ajustes, no estas comparando voces):
+   stability 40 · similarity 75 · style 20 · speaker boost ON · speed 1.0
+   modelo: Eleven Multilingual v2
+
+===========================================================================
+PEGA ESTO TAL CUAL, UNA VEZ POR VOZ
+===========================================================================
+
+Skip the coffee. Wake up at five A M. Budget every dollar. You've done it all — and you're still broke.
+
+Watch. Five hundred a month into an S and P five hundred fund — the five hundred biggest U S companies. Historically? Ten percent a year. Seven, after inflation.
+
+That extra four hundred and thirty thousand? You didn't earn it. Your asset did — while you slept.
+
+===========================================================================
+CANDIDATAS (en este orden)
+===========================================================================
+1. La tuya de Voice Design  (permanente, unica)   <- la apuesta fuerte
+2. Adrian                   (Voice Library)
+3. Cassidy                  (Voice Library)
+4. Bill L. Oxley            (Voice Library)
+5. Brian                    (DEFAULT — solo como control; muere 31-dic-2026)
+
+Si un nombre no aparece, filtra la Voice Library por: Deep · Narrator ·
+American · Middle-aged, y coge las tres primeras que te encajen.
+
+===========================================================================
+COMO JUZGAR (marca si/no en cada una — gana la que sume mas)
+===========================================================================
+[ ] 1. Los 3 primeros segundos ("Skip the coffee") agarran? Cualquier temblor
+       robotico aqui = descartada. Es el 90% de la retencion.
+[ ] 2. La pausa del guion largo antes de "and you're still broke": aterriza,
+       o lo atropella?
+[ ] 3. Pronuncia "S and P five hundred" limpio, sin comerse letras?
+[ ] 4. "four hundred and thirty thousand" tiene PESO, o lo lee de corrido?
+       Es el clímax del video. Si no pesa, no hay video.
+[ ] 5. "while you slept" — sabe bajar a un tono intimo, casi susurro?
+[ ] 6. TEST DEL MOVIL: escuchalo en el altavoz del telefono al 50%, sin
+       auriculares. El 85% de tu audiencia lo oira asi.
+[ ] 7. TEST DE 1.25x: en Shorts la gente acelera. Aguanta sin sonar a pato?
+[ ] 8. ESCUCHALA 3 VECES SEGUIDAS: algo empieza a irritar? (respiraciones,
+       siseo en las eses, entonacion que sube al final de cada frase)
+[ ] 9. Le creerias a esta voz que sabe de dinero?
+
+===========================================================================
+REGLA DE DECISION
+===========================================================================
+Elige por el punto 4 y el punto 6. Una voz que no hace pesar la cifra o que
+se deshace en el altavoz del movil no sirve, por bonita que suene con cascos.
+
+OJO: NO publiques audio generado en plan gratis. Los derechos comerciales se
+conceden AL GENERAR. Testea gratis, decide, PAGA Starter, y REGENERA el audio
+final con la voz elegida. Ver docs/guiones/short-TTS.txt.

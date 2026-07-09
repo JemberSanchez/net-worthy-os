@@ -13,8 +13,18 @@ incluso si cancelas la suscripcion luego.
 Alternativas gratis CON derechos: Google Cloud TTS o Piper (peor calidad).
 
 ===========================================================================
-AJUSTES ELEVENLABS  (voz Brian · modelo Multilingual v2)
-   stability 50 · similarity 75 · style 35 · speaker boost ON · speed 1.0
+!! NO USES BRIAN: las voces "Default" MUEREN el 31-dic-2026
+===========================================================================
+ElevenLabs retira todas sus voces Default esa fecha. La voz es la IDENTIDAD
+de un canal faceless: si caduca, tus videos nuevos suenan a otro canal.
+Ademas Adam/Brian/Antoni son las voces mas sobreexplotadas de internet.
+Permanentes: Voice Library, Cloned y Voice Design.
+-> Elige tu voz con el protocolo de docs/guiones/voice-test.txt ANTES de esto.
+
+===========================================================================
+AJUSTES ELEVENLABS  (modelo Eleven Multilingual v2)
+   stability 40 · similarity 75 · style 20 · speaker boost ON · speed 1.0
+   (stability alta = monotona; similarity >80 = artefactos; style alto = falso)
 ===========================================================================
 
 PEGA SOLO EL BLOQUE DE ABAJO. Ya lleva los numeros escritos como se pronuncian
