@@ -124,16 +124,44 @@ const P = { ink:'#0A1A14', growth:'#1F9E6E', brass:'#D8B25A', paper:'#F4F6F3', g
 const SAFE = { top: 190, bottom: 360, left: 70, right: 130 };
 const SAFE_BOT = 1920 - SAFE.bottom;   // 1560: por debajo, no se ve en el móvil
 
-// ── El guion. Cambia SOLO esto para producir los otros Shorts. ────────────────
-const CFG = {
-  spec: ['$500 A MONTH', 'S&P 500', '30 YEARS'],
-  // Subtítulos: casi verbatim, pero con las cifras en dígitos (se leen mejor que en letra).
-  l2: "You put in $180,000 of your own money. You walk away with about $610,000 — in today's money, after inflation.",
-  l3: "That gap? $430,000 you never worked a single hour for. Your asset made it while you slept.",
-  cta: ['COULD YOU START', 'WITH $50 A MONTH?'],
-  ctaSub: 'comment below',
-  pmt: 500, years: 30, rate: 0.07,
+// ═════════════════════════════════════════════════════════════════════════════
+// DATOS: un Short es esto. El resto del archivo es MOTOR y no se toca.
+// ═════════════════════════════════════════════════════════════════════════════
+const SHORTS = {
+  's3-stat': {
+    ref: 'build-wealth-short-03-stat',
+    spec: ['$500 A MONTH', 'S&P 500', '30 YEARS'],
+    cta: ['COULD YOU START', 'WITH $50 A MONTH?'],
+    ctaSub: 'comment below',
+    pmt: 500, years: 30, rate: 0.07,
+
+    /** El GUION HABLADO, exactamente como se pegó en el TTS. De aquí sale todo:
+     *  el calibrador lo alinea contra el audio y deduce los cortes y los subtítulos.
+     *  Los grupos son los bloques narrativos: sus arranques SON los cortes. */
+    guion: {
+      grupos: [
+        {id:'intro',  texto: "Five hundred dollars a month. An S and P five hundred fund. Thirty years."},
+        {id:'proof',  texto: "You put in a hundred and eighty thousand dollars of your own money. You walk away with about six hundred and ten thousand and that's in today's money, after inflation."},
+        {id:'payoff', texto: "That gap? Four hundred and thirty thousand dollars you never worked a single hour for. Your asset made it while you slept."},
+        {id:'cta',    texto: "Could you start with fifty a month?"},
+      ],
+      // span hablado -> token que se PINTA. "$180,000" se lee mejor que "a hundred and eighty thousand".
+      cifras: [
+        ["a hundred and eighty thousand dollars", "$180,000"],
+        ["six hundred and ten thousand",          "$610,000"],
+        ["Four hundred and thirty thousand dollars", "$430,000"],
+      ],
+      subtitulos: ['proof', 'payoff'],   // en la intro manda el spec drop; en el CTA, el texto grande
+      curvaLlegaEn: "$610,000",          // T.draw = cuando la voz TERMINA de decir esa cifra
+      // Muletillas que se OYEN pero no se escriben: la tarjeta "and that's in today's money,"
+      // medía 813px y su cola quedaba encima de la curva verde. Los subtítulos no son literales.
+      omitirEnSubtitulos: ["and that's"],
+    },
+  },
 };
+
+let SHORT = SHORTS['s3-stat'];
+const CFG = SHORT;   // alias: el motor lee CFG.spec, CFG.cta, CFG.pmt...
 
 /** CALIBRADO CONTRA data/voz-short-03.mp3 (CapCut TTS "Firme Pilot", 24.03s).
  *  Medido, no estimado: se decodificó el MP3, se sacó la envolvente RMS en ventanas de 10 ms y
@@ -164,6 +192,242 @@ const CALIBRADO = {
     {t0:21.12, t1:21.79, t:"it while you slept."},
   ],
 };
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CALIBRADOR AUTOMÁTICO — la limitación que reveló el S3
+// ═════════════════════════════════════════════════════════════════════════════
+// Calibrar el S3 me llevó media hora de análisis de sílabas a mano. Esto lo hace solo:
+//   1. segmenta la voz por energía (RMS 10 ms, silencio ≥250 ms)
+//   2. reparte los grupos del guion entre esos segmentos con programación dinámica,
+//      minimizando el error contra la duración esperada por sílabas
+//   3. dentro de cada grupo alinea palabra a palabra sobre el tiempo de VOZ real,
+//      saltándose las pausas -> la deriva no se acumula de un grupo al siguiente
+// Verificado: reproduce los cortes que calculé a mano para el S3.
+
+const silabas = w => {
+  const s = w.toLowerCase().replace(/[^a-z']/g, '');
+  if (!s) return 1;
+  let n = (s.match(/[aeiouy]+/g) || []).length;
+  if (s.endsWith('e') && n > 1) n--;
+  return Math.max(1, n);
+};
+
+function segmentarVoz(buffer, {umbralRel = 0.05, minSilMs = 250, ventanaMs = 10} = {}){
+  const d = buffer.getChannelData(0), sr = buffer.sampleRate;
+  const W = Math.max(1, Math.floor(sr * ventanaMs / 1000));
+  const rms = [];
+  for (let i = 0; i + W <= d.length; i += W){
+    let a = 0; for (let j = 0; j < W; j++){ const v = d[i+j]; a += v*v; }
+    rms.push(Math.sqrt(a/W));
+  }
+  const pico = Math.max(...rms), thr = pico * umbralRel;
+  const minSil = Math.round(minSilMs / ventanaMs);
+  const t = i => i * ventanaMs / 1000;
+  const segs = []; let dentro = false, ini = 0, sil = 0;
+  rms.forEach((v, i) => {
+    if (v > thr){ if (!dentro){ dentro = true; ini = i; } sil = 0; }
+    else if (dentro && ++sil >= minSil){ dentro = false; segs.push([t(ini), t(i - sil)]); }
+  });
+  if (dentro) segs.push([t(ini), t(rms.length)]);
+  return segs;
+}
+
+/** Partición contigua de N segmentos en G grupos que minimiza |duración real − esperada|.
+ *  El emparejamiento ingenuo 1:1 falla: en el S3 exigía 11.1 sílabas/s en un bloque. */
+function repartirGrupos(segs, silsPorGrupo){
+  const N = segs.length, G = silsPorGrupo.length;
+  if (N < G) return null;
+  const dur = segs.map(s => s[1] - s[0]);
+  const Ds = dur.reduce((a,b) => a+b, 0);
+  const rate = silsPorGrupo.reduce((a,b) => a+b, 0) / Ds;
+  const esperado = silsPorGrupo.map(s => s / rate);
+  const acum = [0]; dur.forEach((d,i) => acum.push(acum[i] + d));
+  const suma = (i,j) => acum[j+1] - acum[i];
+
+  const INF = 1e12;
+  const dp = Array.from({length:G+1}, () => new Array(N+1).fill(INF));
+  const desde = Array.from({length:G+1}, () => new Array(N+1).fill(-1));
+  dp[0][0] = 0;
+  for (let g = 1; g <= G; g++)
+    for (let j = g; j <= N; j++)
+      for (let i = g-1; i < j; i++){
+        if (dp[g-1][i] >= INF) continue;
+        const c = dp[g-1][i] + Math.abs(suma(i, j-1) - esperado[g-1]);
+        if (c < dp[g][j]){ dp[g][j] = c; desde[g][j] = i; }
+      }
+  if (dp[G][N] >= INF) return null;
+  const rangos = []; let j = N;
+  for (let g = G; g >= 1; g--){ const i = desde[g][j]; rangos.unshift([i, j-1]); j = i; }
+  return {rangos, rate, error: dp[G][N]};
+}
+
+/** Reparte las palabras de un grupo sobre SU tiempo de voz, saltándose las pausas. */
+function alinearPalabras(texto, segs){
+  const pal = texto.split(/\s+/).filter(Boolean);
+  const sl = pal.map(silabas);
+  const Ds = segs.reduce((a,s) => a + (s[1]-s[0]), 0);
+  const rate = sl.reduce((a,b) => a+b, 0) / Ds;
+  const reloj = tv => {
+    let acc = 0;
+    for (const [s,f] of segs){ const d = f-s; if (tv <= acc + d + 1e-9) return s + (tv - acc); acc += d; }
+    return segs[segs.length-1][1];
+  };
+  let t = 0;
+  return pal.map((w,i) => { const a = reloj(t); t += sl[i]/rate; return {w, t0:a, t1:reloj(t)}; });
+}
+
+/** "a hundred and eighty thousand dollars" -> un único token "$180,000" con el tiempo del span. */
+function fusionarCifras(ws, cifras){
+  const limpio = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const out = []; let i = 0;
+  while (i < ws.length){
+    let hit = false;
+    for (const [frase, disp] of cifras){
+      const tk = frase.split(/\s+/);
+      if (i + tk.length <= ws.length && tk.every((t,k) => limpio(ws[i+k].w) === limpio(t))){
+        const suf = ws[i+tk.length-1].w.replace(/^[A-Za-z]+/, '');   // conserva la puntuación final
+        out.push({w: disp + suf, t0: ws[i].t0, t1: ws[i+tk.length-1].t1, cifra: disp});
+        i += tk.length; hit = true; break;
+      }
+    }
+    if (!hit) out.push(ws[i++]);
+  }
+  return out;
+}
+
+/** Quita muletillas de los subtítulos (no del audio). Su tiempo pasa a la palabra siguiente,
+ *  así el subtítulo entra cuando la voz empieza la frase, no a media frase. */
+function omitirMuletillas(ws, frases){
+  if (!frases || !frases.length) return ws;
+  const lim = s => s.toLowerCase().replace(/[^a-z']/g, '');
+  const out = []; let i = 0;
+  while (i < ws.length){
+    let quitado = false;
+    for (const fr of frases){
+      const tk = fr.split(/\s+/);
+      if (i + tk.length <= ws.length && tk.every((t,k) => lim(ws[i+k].w) === lim(t))){
+        const t0 = ws[i].t0;
+        i += tk.length;
+        if (i < ws.length) ws[i] = {...ws[i], t0};   // el hueco se lo queda la siguiente
+        quitado = true; break;
+      }
+    }
+    if (!quitado) out.push(ws[i++]);
+  }
+  return out;
+}
+
+const anchoTarjeta = pal => {
+  ctx.font = font(62, 700);
+  return pal.reduce((a,x) => a + ctx.measureText(x.w).width, 0) + 16*(pal.length-1);
+};
+
+/** Tarjetas legibles: corta por puntuación, nunca termina en palabra funcional, y ninguna baja
+ *  de 0.55 s. Si una es demasiado corta, ROBA palabras de la siguiente de una en una — mirando
+ *  el ANCHO real en pantalla, no el número de palabras. Con el tope de palabras se colaban
+ *  "That gap?" (0.34s) y "and that's" (0.36s): ilegibles. */
+const durTarjeta = p => p[p.length-1].t1 - p[0].t0;
+
+/** Rellena tarjetas cortas robando palabras de la siguiente, SIN cruzar la frase (salvo que se
+ *  permita). Luego pega las huérfanas hacia atrás. Mira el ANCHO real, no el nº de palabras. */
+function repararDuraciones(cards, minDur, maxAncho, {cruzarClausula = false} = {}){
+  for (let i = 0; i < cards.length - 1; ){
+    const c = cards[i], n = cards[i+1];
+    const permitido = cruzarClausula || c.cl === n.cl;
+    while (permitido && durTarjeta(c.pal) < minDur && n.pal.length){
+      const cand = c.pal.concat(n.pal[0]);
+      if (anchoTarjeta(cand) > maxAncho) break;      // no cabe: mejor corta que ilegible
+      c.pal = cand; n.pal = n.pal.slice(1);
+    }
+    if (!n.pal.length) cards.splice(i+1, 1); else i++;
+  }
+  for (let i = cards.length - 1; i > 0; i--){
+    const c = cards[i], p = cards[i-1];
+    if (c.cl === p.cl && durTarjeta(c.pal) < minDur &&
+        anchoTarjeta(p.pal.concat(c.pal)) <= maxAncho){
+      p.pal = p.pal.concat(c.pal); cards.splice(i, 1);
+    }
+  }
+}
+
+/** Tarjetas legibles. Reglas, en orden:
+ *   - se corta por puntuación; ninguna termina en palabra funcional
+ *   - ninguna baja de 0.55 s: se rellena robando de la siguiente, DENTRO de su frase
+ *     ("a single hour" + "for. Your asset" era basura: cruzaba el punto)
+ *   - excepción: una frase entera y cortísima ("That gap?", 0.34 s) sí puede tomar la
+ *     primera palabra de la siguiente -> "That gap? $430,000", que es el frame del clímax
+ *   - ninguna supera 620 px: por encima, la curva verde le pasa por encima al texto */
+function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
+  const clausulas = []; let cur = [];
+  for (const x of ws){ cur.push(x); if (/[.?!,;:]$/.test(x.w)){ clausulas.push(cur); cur = []; } }
+  if (cur.length) clausulas.push(cur);
+
+  const cards = [];
+  clausulas.forEach((cl, ci) => {
+    const g = [];
+    for (let i = 0; i < cl.length; i += maxPal) g.push(cl.slice(i, i+maxPal));
+    for (let i = 0; i < g.length-1; i++)
+      while (g[i].length > 1 && FUNC.has(limpio(g[i][g[i].length-1].w))) g[i+1].unshift(g[i].pop());
+    g.forEach(p => cards.push({pal: p, cl: ci, fraseEntera: p.length === cl.length}));
+  });
+
+  repararDuraciones(cards, minDur, maxAncho);                       // dentro de cada frase
+  for (const c of cards)                                            // frase entera y cortísima
+    if (c.fraseEntera && durTarjeta(c.pal) < minDur){
+      const i = cards.indexOf(c), n = cards[i+1];
+      if (!n) continue;
+      while (durTarjeta(c.pal) < minDur && n.pal.length){
+        const cand = c.pal.concat(n.pal[0]);
+        if (anchoTarjeta(cand) > maxAncho) break;
+        c.pal = cand; n.pal = n.pal.slice(1);
+      }
+      if (!n.pal.length) cards.splice(i+1, 1);
+    }
+  repararDuraciones(cards, minDur, maxAncho);                       // recolocar lo que quedó corto
+
+  return cards.map(c => ({t0: c.pal[0].t0, t1: c.pal[c.pal.length-1].t1,
+                          palabras: c.pal.map(x => x.w)}));
+}
+
+/** Todo junto: audio + guion -> cortes, spec drop sincronizado y subtítulos. */
+function calibrarAuto(buffer, guion){
+  const segs = segmentarVoz(buffer);
+  const sils = guion.grupos.map(g => g.texto.split(/\s+/).reduce((a,w) => a + silabas(w), 0));
+  const rep = repartirGrupos(segs, sils);
+  if (!rep) throw new Error(`solo ${segs.length} bloques de voz para ${sils.length} grupos del guion.`);
+
+  const porGrupo = rep.rangos.map(([i,j], k) => {
+    const misSegs = segs.slice(i, j+1);
+    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, misSegs), guion.cifras);
+    return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: misSegs[0][0], fin: misSegs[misSegs.length-1][1]};
+  });
+
+  const idx = id => porGrupo.findIndex(g => g.id === id);
+  const cuts = {
+    hook:  porGrupo[1].inicio,
+    curve: porGrupo[2].inicio,
+    cta:   porGrupo[porGrupo.length-1].inicio,
+  };
+  // la curva llega arriba cuando la voz TERMINA de decir la cifra grande
+  const tok = porGrupo.flatMap(g => g.ws).find(x => x.cifra === guion.curvaLlegaEn);
+  cuts.draw = tok ? tok.t1 : (cuts.hook + cuts.curve) / 2;
+
+  // spec drop: cada línea entra 0.2s antes de su frase. La 1ª ya visible en el frame 1.
+  const segsIntro = porGrupo[0].segs;
+  const spec = CFG.spec.map((_, i) => i === 0 ? -0.30
+                            : +( (segsIntro[Math.min(i, segsIntro.length-1)][0] - 0.20).toFixed(2) ));
+
+  const cards = porGrupo.filter(g => guion.subtitulos.includes(g.id))
+                        .flatMap(g => tarjetasDePalabras(omitirMuletillas(g.ws, guion.omitirEnSubtitulos)));
+
+  return {
+    cuts: Object.fromEntries(Object.entries(cuts).map(([k,v]) => [k, +v.toFixed(2)])),
+    spec,
+    cards: cards.map(c => ({t0:+c.t0.toFixed(2), t1:+c.t1.toFixed(2), t:c.palabras.join(' ')})),
+    diag: {bloques: segs.length, grupos: sils.length, silabas_por_seg: +rep.rate.toFixed(2),
+           error_reparto: +rep.error.toFixed(2)},
+  };
+}
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -271,14 +535,9 @@ let cachedCards = null;
 let srtCards = null;       // si hay .srt, MANDA: sus tiempos los midió el ASR sobre el audio real
 let cortesMedidos = false; // ¿los cortes salen del audio, o siguen siendo mi estimación?
 
-function cards(){
-  if (srtCards) return srtCards;
-  if (!cachedCards) cachedCards = [
-    ...tarjetas(CFG.l2, T.hook, T.curve),
-    ...tarjetas(CFG.l3, T.curve, T.cta),
-  ];
-  return cachedCards;
-}
+/** Los subtítulos SIEMPRE vienen de tiempos medidos (calibración, auto o .srt). Nunca se
+ *  reparten a ojo: eso fue el desfase del S3. Sin medir -> sin subtítulos, y grabar está vetado. */
+function cards(){ return srtCards || []; }
 
 // ── Importar .srt (CapCut: Subtítulos automáticos → Exportar) ────────────────
 // Repartir tarjetas proporcionalmente sobre un tramo de 13s asume que hablas a ritmo de
@@ -664,35 +923,46 @@ async function usarAudio(f){
   // MediaRecorder lo acepta con una pista de voz adjunta y devuelve el vídeo EN SILENCIO.
   mimeCache = null;
 
-  // La calibración vale SOLO para el audio contra el que se midió. Otro audio -> otros tiempos.
-  const esElCalibrado = Math.abs(dur - CALIBRADO.duracion) <= 0.35;
-  if (esElCalibrado){
-    Object.assign(T, {hook:CALIBRADO.hook, draw:CALIBRADO.draw, curve:CALIBRADO.curve,
-                      cta:CALIBRADO.cta, total:dur});
-    T.spec = CALIBRADO.spec.slice();
-    srtCards = CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
-    cortesMedidos = true;
-  } else {
-    srtCards = null; cortesMedidos = false;   // hay que volver a medir
-    T.total = dur;
-    T.spec = [0.10, Math.min(2.15, dur*0.09), Math.min(4.41, dur*0.19)];
-    if (T.cta   > dur - 1)     T.cta   = dur - 2.5;
-    if (T.curve > T.cta - 1)   T.curve = T.cta - 2.5;
-    if (T.draw  > T.curve - 1) T.draw  = T.curve - 2.5;
-    if (T.hook  > T.draw - 1)  T.hook  = T.draw - 2.5;
-  }
-  S[4].max = Math.ceil(dur) + 2;
-  cachedCards = null; pintarSliders(); drawFrame(T.curve + 0.3);
-
+  // decodificar ANTES de decidir: el calibrador automático necesita el PCM
   const ab = await f.arrayBuffer();
   audioCtx = audioCtx || new AudioContext();
   pcm = await audioCtx.decodeAudioData(ab.slice(0));
   document.getElementById('auto').disabled = false;
+  T.total = dur;
+  S[4].max = Math.ceil(dur) + 2;
 
-  statusEl.textContent = esElCalibrado
-    ? `✅ Es el audio calibrado (${dur}s). Tiempos medidos aplicados. Pulsa Grabar.`
-    : `⚠ Audio distinto (${dur}s, el calibrado son ${CALIBRADO.duracion}s). La calibración NO ` +
-      `sirve: carga el .srt de CapCut o pulsa "Detectar cortes por silencios".`;
+  // El S3 ya está PUBLICADO con la calibración hecha a mano: para ese audio no se toca nada.
+  const esElCalibrado = Math.abs(dur - CALIBRADO.duracion) <= 0.35;
+  if (esElCalibrado){
+    aplicarCalibracion({cuts:CALIBRADO, spec:CALIBRADO.spec, cards:CALIBRADO.cards}, dur);
+    statusEl.textContent = `✅ Es el audio calibrado a mano del S3 (${dur}s). Pulsa Grabar.`;
+    return;
+  }
+  // Cualquier otro audio: lo calibra el motor contra el guion de SHORT.guion.
+  try {
+    const cal = calibrarAuto(pcm, SHORT.guion);
+    aplicarCalibracion(cal, dur);
+    statusEl.textContent = `✅ Calibrado solo (${dur}s): ${cal.diag.bloques} bloques de voz, ` +
+      `${cal.diag.silabas_por_seg} síl/s · intro ${T.hook}s · curva ${T.draw}s · ` +
+      `nº ${T.curve}s · CTA ${T.cta}s · ${cal.cards.length} subtítulos. Previsualiza y verifica.`;
+  } catch (e) {
+    srtCards = null; cortesMedidos = false;
+    pintarSliders(); drawFrame(T.total);
+    statusEl.textContent = `⚠ No pude calibrar (${e.message}). Carga el .srt de CapCut, ` +
+      `o mueve los sliders a mano con el reloj activado.`;
+  }
+}
+
+/** Aplica un resultado de calibración (manual, automático o .srt) al estado del motor. */
+function aplicarCalibracion(cal, dur){
+  Object.assign(T, {hook:cal.cuts.hook, draw:cal.cuts.draw, curve:cal.cuts.curve,
+                    cta:cal.cuts.cta, total:dur});
+  T.spec = cal.spec.slice();
+  srtCards = cal.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+  cortesMedidos = true;
+  cachedCards = null;
+  pintarSliders();
+  drawFrame(T.curve + 0.3);
 }
 
 /** Segmenta por energía: ventanas de 20ms, silencio = RMS bajo durante >=250ms.
