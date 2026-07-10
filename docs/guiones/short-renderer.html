@@ -46,6 +46,21 @@
   <small>Genera el vídeo entero: intro, curva, número, CTA y subtítulos quemados. Sin editar.</small>
 </h1>
 
+<div class="row">
+  <label style="font-size:13px;color:var(--grey)">Short:
+    <select id="short" style="font:inherit;background:#0d1c16;color:var(--paper);border:1px solid #2b4238;border-radius:6px;padding:6px 9px">
+      <option value="s3-stat">S3 · stat — la curva (publicado)</option>
+      <option value="s1-story">S1 · story — dos columnas ($0 vs $1,000,000+)</option>
+    </select>
+  </label>
+</div>
+
+<div class="panel">
+  <h2>Checklist de producción — se marca solo</h2>
+  <ul id="checklist-items" style="margin:0; padding-left:2px; list-style:none; font-size:13.5px; line-height:1.95"></ul>
+  <div class="note" style="text-align:left" id="checklist-post"></div>
+</div>
+
 <div class="panel">
   <h2>1 · Carga tu voz</h2>
   <div class="row" style="justify-content:flex-start">
@@ -84,11 +99,11 @@
 
 <div class="panel">
   <h2>3 · Retoca los cortes (solo si hace falta)</h2>
-  <div class="slider"><span>Fin de la intro</span>
+  <div class="slider"><span>Fin de la intro (hook)</span>
     <input type="range" id="sHook" min="1" max="12" step="0.05"><output id="oHook"></output></div>
-  <div class="slider"><span>La curva llega a $610k</span>
+  <div class="slider"><span>La cifra grande aterriza (draw)</span>
     <input type="range" id="sDraw" min="4" max="24" step="0.05"><output id="oDraw"></output></div>
-  <div class="slider"><span>“That gap?” (nº dorado)</span>
+  <div class="slider"><span>Tercer corte (curve)</span>
     <input type="range" id="sCurve" min="6" max="24" step="0.05"><output id="oCurve"></output></div>
   <div class="slider"><span>Entra el CTA</span>
     <input type="range" id="sCTA" min="8" max="30" step="0.05"><output id="oCTA"></output></div>
@@ -130,6 +145,8 @@ const SAFE_BOT = 1920 - SAFE.bottom;   // 1560: por debajo, no se ve en el móvi
 const SHORTS = {
   's3-stat': {
     ref: 'build-wealth-short-03-stat',
+    escena: 'chart',                   // el visual central es la curva compuesta
+    voz: 'voz-short-03.mp3',           // data/<voz>: lo que carga "Usar la voz del proyecto"
     spec: ['$500 A MONTH', 'S&P 500', '30 YEARS'],
     cta: ['COULD YOU START', 'WITH $50 A MONTH?'],
     ctaSub: 'comment below',
@@ -158,10 +175,46 @@ const SHORTS = {
       omitirEnSubtitulos: ["and that's"],
     },
   },
+
+  's1-story': {
+    ref: 'build-wealth-short-01-story',
+    escena: 'columns',                 // mismo sueldo, misma disciplina, distinta DIRECCIÓN del dinero
+    voz: 'voz-short-01.mp3',           // data/<voz>: exporta la voz de CapCut con ESTE nombre
+    // Reencuadre 2026-07-10: el eje NO es hábitos vs activos (falso: invertir es un hábito; y humilla
+    // al viewer). Es qué hace el dinero: se MUEVE (se gasta, se va) o se MULTIPLICA (se posee, compone).
+    // El gancho es la HISTORIA, no una proyección: no lleva pmt/years/rate ni curva.
+    cols: {
+      izq: { label: 'SPENT', valor: '$0' },          // el dinero que se MUEVE (se va)
+      der: { label: 'OWNED', valor: '$1,000,000+' },  // el dinero que MULTIPLICA (compone)
+    },
+    cta: ['YOUR NEXT $100:', 'LEAVE OR WORK?'],
+    ctaSub: 'tell me below',
+    spec: [],                          // el texto de escena lo pinta drawColumns; no hay spec drop
+    // Reloj de PREVISUALIZACIÓN (sin voz). Cuando cargues el MP3, calibrarAuto lo reescribe
+    // contra el guion y luego "Previsualiza y verifica". Estos números son solo para VER la escena.
+    demo: { hook: 3.4, draw: 9.0, curve: 13.0, cta: 28.0, total: 32.0 },
+    guion: {
+      grupos: [
+        {id:'setup',     texto: "Two men. Same salary. Same discipline."},
+        {id:'diverge',   texto: "Thirty years later, one retires with almost nothing — the other, with over a million. Same money in. Here's the only difference: one spent his paycheck. The other used it to own things that paid him back."},
+        {id:'principle', texto: "His habits didn't fail him. A habit just moves money you already have. An asset makes money while you sleep. You've already got the hard part: the discipline. The only question is where you point it."},
+        {id:'cta',       texto: "So your next hundred dollars: does it leave, or does it work? Tell me below."},
+      ],
+      cifras: [
+        ["over a million", "$1,000,000+"],
+      ],
+      // 'principle' SÍ lleva subtítulos: son ~15s de voz tras la revelación y sin ellos la
+      // pantalla se queda quieta — muerte de retención. Van en la zona libre izquierda
+      // (la barra SPENT drenada la despeja); setup/diverge los narra la escena, cta el texto grande.
+      subtitulos: ['principle'],
+      curvaLlegaEn: "$1,000,000+",     // la barra derecha llega al tope cuando la voz lo dice
+      omitirEnSubtitulos: [],
+    },
+  },
 };
 
 let SHORT = SHORTS['s3-stat'];
-const CFG = SHORT;   // alias: el motor lee CFG.spec, CFG.cta, CFG.pmt...
+let CFG = SHORT;   // alias reasignable: el motor lee CFG.spec, CFG.cta, CFG.pmt... (cambia con cargarShort)
 
 /** CALIBRADO CONTRA data/voz-short-03.mp3 (CapCut TTS "Firme Pilot", 24.03s).
  *  Medido, no estimado: se decodificó el MP3, se sacó la envolvente RMS en ventanas de 10 ms y
@@ -449,13 +502,21 @@ const O = ['oHook','oDraw','oCurve','oCTA','oTotal'].map(id => document.getEleme
 const KEYS = ['hook','draw','curve','cta','total'];
 
 function pintarSliders(){
-  KEYS.forEach((k,i) => { S[i].value = T[k]; O[i].textContent = T[k].toFixed(2) + 's'; });
+  KEYS.forEach((k,i) => {
+    // otro Short puede ser más largo que los máximos del HTML (pensados para el S3 de 24s):
+    // si el valor no cabe, el slider lo recortaba EN SILENCIO y la UI mentía.
+    if (+S[i].max < T[k]) S[i].max = Math.ceil(T[k]) + 2;
+    S[i].value = T[k]; O[i].textContent = T[k].toFixed(2) + 's';
+  });
+  pintarChecklist();   // los sliders se repintan en cada cambio de estado: el checklist, con ellos
 }
 S.forEach((el,i) => el.addEventListener('input', () => {
   T[KEYS[i]] = +el.value;
   O[i].textContent = (+el.value).toFixed(2) + 's';
   cachedCards = null;
   cortesMedidos = true;          // lo está cuadrando a ojo: cuenta como medido
+  verificado = false;            // el timing cambió: lo visto ya no vale, re-previsualiza
+  pintarChecklist();
   if (!corriendo) drawFrame(+el.value);
 }));
 
@@ -468,8 +529,9 @@ function series(){
   return {total, contrib, n, finalTotal: total[n-1], finalContrib: contrib[n-1],
           gap: total[n-1]-contrib[n-1]};
 }
-const D = series();
-const MAXY = D.finalTotal * 1.18;
+// Solo los Shorts con proyección (pmt) tienen serie compuesta. El 'story' no lleva curva.
+let D = CFG.pmt ? series() : null;
+let MAXY = D ? D.finalTotal * 1.18 : 0;
 
 // ── Dibujo de texto ───────────────────────────────────────────────────────────
 function font(px, w){ return `${w||400} ${px}px "Segoe UI", Inter, system-ui, sans-serif`; }
@@ -578,21 +640,30 @@ function tarjetasDeSRT(cues){
   return salida;
 }
 
-/** Los tres cortes también salen del .srt: se busca la frase que los marca. */
+/** Los tres cortes también salen del .srt, buscando el ARRANQUE de cada grupo del guion activo.
+ *  (Antes las frases estaban cableadas al S3 — "put in", "that gap" — y con otro Short fallaban
+ *  las tres en silencio.) Contrato de grupos: [intro, <hook>, <curve>, ..., <cta>]. */
+const normalizarTexto = s => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+function cueDeFrase(cues, frase, nPalabras){
+  const objetivo = normalizarTexto(frase).split(' ').slice(0, nPalabras).join(' ');
+  if (!objetivo) return null;
+  return cues.find(c => normalizarTexto(c.texto).includes(objetivo)) || null;
+}
 function cortesDeSRT(cues){
-  const buscar = re => cues.find(c => re.test(c.texto.toLowerCase()));
-  const h = buscar(/put in|you put/);
-  const g = buscar(/that gap|gap\?/);
-  const q = buscar(/could you|fifty|\$?50 a month/);
-  return {hook: h && h.t0, curve: g && g.t0, cta: q && q.t0};
+  const g = SHORT.guion.grupos;
+  const busca = texto => cueDeFrase(cues, texto, 3) || cueDeFrase(cues, texto, 2);
+  const h = busca(g[1].texto);
+  const c = busca(g[2].texto);
+  const q = busca(g[g.length-1].texto);
+  return {hook: h && h.t0, curve: c && c.t0, cta: q && q.t0};
 }
 
 /** Una tarjeta, centrada, con las cifras en verde. Borde negro grueso: legible sobre cualquier cosa.
  *  Si la tarjeta no cabe (p.ej. lleva "$430,000"), encoge la fuente en vez de salirse del lienzo. */
 /** maxW 620, no el ancho de la zona segura: la curva verde cruza la banda de subtítulos por
  *  x≈853, y una tarjeta más ancha le pone texto encima. Verde sobre verde no se lee. */
-function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1){
-  const maxW = 620*s, gap = 16*s;
+function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620){
+  const maxW = anchoMax*s, gap = 16*s;
   let size = 62*s, anchos, totalW;
   for (let intento=0; intento<6; intento++){
     ctx.font = font(size, 700);
@@ -793,6 +864,224 @@ function drawCTA(t, W, H, s){
        {size:30*s, weight:600, color:P.brass, alpha:e*0.9, spacing:6*s});
 }
 
+// ── Escena S1 (story): dos caminos, mismo sueldo, final opuesto ───────────────
+// El gancho es una HISTORIA, no una proyección: no hay curva. Dos barras arrancan IGUALES
+// (mismo sueldo), luego una se vacía a $0 (gastos/hábitos) y la otra crece a $1,000,000+
+// (activos). El texto cinético (SAME SALARY → OPPOSITE ENDING → $0 vs $1,000,000+) ES el caption.
+function drawColumns(t, W, H, s){
+  const yBase = 1300*s;             // suelo común (dentro de SAFE: por debajo lo tapa la app)
+  const yTop  = 470*s;             // techo de la barra que crece
+  const track = yBase - yTop;      // altura máxima
+  const barW  = 168*s;
+  const cxL   = W*0.31, cxR = W*0.69;
+  const hSame = 0.30;              // altura del "mismo sueldo": lo que entra, igual para ambos
+  const loss  = '#C0968C';         // rosa apagado: el $0 ("se fue"), no rojo de fracaso. Único fuera de paleta.
+
+  // Fases (usan los cortes que calibrarAuto deduce del audio; en preview, SHORT.demo):
+  //  · llenado  [0 → hook]      ambas suben a hSame (mismo sueldo)
+  //  · divergen [hook → draw]   izq drena a ~0, der crece al tope
+  const aFill    = clamp01(t / Math.max(0.6, T.hook * 0.62));
+  const aDiverge = clamp01((t - T.hook) / Math.max(0.6, T.draw - T.hook));
+  const aNumR    = clamp01((t - (T.draw - 0.25)) / 0.4);   // $1,000,000+
+  const aNumL    = clamp01((t - (T.draw - 0.9))  / 0.4);   // $0
+  const eF = easeOut(aFill), eD = easeOut(aDiverge);
+
+  const filled    = Math.max(0.05, hSame * eF);    // 0.05: en el frame 1 ya hay dos tocones visibles
+  const leftFrac  = lerp(filled, 0.05, eD);        // el gastador: se queda casi en cero
+  const rightFrac = lerp(filled, 1.00, eD);        // el inversor: al tope
+  const yL = yBase - leftFrac*track, yR = yBase - rightFrac*track;
+
+  // ── suelo común ──
+  ctx.save();
+  ctx.strokeStyle = '#2B4238'; ctx.lineWidth = 2*s;
+  ctx.beginPath(); ctx.moveTo(cxL - barW*0.85, yBase+1); ctx.lineTo(cxR + barW*0.85, yBase+1); ctx.stroke();
+  ctx.restore();
+
+  // ── divisor central punteado: el bosillo donde el camino se bifurca ──
+  ctx.save();
+  ctx.strokeStyle = 'rgba(154,172,162,0.22)'; ctx.lineWidth = 2*s; ctx.setLineDash([6*s,11*s]);
+  ctx.beginPath(); ctx.moveTo(W/2, yTop - 6*s); ctx.lineTo(W/2, yBase); ctx.stroke();
+  ctx.restore();
+
+  // ── barra: degradado vertical + tapa brillante (nada de rectángulos planos) ──
+  function barra(cx, frac, cTop, cBot, glow, capColor){
+    const h = frac*track, yT = yBase - h;
+    ctx.save();
+    if (glow){ ctx.shadowColor = glow; ctx.shadowBlur = 38*s; }
+    const g = ctx.createLinearGradient(0, yT, 0, yBase);
+    g.addColorStop(0, cTop); g.addColorStop(1, cBot);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.roundRect(cx - barW/2, yT, barW, h, [16*s,16*s,0,0]); ctx.fill();
+    ctx.restore();
+    ctx.save();                                    // tapa: filo de luz en lo alto de la barra
+    ctx.strokeStyle = capColor; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx - barW/2 + 7*s, yT + 2*s); ctx.lineTo(cx + barW/2 - 7*s, yT + 2*s); ctx.stroke();
+    ctx.restore();
+    return yT;
+  }
+
+  barra(cxL, leftFrac, '#7A8C82', '#39463F', null, 'rgba(192,106,90,0.85)');   // hábitos: gris apagado
+  barra(cxR, rightFrac,'#3FD89A', '#12734F', 'rgba(31,158,110,0.7)', 'rgba(190,255,224,0.9)'); // activos
+
+  // ── líneas de acumulación dentro de la barra verde: los 30 años que se componen ──
+  ctx.save();
+  ctx.beginPath(); ctx.rect(cxR - barW/2, yR, barW, rightFrac*track); ctx.clip();
+  ctx.strokeStyle = 'rgba(7,18,14,0.30)'; ctx.lineWidth = 2*s;
+  for (let yy = yBase - 42*s; yy > yR; yy -= 46*s){
+    ctx.beginPath(); ctx.moveTo(cxR - barW/2, yy); ctx.lineTo(cxR + barW/2, yy); ctx.stroke();
+  }
+  ctx.restore();
+  // punto de luz en la cresta de la barra verde; tras el millón, RESPIRA (el tramo quieto
+  // posterior es el más largo del Short y un frame congelado ahí es un swipe)
+  const pulso = t > T.draw ? 1 + 0.20*Math.sin((t - T.draw)*2.6) : 1;
+  ctx.save();
+  ctx.globalAlpha = eD; ctx.shadowColor = 'rgba(31,158,110,0.95)'; ctx.shadowBlur = 20*s*pulso;
+  ctx.fillStyle = P.paper; ctx.beginPath(); ctx.arc(cxR, yR + 2*s, 7*s*pulso, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // ── PARTÍCULAS — deterministas: posición = f(t, semilla), sin estado. drawFrame tiene que
+  //    seguir siendo PURA (el exportador MP4 re-renderiza offline y cada frame debe ser idéntico). ──
+  const hash01 = n => { const x = Math.sin(n*127.1)*43758.5453; return x - Math.floor(x); };
+
+  // la fuga del SPENT: gotas que se desprenden del tocón, caen y se desvanecen — el dinero YÉNDOSE.
+  // Siguen goteando tras la divergencia (la pérdida no se detiene), más tenues.
+  if (eD > 0.05){
+    for (let i = 0; i < 6; i++){
+      const p = (t / (1.1 + hash01(i*29)*0.6) + hash01(i*11)) % 1;
+      const x = cxL - barW*0.62 - p*46*s + (hash01(i*31)-0.5)*26*s;
+      const y = yL + p * (yBase - yL - 8*s);
+      ctx.save();
+      ctx.globalAlpha = eD * (1-p) * 0.55;
+      ctx.fillStyle = loss;
+      ctx.beginPath(); ctx.arc(x, y, 4.5*s, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // chispas que SUBEN por dentro del OWNED: el interés compone aunque la escena esté quieta
+  if (eD > 0.05){
+    for (let i = 0; i < 7; i++){
+      const p = (t / (1.5 + hash01(i*17)*0.8) + hash01(i*5)) % 1;
+      const x = cxR + (hash01(i*23) - 0.5) * barW * 0.72;
+      const y = yBase - 10*s - p * (rightFrac*track - 30*s);
+      ctx.save();
+      ctx.globalAlpha = Math.sin(Math.PI*p) * 0.45 * eD;
+      ctx.fillStyle = '#BEFFE0';
+      ctx.beginPath(); ctx.arc(x, y, 3.5*s, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // ── fuente común + bifurcación: el MISMO sueldo se reparte en dos destinos ("same money in") ──
+  // Es el momento que antes faltaba: no se ve QUÉ los separó. Aquí una moneda (el sueldo) se bifurca;
+  // la rama que se POSEE sigue sólida y verde, la que se GASTA se apaga y se puntea (el dinero se va).
+  const aSrc = eF * (1 - aNumR);
+  if (aSrc > 0.03){
+    const ySrc = 402*s, rC = 26*s, forkY = ySrc + rC + 20*s;
+    ctx.save(); ctx.globalAlpha = aSrc; ctx.strokeStyle = P.brass; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(W/2, ySrc + rC); ctx.lineTo(W/2, forkY); ctx.stroke(); ctx.restore();   // tallo
+    ctx.save(); ctx.globalAlpha = aSrc; ctx.strokeStyle = P.growth; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxR, yR - 3*s); ctx.stroke(); ctx.restore();     // rama que trabaja
+    ctx.save(); ctx.globalAlpha = aSrc * (1 - eD*0.4); ctx.strokeStyle = loss; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
+    if (eD > 0.05) ctx.setLineDash([6*s, 9*s]);
+    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxL, yL - 3*s); ctx.stroke(); ctx.restore();     // rama que se va
+    ctx.save(); ctx.globalAlpha = aSrc;                                                                  // la moneda: el sueldo común
+    ctx.shadowColor = 'rgba(216,178,90,0.5)'; ctx.shadowBlur = 16*s;
+    ctx.fillStyle = P.ink; ctx.strokeStyle = P.brass; ctx.lineWidth = 3*s;
+    ctx.beginPath(); ctx.arc(W/2, ySrc, rC, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    text('$', W/2, ySrc + 11*s, {size:30*s, weight:800, color:P.brass, alpha:aSrc});
+
+    // monedas RECORRIENDO las ramas: el sueldo entrando, mes a mes. En el llenado fluyen a las
+    // dos por igual ("same money in"); al divergir, la rama del gasto deja de recibir.
+    for (let i = 0; i < 6; i++){
+      const p = (t / (0.85 + hash01(i*13)*0.5) + hash01(i*7)) % 1;
+      const der = i % 2 === 0;
+      const aRama = der ? 1 : (1 - eD);
+      if (aRama <= 0.02) continue;
+      const tx = der ? cxR : cxL, ty = (der ? yR : yL) - 3*s;
+      const x = lerp(W/2, tx, p), y = lerp(forkY, ty, p);
+      ctx.save();
+      ctx.globalAlpha = aSrc * aRama * Math.sin(Math.PI * Math.min(1, p*1.15)) * 0.9;
+      ctx.fillStyle = P.brass;
+      ctx.shadowColor = 'rgba(216,178,90,0.8)'; ctx.shadowBlur = 10*s;
+      ctx.beginPath(); ctx.arc(x, y, 6*s, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // ── insignia VS: aparece cuando el camino se bifurca ──
+  if (eD > 0.02){
+    const vsY = yBase - track*0.46;
+    ctx.save(); ctx.globalAlpha = eD;
+    ctx.fillStyle = P.ink; ctx.strokeStyle = P.grey; ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.arc(W/2, vsY, 34*s, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    text('VS', W/2, vsY + track*0.006 + 10*s, {size:29*s, weight:800, color:P.paper, alpha:eD*0.95});
+  }
+
+  // ── etiquetas de columna, en chip ──
+  function chip(cx, txt, colTxt, colBorde){
+    ctx.font = font(32*s, 700);
+    const w = ctx.measureText(txt).width + 46*s, h = 50*s, y0 = yBase + 26*s;
+    ctx.save();
+    ctx.fillStyle = 'rgba(13,28,22,0.65)'; ctx.strokeStyle = colBorde; ctx.lineWidth = 2*s;
+    ctx.beginPath(); ctx.roundRect(cx - w/2, y0, w, h, 25*s); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    text(txt, cx, y0 + h*0.68, {size:32*s, weight:700, color:colTxt, spacing:2*s});
+  }
+  chip(cxL, CFG.cols.izq.label, P.grey,  '#3a4d44');
+  chip(cxR, CFG.cols.der.label, P.brass, 'rgba(216,178,90,0.55)');
+
+  // ── fogonazo cuando el millón aterriza (0.4s): es EL frame del Short. Va debajo del texto
+  //    para que las letras sigan nítidas encima. ──
+  const dFlash = t - (T.draw - 0.05);
+  if (dFlash > 0 && dFlash < 0.4){
+    const aF2 = Math.sin(Math.PI * dFlash/0.4) * 0.28;
+    const gF = ctx.createRadialGradient(cxR, yR - 30*s, 0, cxR, yR - 30*s, 300*s);
+    gF.addColorStop(0, `rgba(190,255,224,${aF2})`); gF.addColorStop(1, 'rgba(190,255,224,0)');
+    ctx.save(); ctx.fillStyle = gF; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+
+  // ── banner: SAME SALARY → OPPOSITE ENDING, con el AÑO CORRIENDO mientras divergen ──
+  const aSame = 1 - clamp01((t - (T.hook - 0.3)) / 0.5);
+  const aOpp  = clamp01((t - T.hook) / 0.5);
+  const bannerY = SAFE.top*s + 142*s;
+  if (aSame > 0.01)
+    text('SAME SALARY', W/2, bannerY, {size:62*s, weight:800, color:P.paper,
+         alpha:easeOut(aSame), spacing:4*s, stroke:10*s});
+  if (aOpp > 0.01){
+    // mientras las barras divergen se VE pasar el tiempo (YEAR 1 → 30, lineal: tictac parejo);
+    // cuando el millón aterriza, se queda en "30 YEARS LATER"
+    const kicker = aNumR >= 1 ? '30 YEARS LATER' : `YEAR ${1 + Math.floor(aDiverge * 29)}`;
+    text(kicker, W/2, bannerY - 54*s, {size:24*s, weight:700, color:P.brass,
+         alpha:easeOut(aOpp)*0.85, spacing:6*s});
+    text('OPPOSITE ENDING', W/2, bannerY, {size:62*s, weight:800, color:P.brass,
+         alpha:easeOut(aOpp), spacing:2*s, stroke:10*s});
+  }
+
+  // ── cifras grandes: golpe al entrar, sobre cada barra. Una arriba, otra abajo: el hueco SE VE ──
+  function cifra(cx, yT, valor, color, a, glow){
+    if (a <= 0) return;
+    const y = yT - 30*s;
+    let esc = 1; const d = t - (T.draw - 0.25);
+    if (d > 0 && d < 0.5) esc = 1 + 0.16*Math.sin(Math.PI*(d/0.5));
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(cx, y); ctx.scale(esc, esc);
+    if (glow){ ctx.shadowColor = glow; ctx.shadowBlur = 24*s; }
+    text(valor, 0, 0, {size:58*s, weight:800, color, stroke:9*s});
+    ctx.restore();
+  }
+  // La derecha CUENTA mientras la barra crece: arranca lenta y se dispara (pow 1.6 — así se
+  // SIENTE el compuesto), y aterriza como "$1,000,000+" con el golpe. La izquierda no cuenta
+  // hacia atrás: la historia nunca dice de cuánto partió, solo dónde acabó.
+  const aCifraR = clamp01((t - (T.hook + 0.30)) / 0.40);
+  const conteo  = aNumR >= 1 ? CFG.cols.der.valor : money(1e6 * Math.pow(eD, 1.6));
+  cifra(cxL, yL, CFG.cols.izq.valor, loss,    easeOut(aNumL), null);
+  cifra(cxR, yR, conteo,             P.paper, easeOut(aCifraR), 'rgba(31,158,110,0.6)');
+}
+
 // ── Frame completo (PURA: mismo t -> mismo frame) ─────────────────────────────
 function drawFrame(t){
   const W = canvas.width, H = canvas.height, s = Math.min(W,H)/1080;
@@ -805,20 +1094,30 @@ function drawFrame(t){
   text('NET WORTHY', W/2, (SAFE.top + 24)*s, {size:26*s, weight:700, color:P.brass,
        alpha:0.9, spacing:6*s});
 
-  // crossfade intro -> gráfica
-  const fade = 0.45;
-  const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
-  const aChart = clamp01((t - (T.hook - fade)) / fade);
+  // escena central: la curva (stat) o las dos columnas (story). El resto del frame es común.
+  if (CFG.escena === 'columns'){
+    drawColumns(t, W, H, s);
+  } else {
+    // crossfade intro -> gráfica
+    const fade = 0.45;
+    const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
+    const aChart = clamp01((t - (T.hook - fade)) / fade);
 
-  if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
-  if (aChart > 0) drawChart(t, W, H, s, aChart);
+    if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
+    if (aChart > 0) drawChart(t, W, H, s, aChart);
+  }
 
-  // subtítulos (solo mientras habla de los números; en la intro el spec drop ya ES el subtítulo)
+  // subtítulos (tiempos SIEMPRE medidos). Posición por escena: en la gráfica van al centro;
+  // en las columnas, a la zona libre izquierda (la barra SPENT drenada la despeja) y más
+  // estrechos, para no pisar la barra verde (arranca en x≈661) ni la insignia VS.
   if (t >= T.hook && t < T.cta){
     const c = cards().find(k => t >= k.t0 && t < k.t1);
     if (c){
       const dentro = clamp01((t - c.t0) / 0.12);
-      dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, 1 + 0.05*(1-dentro));
+      if (CFG.escena === 'columns')
+        dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, 1 + 0.05*(1-dentro), 470);
+      else
+        dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, 1 + 0.05*(1-dentro));
     }
   }
 
@@ -827,11 +1126,18 @@ function drawFrame(t){
   // aviso YMYL: DENTRO de la zona segura. Abajo del todo lo tapaba el título del vídeo,
   // y un descargo que nadie ve no protege nada.
   // 22px, no 19: a 19px el aviso es ilegible en un móvil, y un descargo ilegible no protege nada.
-  const rPct = +(CFG.rate*100).toFixed(1);
-  text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
-       W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
-  text('S&P 500 ≈10%/yr nominal since 1957 · Not financial advice',
-       W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
+  if (CFG.escena === 'columns'){
+    text('Illustrative example · Investing involves risk of loss',
+         W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
+    text('Past results don’t guarantee future returns · Not financial advice',
+         W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
+  } else {
+    const rPct = +(CFG.rate*100).toFixed(1);
+    text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
+         W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
+    text('S&P 500 ≈10%/yr nominal since 1957 · Not financial advice',
+         W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
+  }
 
   // diagnóstico (nunca se graba)
   if (window.verZonas) dibujarZonasSeguras(W, H, s);
@@ -855,7 +1161,30 @@ function dibujarZonasSeguras(W, H, s){
 }
 
 // ── Reproducción: si hay audio, ÉL manda el reloj (imposible desincronizar) ───
-let raf = null, corriendo = false, sesion = 0;
+let raf = null, corriendo = false, sesion = 0, exportando = false;
+
+// ── Checklist de producción: el estado del pipeline, VISIBLE. Sin estado propio: lee el que
+//    ya existe (voz, cortesMedidos) más dos hechos: ¿previsualizaste ENTERO? ¿exportaste? ──
+let verificado = false, exportado = false;
+function pintarChecklist(){
+  const ul = document.getElementById('checklist-items');
+  if (!ul) return;
+  const conVoz = !!(audioEl.src && pcm);
+  const pasos = [
+    [true, `Short: <b>${CFG.ref}</b>${CFG.demo ? '' : ' — PUBLICADO (solo re-render)'}`],
+    [conVoz, conVoz ? `Voz cargada · ${T.total.toFixed(2)}s`
+                    : `Cargar la voz — <code>data/${CFG.voz}</code> (CapCut TTS → exportar MP3)`],
+    [conVoz && cortesMedidos, 'Cortes calibrados sobre TU audio (se hace solo al cargar el MP3)'],
+    [verificado, 'Previsualizar ENTERO y verificar (▶ hasta el final; se desmarca si tocas algo)'],
+    [exportado, 'Grabar el MP4 (⏺) y bajar el Frame final (⬇) para la portada'],
+  ];
+  ul.innerHTML = pasos.map(([ok, txt]) =>
+    `<li style="color:${ok ? 'var(--growth)' : 'var(--paper)'}">${ok ? '✅' : '⬜'} ${txt}</li>`).join('');
+  document.getElementById('checklist-post').innerHTML =
+    'Después: subir a YouTube Shorts + Facebook Reels y <b>anotar el ADN</b> ' +
+    '(<code>record-dna</code> + <code>record-cost</code>). Pasos exactos, textos de subida y ' +
+    'comandos: <b>docs/guiones/PRODUCCION-S1.md</b>.';
+}
 window.verReloj = false;
 window.verZonas = false;
 document.getElementById('reloj').onchange = e => {
@@ -888,8 +1217,45 @@ function reproducir(hasta, alTerminar){
     else { corriendo = false; audioEl.pause(); if (alTerminar) alTerminar(frames); }
   })();
 }
-document.getElementById('play').onclick = () => { statusEl.textContent=''; reproducir(T.total); };
+document.getElementById('play').onclick = () => {
+  statusEl.textContent='';
+  // solo cuenta como verificado si llegó AL FINAL (parar a medias no marca nada:
+  // reproducir() no llama al callback cuando otro play/stop toma el relevo)
+  reproducir(T.total, () => { verificado = true; pintarChecklist(); });
+};
 document.getElementById('stop').onclick = () => { sesion++; corriendo = false; audioEl.pause(); };
+
+/** Cambia el Short activo. Rehace la serie (solo si el Short lleva proyección), reinicia el reloj
+ *  desde su calibración/demo y descarta TODO lo del Short anterior — incluido el audio decodificado:
+ *  el exportador MP4 mete el AAC desde `pcm`, y si sobreviviera al cambio, el S1 saldría con la
+ *  voz del S3 incrustada. */
+function cargarShort(key){
+  if (!SHORTS[key]) return;
+  if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera a que termine para cambiar de Short.'; return; }
+  sesion++; corriendo = false; audioEl.pause(); audioEl.removeAttribute('src');
+  pcm = null; mimeCache = null;
+  SHORT = SHORTS[key]; CFG = SHORT;
+  D = CFG.pmt ? series() : null;
+  MAXY = D ? D.finalTotal * 1.18 : 0;
+  // El S3 arranca con su calibración MANUAL puesta (incluye subtítulos). El story no tiene voz
+  // todavía: sin tiempos medidos no hay subtítulos, y grabar sigue vetado hasta calibrar.
+  srtCards = CFG.demo ? null : CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+  cortesMedidos = !CFG.demo;
+  cachedCards = null;
+  verificado = false; exportado = false;
+  document.getElementById('auto').disabled = true;
+  document.getElementById('short').value = key;
+  document.getElementById('voz-proyecto').textContent = `🎙 Usar la voz del proyecto (${CFG.voz})`;
+  const tl = CFG.demo || CALIBRADO;
+  Object.assign(T, {hook:tl.hook, draw:tl.draw, curve:tl.curve, cta:tl.cta,
+                    total:tl.total ?? tl.duracion, spec:(tl.spec || CFG.spec || []).slice()});
+  pintarSliders();
+  drawFrame(Math.min(T.curve + 0.3, T.total));
+  statusEl.textContent = CFG.demo
+    ? `Short ${key}: reloj de PREVISUALIZACIÓN (sin voz). Carga data/${CFG.voz} y se recalibra contra el guion.`
+    : `Short ${key}: calibración a mano cargada. Carga data/${CFG.voz} y pulsa Grabar.`;
+}
+document.getElementById('short').onchange = e => cargarShort(e.target.value);
 
 // ── Audio: carga + detección de silencios ─────────────────────────────────────
 let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
@@ -899,21 +1265,22 @@ document.getElementById('mp3').onchange = e => { if (e.target.files[0]) usarAudi
 /** Carga la voz del proyecto sin pelearse con el diálogo de archivos.
  *  Necesita servirse por http (localhost); desde file:// el navegador bloquea leer el disco. */
 document.getElementById('voz-proyecto').onclick = async () => {
-  statusEl.textContent = 'Buscando data/voz-short-03.mp3…';
+  statusEl.textContent = `Buscando data/${CFG.voz}…`;
   try {
-    const r = await fetch('../../data/voz-short-03.mp3');
+    const r = await fetch(`../../data/${CFG.voz}`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const b = await r.blob();
-    await usarAudio(new File([b], 'voz-short-03.mp3', {type:'audio/mpeg'}));
+    await usarAudio(new File([b], CFG.voz, {type:'audio/mpeg'}));
   } catch (err) {
     statusEl.textContent = '⚠ No pude leerlo solo (' + err.message + '). ' +
       'Abre la página desde http://localhost:8765/docs/guiones/short-renderer.html, ' +
-      'o usa el selector de arriba con: Proyecto AI\\data\\voz-short-03.mp3';
+      `o usa el selector de arriba con: Proyecto AI\\data\\${CFG.voz}`;
   }
 };
 
 async function usarAudio(f){
   audioEl.src = URL.createObjectURL(f);
+  verificado = false; exportado = false;   // audio nuevo: lo visto y lo exportado ya no valen
   await new Promise(r => audioEl.onloadedmetadata = r);
   // floor, nunca toFixed: toFixed redondea HACIA ARRIBA la mitad de las veces y entonces
   // T.total > duración real -> currentTime jamás lo alcanza -> bucle infinito.
@@ -932,7 +1299,9 @@ async function usarAudio(f){
   S[4].max = Math.ceil(dur) + 2;
 
   // El S3 ya está PUBLICADO con la calibración hecha a mano: para ese audio no se toca nada.
-  const esElCalibrado = Math.abs(dur - CALIBRADO.duracion) <= 0.35;
+  // La duración sola NO basta: si la voz del S1 durase ~24s se llevaría la calibración (y los
+  // subtítulos) del S3 quemados. Tiene que ser el S3 el Short activo.
+  const esElCalibrado = SHORT === SHORTS['s3-stat'] && Math.abs(dur - CALIBRADO.duracion) <= 0.35;
   if (esElCalibrado){
     aplicarCalibracion({cuts:CALIBRADO, spec:CALIBRADO.spec, cards:CALIBRADO.cards}, dur);
     statusEl.textContent = `✅ Es el audio calibrado a mano del S3 (${dur}s). Pulsa Grabar.`;
@@ -1007,9 +1376,14 @@ document.getElementById('srt').onchange = async (e) => {
   if (c.hook  != null) T.hook  = +c.hook.toFixed(2);  else faltan.push('intro');
   if (c.curve != null) T.curve = +c.curve.toFixed(2); else faltan.push('nº dorado');
   if (c.cta   != null) T.cta   = +c.cta.toFixed(2);   else faltan.push('CTA');
-  // el cue donde se dice "$610,000" marca cuándo la curva debe llegar arriba
-  const seis = cues.find(q => /610|six hundred and ten/i.test(q.texto));
-  T.draw = seis ? +seis.t1.toFixed(2) : +(T.curve - 2.0).toFixed(2);
+  // el cue donde se dice la cifra grande (curvaLlegaEn) marca cuándo el visual llega arriba.
+  // Se busca la FRASE HABLADA de esa cifra (guion.cifras); si el ASR escribió dígitos, se
+  // buscan los dígitos. (Antes buscaba "610" a pelo: solo servía para el S3.)
+  const fraseCifra = (SHORT.guion.cifras.find(([,disp]) => disp === SHORT.guion.curvaLlegaEn) || [''])[0];
+  const digitos = (SHORT.guion.curvaLlegaEn.match(/\d/g) || []).join('').slice(0, 3);
+  const cueCifra = (fraseCifra && cueDeFrase(cues, fraseCifra, 3)) ||
+                   (digitos && cues.find(q => q.texto.replace(/\D/g, '').includes(digitos))) || null;
+  T.draw = cueCifra ? +cueCifra.t1.toFixed(2) : +(T.curve - 2.0).toFixed(2);
   pintarSliders();
   drawFrame(T.cta - 0.1);
 
@@ -1320,7 +1694,7 @@ async function grabar(){
   // Grabar con los cortes por defecto sobre un audio real = visuales adelantados a la voz.
   // Es el fallo más difícil de ver y el más caro: se descubre al mirar el vídeo terminado.
   if (audioEl.src && !cortesMedidos) throw new Error(
-    'los cortes siguen en mi estimación (5.4 / 18.2 / 20.8), no en tu audio. ' +
+    'los cortes no están medidos sobre tu audio: los visuales saldrían desincronizados. ' +
     'Carga el .srt de CapCut, o pulsa "Detectar cortes por silencios", o mueve un slider.');
   // reloj y zonas son diagnóstico: jamás deben quedar quemados en el vídeo
   const relojAntes = window.verReloj, zonasAntes = window.verZonas;
@@ -1366,8 +1740,22 @@ function descargar(blob, nombre){
 }
 
 document.getElementById('rec').onclick = async () => {
-  const btns = document.querySelectorAll('button');
+  // Guards COMUNES a los dos caminos (antes solo los tenía el respaldo WebM: el MP4 —el camino
+  // bueno— exportaba mudo o con el reloj demo sin quejarse):
+  //  · sin voz no hay Short: un vídeo mudo nunca es válido
+  //  · sin cortes MEDIDOS (calibración/.srt/sliders) los visuales van desincronizados de la voz
+  if (!audioEl.src || !pcm){
+    statusEl.textContent = `⚠ No hay voz cargada. Carga data/${CFG.voz} (o tu MP3) antes de grabar.`;
+    return;
+  }
+  if (!cortesMedidos){
+    statusEl.textContent = '⚠ Los cortes no están medidos sobre TU audio. Recarga el MP3 ' +
+      '(se calibra solo), o carga el .srt de CapCut, o ajusta los sliders con el reloj activado.';
+    return;
+  }
+  const btns = document.querySelectorAll('button, select');
   btns.forEach(b => b.disabled = true);
+  exportando = true;
   // los diagnósticos jamás se quedan quemados en el archivo
   const relojAntes = window.verReloj, zonasAntes = window.verZonas;
   window.verReloj = false; window.verZonas = false;
@@ -1387,7 +1775,8 @@ document.getElementById('rec').onclick = async () => {
       blob = await grabar();
     }
 
-    descargar(blob, `net-worthy-short-${canvas.width}x${canvas.height}.${blob.ext}`);
+    descargar(blob, `net-worthy-${CFG.ref}-${canvas.width}x${canvas.height}.${blob.ext}`);
+    exportado = true;
     const mb = (blob.size/1_048_576).toFixed(1);
     statusEl.textContent = blob.ext === 'mp4'
       ? `✅ MP4 · ${mb} MB · ${blob.frames} frames a ${blob.fps} fps · ` +
@@ -1397,9 +1786,11 @@ document.getElementById('rec').onclick = async () => {
   } catch (err) {
     statusEl.textContent = '⚠ No se descargó nada — ' + err.message;
   } finally {
+    exportando = false;
     window.verReloj = relojAntes; window.verZonas = zonasAntes;
     btns.forEach(b => b.disabled = false);
     document.getElementById('auto').disabled = !pcm;
+    pintarChecklist();
     drawFrame(T.curve + 0.3);
   }
 };

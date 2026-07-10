@@ -44,7 +44,8 @@ publicar, se llena al MEDIR. **Lo único que importa: el sábado 2026-07-12 corr
   voces Default caducan el 31-dic-2026.
 - **Confounder anotado:** el S3 se publicó a las 02:00 hora local con audiencia EN/US. Si retiene
   poco, puede ser la HORA, no el gancho. No atribuirlo a `hook_type`.
-- **Siguiente:** medir → producir S1 (`hook_type=story`; falta la escena de dos columnas) → S2, S4, S5.
+- **Siguiente:** producir S1 (escena de columnas LISTA en el motor multi-Short; solo falta la voz —
+  runbook: `docs/guiones/PRODUCCION-S1.md`) → medir S3 el sábado 12 → S2, S4, S5.
 - **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen (alcance
   orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
 

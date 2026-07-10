@@ -35,17 +35,25 @@ lo sabe y `dna` no mezclará peras con manzanas.
 ## S1 · GANCHO DE HISTORIA  → `hook_type: story`
 `ref: build-wealth-short-01-story`
 
-**Voz (pegar en ElevenLabs):**
+**Voz (pegar en el TTS):**
 ```
-Two men. Same job. Same salary. Thirty years later, one retires with almost nothing. The other retires with over a million dollars. Same money in. So what did the millionaire do?
+Two men. Same salary. Same discipline. Thirty years later, one retires with almost nothing — the other, with over a million. Same money in.
 
-He didn't budget harder. He didn't wake up at five in the morning. He bought assets.
+Here's the only difference: one spent his paycheck. The other used it to own things that paid him back.
 
-A habit moves money you already have. An asset makes money while you sleep.
+His habits didn't fail him. A habit just moves money you already have. An asset makes money while you sleep.
 
-Which one are you right now? Tell me below.
+You've already got the hard part: the discipline. The only question is where you point it.
+
+So — your next hundred dollars: does it leave, or does it work? Tell me below.
 ```
-**Texto en pantalla:** `SAME SALARY.` → `OPPOSITE ENDING.` → `$0 vs $1,000,000+` → `WHICH ONE ARE YOU?`
+**Reencuadre (2026-07-10):** el eje ya NO es *hábitos vs activos* (dicotomía falsa y que aleja al
+viewer: invertir $500/mes ES un hábito, y el CTA "¿cuál eres tú?" humilla a media audiencia). El eje
+es **qué hace el dinero: se MUEVE (se gasta, se va) o se MULTIPLICA (se posee, compone)**. Mismo
+sueldo, misma disciplina, distinta DIRECCIÓN. Honra el hábito (es el combustible) y el cierre es
+accionable, no acusatorio. Alineado con el S2 ("Discipline is fuel. Fuel with no engine goes nowhere").
+**Texto en pantalla:** `SAME SALARY.` → `OPPOSITE ENDING.` → `SPENT $0  vs  OWNED $1,000,000+` → `LEAVE OR WORK?`
+**Columnas:** `SPENT` (money leaves) vs `OWNED` (money works) — juzgan al *dinero*, no a la persona.
 **Pexels:** `two businessmen walking opposite directions` · `crossroads silhouette` · `empty wallet` · `luxury home sunset` · `stock chart rising`
 
 ---

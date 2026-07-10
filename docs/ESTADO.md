@@ -4,8 +4,10 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
-> **Última actualización: 2026-07-10.** Estado en una línea:
-> *el Short #1 está PUBLICADO; `production_outcome = 0`; lo único que importa es MEDIR el sábado 12.*
+> **Última actualización: 2026-07-10 (tarde).** Estado en una línea:
+> *el Short #1 está PUBLICADO; `production_outcome = 0`; lo único que importa es MEDIR el sábado 12.
+> El S1 está LISTO EN EL MOTOR (escena de columnas + guion reencuadrado + runbook): solo falta que
+> el usuario grabe la voz. Guía paso a paso: `docs/guiones/PRODUCCION-S1.md`.*
 
 ---
 
@@ -71,6 +73,16 @@ Todo el contexto (motor de voz, motor de visuales, fps, confounder, URLs) está 
 ## 5. EL MOTOR DE VIDEO — `docs/guiones/short-renderer.html`
 Un solo HTML, sin dependencias, se abre con doble clic. **Genera el Short entero**: intro, curva
 compuesta, número dorado, CTA y subtítulos quemados, con la voz incrustada. **No hace falta CapCut.**
+
+**Desde 2026-07-10 es MULTI-SHORT** (selector arriba): cada Short es un bloque en `SHORTS[...]` con
+su `escena` (`chart` = curva del S3 · `columns` = dos columnas del S1), su `voz` (`data/voz-short-NN.mp3`),
+su guion y su CTA. La escena `columns` narra SPENT vs OWNED con monedas por las ramas, año corriendo,
+conteo al millón, fuga y chispas — **todo determinista** (`drawFrame` sigue siendo pura: verificado
+por comparación de píxeles). Hay un **checklist de producción que se marca solo** (voz → calibración →
+previsualización entera → MP4). Guards añadidos tras auditoría: sin voz o sin cortes medidos no se
+graba (ahora también en el camino MP4), el audio decodificado se suelta al cambiar de Short (antes el
+S1 habría salido CON LA VOZ DEL S3), la calibración manual del S3 solo se aplica si el S3 está activo,
+y el `.srt` deriva los cortes del guion activo (ya no está cableado al S3).
 
 ```
 1. Servirlo por http (el botón "Usar la voz del proyecto" hace fetch y file:// lo bloquea):
@@ -154,10 +166,12 @@ cuadra. Y **nunca** llamar al S&P "sólido" o "seguro": cayó **-57%** en 2007-0
 
 ## 9. QUÉ HACER DESPUÉS (en este orden)
 1. **Sábado 12: MEDIR.** `record-analytics` + `record-cost` + `record-outcome` + `dna`. Nada más.
-2. **Producir el S1** (`hook_type=story`, Marcus vs Dylan). Guion en `docs/guiones/shorts-pack-01.md`.
-   Falta: (a) que el usuario grabe la voz con CapCut TTS y la exporte a MP3;
-   (b) **una escena nueva** en el motor: dos columnas enfrentadas (`$0` vs `$1,000,000+`).
-   Esa escena ya **no es especulativa**: la pide un Short concreto. Es la secuencia de la Regla 1.
+2. **Producir el S1** (`hook_type=story`). La escena de dos columnas **YA EXISTE** y el guion se
+   **reencuadró** (2026-07-10): el eje ya no es "hábitos vs activos" (falso y humilla al viewer),
+   es **qué hace el dinero — se GASTA (SPENT, $0) o se POSEE (OWNED, $1M+)** — respetando la
+   disciplina. Solo falta: **que el usuario grabe la voz** (CapCut TTS "Firme Pilot" →
+   `data/voz-short-01.mp3`). Todo el paso a paso, textos de subida y comandos de anotación:
+   **`docs/guiones/PRODUCCION-S1.md`**. Guion en `shorts-pack-01.md`.
 3. Luego S2 (`contrarian`), S4 (`shock`), S5 (`question`). **Uno al día.**
    Los 5 comparten tema, voz y estilo: **la única variable es el gancho.** Es un experimento con la
    variable aislada, que es lo que exige la Regla 3.
