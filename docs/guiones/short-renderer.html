@@ -67,7 +67,10 @@
     <button id="play" class="ghost">▶ Previsualizar</button>
     <button id="stop" class="ghost">■ Parar</button>
     <label style="font-size:13px;color:var(--grey)">
-      <input type="checkbox" id="reloj"> ver reloj (diagnóstico)
+      <input type="checkbox" id="reloj"> ver reloj
+    </label>
+    <label style="font-size:13px;color:var(--grey)">
+      <input type="checkbox" id="zonas"> ver zonas seguras (YT/FB)
     </label>
   </div>
 </div>
@@ -104,6 +107,13 @@
 
 <script>
 const P = { ink:'#0A1A14', growth:'#1F9E6E', brass:'#D8B25A', paper:'#F4F6F3', grey:'#5C6E64' };
+
+/** ZONAS SEGURAS (px sobre 1080x1920). Unión de lo que tapan las dos plataformas:
+ *  - YouTube Shorts: ~350px abajo (canal, título, música) · 120px a la derecha (like/compartir)
+ *  - Facebook Reels: ~290px abajo (caption y botones) · ~65px a los lados
+ *  Nada importante fuera de esto. El nº dorado y el aviso YMYL vivían en la franja tapada. */
+const SAFE = { top: 190, bottom: 360, left: 70, right: 130 };
+const SAFE_BOT = 1920 - SAFE.bottom;   // 1560: por debajo, no se ve en el móvil
 
 // ── El guion. Cambia SOLO esto para producir los otros Shorts. ────────────────
 const CFG = {
@@ -309,8 +319,8 @@ function cortesDeSRT(cues){
 
 /** Una tarjeta, centrada, con las cifras en verde. Borde negro grueso: legible sobre cualquier cosa.
  *  Si la tarjeta no cabe (p.ej. lleva "$430,000"), encoge la fuente en vez de salirse del lienzo. */
-function dibujarSubtitulo(palabras, cx, cy, s, alpha){
-  const maxW = canvas.width * 0.88, gap = 16*s;
+function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1){
+  const maxW = (canvas.width - 2*SAFE.left - 60*s), gap = 16*s;   // dentro de la zona segura
   let size = 62*s, anchos, totalW;
   for (let intento=0; intento<6; intento++){
     ctx.font = font(size, 700);
@@ -319,13 +329,16 @@ function dibujarSubtitulo(palabras, cx, cy, s, alpha){
     if (totalW <= maxW) break;
     size *= 0.92;
   }
-  let x = cx - totalW/2;
+  ctx.save();
+  ctx.translate(cx, cy); ctx.scale(escala, escala);   // micro-pop al entrar: el ojo lo engancha
+  let x = -totalW/2;
   palabras.forEach((p,i) => {
     const esCifra = /\$|\d/.test(p);
-    text(p, x, cy, {size, weight:700, color: esCifra ? P.growth : P.paper,
-                    align:'left', alpha, stroke: 12*s});
+    text(p, x, 0, {size, weight:700, color: esCifra ? P.growth : P.paper,
+                   align:'left', alpha, stroke: 12*s});
     x += anchos[i] + gap;
   });
+  ctx.restore();
 }
 
 // ── Escena 1: la intro (spec drop) ────────────────────────────────────────────
@@ -359,11 +372,12 @@ function drawHook(t, W, H, s){
 
 // ── Escena 2-4: la gráfica ────────────────────────────────────────────────────
 function drawChart(t, W, H, s, alpha){
-  const x0 = W*0.09, x1 = W - W*0.09;
-  const yTop = H*0.225, yBot = H*0.735;
-  const foot = H*0.815, head = H*0.085;
-  const px = i => lerp(x0, x1, i/(D.n-1));
+  // Todo dentro de SAFE: fuera de ahí lo tapa la interfaz de YouTube/Facebook.
+  const x0 = 150*s, x1 = W - SAFE.right - 10*s;
+  const yTop = 470*s, yBot = 1150*s;
+  const head = SAFE.top + 25*s;
   const py = v => lerp(yBot, yTop, v/MAXY);
+  const px = i => lerp(x0, x1, i/(D.n-1));
 
   // La curva TERMINA de dibujarse cuando la voz dice "$610,000" (T.draw), no cuando le apetece.
   // Si el contador llega a la cifra 3s después de oírla, el clímax se deshincha.
@@ -438,36 +452,31 @@ function drawChart(t, W, H, s, alpha){
   text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${Math.min(CFG.years, Math.floor(idx/12)+1)}`,
        W/2, head + 186*s, {size:22*s, weight:600, color:P.brass, alpha:alpha*0.85, spacing:4*s});
 
-  // bloque final: columnas + número dorado
+  // "YOU PAID IN $180,000" va PEGADO a la línea de aportes, dentro de la gráfica.
+  // Antes era una columna abajo, en la franja que tapa la interfaz. Y el contador de arriba ya
+  // dice el total, así que la columna "YOU WALK AWAY WITH" solo repetía.
+  if (p > 0.35){
+    const aP = clamp01((p - 0.35) / 0.25);
+    const yc = py(D.contrib[Math.min(idx, D.n-1)]);
+    text('YOU PAID IN ' + money(D.finalContrib), x1, yc + 42*s,
+         {size:26*s, weight:600, color:'#9AACA2', align:'right', alpha:aP*alpha*0.9, stroke:8*s});
+  }
+
+  // el número dorado: golpe al entrar, luego respira. Es el frame que la gente rebobina,
+  // así que vive BIEN dentro de la zona segura, no a 193px del borde.
   if (aLab > 0){
-    const colL = W*0.09, colR = W - W*0.09;
-    text('YOU PAID IN', colL, foot, {size:22*s, weight:600, color:P.grey, align:'left',
-         alpha:aLab*alpha, spacing:2*s});
-    text(money(D.finalContrib), colL, foot+52*s, {size:52*s, weight:700, color:P.grey,
-         align:'left', alpha:aLab*alpha});
-    text('YOU WALK AWAY WITH', colR, foot, {size:22*s, weight:600, color:P.growth, align:'right',
-         alpha:aLab*alpha, spacing:2*s});
-    text(money(D.finalTotal), colR, foot+52*s, {size:52*s, weight:700, color:P.growth,
-         align:'right', alpha:aLab*alpha});
-
-    ctx.save(); ctx.globalAlpha = aLab*alpha;
-    ctx.strokeStyle='rgba(216,178,90,0.35)'; ctx.lineWidth=1.5*s;
-    ctx.beginPath(); ctx.moveTo(colL, foot+88*s); ctx.lineTo(colR, foot+88*s); ctx.stroke();
-    ctx.restore();
-
-    // el número dorado: golpe al entrar, luego respira. Es el frame que la gente rebobina.
     const dg = t - T.curve;
     let eg = 1;
     if (dg > 0 && dg < 0.6) eg = 1 + 0.16*Math.sin(Math.PI*(dg/0.6));
     else if (dg >= 0.6) eg = 1 + 0.012*Math.sin((dg-0.6)*2.4);
+    text('THE GAP', W/2, 1330*s, {size:24*s, weight:600, color:P.brass,
+         alpha:aLab*alpha*0.75, spacing:6*s});
     ctx.save();
     ctx.globalAlpha = aLab*alpha;
-    ctx.translate(W/2, foot+162*s); ctx.scale(eg, eg);
+    ctx.translate(W/2, 1420*s); ctx.scale(eg, eg);
     ctx.shadowColor='rgba(216,178,90,0.55)'; ctx.shadowBlur=22*s;
-    text(money(D.gap), 0, 0, {size:74*s, weight:800, color:P.brass});
+    text(money(D.gap), 0, 0, {size:82*s, weight:800, color:P.brass});
     ctx.restore();
-    text('you never worked a single hour for', W/2, foot+202*s,
-         {size:25*s, weight:500, color:P.paper, alpha:aLab*alpha*0.72});
   }
 }
 
@@ -508,7 +517,8 @@ function drawFrame(t){
   g.addColorStop(0,'rgba(31,158,110,0.09)'); g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
-  text('NET WORTHY', W/2, H*0.085, {size:26*s, weight:700, color:P.brass, alpha:0.9, spacing:6*s});
+  text('NET WORTHY', W/2, (SAFE.top + 24)*s, {size:26*s, weight:700, color:P.brass,
+       alpha:0.9, spacing:6*s});
 
   // crossfade intro -> gráfica
   const fade = 0.45;
@@ -523,30 +533,52 @@ function drawFrame(t){
     const c = cards().find(k => t >= k.t0 && t < k.t1);
     if (c){
       const dentro = clamp01((t - c.t0) / 0.12);
-      dibujarSubtitulo(c.palabras, W/2, H*0.345, s, dentro);
+      dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, 1 + 0.05*(1-dentro));
     }
   }
 
   drawCTA(t, W, H, s);
 
-  // aviso YMYL: siempre visible, protege la monetización
+  // aviso YMYL: DENTRO de la zona segura. Abajo del todo lo tapaba el título del vídeo,
+  // y un descargo que nadie ve no protege nada.
   const rPct = +(CFG.rate*100).toFixed(1);
   text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
-       W/2, H - 74*s, {size:18*s, color:P.paper, alpha:0.42});
-  text('S&P 500 has returned ≈10%/yr nominal since 1957 · Not financial advice',
-       W/2, H - 40*s, {size:18*s, color:P.paper, alpha:0.42});
+       W/2, 1490*s, {size:19*s, color:P.paper, alpha:0.45});
+  text('S&P 500 ≈10%/yr nominal since 1957 · Not financial advice',
+       W/2, 1524*s, {size:19*s, color:P.paper, alpha:0.45});
 
-  // reloj de diagnóstico: para comprobar a ojo si un corte cae donde habla la voz
+  // diagnóstico (nunca se graba)
+  if (window.verZonas) dibujarZonasSeguras(W, H, s);
   if (window.verReloj)
-    text(`t=${t.toFixed(2)}s`, W/2, H*0.135, {size:34*s, weight:700, color:'#FF6B6B'});
+    text(`t=${t.toFixed(2)}s`, W/2, 165*s, {size:34*s, weight:700, color:'#FF6B6B'});
+}
+
+/** Pinta lo que tapan YouTube y Facebook. Si algo tuyo cae dentro del rojo, no existe. */
+function dibujarZonasSeguras(W, H, s){
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,60,60,0.22)';
+  ctx.fillRect(0, 0, W, SAFE.top*s);
+  ctx.fillRect(0, SAFE_BOT*s, W, H - SAFE_BOT*s);
+  ctx.fillRect(0, SAFE.top*s, SAFE.left*s, (SAFE_BOT-SAFE.top)*s);
+  ctx.fillRect(W - SAFE.right*s, SAFE.top*s, SAFE.right*s, (SAFE_BOT-SAFE.top)*s);
+  ctx.strokeStyle = '#FF3C3C'; ctx.lineWidth = 3*s;
+  ctx.strokeRect(SAFE.left*s, SAFE.top*s, W - (SAFE.left+SAFE.right)*s, (SAFE_BOT-SAFE.top)*s);
+  ctx.restore();
+  text('↑ ZONA SEGURA · lo de fuera lo tapa la app ↓', W/2, (SAFE_BOT + 44)*s,
+       {size:22*s, weight:700, color:'#FF6B6B', spacing:2*s});
 }
 
 // ── Reproducción: si hay audio, ÉL manda el reloj (imposible desincronizar) ───
 let raf = null, corriendo = false, sesion = 0;
 window.verReloj = false;
+window.verZonas = false;
 document.getElementById('reloj').onchange = e => {
   window.verReloj = e.target.checked;
-  if (!corriendo) drawFrame(T.total);
+  if (!corriendo) drawFrame(T.curve + 0.3);
+};
+document.getElementById('zonas').onchange = e => {
+  window.verZonas = e.target.checked;
+  if (!corriendo) drawFrame(T.curve + 0.3);
 };
 
 function reproducir(hasta, alTerminar){
@@ -768,9 +800,9 @@ async function grabar(){
   if (audioEl.src && !cortesMedidos) throw new Error(
     'los cortes siguen en mi estimación (5.4 / 18.2 / 20.8), no en tu audio. ' +
     'Carga el .srt de CapCut, o pulsa "Detectar cortes por silencios", o mueve un slider.');
-  // el reloj es diagnóstico: jamás debe quedar quemado en el vídeo
-  const relojAntes = window.verReloj;
-  window.verReloj = false;
+  // reloj y zonas son diagnóstico: jamás deben quedar quemados en el vídeo
+  const relojAntes = window.verReloj, zonasAntes = window.verZonas;
+  window.verReloj = false; window.verZonas = false;
   let seFue = false;
   const vigia = () => { if (document.hidden) seFue = true; };
   document.addEventListener('visibilitychange', vigia);
@@ -797,7 +829,7 @@ async function grabar(){
     return blob;
   } finally {
     document.removeEventListener('visibilitychange', vigia);
-    window.verReloj = relojAntes;
+    window.verReloj = relojAntes; window.verZonas = zonasAntes;
   }
 }
 
