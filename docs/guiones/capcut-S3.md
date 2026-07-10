@@ -1,7 +1,14 @@
-# MONTAJE EN CAPCUT — Short S3 (el de la curva)
+# ⚠️ OBSOLETO — MONTAJE EN CAPCUT (Short S3)
 
-> El más barato de los cinco: la animación ya es el clímax. Objetivo: publicar hoy.
-> `ref: build-wealth-short-03-stat` · `hook_type: stat` · ~30s · 1080x1920
+> **Este flujo YA NO SE USA.** El Short se genera entero con `docs/guiones/short-renderer.html`:
+> visuales, voz y subtítulos quemados, exportado como MP4 H.264+AAC listo para subir. Sin editar.
+>
+> **CapCut solo sirve para una cosa:** generar el MP3 de la voz con su TTS (`Texto a voz`).
+> Todo lo demás de este documento se conserva como registro histórico de cómo se produjo el S3.
+>
+> El S3 se publicó el 2026-07-10 con el renderizador, no con este montaje.
+
+`ref: build-wealth-short-03-stat` · `hook_type: stat` · 24s · 1080x1920
 
 ---
 

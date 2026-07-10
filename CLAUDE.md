@@ -30,18 +30,27 @@ publicado revele una limitación concreta. Excepción: instrumentación de captu
 Hito actual: **10 videos instrumentados**. Progreso = filas del dataset, no commits ni módulos.
 No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
-## Estado actual
-Sistema construido, auditado, sin bugs que afecten decisiones (87 tests, DB reseteada limpia).
-`decide` ya pondera por DINERO (feature monetization/RPM), no solo vistas. `production_outcome = 0`:
-el moat está vacío hasta el primer video. **Marca hecha y EN VIVO** (Net Worthy @networthytv; kit en
-`marca/`). Primer video decidido, empaquetado e instrumentado: build-wealth "assets vs habits", ref
-`build-wealth-assets-vs-habits-2026-07` (paquete en `docs/guiones/build-wealth-PAQUETE-COMPLETO.md`).
-Producción: stack gratis (ElevenLabs voz Brian + CapCut + Pexels). **El único pendiente real es
-PRODUCIR Y PUBLICAR el video #1** (empezar por el Short de 45s). Detalle de todo en `docs/ESTADO.md`.
+## Estado actual (2026-07-10) — LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
+**Short #1 PUBLICADO** el 2026-07-10 (YouTube Shorts + Facebook Reels), ref
+`build-wealth-short-03-stat`. Pero **`production_outcome` = 0 filas**: el moat no se llena al
+publicar, se llena al MEDIR. **Lo único que importa: el sábado 2026-07-12 correr `record-analytics`
++ `record-cost` + `record-outcome` + `dna`.** 92 tests verdes. 2 de 10 videos instrumentados, 0 medidos.
+
+- **Motor de video:** `docs/guiones/short-renderer.html` genera el Short entero (visuales + voz +
+  subtítulos quemados) y exporta **MP4 H.264+AAC** listo para subir. Sin CapCut. Datos por Short en
+  `SHORTS[...]`; el resto es motor. Tiene **calibrador automático** que deduce cortes y subtítulos
+  del audio (verificado: reproduce exacto la calibración manual del S3).
+- **Voz actual:** CapCut TTS. ElevenLabs aplazado: su plan gratis no da derechos comerciales y sus
+  voces Default caducan el 31-dic-2026.
+- **Confounder anotado:** el S3 se publicó a las 02:00 hora local con audiencia EN/US. Si retiene
+  poco, puede ser la HORA, no el gancho. No atribuirlo a `hook_type`.
+- **Siguiente:** medir → producir S1 (`hook_type=story`; falta la escena de dos columnas) → S2, S4, S5.
+- **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen (alcance
+  orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
 
 ## Docs (leer al retomar)
-`docs/ESTADO.md` (traspaso) · `docs/VISION.md` (arquitectura congelada) · `docs/POLITICA.md` ·
-`docs/guiones/` (paquetes de producción) · `marca/` (kit de marca).
+`docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/POLITICA.md` ·
+`docs/VISION.md` (arquitectura congelada) · `docs/guiones/` (guiones, motor, calibración) · `marca/`.
 
 ## Convenciones
 - Responder en **español**; el contenido del canal va en **inglés**.

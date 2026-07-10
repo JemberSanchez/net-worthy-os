@@ -1,15 +1,18 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
-> **Para el nuevo chat:** lee este archivo primero, luego `CLAUDE.md`, `docs/POLITICA.md` y
-> `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI` (repo git, rama `master`).
-> Hay memoria en `~/.claude/projects/.../memory/` (índice `MEMORY.md`) que se carga sola.
+> **Para el nuevo chat:** lee este archivo entero antes de tocar nada. Luego `CLAUDE.md`,
+> `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
+> (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
+>
+> **Última actualización: 2026-07-10.** Estado en una línea:
+> *el Short #1 está PUBLICADO; `production_outcome = 0`; lo único que importa es MEDIR el sábado 12.*
 
 ---
 
 ## 1. Qué es
-Sistema de inteligencia que decide **QUÉ** contenido crear (por datos: demanda + dinero) y
-acumula **qué funciona**. NO es un generador de video. Nicho: **finanzas/inversiones/crypto,
-faceless, audiencia EN**. Canal: **Net Worthy** (@networthytv).
+Sistema que decide **QUÉ** contenido crear (por datos: demanda + dinero) y acumula **qué funciona**.
+NO es un generador de video — el video es el primer producto, el activo es el conocimiento calibrado.
+Nicho: **finanzas/inversiones/crypto, faceless, audiencia EN**. Canal: **Net Worthy** (@networthytv).
 
 ## 2. El reparto mental (lo más importante)
 ```
@@ -17,127 +20,208 @@ SISTEMA decide QUÉ (tema, por demanda+RPM)  →  TU CLAUDE piensa CÓMO (ángul
                                             →  SISTEMA acumula QUÉ FUNCIONA (record-outcome)
 ```
 Regla dura (memoria [[raw-term-is-que-not-video]]): un término del detector ("build wealth") es
-una **señal de demanda, NO un video**. SIEMPRE estructurarlo en un catch-up explainer (hook → qué
-cambió → datos → alcista → riesgo → "y a mí qué" → cierre) + aviso YMYL.
-
-## 3. Qué está construido (todo en git, **87 tests verdes**, auditado y sin bugs que afecten decisiones)
-- **Kernel** `omega/reasoning/` (domain-agnostic, test de pureza AST): beliefs/predictions,
-  signals, hypotheses, opportunities, decision_engine (score = confianza + Σ peso·feature), decisions.
-- **Observación + decisión** `omega/`: `sources/rss.py` (12 feeds) · **`sources/youtube.py`**
-  (YouTube Data API, filtro de idioma solo-EN) · `analyze/momentum.py` (presencia RSS) ·
-  **`analyze/demand.py`** (demanda por vistas + `related`) · **`analyze/monetization.py`**
-  (RPM por sub-nicho) · `analyze/hypothesis_engine.py` (genera candidatas de 2 orígenes).
-- **`decide` pondera 4 señales de audiencia + dinero:** demand (vistas) · gap (desatendido) ·
-  demand_momentum (emergente) · **monetization (RPM — rentabilidad, no viralidad)**.
-  Además YouTube **origina** temas (frases de alta demanda) aunque RSS no las levante.
-- **Laboratorio creativo** `omega/creative/`: patterns (CKB), decisions+calibración, combinator,
-  reasoning_loop, production, tradeoffs, experiments, questions, thinking (inerte sin LLM).
-- **Instrumentación** `omega/creative/production_dna.py`: ADN por video (hook/story/cta/bloques)
-  + analíticas (CTR/AVD/retención) + coste (horas/$/tiempo) + `dna_calibration` (con guard de
-  confounding: marca PROVISIONAL con n bajo). Comandos record-dna/record-analytics/record-cost/dna.
-
-## 4. Comandos (`python -m omega.cli <cmd>`) — y `/daily`
-Diario: `ingest` · `youtube-scan` · `signals` · `decide` (o el atajo **`/daily`**).
-Idea: `think "<tema>"` → pegar pack en Claude → rellenar data/think_result.json → `record-think`.
-Explorar: `trends` · `youtube <q>` · `related <tema>` · `patterns` · `combine`.
-Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` · `dna` · `learnings`.
-Tests: `python -m unittest discover -s tests -q`.
-
-## 5. MARCA — hecha y EN VIVO
-- Canal **Net Worthy**, handle **@networthytv** (mismo en las 4 redes idealmente).
-- Tagline: **"Wealth, explained plainly."**
-- Símbolo: la **N** con la pata derecha convertida en flecha dorada hacia arriba (net worth ↑),
-  fondo cuadrado full-bleed verde. Paleta "green felt & brass" (`#0A1A14` ink · `#1F9E6E` growth ·
-  `#D8B25A` brass · `#F4F6F3` paper).
-- Kit completo con descargas PNG en **`marca/export.html`** (+ `marca/README.md`). Avatar y banner
-  ya subidos al canal.
-
-## 6. PRIMER VIDEO — decidido, empaquetado, instrumentado
-- El sistema (corrido en fresco) eligió **"build wealth"** por demanda+RPM (venció a SpaceX/crypto).
-- Ángulo: **"No construyes riqueza con hábitos, sino con activos"** (assets vs habits).
-- Gancho: **Marcus vs Dylan** (dos hombres, mismo sueldo, uno se jubila pobre y otro rico) — recurso
-  narrativo para enganchar, se resuelve al min ~4 (= activos).
-- Paquete completo (Short 45s + largo 7min palabra por palabra, retención, títulos, miniaturas,
-  b-roll, YMYL): **`docs/guiones/build-wealth-PAQUETE-COMPLETO.md`**.
-- Registrado: `creative_decision` + `production_dna` con ref **`build-wealth-assets-vs-habits-2026-07`**.
-
-## 7. PRODUCCIÓN — stack (ver memoria [[production-stack]])
-- **Voz:** ElevenLabs — voz **Brian**, modelo **Multilingual v2**, stability 50 / similarity 75 /
-  style 35 / speaker boost ON. Guion listo para TTS en `docs/guiones/short-TTS.txt`.
-  ⚠️ **REQUIERE plan Starter ($5/mes)**: el gratis no da licencia comercial, prohíbe canales
-  monetizados y exige "elevenlabs.io" en el título. Los derechos se conceden AL GENERAR, así que
-  el audio hecho en gratis NO se legaliza pagando después. Alternativas gratis con derechos:
-  Google Cloud TTS / Piper (peor calidad).
-- **Edición:** CapCut (subtítulos auto). **B-roll:** Pexels/Pixabay. **Miniatura:** Canva.
-  **Música:** YouTube Audio Library. **IA imagen:** Ideogram/Bing.
-- Nota MCP: en sesiones no-interactivas Claude **no** puede conectar/usar MCPs (OAuth). ElevenLabs
-  conectado por el usuario pero no llega a la sesión. No bloquea: el pipeline es manual con apps web.
-
-## 8. Estado honesto / lo más flojo
-**Ya hay un video publicado** (Short S3, 2026-07-10). Pero `production_outcome` **sigue en 0**: el
-moat no se llena al publicar, se llena al MEDIR. Hasta que no corras `record-outcome` con los
-números reales de las 48h, el sistema no ha aprendido nada. Publicar era la condición necesaria;
-medir es la suficiente.
-
-2 de 10 videos instrumentados (el largo aún sin producir). Política: motor CONGELADO
-(docs/POLITICA.md), hito = 10 videos con ADN + resultado + coste. La DB está limpia (backup `.bak`
-en data/).
-
-## 9. ✅ PUBLICADO — ahora toca MEDIR (2026-07-12, a las 48h)
-El Short S3 se publicó el **2026-07-10 a las 02:00 (hora local)** en **YouTube Shorts** y
-**Facebook Reels**. Archivo: MP4 H.264+AAC, 1080x1920, 30 fps, 24.03s, 13 MB, generado entero por
-`docs/guiones/short-renderer.html`. Contexto guardado en `production_context`.
-
-> ⚠️ **Confounder anotado:** se publicó a las 2 de la mañana hora local y la audiencia es EN/US.
-> Si la velocidad inicial es baja, puede ser la HORA, no el gancho. No lo atribuyas al `hook_type`.
-
-**A las 48h** (2026-07-12), de YouTube Studio y de Facebook:
-```
-python -m omega.cli record-analytics    # ctr/avd/retención como FRACCIÓN 0..1, NO %
-python -m omega.cli record-cost         # tus horas REALES de hoy
-python -m omega.cli record-outcome build-wealth-short-03-stat <0..1>
-python -m omega.cli dna
-```
-Los JSON ya están en `data/` con ceros y con el aviso del formato. `production_outcome` sigue en 0
-hasta que corras `record-outcome`: ese será el primer dato real que aprende el sistema.
-
-**Después** (y solo después): extraer el motor de vídeo configurable (`SHORTS` como datos + escenas).
-POLITICA.md Regla 1: publicar → detectar limitación → construir.
+una **señal de demanda, NO un video**. Estructurarlo siempre + aviso YMYL.
 
 ---
 
-## 9-bis. Cómo se produjo (por si hay que repetirlo)
-El vídeo **ya se genera solo**. `docs/guiones/short-renderer.html` produce los 24s completos
-(intro, curva, número dorado, CTA y subtítulos quemados) con la voz incrustada. No hay que editar.
+## 3. ⚠️ LO ÚNICO QUE IMPORTA AHORA
+El Short #1 se publicó. **`production_outcome` sigue en 0 filas.** El moat no se llena al publicar,
+se llena al **medir**.
+
+**Sábado 2026-07-12** (48h), con YouTube Studio y Facebook abiertos:
+```
+python -m omega.cli record-analytics    # ctr/avd/retención como FRACCIÓN 0..1, NUNCA %
+python -m omega.cli record-cost         # horas REALES del usuario
+python -m omega.cli record-outcome build-wealth-short-03-stat <0..1>
+python -m omega.cli dna
+```
+`data/production_analytics.json` y `data/production_cost.json` ya existen con ceros y con el aviso
+del formato. **Si el usuario escribe `4.5` en vez de `0.045`, el comando lo rechaza** (guard añadido).
+
+Las **vistas/likes/comentarios** se pueden sacar por API sin copiar nada:
+```python
+from omega.sources import youtube
+youtube.video_stats(['HMkPACqdvV8'])
+```
+CTR y retención **no son públicos**: solo en Studio. Eso lo copia el usuario.
+
+> ⚠️ **CONFOUNDER ANOTADO.** Se publicó a las **02:00 hora local (UTC-5)** y la audiencia es EN/US.
+> Si la velocidad inicial es baja, puede ser la HORA, no el gancho. **No lo atribuyas a
+> `hook_type=stat`.** Está guardado en `production_context`. Es la Regla 3 de POLITICA.md.
+
+---
+
+## 4. El video publicado
+| | |
+|---|---|
+| `production_ref` | **`build-wealth-short-03-stat`** |
+| Publicado | 2026-07-10 · 07:00:32 UTC (02:00 local) |
+| YouTube | https://youtube.com/shorts/HMkPACqdvV8 (id `HMkPACqdvV8`) |
+| Facebook | https://www.facebook.com/share/r/1CiuGzWcRV/ |
+| Archivo | MP4 H.264+AAC · 1080x1920 · 30.00 fps exactos · 24.03s · 13 MB |
+| ADN | `hook=stat, story=none, cta=comment`, 7 bloques |
+| Voz | CapCut TTS "Firme Pilot" (`data/voz-short-03.mp3`, gitignored) |
+| Música | **ninguna** |
+
+Todo el contexto (motor de voz, motor de visuales, fps, confounder, URLs) está en la tabla
+`production_context`, escrito con `omega.creative.decisions.record_context` — una API que ya existía.
+
+---
+
+## 5. EL MOTOR DE VIDEO — `docs/guiones/short-renderer.html`
+Un solo HTML, sin dependencias, se abre con doble clic. **Genera el Short entero**: intro, curva
+compuesta, número dorado, CTA y subtítulos quemados, con la voz incrustada. **No hace falta CapCut.**
 
 ```
-1. Abre docs/guiones/short-renderer.html en Chrome
-2. Botón "🎙 Usar la voz del proyecto"  → dirá "✅ Es el audio calibrado"
-3. "Grabar y descargar el Short"  → MP4 (H.264+AAC) 1080x1920, 30 fps exactos,
-   24s, con voz y subtítulos quemados. Tarda ~1 min; puedes cambiar de pestaña.
-4. Publica ese archivo TAL CUAL en YouTube Shorts + Facebook Reels.
-   No hace falta CapCut ni convertir nada. (Música: opcional, no obligatoria.)
-5. CIERRA EL BUCLE (el primer dato real del sistema, production_outcome sigue en 0):
-     python -m omega.cli record-analytics   (ctr/avd/retención como FRACCIÓN 0..1, no %)
-     python -m omega.cli record-cost         (horas)
-     python -m omega.cli record-outcome build-wealth-short-03-stat <0..1>
-     python -m omega.cli dna
+1. Servirlo por http (el botón "Usar la voz del proyecto" hace fetch y file:// lo bloquea):
+   .claude/launch.json ya tiene un servidor estático -> http://localhost:8765/docs/guiones/short-renderer.html
+2. "🎙 Usar la voz del proyecto" -> carga data/voz-short-03.mp3 y calibra
+3. "⏺ Grabar y descargar el Short" -> MP4 listo para subir. ~1 min. Puedes cambiar de pestaña.
+4. "⬇ Frame final" -> PNG del número dorado (miniatura YT + portada FB)
 ```
 
-**Ya hecho (2026-07-09):** curva animada (`curva-compuesta.html`) · renderizador completo del Short ·
-calibración del audio (`docs/guiones/calibracion-voz-short-03.md`) · zonas seguras de YouTube/Facebook ·
-ADN registrado (`build-wealth-short-03-stat`, 7 bloques). 2 vídeos instrumentados de 10.
+### Datos vs motor
+`SHORTS['s3-stat']` contiene **todo** lo que define un Short: `spec` (3 líneas de la intro), `cta`,
+`pmt/years/rate`, y un `guion` con:
+- `grupos[]` — el texto **hablado**, partido en bloques narrativos. **Sus arranques SON los cortes.**
+- `cifras[]` — spans hablados → token que se pinta (`"a hundred and eighty thousand dollars"` → `"$180,000"`)
+- `subtitulos[]` — qué grupos llevan subtítulos
+- `curvaLlegaEn` — la curva termina cuando la voz acaba de decir esa cifra
+- `omitirEnSubtitulos[]` — muletillas que se oyen pero no se escriben
 
-**Tres cifras falsas corregidas por el camino:** el gap no era $420k sino **$429,985** ($609,985
-final, 7% nominal capitalizado mensual, no ~$600k) · el café "$18,000 invertido" era en realidad
-$18,250 **sin invertir** (invertido: **$26,323**) · las voces Default de ElevenLabs **caducan el
-31-dic-2026**, y su plan gratis no da derechos comerciales.
+El resto del archivo es motor y **no se toca por Short**.
 
-**NO construir más motor antes de publicar** (`docs/POLITICA.md`, Regla 1). El motor de vídeo
-configurable (SHORTS como datos + escenas) está diseñado y esperando; se extrae DESPUÉS del S3,
-y las escenas del S4/S5 se construyen cuando toque producirlos.
+### Calibrador automático (lo más valioso)
+Dado el MP3 + el guion, deduce solo los cortes, el spec drop y los subtítulos:
+1. segmenta la voz por energía (RMS 10 ms, silencio ≥250 ms)
+2. reparte los grupos entre los segmentos con **programación dinámica** (el mapeo 1:1 es FALSO:
+   en el S3 exigía 11.1 sílabas/s en un bloque)
+3. dentro de cada grupo alinea palabra a palabra sobre el tiempo de **voz real**, saltándose las
+   pausas → la deriva no se acumula
 
-## 10. Cómo arrancar el nuevo chat
-*"Lee docs/ESTADO.md y CLAUDE.md. Vamos a producir el primer video (build-wealth, Short). Ayúdame
-con [la animación de la curva / el guion final / lo que sea]."* — o corre `/daily` para ver si el
-sistema propone algo nuevo. Recuerda: el único pendiente real es PRODUCIR Y PUBLICAR.
+**Verificado:** contra `voz-short-03.mp3` reproduce **exactamente** lo que se calibró a mano —
+cortes `5.94 / 12.80 / 15.99 / 22.44`, spec `[-0.30, 2.15, 4.41]` y **11 de 11 subtítulos idénticos**.
+Método completo en `docs/guiones/calibracion-voz-short-03.md`.
+
+El S3 (ya publicado) usa su calibración manual; no se re-renderiza lo que está en la calle.
+
+### Exportador MP4
+`MediaRecorder` **no sirve**: `isTypeSupported('video/mp4')` devuelve `true` y luego produce **0 bytes**.
+Y **Facebook no acepta WebM** (su lista oficial: mp4, mov, mkv, avi, ogv… sin webm).
+Por eso el MP4 se construye a mano: `drawFrame(t)` es pura → render offline frame a frame →
+**WebCodecs** (`VideoEncoder` H.264 + `AudioEncoder` AAC) → **muxer ISO BMFF escrito a mano**
+(`ftyp | mdat | moov`, orden que evita el huevo-y-la-gallina de los offsets `stco`).
+Regalo: 30 fps exactos, cero frames perdidos, y no depende de `requestAnimationFrame` (se puede
+cambiar de pestaña; el yield usa `MessageChannel`, no `setTimeout`, que se estrangula en background).
+
+---
+
+## 6. ZONAS SEGURAS (no las muevas sin medir)
+```js
+SAFE = { top: 190, bottom: 360, left: 70, right: 130 }   // sobre 1080x1920
+```
+YouTube Shorts tapa los **350 px inferiores** (canal/título/música) y **120 px** a la derecha.
+Facebook Reels, ~290 px abajo. El `$429,985` y el aviso YMYL **estaban dentro de esa franja** y no se
+veían. Hay un interruptor "ver zonas seguras" en el renderizador para comprobarlo a ojo.
+
+---
+
+## 7. CIFRAS VERIFICADAS (tres eran falsas)
+| Cosa | Estaba mal | Correcto |
+|---|---|---|
+| Gap del compuesto | $420,000 | **$429,985** ($609,985 final, no ~$600k) |
+| Convención | ambigua | **7% nominal capitalizado mensual** ($500/mes × 360) |
+| El café | "$18,000 invertido" | $18,250 es el ahorro **SIN invertir**; invertido: **$26,323** |
+| S&P 500 | "9,5%" | ~10,4–10,7% **nominal** · ~6,5–6,8% **real** desde 1957 |
+
+**Regla YMYL:** si dices "10% histórico" tienes que decir "≈7% tras inflación", o el número final no
+cuadra. Y **nunca** llamar al S&P "sólido" o "seguro": cayó **-57%** en 2007-09.
+
+---
+
+## 8. VOZ — estado real
+- **Ahora se usa CapCut TTS** (voz "Firme Pilot"). Gratis, uso comercial según CapCut.
+- **ElevenLabs está APLAZADO**, y por dos razones verificadas:
+  1. su **plan gratis no da derechos comerciales**, y los derechos se conceden **AL GENERAR**
+     (lo hecho en gratis no se legaliza pagando después). Hace falta Starter ($5/mes).
+  2. sus voces **Default (Brian, Adam, Antoni…) EXPIRAN el 31-dic-2026**. Para un canal faceless la
+     voz ES la identidad. Si se paga, hay que usar **Voice Design** (permanente y única).
+- Si el usuario decide pagar: el prompt de voz elegido está en `docs/guiones/voice-design.txt`
+  (prompt B, *"el que te cuenta la verdad"*). Ajustes: stability 40 / similarity 75 / style 20.
+- **Cambiar de motor de voz rompe la comparabilidad.** Se anota como bloque en `production_dna.blocks`.
+
+---
+
+## 9. QUÉ HACER DESPUÉS (en este orden)
+1. **Sábado 12: MEDIR.** `record-analytics` + `record-cost` + `record-outcome` + `dna`. Nada más.
+2. **Producir el S1** (`hook_type=story`, Marcus vs Dylan). Guion en `docs/guiones/shorts-pack-01.md`.
+   Falta: (a) que el usuario grabe la voz con CapCut TTS y la exporte a MP3;
+   (b) **una escena nueva** en el motor: dos columnas enfrentadas (`$0` vs `$1,000,000+`).
+   Esa escena ya **no es especulativa**: la pide un Short concreto. Es la secuencia de la Regla 1.
+3. Luego S2 (`contrarian`), S4 (`shock`), S5 (`question`). **Uno al día.**
+   Los 5 comparten tema, voz y estilo: **la única variable es el gancho.** Es un experimento con la
+   variable aislada, que es lo que exige la Regla 3.
+
+**NO construir un generador de posts de texto.** Verificado: el alcance orgánico de una Página de
+Facebook es el **1-6% de sus seguidores**, y el canal tiene **cero**. Los posts de texto no se
+distribuyen a no-seguidores; los Reels sí. Los Community posts de YouTube tampoco (van a suscriptores).
+"Contenido diario" = **más Shorts**, no más formatos.
+
+---
+
+## 10. TRAMPAS CONOCIDAS (le costaron horas a la sesión anterior)
+- **`MediaRecorder.isTypeSupported()` MIENTE.** Hay que sondear grabando de verdad, y sondear el
+  **vídeo aislado**: con una pista de audio adjunta, un contenedor sin códec de vídeo igual emite
+  bytes (los del audio) y el sondeo da un falso positivo → archivo con voz y sin imagen.
+- **`+duration.toFixed(2)` redondea HACIA ARRIBA** la mitad de las veces → `currentTime` nunca
+  alcanza el límite → bucle infinito al grabar. Usar `Math.floor` y `audioEl.ended`.
+- **La pestaña en segundo plano estrangula `requestAnimationFrame`** → vídeo a saltos, sin avisar.
+  Hay guards; el camino MP4 (WebCodecs) no lo sufre.
+- **Los subtítulos NUNCA se reparten proporcionalmente.** Ese fue el desfase del S3: el habla no es
+  un metrónomo. Sin tiempos medidos → sin subtítulos, y grabar está vetado.
+- **El panel de preview de Claude reporta `document.hidden = true`** y estrangula rAF: los guards
+  saltan. Para verificar hay que tomar una captura antes (trae la pestaña al frente) o sondear
+  la lógica directamente.
+- **PowerShell rompe los mensajes de commit** con comillas/`&`/`$`. Escribir el mensaje a un archivo
+  y usar `git commit -F <archivo>`.
+- Hay un hook de plugin roto (`validate_antipatterns.py` no existe) que escupe un error tras cada
+  edición. **Es ruido, se ignora.** Las ediciones se aplican bien.
+
+---
+
+## 11. Qué está construido (código)
+- **92 tests verdes** (`python -m unittest discover -s tests -q`). Correr SIEMPRE antes de commitear lógica.
+- **Kernel** `omega/reasoning/` (domain-agnostic, test de pureza por AST): beliefs/predictions,
+  signals, hypotheses, opportunities, decision_engine (score = confianza + Σ peso·feature), decisions.
+- **Observación + decisión** `omega/`: `sources/rss.py` (12 feeds) · `sources/youtube.py` (API, filtro
+  solo-EN) · `analyze/momentum.py` · `analyze/demand.py` · `analyze/monetization.py` (RPM) ·
+  `analyze/hypothesis_engine.py`.
+- **`decide`** pondera demand · gap · demand_momentum · **monetization** (dinero, no viralidad).
+- **Creativo** `omega/creative/`: patterns (CKB), decisions+calibración, combinator, experiments,
+  production_dna (ADN + analíticas + coste, con guard de confounding).
+- **Auditoría 2026-07-09:** 3 bugs de señal arreglados (contracciones inglesas esquivaban las
+  stopwords; `record_analytics` sin validación de rango; `feeds.json` arrastraba retiros DEPORTIVOS
+  vía "OR retirement" — "justin verlander" llegó a **ganar** `decide`).
+
+## 12. Comandos
+Diario: `ingest` · `youtube-scan` · `signals` · `decide` (atajo **`/daily`**).
+Explorar: `trends` · `youtube <q>` · `related <tema>` · `patterns` · `combine`.
+Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` ·
+`dna` · `learnings`.
+
+## 13. Convenciones
+- Responder en **español**; el contenido del canal va en **inglés**.
+- **Verificar antes de afirmar.** Esta sesión encontró 3 cifras falsas y ~8 bugs; ninguno se evitó
+  "siendo cuidadoso", todos aparecieron al **medir**. Es el activo del proyecto.
+- `data/` y `.env` gitignored. Rama `master`. Commits terminan con
+  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- Windows + PowerShell. Kernel `omega/reasoning/` es domain-agnostic (test de pureza): nada de video.
+
+## 14. Cómo arrancar el nuevo chat
+> *"Lee `docs/ESTADO.md`. Estamos en: Short #1 publicado, `production_outcome = 0`.
+> [Si es sábado 12 o después] Vamos a medir y cerrar el bucle.
+> [Si no] Vamos a producir el S1: necesito la escena de las dos columnas."*
+
+**No empieces a construir nada sin leer `docs/POLITICA.md`.** El motor creativo está congelado.
+Progreso del proyecto = **filas del dataset**, no commits ni módulos. Van 2 de 10 instrumentados,
+y **0 medidos**.
