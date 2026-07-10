@@ -106,10 +106,12 @@
 <div id="status"></div>
 
 <p class="note">
-  Sale en <code>.mp4</code> (H.264 + AAC) si tu navegador puede; si no, <code>.webm</code>.
-  <strong>Deja esta pestaña al frente durante la grabación</strong> — si te vas, el navegador congela
-  la animación y se aborta sin descargar nada.
-  <br><span class="warn">Solo Chrome o Edge.</span>
+  Sale un <code>.mp4</code> (H.264 + AAC) a <strong>30 fps exactos</strong>, listo para subir
+  <strong>directamente a YouTube y a Facebook</strong>. Sin CapCut, sin convertir nada.
+  <br>El render tarda entre 30 s y un minuto: no usa <code>requestAnimationFrame</code>, así que
+  <strong>puedes cambiar de pestaña</strong> mientras trabaja.
+  <br><span class="warn">Si tu navegador no sabe codificar H.264, caerá a <code>.webm</code> y te
+  avisará: YouTube lo acepta, pero Facebook NO.</span>
 </p>
 
 <script>
@@ -770,9 +772,208 @@ document.getElementById('auto').onclick = () => {
     `nº dorado ${T.curve}s · CTA ${T.cta}s. Activa el reloj y verifica — el .srt es más fiable.`;
 };
 
-// ── Grabación ────────────────────────────────────────────────────────────────
-// MP4 primero (CapCut lo traga siempre). isTypeSupported() MIENTE en máquinas sin
-// codificador H.264: devuelve true y luego no emite un byte. Se sondea de verdad.
+// ═════════════════════════════════════════════════════════════════════════════
+// EXPORTADOR MP4 (H.264 + AAC) — el que se sube directo a YouTube y Facebook
+// ═════════════════════════════════════════════════════════════════════════════
+// Facebook NO acepta WebM (su lista oficial: mp4, mov, mkv, avi, ogv... no webm).
+// Y MediaRecorder miente: isTypeSupported('video/mp4') = true, y luego 0 bytes.
+// Solución: no le pedimos el MP4 a nadie. Renderizamos frame a frame (drawFrame es
+// PURA), codificamos con WebCodecs y escribimos el contenedor ISO BMFF a mano.
+// Regalo: 30 fps EXACTOS, cero frames perdidos, y da igual si cambias de pestaña
+// (no usa requestAnimationFrame).
+
+const FPS_MP4 = 30;
+
+// ── utilidades de bytes / cajas ISO BMFF ─────────────────────────────────────
+const b8  = (...a) => new Uint8Array(a);
+const b16 = n => new Uint8Array([n>>8 & 255, n & 255]);
+const b24 = n => new Uint8Array([n>>16 & 255, n>>8 & 255, n & 255]);
+const b32 = n => new Uint8Array([n>>>24 & 255, n>>>16 & 255, n>>>8 & 255, n & 255]);
+const s4  = s => new Uint8Array([...s].map(c => c.charCodeAt(0)));
+function unir(arrs){
+  let n = 0; for (const a of arrs) n += a.length;
+  const o = new Uint8Array(n); let p = 0;
+  for (const a of arrs){ o.set(a, p); p += a.length; }
+  return o;
+}
+const caja  = (tipo, ...cuerpo) => { const c = unir(cuerpo); return unir([b32(c.length+8), s4(tipo), c]); };
+const cajaF = (tipo, ver, flags, ...cuerpo) => caja(tipo, b8(ver), b24(flags), ...cuerpo);
+const MATRIZ = unir([b32(0x00010000),b32(0),b32(0), b32(0),b32(0x00010000),b32(0), b32(0),b32(0),b32(0x40000000)]);
+const ceros = n => new Uint8Array(n);
+
+/** esds: descriptores MPEG-4 para AAC. Longitudes de 1 byte (siempre <128 aquí). */
+function esds(asc){
+  const dsi = unir([b8(0x05, asc.length), asc]);
+  const dcd = unir([b8(0x04, 13 + dsi.length, 0x40, 0x15), b24(0), b32(0), b32(0), dsi]);
+  const sl  = b8(0x06, 0x01, 0x02);
+  const es  = unir([b8(0x03, 3 + dcd.length + sl.length), b16(1), b8(0), dcd, sl]);
+  return cajaF('esds', 0, 0, es);
+}
+
+function stbl(entrada, nMuestras, delta, tamanos, offsetChunk, claves){
+  const stts = cajaF('stts', 0, 0, b32(1), b32(nMuestras), b32(delta));
+  const stsc = cajaF('stsc', 0, 0, b32(1), b32(1), b32(nMuestras), b32(1));
+  const stsz = cajaF('stsz', 0, 0, b32(0), b32(nMuestras), unir(tamanos.map(b32)));
+  const stco = cajaF('stco', 0, 0, b32(1), b32(offsetChunk));
+  const stss = claves ? cajaF('stss', 0, 0, b32(claves.length), unir(claves.map(b32))) : null;
+  const hijos = [cajaF('stsd', 0, 0, b32(1), entrada), stts];
+  if (stss) hijos.push(stss);
+  hijos.push(stsc, stsz, stco);
+  return caja('stbl', ...hijos);
+}
+
+const dinf = () => caja('dinf', cajaF('dref', 0, 0, b32(1), cajaF('url ', 0, 1)));
+const hdlr = (tipo, nombre) => cajaF('hdlr', 0, 0, b32(0), s4(tipo), ceros(12), s4(nombre), b8(0));
+
+function trak(id, duracionMovie, mdhdTs, mdhdDur, esVideo, w, h, minf){
+  const tkhd = cajaF('tkhd', 0, 7, b32(0), b32(0), b32(id), b32(0), b32(duracionMovie), ceros(8),
+                     b16(0), b16(0), b16(esVideo ? 0 : 0x0100), b16(0), MATRIZ,
+                     b32(esVideo ? w<<16 : 0), b32(esVideo ? h<<16 : 0));
+  const mdhd = cajaF('mdhd', 0, 0, b32(0), b32(0), b32(mdhdTs), b32(mdhdDur), b16(0x55C4), b16(0));
+  return caja('trak', tkhd, caja('mdia', mdhd, hdlr(esVideo?'vide':'soun', esVideo?'VideoHandler':'SoundHandler'),
+                                 caja('minf',
+                                      esVideo ? cajaF('vmhd', 0, 1, b16(0), b16(0), b16(0), b16(0))
+                                              : cajaF('smhd', 0, 0, b16(0), b16(0)),
+                                      dinf(), minf)));
+}
+
+/** Une vídeo H.264 + audio AAC en un MP4 real. Orden ftyp|mdat|moov: así los offsets
+ *  de stco se conocen antes de escribir moov (el clásico problema del huevo y la gallina). */
+function muxMP4(v, a){
+  const MTS = 1000;
+  const vTs = FPS_MP4 * 1000, vDelta = 1000;
+  const vDur = v.tamanos.length * vDelta;
+  const segV = v.tamanos.length / FPS_MP4;
+  const segA = a ? (a.tamanos.length * 1024) / a.sr : 0;
+  const durMovie = Math.round(Math.max(segV, segA) * MTS);
+
+  const ftyp = caja('ftyp', s4('isom'), b32(512), s4('isom'), s4('iso2'), s4('avc1'), s4('mp41'));
+  const datosV = unir(v.trozos), datosA = a ? unir(a.trozos) : new Uint8Array(0);
+  const mdatCuerpo = unir([datosV, datosA]);
+  const mdat = unir([b32(mdatCuerpo.length + 8), s4('mdat'), mdatCuerpo]);
+
+  const offV = ftyp.length + 8;
+  const offA = offV + datosV.length;
+
+  const avc1 = caja('avc1', ceros(6), b16(1), b16(0), b16(0), ceros(12), b16(v.w), b16(v.h),
+                    b32(0x00480000), b32(0x00480000), b32(0), b16(1), ceros(32), b16(0x0018), b16(0xFFFF),
+                    caja('avcC', v.desc));
+  const trakV = trak(1, durMovie, vTs, vDur, true, v.w, v.h,
+                     stbl(avc1, v.tamanos.length, vDelta, v.tamanos, offV, v.claves));
+
+  const traks = [trakV];
+  if (a){
+    const mp4a = caja('mp4a', ceros(6), b16(1), b16(0), b16(0), b32(0), b16(a.ch), b16(16),
+                      b16(0), b16(0), b32(a.sr << 16), esds(a.desc));
+    traks.push(trak(2, durMovie, a.sr, a.tamanos.length * 1024, false, 0, 0,
+                    stbl(mp4a, a.tamanos.length, 1024, a.tamanos, offA, null)));
+  }
+  const mvhd = cajaF('mvhd', 0, 0, b32(0), b32(0), b32(MTS), b32(durMovie), b32(0x00010000),
+                     b16(0x0100), b16(0), ceros(8), MATRIZ, ceros(24), b32(traks.length + 1));
+  const moov = caja('moov', mvhd, ...traks);
+
+  return new Blob([ftyp, mdat, moov], {type: 'video/mp4'});
+}
+
+// ── el exportador ────────────────────────────────────────────────────────────
+const CODECS_H264 = ['avc1.640028', 'avc1.4D0028', 'avc1.42E01E', 'avc1.42001f'];
+
+/** Cede el hilo para que el codificador vacíe su cola. NO se usa setTimeout: en pestañas de
+ *  segundo plano el navegador lo estrangula a 1 tick/segundo y el export tardaría horas.
+ *  MessageChannel es un macrotask que no se throttlea. */
+const cede = () => new Promise(r => {
+  const ch = new MessageChannel();
+  ch.port1.onmessage = () => r();
+  ch.port2.postMessage(0);
+});
+
+async function h264Disponible(){
+  if (typeof VideoEncoder === 'undefined' || typeof AudioEncoder === 'undefined') return null;
+  for (const c of CODECS_H264){
+    const cfg = {codec:c, width:canvas.width, height:canvas.height,
+                 bitrate:14_000_000, framerate:FPS_MP4, avc:{format:'avc'}, latencyMode:'quality'};
+    try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; } catch(e){}
+  }
+  return null;
+}
+
+async function exportarMP4(progreso){
+  const cfg = await h264Disponible();
+  if (!cfg) throw new Error('este navegador no sabe codificar H.264 con WebCodecs.');
+
+  const nF = Math.max(1, Math.round(T.total * FPS_MP4));
+  const trozos = [], tamanos = [], claves = [];
+  let desc = null, fallo = null;
+
+  const venc = new VideoEncoder({
+    output: (chunk, meta) => {
+      if (!desc && meta?.decoderConfig?.description) desc = new Uint8Array(meta.decoderConfig.description);
+      const b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+      trozos.push(b); tamanos.push(b.length);
+      if (chunk.type === 'key') claves.push(trozos.length);
+    },
+    error: e => { fallo = e; }
+  });
+  venc.configure(cfg);
+
+  for (let i = 0; i < nF; i++){
+    if (fallo) throw fallo;
+    drawFrame(Math.min(i / FPS_MP4, T.total));
+    const vf = new VideoFrame(canvas, {timestamp: Math.round(i * 1e6 / FPS_MP4),
+                                       duration: Math.round(1e6 / FPS_MP4)});
+    venc.encode(vf, {keyFrame: i % (FPS_MP4 * 2) === 0});
+    vf.close();
+    if (venc.encodeQueueSize > 6) await cede();
+    if (i % 10 === 0) progreso?.(0.05 + 0.75 * i / nF);
+  }
+  await venc.flush(); venc.close();
+  if (fallo) throw fallo;
+  if (!desc) throw new Error('el codificador no devolvió la cabecera avcC.');
+
+  let audio = null;
+  if (pcm){
+    progreso?.(0.85);
+    const sr = pcm.sampleRate, ch = Math.min(2, pcm.numberOfChannels);
+    const aTrozos = [], aTamanos = []; let aDesc = null, aFallo = null;
+    const aenc = new AudioEncoder({
+      output: (chunk, meta) => {
+        if (!aDesc && meta?.decoderConfig?.description) aDesc = new Uint8Array(meta.decoderConfig.description);
+        const b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+        aTrozos.push(b); aTamanos.push(b.length);
+      },
+      error: e => { aFallo = e; }
+    });
+    aenc.configure({codec:'mp4a.40.2', sampleRate:sr, numberOfChannels:ch, bitrate:160_000});
+
+    const L = pcm.getChannelData(0), R = ch > 1 ? pcm.getChannelData(1) : null;
+    const limite = Math.min(pcm.length, Math.ceil(T.total * sr));
+    for (let off = 0; off < limite; off += 1024){
+      if (aFallo) throw aFallo;
+      const len = Math.min(1024, limite - off);
+      const data = new Float32Array(len * ch);
+      data.set(L.subarray(off, off + len), 0);
+      if (R) data.set(R.subarray(off, off + len), len);
+      const ad = new AudioData({format:'f32-planar', sampleRate:sr, numberOfFrames:len,
+                                numberOfChannels:ch, timestamp: Math.round(off / sr * 1e6), data});
+      aenc.encode(ad); ad.close();
+      if (aenc.encodeQueueSize > 16) await cede();
+    }
+    await aenc.flush(); aenc.close();
+    if (aFallo) throw aFallo;
+    if (!aDesc) throw new Error('el codificador de audio no devolvió la cabecera AAC.');
+    audio = {trozos:aTrozos, tamanos:aTamanos, desc:aDesc, sr, ch};
+  }
+
+  progreso?.(0.95);
+  const blob = muxMP4({trozos, tamanos, claves, desc, w:canvas.width, h:canvas.height}, audio);
+  blob.ext = 'mp4';
+  blob.fps = FPS_MP4;
+  blob.conAudio = !!audio;
+  blob.frames = tamanos.length;
+  return blob;
+}
+
+// ── Grabación (respaldo: solo si no hay WebCodecs/H.264) ─────────────────────
 const MIMES_MUDO  = ['video/mp4;codecs=avc1.640028', 'video/mp4',
                      'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
 const extDe = m => m.startsWith('video/mp4') ? 'mp4' : 'webm';
@@ -897,17 +1098,39 @@ function descargar(blob, nombre){
 document.getElementById('rec').onclick = async () => {
   const btns = document.querySelectorAll('button');
   btns.forEach(b => b.disabled = true);
-  statusEl.textContent = `Grabando ${T.total.toFixed(1)}s… deja la pestaña al frente.`;
+  // los diagnósticos jamás se quedan quemados en el archivo
+  const relojAntes = window.verReloj, zonasAntes = window.verZonas;
+  window.verReloj = false; window.verZonas = false;
+
   try {
-    const blob = await grabar();
+    const cfg = await h264Disponible();
+    let blob;
+    if (cfg){
+      // CAMINO BUENO: MP4 (H.264 + AAC). Directo a YouTube y Facebook, sin CapCut.
+      statusEl.textContent = `Renderizando MP4 a ${FPS_MP4} fps… puedes cambiar de pestaña.`;
+      blob = await exportarMP4(p => {
+        statusEl.textContent = `Renderizando MP4… ${Math.round(p*100)}%  (${cfg.codec})`;
+      });
+    } else {
+      // RESPALDO: sin WebCodecs/H.264 solo sale WebM, y Facebook NO lo acepta.
+      statusEl.textContent = 'Sin H.264: grabando WebM… deja la pestaña al frente.';
+      blob = await grabar();
+    }
+
     descargar(blob, `net-worthy-short-${canvas.width}x${canvas.height}.${blob.ext}`);
-    statusEl.textContent = `Listo: ${blob.ext.toUpperCase()} · ${Math.round(blob.size/1024)} KB · ` +
-      `${blob.fps} fps · ${blob.conAudio ? 'con voz' : 'MUDO'}.`;
+    const mb = (blob.size/1_048_576).toFixed(1);
+    statusEl.textContent = blob.ext === 'mp4'
+      ? `✅ MP4 · ${mb} MB · ${blob.frames} frames a ${blob.fps} fps · ` +
+        `${blob.conAudio ? 'con voz' : 'MUDO'}. Súbelo tal cual a YouTube y Facebook.`
+      : `⚠ WEBM · ${mb} MB · ${blob.fps} fps · ${blob.conAudio ? 'con voz' : 'MUDO'}. ` +
+        `YouTube lo acepta; FACEBOOK NO. Conviértelo a MP4 antes de subirlo allí.`;
   } catch (err) {
     statusEl.textContent = '⚠ No se descargó nada — ' + err.message;
   } finally {
+    window.verReloj = relojAntes; window.verZonas = zonasAntes;
     btns.forEach(b => b.disabled = false);
     document.getElementById('auto').disabled = !pcm;
+    drawFrame(T.curve + 0.3);
   }
 };
 

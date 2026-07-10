@@ -85,11 +85,12 @@ El vídeo **ya se genera solo**. `docs/guiones/short-renderer.html` produce los 
 
 ```
 1. Abre docs/guiones/short-renderer.html en Chrome
-2. Carga data/voz-short-03.mp3  → dirá "✅ Es el audio calibrado"
-3. "Grabar y descargar el Short"  → MP4/WebM 1080x1920, ~24s, con voz y subtítulos
-4. (opcional, 2 min) CapCut: música de Pixabay a -18 dB bajo la voz
-5. Publica en YouTube Shorts + Facebook Reels
-6. CIERRA EL BUCLE (el primer dato real del sistema, production_outcome sigue en 0):
+2. Botón "🎙 Usar la voz del proyecto"  → dirá "✅ Es el audio calibrado"
+3. "Grabar y descargar el Short"  → MP4 (H.264+AAC) 1080x1920, 30 fps exactos,
+   24s, con voz y subtítulos quemados. Tarda ~1 min; puedes cambiar de pestaña.
+4. Publica ese archivo TAL CUAL en YouTube Shorts + Facebook Reels.
+   No hace falta CapCut ni convertir nada. (Música: opcional, no obligatoria.)
+5. CIERRA EL BUCLE (el primer dato real del sistema, production_outcome sigue en 0):
      python -m omega.cli record-analytics   (ctr/avd/retención como FRACCIÓN 0..1, no %)
      python -m omega.cli record-cost         (horas)
      python -m omega.cli record-outcome build-wealth-short-03-stat <0..1>
