@@ -51,20 +51,33 @@
   <input type="file" id="mp3" accept="audio/*">
   <div class="note" style="text-align:left">
     El MP3 de ElevenLabs o el audio exportado de CapCut. <strong>El audio manda el reloj:</strong>
-    la animación se dibuja siguiendo su tiempo, así que no pueden desincronizarse.
-    Sin audio, el vídeo se genera mudo con la duración de abajo.
+    la animación se dibuja siguiendo su tiempo. Sin audio, el vídeo sale mudo.
   </div>
+
+  <h2 style="margin-top:8px">2 · Carga el .srt de CapCut <span style="color:var(--growth)">(esto arregla el desfase)</span></h2>
+  <input type="file" id="srt" accept=".srt,text/plain">
+  <div class="note" style="text-align:left">
+    En CapCut: <strong>Subtítulos automáticos → Exportar</strong>. Trae los tiempos que el
+    reconocimiento de voz midió sobre <em>tu</em> audio. Sin él, los subtítulos se reparten
+    a ojo y <strong>derivan</strong>. Corrige antes las cifras (<code>$609,985</code>) en CapCut.
+  </div>
+
   <div class="row">
-    <button id="auto" class="ghost" disabled>✨ Detectar los cortes solo</button>
+    <button id="auto" class="ghost" disabled>✨ Detectar cortes por silencios</button>
     <button id="play" class="ghost">▶ Previsualizar</button>
     <button id="stop" class="ghost">■ Parar</button>
+    <label style="font-size:13px;color:var(--grey)">
+      <input type="checkbox" id="reloj"> ver reloj (diagnóstico)
+    </label>
   </div>
 </div>
 
 <div class="panel">
-  <h2>2 · Ajusta los tres cortes</h2>
+  <h2>3 · Retoca los cortes (solo si hace falta)</h2>
   <div class="slider"><span>Fin de la intro</span>
     <input type="range" id="sHook" min="1" max="12" step="0.05"><output id="oHook"></output></div>
+  <div class="slider"><span>La curva llega a $610k</span>
+    <input type="range" id="sDraw" min="4" max="24" step="0.05"><output id="oDraw"></output></div>
   <div class="slider"><span>“That gap?” (nº dorado)</span>
     <input type="range" id="sCurve" min="6" max="24" step="0.05"><output id="oCurve"></output></div>
   <div class="slider"><span>Entra el CTA</span>
@@ -103,6 +116,34 @@ const CFG = {
   pmt: 500, years: 30, rate: 0.07,
 };
 
+/** CALIBRADO CONTRA data/voz-short-03.mp3 (CapCut TTS "Firme Pilot", 24.03s).
+ *  Medido, no estimado: se decodificó el MP3, se sacó la envolvente RMS en ventanas de 10 ms y
+ *  salieron 11 bloques de voz. Los bordes de grupo se validaron por tasa de sílabas (5.5 sil/s
+ *  global); dentro de cada grupo las palabras se reparten sobre el tiempo de voz REAL, saltándose
+ *  las pausas — así la deriva no se acumula.
+ *  Si cargas otro audio, esto se descarta solo y hay que medir de nuevo (.srt o auto). */
+const CALIBRADO = {
+  duracion: 24.03,
+  hook: 5.94,    // arranca "You put in..."
+  draw: 12.80,   // la curva TERMINA de dibujarse cuando la voz dice "$610,000"
+  curve: 15.99,  // "That gap?" -> entra el oro
+  cta: 22.44,    // "Could you start..."
+  spec: [0.00, 2.15, 4.41],   // la 1ª en el frame 1 (la voz entra en 0.40); las otras, antes de su frase
+  cards: [
+    {t0:5.94,  t1:8.26,  t:"You put in $180,000"},
+    {t0:8.26,  t1:9.85,  t:"of your own money."},
+    {t0:9.85,  t1:10.56, t:"You walk away"},
+    {t0:10.56, t1:12.80, t:"with about $610,000"},
+    {t0:12.80, t1:14.66, t:"and that's in today's money,"},
+    {t0:14.66, t1:15.99, t:"after inflation."},
+    {t0:15.99, t1:18.39, t:"That gap? $430,000"},
+    {t0:18.39, t1:19.22, t:"you never worked"},
+    {t0:19.22, t1:20.45, t:"a single hour for."},
+    {t0:20.45, t1:21.12, t:"Your asset made"},
+    {t0:21.12, t1:21.79, t:"it while you slept."},
+  ],
+};
+
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const statusEl = document.getElementById('status');
@@ -115,11 +156,12 @@ const clamp01 = t => Math.max(0, Math.min(1, t));
 const easeOut = t => 1 - Math.pow(1-t, 3);
 
 // ── Cortes (segundos). Los sliders los escriben. ──────────────────────────────
-const T = { hook: 5.4, curve: 18.2, cta: 20.8, total: 24 };
+const T = { hook: CALIBRADO.hook, draw: CALIBRADO.draw, curve: CALIBRADO.curve,
+            cta: CALIBRADO.cta, total: CALIBRADO.duracion, spec: CALIBRADO.spec.slice() };
 
-const S = ['sHook','sCurve','sCTA','sTotal'].map(id => document.getElementById(id));
-const O = ['oHook','oCurve','oCTA','oTotal'].map(id => document.getElementById(id));
-const KEYS = ['hook','curve','cta','total'];
+const S = ['sHook','sDraw','sCurve','sCTA','sTotal'].map(id => document.getElementById(id));
+const O = ['oHook','oDraw','oCurve','oCTA','oTotal'].map(id => document.getElementById(id));
+const KEYS = ['hook','draw','curve','cta','total'];
 
 function pintarSliders(){
   KEYS.forEach((k,i) => { S[i].value = T[k]; O[i].textContent = T[k].toFixed(2) + 's'; });
@@ -128,6 +170,7 @@ S.forEach((el,i) => el.addEventListener('input', () => {
   T[KEYS[i]] = +el.value;
   O[i].textContent = (+el.value).toFixed(2) + 's';
   cachedCards = null;
+  cortesMedidos = true;          // lo está cuadrando a ojo: cuenta como medido
   if (!corriendo) drawFrame(+el.value);
 }));
 
@@ -204,12 +247,64 @@ function tarjetas(texto, t0, t1){
   });
 }
 let cachedCards = null;
+let srtCards = null;       // si hay .srt, MANDA: sus tiempos los midió el ASR sobre el audio real
+let cortesMedidos = false; // ¿los cortes salen del audio, o siguen siendo mi estimación?
+
 function cards(){
+  if (srtCards) return srtCards;
   if (!cachedCards) cachedCards = [
     ...tarjetas(CFG.l2, T.hook, T.curve),
     ...tarjetas(CFG.l3, T.curve, T.cta),
   ];
   return cachedCards;
+}
+
+// ── Importar .srt (CapCut: Subtítulos automáticos → Exportar) ────────────────
+// Repartir tarjetas proporcionalmente sobre un tramo de 13s asume que hablas a ritmo de
+// metrónomo. No hablas así: hay pausas y énfasis, y medio segundo de deriva se VE.
+// El .srt trae los tiempos que el reconocimiento de voz midió sobre TU audio.
+const hms = s => {
+  const m = s.match(/(\d+):(\d+):(\d+)[,.](\d+)/);
+  return +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/1000;
+};
+
+function parseSRT(txt){
+  const cues = [];
+  txt.replace(/\r/g,'').split(/\n\s*\n+/).forEach(bloque => {
+    const lineas = bloque.split('\n').filter(l => l.trim());
+    const i = lineas.findIndex(l => l.includes('-->'));
+    if (i < 0) return;
+    const [a, z] = lineas[i].split('-->').map(s => s.trim());
+    const texto = lineas.slice(i+1).join(' ').trim();
+    if (texto) cues.push({t0: hms(a), t1: hms(z), texto});
+  });
+  return cues;
+}
+
+/** Cada cue dura 1-3s: repartir SUS palabras dentro de ÉL da error <0.3s, no de segundos. */
+function tarjetasDeSRT(cues){
+  const salida = [];
+  cues.forEach(c => {
+    const grupos = trocear(c.texto);
+    const totalPal = grupos.reduce((a,g) => a + g.length, 0) || 1;
+    let acc = 0;
+    grupos.forEach(g => {
+      const a = c.t0 + (c.t1-c.t0)*(acc/totalPal);
+      acc += g.length;
+      const b = c.t0 + (c.t1-c.t0)*(acc/totalPal);
+      salida.push({t0:a, t1:b, palabras:g});
+    });
+  });
+  return salida;
+}
+
+/** Los tres cortes también salen del .srt: se busca la frase que los marca. */
+function cortesDeSRT(cues){
+  const buscar = re => cues.find(c => re.test(c.texto.toLowerCase()));
+  const h = buscar(/put in|you put/);
+  const g = buscar(/that gap|gap\?/);
+  const q = buscar(/could you|fifty|\$?50 a month/);
+  return {hook: h && h.t0, curve: g && g.t0, cta: q && q.t0};
 }
 
 /** Una tarjeta, centrada, con las cifras en verde. Borde negro grueso: legible sobre cualquier cosa.
@@ -238,9 +333,10 @@ function drawHook(t, W, H, s){
   const p = clamp01(t / T.hook);
   const cy = H*0.44;
   const tams = [96, 116, 96];
+  // cada línea entra justo ANTES de que la voz la diga (T.spec, medido sobre el audio).
+  // La primera aparece en el frame 1: en Shorts, un arranque en negro es un swipe.
   CFG.spec.forEach((linea, i) => {
-    const retardo = [0.06, 0.30, 0.56][i];
-    const a = clamp01((p - retardo) / 0.16);
+    const a = clamp01((t - T.spec[i]) / 0.30);
     if (a <= 0) return;
     const dy = (1 - easeOut(a)) * 60*s;   // entra subiendo
     const color = i === 1 ? P.brass : P.paper;
@@ -269,8 +365,10 @@ function drawChart(t, W, H, s, alpha){
   const px = i => lerp(x0, x1, i/(D.n-1));
   const py = v => lerp(yBot, yTop, v/MAXY);
 
-  const arranque = T.hook + 0.6;
-  const fin = Math.max(arranque + 1, T.curve - 0.5);
+  // La curva TERMINA de dibujarse cuando la voz dice "$610,000" (T.draw), no cuando le apetece.
+  // Si el contador llega a la cifra 3s después de oírla, el clímax se deshincha.
+  const arranque = T.hook + 0.4;
+  const fin = Math.max(arranque + 1, T.draw);
   const p = clamp01((t - arranque) / (fin - arranque));
   const idx = Math.max(0, Math.floor(p * (D.n-1)));
   const aGap  = clamp01((t - T.curve) / 0.5);        // el área dorada aparece con "That gap?"
@@ -383,11 +481,21 @@ function drawCTA(t, W, H, s){
   ctx.fillStyle = P.ink; ctx.fillRect(0,0,W,H);
   ctx.restore();
 
+  // "WITH $50 A MONTH?" a 84px mide ~1075px sobre un lienzo de 1080: tocaba los dos bordes.
+  // Se encoge hasta caber con margen, en vez de recortarse en el móvil.
+  const maxW = W*0.86;
+  let size = 84*s;
+  for (let i=0; i<8; i++){
+    ctx.font = font(size, 800);
+    if (Math.max(...CFG.cta.map(l => ctx.measureText(l).width)) <= maxW) break;
+    size *= 0.94;
+  }
+  const salto = size*1.24;
   const cy = H*0.46 + (1-e)*50*s;
   CFG.cta.forEach((linea,i) => {
-    text(linea, W/2, cy + i*104*s, {size:84*s, weight:800, color:P.paper, alpha:e, stroke:10*s});
+    text(linea, W/2, cy + i*salto, {size, weight:800, color:P.paper, alpha:e, stroke:10*s});
   });
-  text(CFG.ctaSub.toUpperCase(), W/2, cy + CFG.cta.length*104*s + 34*s,
+  text(CFG.ctaSub.toUpperCase(), W/2, cy + CFG.cta.length*salto + 12*s,
        {size:30*s, weight:600, color:P.brass, alpha:e*0.9, spacing:6*s});
 }
 
@@ -427,19 +535,30 @@ function drawFrame(t){
        W/2, H - 74*s, {size:18*s, color:P.paper, alpha:0.42});
   text('S&P 500 has returned ≈10%/yr nominal since 1957 · Not financial advice',
        W/2, H - 40*s, {size:18*s, color:P.paper, alpha:0.42});
+
+  // reloj de diagnóstico: para comprobar a ojo si un corte cae donde habla la voz
+  if (window.verReloj)
+    text(`t=${t.toFixed(2)}s`, W/2, H*0.135, {size:34*s, weight:700, color:'#FF6B6B'});
 }
 
 // ── Reproducción: si hay audio, ÉL manda el reloj (imposible desincronizar) ───
-let raf = null, corriendo = false;
+let raf = null, corriendo = false, sesion = 0;
+window.verReloj = false;
+document.getElementById('reloj').onchange = e => {
+  window.verReloj = e.target.checked;
+  if (!corriendo) drawFrame(T.total);
+};
 
 function reproducir(hasta, alTerminar){
   cancelAnimationFrame(raf);
+  const mia = ++sesion;              // invalida cualquier bucle anterior
   corriendo = true;
   const usaAudio = !!audioEl.src;
   const t0 = performance.now();
   if (usaAudio){ audioEl.currentTime = 0; audioEl.play().catch(()=>{}); }
   let frames = 0;
   (function loop(){
+    if (mia !== sesion) return;      // otro play tomó el relevo
     const t = usaAudio ? audioEl.currentTime : (performance.now()-t0)/1000;
     drawFrame(Math.min(t, T.total));
     frames++;
@@ -448,7 +567,7 @@ function reproducir(hasta, alTerminar){
   })();
 }
 document.getElementById('play').onclick = () => { statusEl.textContent=''; reproducir(T.total); };
-document.getElementById('stop').onclick = () => { corriendo = false; audioEl.pause(); };
+document.getElementById('stop').onclick = () => { sesion++; corriendo = false; audioEl.pause(); };
 
 // ── Audio: carga + detección de silencios ─────────────────────────────────────
 let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
@@ -458,17 +577,37 @@ document.getElementById('mp3').onchange = async (e) => {
   if (!f) return;
   audioEl.src = URL.createObjectURL(f);
   await new Promise(r => audioEl.onloadedmetadata = r);
-  T.total = +audioEl.duration.toFixed(2);
-  S[3].max = Math.ceil(T.total)+2;
-  if (T.cta > T.total - 1) T.cta = T.total - 2.5;
-  if (T.curve > T.cta - 1) T.curve = T.cta - 2.5;
-  cachedCards = null; pintarSliders(); drawFrame(T.total);
+  const dur = +audioEl.duration.toFixed(2);
+
+  // La calibración vale SOLO para el audio contra el que se midió. Otro audio -> otros tiempos.
+  const esElCalibrado = Math.abs(dur - CALIBRADO.duracion) <= 0.35;
+  if (esElCalibrado){
+    Object.assign(T, {hook:CALIBRADO.hook, draw:CALIBRADO.draw, curve:CALIBRADO.curve,
+                      cta:CALIBRADO.cta, total:dur});
+    T.spec = CALIBRADO.spec.slice();
+    srtCards = CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+    cortesMedidos = true;
+  } else {
+    srtCards = null; cortesMedidos = false;   // hay que volver a medir
+    T.total = dur;
+    T.spec = [0.10, Math.min(2.15, dur*0.09), Math.min(4.41, dur*0.19)];
+    if (T.cta   > dur - 1)     T.cta   = dur - 2.5;
+    if (T.curve > T.cta - 1)   T.curve = T.cta - 2.5;
+    if (T.draw  > T.curve - 1) T.draw  = T.curve - 2.5;
+    if (T.hook  > T.draw - 1)  T.hook  = T.draw - 2.5;
+  }
+  S[4].max = Math.ceil(dur) + 2;
+  cachedCards = null; pintarSliders(); drawFrame(T.curve + 0.3);
 
   const ab = await f.arrayBuffer();
   audioCtx = audioCtx || new AudioContext();
   pcm = await audioCtx.decodeAudioData(ab.slice(0));
   document.getElementById('auto').disabled = false;
-  statusEl.textContent = `Audio cargado: ${T.total}s. Pulsa "Detectar los cortes solo".`;
+
+  statusEl.textContent = esElCalibrado
+    ? `✅ Es el audio calibrado (${dur}s). Tiempos medidos aplicados. Pulsa Grabar.`
+    : `⚠ Audio distinto (${dur}s, el calibrado son ${CALIBRADO.duracion}s). La calibración NO ` +
+      `sirve: carga el .srt de CapCut o pulsa "Detectar cortes por silencios".`;
 };
 
 /** Segmenta por energía: ventanas de 20ms, silencio = RMS bajo durante >=250ms.
@@ -500,19 +639,52 @@ function detectarCortes(){
   return segmentos;
 }
 
+document.getElementById('srt').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const cues = parseSRT(await f.text());
+  if (!cues.length){ statusEl.textContent = 'Ese .srt no tiene subtítulos legibles.'; return; }
+
+  srtCards = tarjetasDeSRT(cues);
+  cortesMedidos = true;
+  const c = cortesDeSRT(cues);
+  const faltan = [];
+  if (c.hook  != null) T.hook  = +c.hook.toFixed(2);  else faltan.push('intro');
+  if (c.curve != null) T.curve = +c.curve.toFixed(2); else faltan.push('nº dorado');
+  if (c.cta   != null) T.cta   = +c.cta.toFixed(2);   else faltan.push('CTA');
+  // el cue donde se dice "$610,000" marca cuándo la curva debe llegar arriba
+  const seis = cues.find(q => /610|six hundred and ten/i.test(q.texto));
+  T.draw = seis ? +seis.t1.toFixed(2) : +(T.curve - 2.0).toFixed(2);
+  pintarSliders();
+  drawFrame(T.cta - 0.1);
+
+  statusEl.textContent = `SRT: ${cues.length} subtítulos → ${srtCards.length} tarjetas. ` +
+    `Cortes: intro ${T.hook}s · nº ${T.curve}s · CTA ${T.cta}s.` +
+    (faltan.length ? ` ⚠ No encontré la frase de: ${faltan.join(', ')} — ajusta ese slider a mano.` : '');
+};
+
+/** Heurística honesta: un guion así tiene MUCHAS frases (este audio dio 11 bloques, no 4).
+ *  Los cortes narrativos caen tras las pausas MÁS LARGAS. Es una aproximación: verifica con el
+ *  reloj. El .srt siempre es mejor. */
 document.getElementById('auto').onclick = () => {
+  if (srtCards){ statusEl.textContent = 'Ya tienes tiempos medidos (.srt o calibración): mejores que los silencios.'; return; }
   const seg = detectarCortes();
   if (seg.length < 4){
-    statusEl.textContent = `Solo encontré ${seg.length} bloques de voz (esperaba 4). ` +
-      'Ajusta los sliders a mano mirando la forma de onda en CapCut.';
+    statusEl.textContent = `Solo encontré ${seg.length} bloques de voz. Necesito al menos 4. ` +
+      'Exporta el .srt de CapCut, o mueve los sliders a mano con el reloj activado.';
     return;
   }
-  T.hook  = +seg[1][0].toFixed(2);
-  T.curve = +seg[2][0].toFixed(2);
-  T.cta   = +seg[seg.length-1][0].toFixed(2);
-  cachedCards = null; pintarSliders(); drawFrame(T.total);
-  statusEl.textContent = `Cortes detectados: intro ${T.hook}s · nº dorado ${T.curve}s · CTA ${T.cta}s. ` +
-    'Previsualiza y retoca si algo baila.';
+  const pausas = seg.slice(1).map((s,i) => ({inicio: s[0], hueco: s[0] - seg[i][1]}));
+  const cortes = pausas.sort((a,b) => b.hueco - a.hueco).slice(0,3)
+                       .map(p => p.inicio).sort((a,b) => a-b);
+  T.hook  = +cortes[0].toFixed(2);
+  T.curve = +cortes[1].toFixed(2);
+  T.cta   = +cortes[2].toFixed(2);
+  T.draw  = +Math.max(T.hook + 1.5, T.curve - 2.5).toFixed(2);
+  cortesMedidos = true;
+  cachedCards = null; pintarSliders(); drawFrame(T.curve + 0.3);
+  statusEl.textContent = `Aproximado por silencios: intro ${T.hook}s · curva llega ${T.draw}s · ` +
+    `nº dorado ${T.curve}s · CTA ${T.cta}s. Activa el reloj y verifica — el .srt es más fiable.`;
 };
 
 // ── Grabación ────────────────────────────────────────────────────────────────
@@ -591,6 +763,14 @@ async function elegirMime(){
 
 async function grabar(){
   if (document.hidden) throw new Error('la pestaña está en segundo plano. Ponla al frente.');
+  // Grabar con los cortes por defecto sobre un audio real = visuales adelantados a la voz.
+  // Es el fallo más difícil de ver y el más caro: se descubre al mirar el vídeo terminado.
+  if (audioEl.src && !cortesMedidos) throw new Error(
+    'los cortes siguen en mi estimación (5.4 / 18.2 / 20.8), no en tu audio. ' +
+    'Carga el .srt de CapCut, o pulsa "Detectar cortes por silencios", o mueve un slider.');
+  // el reloj es diagnóstico: jamás debe quedar quemado en el vídeo
+  const relojAntes = window.verReloj;
+  window.verReloj = false;
   let seFue = false;
   const vigia = () => { if (document.hidden) seFue = true; };
   document.addEventListener('visibilitychange', vigia);
@@ -615,7 +795,10 @@ async function grabar(){
     if (blob.size < 5000) throw new Error(`grabación vacía (${blob.size} bytes).`);
     blob.fps = Math.round(fps); blob.ext = extDe(mime); blob.conAudio = !!audioEl.src;
     return blob;
-  } finally { document.removeEventListener('visibilitychange', vigia); }
+  } finally {
+    document.removeEventListener('visibilitychange', vigia);
+    window.verReloj = relojAntes;
+  }
 }
 
 function descargar(blob, nombre){
@@ -649,8 +832,12 @@ document.getElementById('png').onclick = () => {
   }, 'image/png');
 };
 
+// Arranca con la calibración de voz-short-03.mp3 ya puesta: cargar el MP3 y grabar, nada más.
+srtCards = CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+cortesMedidos = true;
 pintarSliders();
-drawFrame(T.total);
+drawFrame(T.curve + 0.3);
+statusEl.textContent = 'Calibrado para voz-short-03.mp3 (24.03s). Carga ese MP3 y pulsa Grabar.';
 </script>
 </body>
 </html>
