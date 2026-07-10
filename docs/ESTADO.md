@@ -74,12 +74,39 @@ Tests: `python -m unittest discover -s tests -q`.
   conectado por el usuario pero no llega a la sesión. No bloquea: el pipeline es manual con apps web.
 
 ## 8. Estado honesto / lo más flojo
-`production_outcome = 0` → **el moat está VACÍO.** Todo está construido, auditado y limpio, pero el
-sistema **aún no ha aprendido nada real** porque no hay ni un video publicado. No es un bug; es lo
-que el primer video arregla. La DB se reseteó (limpia; backup `.bak` en data/). Política: motor
-CONGELADO (docs/POLITICA.md), hito = 10 videos instrumentados.
+**Ya hay un video publicado** (Short S3, 2026-07-10). Pero `production_outcome` **sigue en 0**: el
+moat no se llena al publicar, se llena al MEDIR. Hasta que no corras `record-outcome` con los
+números reales de las 48h, el sistema no ha aprendido nada. Publicar era la condición necesaria;
+medir es la suficiente.
 
-## 9. EL ÚNICO PASO QUE QUEDA — PUBLICAR el Short S3
+2 de 10 videos instrumentados (el largo aún sin producir). Política: motor CONGELADO
+(docs/POLITICA.md), hito = 10 videos con ADN + resultado + coste. La DB está limpia (backup `.bak`
+en data/).
+
+## 9. ✅ PUBLICADO — ahora toca MEDIR (2026-07-12, a las 48h)
+El Short S3 se publicó el **2026-07-10 a las 02:00 (hora local)** en **YouTube Shorts** y
+**Facebook Reels**. Archivo: MP4 H.264+AAC, 1080x1920, 30 fps, 24.03s, 13 MB, generado entero por
+`docs/guiones/short-renderer.html`. Contexto guardado en `production_context`.
+
+> ⚠️ **Confounder anotado:** se publicó a las 2 de la mañana hora local y la audiencia es EN/US.
+> Si la velocidad inicial es baja, puede ser la HORA, no el gancho. No lo atribuyas al `hook_type`.
+
+**A las 48h** (2026-07-12), de YouTube Studio y de Facebook:
+```
+python -m omega.cli record-analytics    # ctr/avd/retención como FRACCIÓN 0..1, NO %
+python -m omega.cli record-cost         # tus horas REALES de hoy
+python -m omega.cli record-outcome build-wealth-short-03-stat <0..1>
+python -m omega.cli dna
+```
+Los JSON ya están en `data/` con ceros y con el aviso del formato. `production_outcome` sigue en 0
+hasta que corras `record-outcome`: ese será el primer dato real que aprende el sistema.
+
+**Después** (y solo después): extraer el motor de vídeo configurable (`SHORTS` como datos + escenas).
+POLITICA.md Regla 1: publicar → detectar limitación → construir.
+
+---
+
+## 9-bis. Cómo se produjo (por si hay que repetirlo)
 El vídeo **ya se genera solo**. `docs/guiones/short-renderer.html` produce los 24s completos
 (intro, curva, número dorado, CTA y subtítulos quemados) con la voz incrustada. No hay que editar.
 
