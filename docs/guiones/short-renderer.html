@@ -138,13 +138,15 @@ const CALIBRADO = {
   draw: 12.80,   // la curva TERMINA de dibujarse cuando la voz dice "$610,000"
   curve: 15.99,  // "That gap?" -> entra el oro
   cta: 22.44,    // "Could you start..."
-  spec: [0.00, 2.15, 4.41],   // la 1ª en el frame 1 (la voz entra en 0.40); las otras, antes de su frase
+  // La 1ª línea arranca en -0.30 para estar YA VISIBLE en el frame 1: con 0.00 el fundido
+  // empezaba en cero y el Short abría en negro medio segundo. Eso es un swipe.
+  spec: [-0.30, 2.15, 4.41],
   cards: [
     {t0:5.94,  t1:8.26,  t:"You put in $180,000"},
     {t0:8.26,  t1:9.85,  t:"of your own money."},
     {t0:9.85,  t1:10.56, t:"You walk away"},
     {t0:10.56, t1:12.80, t:"with about $610,000"},
-    {t0:12.80, t1:14.66, t:"and that's in today's money,"},
+    {t0:12.80, t1:14.66, t:"in today's money,"},   // sin "and that's": pisaba la curva
     {t0:14.66, t1:15.99, t:"after inflation."},
     {t0:15.99, t1:18.39, t:"That gap? $430,000"},
     {t0:18.39, t1:19.22, t:"you never worked"},
@@ -319,8 +321,10 @@ function cortesDeSRT(cues){
 
 /** Una tarjeta, centrada, con las cifras en verde. Borde negro grueso: legible sobre cualquier cosa.
  *  Si la tarjeta no cabe (p.ej. lleva "$430,000"), encoge la fuente en vez de salirse del lienzo. */
+/** maxW 620, no el ancho de la zona segura: la curva verde cruza la banda de subtítulos por
+ *  x≈853, y una tarjeta más ancha le pone texto encima. Verde sobre verde no se lee. */
 function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1){
-  const maxW = (canvas.width - 2*SAFE.left - 60*s), gap = 16*s;   // dentro de la zona segura
+  const maxW = 620*s, gap = 16*s;
   let size = 62*s, anchos, totalW;
   for (let intento=0; intento<6; intento++){
     ctx.font = font(size, 700);
@@ -373,7 +377,8 @@ function drawHook(t, W, H, s){
 // ── Escena 2-4: la gráfica ────────────────────────────────────────────────────
 function drawChart(t, W, H, s, alpha){
   // Todo dentro de SAFE: fuera de ahí lo tapa la interfaz de YouTube/Facebook.
-  const x0 = 150*s, x1 = W - SAFE.right - 10*s;
+  // x1 deja 20px extra: la etiqueta "30" va centrada en x1 y asomaba por la derecha.
+  const x0 = 160*s, x1 = W - SAFE.right - 20*s;
   const yTop = 470*s, yBot = 1150*s;
   const head = SAFE.top + 25*s;
   const py = v => lerp(yBot, yTop, v/MAXY);
@@ -455,11 +460,23 @@ function drawChart(t, W, H, s, alpha){
   // "YOU PAID IN $180,000" va PEGADO a la línea de aportes, dentro de la gráfica.
   // Antes era una columna abajo, en la franja que tapa la interfaz. Y el contador de arriba ya
   // dice el total, así que la columna "YOU WALK AWAY WITH" solo repetía.
-  if (p > 0.35){
-    const aP = clamp01((p - 0.35) / 0.25);
-    const yc = py(D.contrib[Math.min(idx, D.n-1)]);
-    text('YOU PAID IN ' + money(D.finalContrib), x1, yc + 42*s,
-         {size:26*s, weight:600, color:'#9AACA2', align:'right', alpha:aP*alpha*0.9, stroke:8*s});
+  // Aparece cuando la curva ya llegó, FIJA en el extremo de la línea gris. Si la persigue
+  // mientras se dibuja, el ojo va al texto que se mueve en vez de a la curva que explota.
+  if (p >= 0.995){
+    const aP = clamp01((t - T.draw) / 0.4);
+    const etq = 'YOU PAID IN ' + money(D.finalContrib);
+    const yE = py(D.finalContrib) + 52*s;
+    // Placa oscura: la línea discontinua pasa justo por ahí y le cruzaba las letras.
+    ctx.save();
+    ctx.font = font(26*s, 600);
+    const wE = ctx.measureText(etq).width, ph = 42*s;
+    ctx.globalAlpha = aP*alpha*0.82;
+    ctx.fillStyle = P.ink;
+    ctx.beginPath();
+    ctx.roundRect(x1 - wE - 16*s, yE - ph*0.72, wE + 32*s, ph, 8*s);
+    ctx.fill();
+    ctx.restore();
+    text(etq, x1, yE, {size:26*s, weight:600, color:'#9AACA2', align:'right', alpha:aP*alpha});
   }
 
   // el número dorado: golpe al entrar, luego respira. Es el frame que la gente rebobina,
@@ -541,11 +558,12 @@ function drawFrame(t){
 
   // aviso YMYL: DENTRO de la zona segura. Abajo del todo lo tapaba el título del vídeo,
   // y un descargo que nadie ve no protege nada.
+  // 22px, no 19: a 19px el aviso es ilegible en un móvil, y un descargo ilegible no protege nada.
   const rPct = +(CFG.rate*100).toFixed(1);
   text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
-       W/2, 1490*s, {size:19*s, color:P.paper, alpha:0.45});
+       W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
   text('S&P 500 ≈10%/yr nominal since 1957 · Not financial advice',
-       W/2, 1524*s, {size:19*s, color:P.paper, alpha:0.45});
+       W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
 
   // diagnóstico (nunca se graba)
   if (window.verZonas) dibujarZonasSeguras(W, H, s);
@@ -594,7 +612,11 @@ function reproducir(hasta, alTerminar){
     const t = usaAudio ? audioEl.currentTime : (performance.now()-t0)/1000;
     drawFrame(Math.min(t, T.total));
     frames++;
-    if (t < hasta && corriendo) raf = requestAnimationFrame(loop);
+    // BUG CAZADO: mirar solo `t < hasta` cuelga el bucle para siempre. Si T.total quedó por
+    // encima de la duración real (redondeo), currentTime se congela debajo y no se llega nunca.
+    // audioEl.ended es la única señal fiable de que el audio acabó.
+    const acabo = usaAudio ? (audioEl.ended || t >= hasta - 0.02) : (t >= hasta);
+    if (!acabo && corriendo) raf = requestAnimationFrame(loop);
     else { corriendo = false; audioEl.pause(); if (alTerminar) alTerminar(frames); }
   })();
 }
@@ -609,7 +631,13 @@ document.getElementById('mp3').onchange = async (e) => {
   if (!f) return;
   audioEl.src = URL.createObjectURL(f);
   await new Promise(r => audioEl.onloadedmetadata = r);
-  const dur = +audioEl.duration.toFixed(2);
+  // floor, nunca toFixed: toFixed redondea HACIA ARRIBA la mitad de las veces y entonces
+  // T.total > duración real -> currentTime jamás lo alcanza -> bucle infinito.
+  const dur = Math.floor(audioEl.duration * 100) / 100;
+
+  // El mime cacheado puede ser de una grabación MUDA anterior (sin códec de audio).
+  // MediaRecorder lo acepta con una pista de voz adjunta y devuelve el vídeo EN SILENCIO.
+  mimeCache = null;
 
   // La calibración vale SOLO para el audio contra el que se midió. Otro audio -> otros tiempos.
   const esElCalibrado = Math.abs(dur - CALIBRADO.duracion) <= 0.35;
@@ -808,6 +836,10 @@ async function grabar(){
   document.addEventListener('visibilitychange', vigia);
   try {
     const mime = await elegirMime();
+    // MediaRecorder acepta una pista de audio con un mime sin códec de audio y la tira en
+    // silencio, sin avisar. Antes que entregar un Short mudo, se aborta.
+    if (audioEl.src && !/opus|mp4a/.test(mime))
+      throw new Error(`el contenedor "${mime}" no lleva códec de audio: el vídeo saldría mudo.`);
     const rec = new MediaRecorder(armarStream(), {mimeType: mime, videoBitsPerSecond: 12_000_000});
     const trozos = [];
     rec.ondataavailable = e => { if (e.data.size) trozos.push(e.data); };

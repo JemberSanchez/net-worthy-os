@@ -45,6 +45,11 @@ spec  = [0.00, 2.15, 4.41]   cada línea de la intro, antes de su frase
 en palabra funcional, y las cifras fusionadas en un solo token (`$430,000`) con el tiempo del span
 hablado completo ("four hundred and thirty thousand dollars").
 
+Una tarjeta se recortó por razones de composición, no de tiempo: `"and that's in today's money,"`
+medía 813 px y la curva verde cruza la banda de subtítulos por x≈853 — la cola quedaba *encima* de
+la curva. Se dejó en `"in today's money,"`. Los subtítulos no tienen que ser literales; el ancho
+máximo está limitado a 620 px para que ninguna futura tarjeta pueda invadir la curva.
+
 ## Verificado en el navegador
 
 - Los 8 puntos de control caen sobre la palabra correcta (`t=6.5` → "You put in $180,000";
