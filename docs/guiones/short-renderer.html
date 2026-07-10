@@ -48,6 +48,13 @@
 
 <div class="panel">
   <h2>1 · Carga tu voz</h2>
+  <div class="row" style="justify-content:flex-start">
+    <button id="voz-proyecto" class="brass">🎙 Usar la voz del proyecto (voz-short-03.mp3)</button>
+  </div>
+  <div class="note" style="text-align:left">
+    Ese botón la carga sola desde <code>data/voz-short-03.mp3</code>. Solo funciona si abriste
+    la página por <code>http://localhost:8765</code>. Si no, usa el selector de aquí abajo.
+  </div>
   <input type="file" id="mp3" accept="audio/*">
   <div class="note" style="text-align:left">
     El MP3 de ElevenLabs o el audio exportado de CapCut. <strong>El audio manda el reloj:</strong>
@@ -626,9 +633,25 @@ document.getElementById('stop').onclick = () => { sesion++; corriendo = false; a
 // ── Audio: carga + detección de silencios ─────────────────────────────────────
 let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
 
-document.getElementById('mp3').onchange = async (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
+document.getElementById('mp3').onchange = e => { if (e.target.files[0]) usarAudio(e.target.files[0]); };
+
+/** Carga la voz del proyecto sin pelearse con el diálogo de archivos.
+ *  Necesita servirse por http (localhost); desde file:// el navegador bloquea leer el disco. */
+document.getElementById('voz-proyecto').onclick = async () => {
+  statusEl.textContent = 'Buscando data/voz-short-03.mp3…';
+  try {
+    const r = await fetch('../../data/voz-short-03.mp3');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const b = await r.blob();
+    await usarAudio(new File([b], 'voz-short-03.mp3', {type:'audio/mpeg'}));
+  } catch (err) {
+    statusEl.textContent = '⚠ No pude leerlo solo (' + err.message + '). ' +
+      'Abre la página desde http://localhost:8765/docs/guiones/short-renderer.html, ' +
+      'o usa el selector de arriba con: Proyecto AI\\data\\voz-short-03.mp3';
+  }
+};
+
+async function usarAudio(f){
   audioEl.src = URL.createObjectURL(f);
   await new Promise(r => audioEl.onloadedmetadata = r);
   // floor, nunca toFixed: toFixed redondea HACIA ARRIBA la mitad de las veces y entonces
@@ -668,7 +691,7 @@ document.getElementById('mp3').onchange = async (e) => {
     ? `✅ Es el audio calibrado (${dur}s). Tiempos medidos aplicados. Pulsa Grabar.`
     : `⚠ Audio distinto (${dur}s, el calibrado son ${CALIBRADO.duracion}s). La calibración NO ` +
       `sirve: carga el .srt de CapCut o pulsa "Detectar cortes por silencios".`;
-};
+}
 
 /** Segmenta por energía: ventanas de 20ms, silencio = RMS bajo durante >=250ms.
  *  Los arranques de los bloques 2, 3 y 4 son exactamente los tres cortes que necesitamos. */
