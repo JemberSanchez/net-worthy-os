@@ -79,24 +79,35 @@ sistema **aún no ha aprendido nada real** porque no hay ni un video publicado. 
 que el primer video arregla. La DB se reseteó (limpia; backup `.bak` en data/). Política: motor
 CONGELADO (docs/POLITICA.md), hito = 10 videos instrumentados.
 
-## 9. EL ÚNICO PASO QUE QUEDA — producir y publicar el video #1
-Camino más barato = el **Short de 45s** (hook Marcus vs Dylan) para probar el gancho:
+## 9. EL ÚNICO PASO QUE QUEDA — PUBLICAR el Short S3
+El vídeo **ya se genera solo**. `docs/guiones/short-renderer.html` produce los 24s completos
+(intro, curva, número dorado, CTA y subtítulos quemados) con la voz incrustada. No hay que editar.
+
 ```
-1. Voz    → ElevenLabs (Brian, ajustes de §7), pega el guion del Short → MP3
-2. Editor → CapCut: voz + b-roll Pexels + subtítulos + animación curva + música
-     La curva YA está hecha: abre `docs/guiones/curva-compuesta.html` en Chrome →
-     "Grabar y descargar video" → .webm 9:16 (y "Frame final PNG" = miniatura B). $180k→$610k.
-3. Publica → Short en YouTube + cross-post TikTok/IG/FB
-4. Mide y cierra el bucle (PRIMER dato real del sistema):
-     python -m omega.cli record-analytics   (CTR/retención)
+1. Abre docs/guiones/short-renderer.html en Chrome
+2. Carga data/voz-short-03.mp3  → dirá "✅ Es el audio calibrado"
+3. "Grabar y descargar el Short"  → MP4/WebM 1080x1920, ~24s, con voz y subtítulos
+4. (opcional, 2 min) CapCut: música de Pixabay a -18 dB bajo la voz
+5. Publica en YouTube Shorts + Facebook Reels
+6. CIERRA EL BUCLE (el primer dato real del sistema, production_outcome sigue en 0):
+     python -m omega.cli record-analytics   (ctr/avd/retención como FRACCIÓN 0..1, no %)
      python -m omega.cli record-cost         (horas)
-     python -m omega.cli record-outcome build-wealth-assets-vs-habits-2026-07 <0..1>
+     python -m omega.cli record-outcome build-wealth-short-03-stat <0..1>
      python -m omega.cli dna
 ```
-~~Pendiente: animación de la curva.~~ **HECHA** (2026-07-09): `docs/guiones/curva-compuesta.html`
-— se auto-graba a `.webm` (9:16 y 16:9) y exporta PNG de miniatura. Verificada en navegador.
-De paso se corrigió una cifra falsa del guion: el gap NO era $420k sino **$429,985** ($609,985
-final, no ~$600k). Convención: 7% nominal capitalizado mensual.
+
+**Ya hecho (2026-07-09):** curva animada (`curva-compuesta.html`) · renderizador completo del Short ·
+calibración del audio (`docs/guiones/calibracion-voz-short-03.md`) · zonas seguras de YouTube/Facebook ·
+ADN registrado (`build-wealth-short-03-stat`, 7 bloques). 2 vídeos instrumentados de 10.
+
+**Tres cifras falsas corregidas por el camino:** el gap no era $420k sino **$429,985** ($609,985
+final, 7% nominal capitalizado mensual, no ~$600k) · el café "$18,000 invertido" era en realidad
+$18,250 **sin invertir** (invertido: **$26,323**) · las voces Default de ElevenLabs **caducan el
+31-dic-2026**, y su plan gratis no da derechos comerciales.
+
+**NO construir más motor antes de publicar** (`docs/POLITICA.md`, Regla 1). El motor de vídeo
+configurable (SHORTS como datos + escenas) está diseñado y esperando; se extrae DESPUÉS del S3,
+y las escenas del S4/S5 se construyen cuando toque producirlos.
 
 ## 10. Cómo arrancar el nuevo chat
 *"Lee docs/ESTADO.md y CLAUDE.md. Vamos a producir el primer video (build-wealth, Short). Ayúdame
