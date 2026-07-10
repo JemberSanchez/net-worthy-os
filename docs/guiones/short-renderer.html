@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Net Worthy — Renderizador de Shorts</title>
+<style>
+  :root{ --ink:#0A1A14; --growth:#1F9E6E; --brass:#D8B25A; --paper:#F4F6F3; --grey:#5C6E64; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:22px; background:#07120E; color:var(--paper);
+    font:15px/1.5 "Segoe UI", Inter, system-ui, sans-serif;
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+  }
+  h1{font-size:18px; font-weight:600; margin:0; text-align:center}
+  h1 small{color:var(--grey); font-weight:400; display:block; font-size:13px; margin-top:4px}
+  #stage{border:1px solid #1d2f27; border-radius:10px; overflow:hidden; line-height:0}
+  canvas{display:block; max-height:60vh; width:auto; height:auto}
+  .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center}
+  button{
+    background:var(--growth); color:#04120C; border:0; border-radius:7px;
+    padding:10px 16px; font-weight:650; font-size:14px; cursor:pointer; font-family:inherit;
+  }
+  button:hover:not(:disabled){filter:brightness(1.12)}
+  button:disabled{opacity:.4; cursor:not-allowed}
+  button.ghost{background:transparent; color:var(--paper); border:1px solid #2b4238}
+  button.brass{background:var(--brass); color:#1a1204}
+  .panel{
+    background:#0d1c16; border:1px solid #23382e; border-radius:9px; padding:14px 16px;
+    width:min(760px,100%); display:flex; flex-direction:column; gap:10px;
+  }
+  .panel h2{font-size:13px; margin:0 0 2px; color:var(--brass); letter-spacing:.06em; text-transform:uppercase}
+  .slider{display:grid; grid-template-columns:190px 1fr 74px; gap:10px; align-items:center; font-size:13px}
+  .slider span{color:var(--grey)}
+  .slider input[type=range]{width:100%}
+  .slider output{text-align:right; font-variant-numeric:tabular-nums; color:var(--paper)}
+  input[type=file]{font:inherit; font-size:13px; color:var(--grey)}
+  #status{min-height:20px; font-size:13px; color:var(--brass); text-align:center}
+  .note{max-width:700px; color:var(--grey); font-size:12.5px; text-align:center; line-height:1.6}
+  .note code{background:#0d1c16; padding:1px 5px; border-radius:4px; color:var(--paper)}
+  .warn{color:#E0A0A0}
+</style>
+</head>
+<body>
+
+<h1>Renderizador de Shorts — Net Worthy
+  <small>Genera el vídeo entero: intro, curva, número, CTA y subtítulos quemados. Sin editar.</small>
+</h1>
+
+<div class="panel">
+  <h2>1 · Carga tu voz</h2>
+  <input type="file" id="mp3" accept="audio/*">
+  <div class="note" style="text-align:left">
+    El MP3 de ElevenLabs o el audio exportado de CapCut. <strong>El audio manda el reloj:</strong>
+    la animación se dibuja siguiendo su tiempo, así que no pueden desincronizarse.
+    Sin audio, el vídeo se genera mudo con la duración de abajo.
+  </div>
+  <div class="row">
+    <button id="auto" class="ghost" disabled>✨ Detectar los cortes solo</button>
+    <button id="play" class="ghost">▶ Previsualizar</button>
+    <button id="stop" class="ghost">■ Parar</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>2 · Ajusta los tres cortes</h2>
+  <div class="slider"><span>Fin de la intro</span>
+    <input type="range" id="sHook" min="1" max="12" step="0.05"><output id="oHook"></output></div>
+  <div class="slider"><span>“That gap?” (nº dorado)</span>
+    <input type="range" id="sCurve" min="6" max="24" step="0.05"><output id="oCurve"></output></div>
+  <div class="slider"><span>Entra el CTA</span>
+    <input type="range" id="sCTA" min="8" max="30" step="0.05"><output id="oCTA"></output></div>
+  <div class="slider"><span>Duración total</span>
+    <input type="range" id="sTotal" min="10" max="60" step="0.05"><output id="oTotal"></output></div>
+</div>
+
+<div id="stage"><canvas id="c" width="1080" height="1920"></canvas></div>
+
+<div class="row">
+  <button id="rec">⏺ Grabar y descargar el Short</button>
+  <button id="png" class="brass">⬇ Frame final (miniatura)</button>
+</div>
+
+<div id="status"></div>
+
+<p class="note">
+  Sale en <code>.mp4</code> (H.264 + AAC) si tu navegador puede; si no, <code>.webm</code>.
+  <strong>Deja esta pestaña al frente durante la grabación</strong> — si te vas, el navegador congela
+  la animación y se aborta sin descargar nada.
+  <br><span class="warn">Solo Chrome o Edge.</span>
+</p>
+
+<script>
+const P = { ink:'#0A1A14', growth:'#1F9E6E', brass:'#D8B25A', paper:'#F4F6F3', grey:'#5C6E64' };
+
+// ── El guion. Cambia SOLO esto para producir los otros Shorts. ────────────────
+const CFG = {
+  spec: ['$500 A MONTH', 'S&P 500', '30 YEARS'],
+  // Subtítulos: casi verbatim, pero con las cifras en dígitos (se leen mejor que en letra).
+  l2: "You put in $180,000 of your own money. You walk away with about $610,000 — in today's money, after inflation.",
+  l3: "That gap? $430,000 you never worked a single hour for. Your asset made it while you slept.",
+  cta: ['COULD YOU START', 'WITH $50 A MONTH?'],
+  ctaSub: 'comment below',
+  pmt: 500, years: 30, rate: 0.07,
+};
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const audioEl = new Audio();
+audioEl.preload = 'auto';
+
+const money = v => '$' + Math.round(v).toLocaleString('en-US');
+const lerp = (a,b,t) => a + (b-a)*t;
+const clamp01 = t => Math.max(0, Math.min(1, t));
+const easeOut = t => 1 - Math.pow(1-t, 3);
+
+// ── Cortes (segundos). Los sliders los escriben. ──────────────────────────────
+const T = { hook: 5.4, curve: 18.2, cta: 20.8, total: 24 };
+
+const S = ['sHook','sCurve','sCTA','sTotal'].map(id => document.getElementById(id));
+const O = ['oHook','oCurve','oCTA','oTotal'].map(id => document.getElementById(id));
+const KEYS = ['hook','curve','cta','total'];
+
+function pintarSliders(){
+  KEYS.forEach((k,i) => { S[i].value = T[k]; O[i].textContent = T[k].toFixed(2) + 's'; });
+}
+S.forEach((el,i) => el.addEventListener('input', () => {
+  T[KEYS[i]] = +el.value;
+  O[i].textContent = (+el.value).toFixed(2) + 's';
+  cachedCards = null;
+  if (!corriendo) drawFrame(+el.value);
+}));
+
+// ── Serie compuesta real (nada escrito a mano) ────────────────────────────────
+function series(){
+  const n = CFG.years*12, r = CFG.rate/12;
+  const total = [], contrib = [];
+  let bal = 0;
+  for (let i=1; i<=n; i++){ bal = bal*(1+r) + CFG.pmt; total.push(bal); contrib.push(CFG.pmt*i); }
+  return {total, contrib, n, finalTotal: total[n-1], finalContrib: contrib[n-1],
+          gap: total[n-1]-contrib[n-1]};
+}
+const D = series();
+const MAXY = D.finalTotal * 1.18;
+
+// ── Dibujo de texto ───────────────────────────────────────────────────────────
+function font(px, w){ return `${w||400} ${px}px "Segoe UI", Inter, system-ui, sans-serif`; }
+
+function text(str, x, y, {size=40, weight=400, color=P.paper, align='center', alpha=1,
+                          spacing=0, stroke=0}={}){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = font(size, weight);
+  ctx.textAlign = align;
+  try { ctx.letterSpacing = spacing + 'px'; } catch(e){}
+  if (stroke){
+    ctx.lineWidth = stroke; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round';
+    ctx.strokeText(str, x, y);
+  }
+  ctx.fillStyle = color;
+  ctx.fillText(str, x, y);
+  ctx.restore();
+}
+
+// ── Subtítulos ────────────────────────────────────────────────────────────────
+// Trocear por número de palabras a secas produce basura: "You walk away with" (termina en
+// preposición) o "That gap? $430,000 you" (deja 'you' colgando). Se corta por puntuación
+// primero, y ninguna tarjeta puede terminar en palabra funcional.
+const FUNC = new Set(['a','an','the','of','in','on','for','and','with','to','you','your','it',
+                      'at','is','was','are','be','that','this','but','or','so','as','into',
+                      'from','about','my','its','his','her']);
+const limpio = w => w.toLowerCase().replace(/[^a-z']/g, '');
+
+function trocear(texto, maxPal=4){
+  const clausulas = texto.split(/(?<=[.?!,;:—])\s+/).map(c => c.trim()).filter(Boolean);
+  const salida = [];
+  clausulas.forEach(cl => {
+    const pal = cl.split(/\s+/).filter(w => w && w !== '—');
+    if (!pal.length) return;
+    const g = [];
+    for (let i=0; i<pal.length; i+=maxPal) g.push(pal.slice(i, i+maxPal));
+    // empuja las palabras funcionales finales a la tarjeta siguiente
+    for (let i=0; i<g.length-1; i++){
+      while (g[i].length > 1 && FUNC.has(limpio(g[i][g[i].length-1]))) g[i+1].unshift(g[i].pop());
+    }
+    // una tarjeta huérfana de una sola palabra se fusiona con la anterior
+    if (g.length > 1 && g[g.length-1].length === 1 && g[g.length-2].length < 5){
+      g[g.length-2].push(...g.pop());
+    }
+    salida.push(...g);
+  });
+  return salida;
+}
+
+function tarjetas(texto, t0, t1){
+  const grupos = trocear(texto);
+  const totalPal = grupos.reduce((a,g) => a + g.length, 0);
+  let acc = 0;
+  return grupos.map(g => {
+    const a = t0 + (t1-t0)*(acc/totalPal);
+    acc += g.length;
+    const b = t0 + (t1-t0)*(acc/totalPal);
+    return {t0:a, t1:b, palabras:g};
+  });
+}
+let cachedCards = null;
+function cards(){
+  if (!cachedCards) cachedCards = [
+    ...tarjetas(CFG.l2, T.hook, T.curve),
+    ...tarjetas(CFG.l3, T.curve, T.cta),
+  ];
+  return cachedCards;
+}
+
+/** Una tarjeta, centrada, con las cifras en verde. Borde negro grueso: legible sobre cualquier cosa.
+ *  Si la tarjeta no cabe (p.ej. lleva "$430,000"), encoge la fuente en vez de salirse del lienzo. */
+function dibujarSubtitulo(palabras, cx, cy, s, alpha){
+  const maxW = canvas.width * 0.88, gap = 16*s;
+  let size = 62*s, anchos, totalW;
+  for (let intento=0; intento<6; intento++){
+    ctx.font = font(size, 700);
+    anchos = palabras.map(p => ctx.measureText(p).width);
+    totalW = anchos.reduce((a,b)=>a+b, 0) + gap*(palabras.length-1);
+    if (totalW <= maxW) break;
+    size *= 0.92;
+  }
+  let x = cx - totalW/2;
+  palabras.forEach((p,i) => {
+    const esCifra = /\$|\d/.test(p);
+    text(p, x, cy, {size, weight:700, color: esCifra ? P.growth : P.paper,
+                    align:'left', alpha, stroke: 12*s});
+    x += anchos[i] + gap;
+  });
+}
+
+// ── Escena 1: la intro (spec drop) ────────────────────────────────────────────
+function drawHook(t, W, H, s){
+  const p = clamp01(t / T.hook);
+  const cy = H*0.44;
+  const tams = [96, 116, 96];
+  CFG.spec.forEach((linea, i) => {
+    const retardo = [0.06, 0.30, 0.56][i];
+    const a = clamp01((p - retardo) / 0.16);
+    if (a <= 0) return;
+    const dy = (1 - easeOut(a)) * 60*s;   // entra subiendo
+    const color = i === 1 ? P.brass : P.paper;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 20*s;
+    text(linea, W/2, cy + (i-1)*150*s + dy,
+         {size: tams[i]*s, weight:800, color, alpha:easeOut(a), spacing: i===1 ? 8*s : 0});
+    ctx.restore();
+  });
+  // línea dorada que crece bajo el bloque
+  const a = clamp01((p - 0.72) / 0.18);
+  if (a > 0){
+    const w = 260*s * easeOut(a);
+    ctx.save(); ctx.globalAlpha = easeOut(a);
+    ctx.strokeStyle = P.brass; ctx.lineWidth = 5*s; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(W/2-w/2, cy + 230*s); ctx.lineTo(W/2+w/2, cy + 230*s); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ── Escena 2-4: la gráfica ────────────────────────────────────────────────────
+function drawChart(t, W, H, s, alpha){
+  const x0 = W*0.09, x1 = W - W*0.09;
+  const yTop = H*0.225, yBot = H*0.735;
+  const foot = H*0.815, head = H*0.085;
+  const px = i => lerp(x0, x1, i/(D.n-1));
+  const py = v => lerp(yBot, yTop, v/MAXY);
+
+  const arranque = T.hook + 0.6;
+  const fin = Math.max(arranque + 1, T.curve - 0.5);
+  const p = clamp01((t - arranque) / (fin - arranque));
+  const idx = Math.max(0, Math.floor(p * (D.n-1)));
+  const aGap  = clamp01((t - T.curve) / 0.5);        // el área dorada aparece con "That gap?"
+  const aLab  = clamp01((t - T.curve - 0.15) / 0.5);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // rejilla
+  ctx.strokeStyle = '#1E362C'; ctx.lineWidth = 1.5*s;
+  ctx.globalAlpha = alpha*0.5;
+  for (let v=100000; v<=MAXY; v+=100000){
+    const y = py(v);
+    ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+    text('$'+(v/1000)+'k', x0-14*s, y+8*s, {size:23*s, color:P.grey, align:'right', alpha:alpha});
+  }
+  ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.moveTo(x0,yBot); ctx.lineTo(x1,yBot);
+  ctx.strokeStyle='#2B4238'; ctx.lineWidth=2*s; ctx.stroke();
+  for (let yr=0; yr<=CFG.years; yr+=5){
+    const i = Math.min(D.n-1, yr*12);
+    text(String(yr), px(i), yBot+34*s, {size:22*s, color:P.grey, alpha:alpha*0.75});
+  }
+  ctx.restore();
+
+  // área del gap (degradado, no plano: en plano sale marrón oliva sobre el verde)
+  if (aGap > 0){
+    ctx.save(); ctx.globalAlpha = aGap*alpha;
+    ctx.beginPath(); ctx.moveTo(px(0), py(D.total[0]));
+    for (let i=1;i<=idx;i++) ctx.lineTo(px(i), py(D.total[i]));
+    for (let i=idx;i>=0;i--) ctx.lineTo(px(i), py(D.contrib[i]));
+    ctx.closePath();
+    const g = ctx.createLinearGradient(0,yTop,0,yBot);
+    g.addColorStop(0,'rgba(216,178,90,0.34)'); g.addColorStop(1,'rgba(216,178,90,0.07)');
+    ctx.fillStyle = g; ctx.fill(); ctx.restore();
+  }
+
+  // aportes (la otra mitad de la comparación: tiene que leerse)
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.strokeStyle='#9AACA2'; ctx.lineWidth=6*s; ctx.setLineDash([16*s,11*s]); ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(px(0), py(D.contrib[0]));
+  for (let i=1;i<=idx;i++) ctx.lineTo(px(i), py(D.contrib[i]));
+  ctx.stroke(); ctx.restore();
+
+  // curva compuesta
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.strokeStyle=P.growth; ctx.lineWidth=9*s; ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.shadowColor='rgba(31,158,110,0.85)'; ctx.shadowBlur=34*s;
+  ctx.beginPath(); ctx.moveTo(px(0), py(D.total[0]));
+  for (let i=1;i<=idx;i++) ctx.lineTo(px(i), py(D.total[i]));
+  ctx.stroke();
+  ctx.shadowBlur = 30*s; ctx.fillStyle = P.paper;
+  ctx.beginPath(); ctx.arc(px(idx), py(D.total[idx]), 11*s, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // contador (golpe justo al terminar de dibujarse)
+  const shown = D.total[idx];
+  let esc = 1;
+  const dPunch = t - fin;
+  if (dPunch > 0 && dPunch < 0.55) esc = 1 + 0.13*Math.sin(Math.PI*(dPunch/0.55));
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
+  ctx.shadowColor='rgba(31,158,110,0.5)'; ctx.shadowBlur=26*s;
+  text(money(shown), 0, 0, {size:96*s, weight:800, color:P.paper});
+  ctx.restore();
+  text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${Math.min(CFG.years, Math.floor(idx/12)+1)}`,
+       W/2, head + 186*s, {size:22*s, weight:600, color:P.brass, alpha:alpha*0.85, spacing:4*s});
+
+  // bloque final: columnas + número dorado
+  if (aLab > 0){
+    const colL = W*0.09, colR = W - W*0.09;
+    text('YOU PAID IN', colL, foot, {size:22*s, weight:600, color:P.grey, align:'left',
+         alpha:aLab*alpha, spacing:2*s});
+    text(money(D.finalContrib), colL, foot+52*s, {size:52*s, weight:700, color:P.grey,
+         align:'left', alpha:aLab*alpha});
+    text('YOU WALK AWAY WITH', colR, foot, {size:22*s, weight:600, color:P.growth, align:'right',
+         alpha:aLab*alpha, spacing:2*s});
+    text(money(D.finalTotal), colR, foot+52*s, {size:52*s, weight:700, color:P.growth,
+         align:'right', alpha:aLab*alpha});
+
+    ctx.save(); ctx.globalAlpha = aLab*alpha;
+    ctx.strokeStyle='rgba(216,178,90,0.35)'; ctx.lineWidth=1.5*s;
+    ctx.beginPath(); ctx.moveTo(colL, foot+88*s); ctx.lineTo(colR, foot+88*s); ctx.stroke();
+    ctx.restore();
+
+    // el número dorado: golpe al entrar, luego respira. Es el frame que la gente rebobina.
+    const dg = t - T.curve;
+    let eg = 1;
+    if (dg > 0 && dg < 0.6) eg = 1 + 0.16*Math.sin(Math.PI*(dg/0.6));
+    else if (dg >= 0.6) eg = 1 + 0.012*Math.sin((dg-0.6)*2.4);
+    ctx.save();
+    ctx.globalAlpha = aLab*alpha;
+    ctx.translate(W/2, foot+162*s); ctx.scale(eg, eg);
+    ctx.shadowColor='rgba(216,178,90,0.55)'; ctx.shadowBlur=22*s;
+    text(money(D.gap), 0, 0, {size:74*s, weight:800, color:P.brass});
+    ctx.restore();
+    text('you never worked a single hour for', W/2, foot+202*s,
+         {size:25*s, weight:500, color:P.paper, alpha:aLab*alpha*0.72});
+  }
+}
+
+// ── Escena 4: el CTA ──────────────────────────────────────────────────────────
+function drawCTA(t, W, H, s){
+  const a = clamp01((t - T.cta) / 0.45);
+  if (a <= 0) return;
+  const e = easeOut(a);
+  ctx.save();
+  ctx.globalAlpha = e * 0.52;                    // oscurece, pero el nº dorado debe seguir vivo
+  ctx.fillStyle = P.ink; ctx.fillRect(0,0,W,H);
+  ctx.restore();
+
+  const cy = H*0.46 + (1-e)*50*s;
+  CFG.cta.forEach((linea,i) => {
+    text(linea, W/2, cy + i*104*s, {size:84*s, weight:800, color:P.paper, alpha:e, stroke:10*s});
+  });
+  text(CFG.ctaSub.toUpperCase(), W/2, cy + CFG.cta.length*104*s + 34*s,
+       {size:30*s, weight:600, color:P.brass, alpha:e*0.9, spacing:6*s});
+}
+
+// ── Frame completo (PURA: mismo t -> mismo frame) ─────────────────────────────
+function drawFrame(t){
+  const W = canvas.width, H = canvas.height, s = Math.min(W,H)/1080;
+
+  ctx.fillStyle = P.ink; ctx.fillRect(0,0,W,H);
+  const g = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, Math.max(W,H)*0.75);
+  g.addColorStop(0,'rgba(31,158,110,0.09)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  text('NET WORTHY', W/2, H*0.085, {size:26*s, weight:700, color:P.brass, alpha:0.9, spacing:6*s});
+
+  // crossfade intro -> gráfica
+  const fade = 0.45;
+  const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
+  const aChart = clamp01((t - (T.hook - fade)) / fade);
+
+  if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
+  if (aChart > 0) drawChart(t, W, H, s, aChart);
+
+  // subtítulos (solo mientras habla de los números; en la intro el spec drop ya ES el subtítulo)
+  if (t >= T.hook && t < T.cta){
+    const c = cards().find(k => t >= k.t0 && t < k.t1);
+    if (c){
+      const dentro = clamp01((t - c.t0) / 0.12);
+      dibujarSubtitulo(c.palabras, W/2, H*0.345, s, dentro);
+    }
+  }
+
+  drawCTA(t, W, H, s);
+
+  // aviso YMYL: siempre visible, protege la monetización
+  const rPct = +(CFG.rate*100).toFixed(1);
+  text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
+       W/2, H - 74*s, {size:18*s, color:P.paper, alpha:0.42});
+  text('S&P 500 has returned ≈10%/yr nominal since 1957 · Not financial advice',
+       W/2, H - 40*s, {size:18*s, color:P.paper, alpha:0.42});
+}
+
+// ── Reproducción: si hay audio, ÉL manda el reloj (imposible desincronizar) ───
+let raf = null, corriendo = false;
+
+function reproducir(hasta, alTerminar){
+  cancelAnimationFrame(raf);
+  corriendo = true;
+  const usaAudio = !!audioEl.src;
+  const t0 = performance.now();
+  if (usaAudio){ audioEl.currentTime = 0; audioEl.play().catch(()=>{}); }
+  let frames = 0;
+  (function loop(){
+    const t = usaAudio ? audioEl.currentTime : (performance.now()-t0)/1000;
+    drawFrame(Math.min(t, T.total));
+    frames++;
+    if (t < hasta && corriendo) raf = requestAnimationFrame(loop);
+    else { corriendo = false; audioEl.pause(); if (alTerminar) alTerminar(frames); }
+  })();
+}
+document.getElementById('play').onclick = () => { statusEl.textContent=''; reproducir(T.total); };
+document.getElementById('stop').onclick = () => { corriendo = false; audioEl.pause(); };
+
+// ── Audio: carga + detección de silencios ─────────────────────────────────────
+let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
+
+document.getElementById('mp3').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  audioEl.src = URL.createObjectURL(f);
+  await new Promise(r => audioEl.onloadedmetadata = r);
+  T.total = +audioEl.duration.toFixed(2);
+  S[3].max = Math.ceil(T.total)+2;
+  if (T.cta > T.total - 1) T.cta = T.total - 2.5;
+  if (T.curve > T.cta - 1) T.curve = T.cta - 2.5;
+  cachedCards = null; pintarSliders(); drawFrame(T.total);
+
+  const ab = await f.arrayBuffer();
+  audioCtx = audioCtx || new AudioContext();
+  pcm = await audioCtx.decodeAudioData(ab.slice(0));
+  document.getElementById('auto').disabled = false;
+  statusEl.textContent = `Audio cargado: ${T.total}s. Pulsa "Detectar los cortes solo".`;
+};
+
+/** Segmenta por energía: ventanas de 20ms, silencio = RMS bajo durante >=250ms.
+ *  Los arranques de los bloques 2, 3 y 4 son exactamente los tres cortes que necesitamos. */
+function detectarCortes(){
+  const data = pcm.getChannelData(0), sr = pcm.sampleRate;
+  const win = Math.floor(sr*0.02);
+  const rms = [];
+  for (let i=0; i+win<=data.length; i+=win){
+    let acc = 0;
+    for (let j=0;j<win;j++){ const v = data[i+j]; acc += v*v; }
+    rms.push(Math.sqrt(acc/win));
+  }
+  const pico = Math.max(...rms);
+  const umbral = pico * 0.05;
+  const minSil = Math.round(0.25/0.02);
+
+  const segmentos = [];
+  let dentro = false, ini = 0, sil = 0;
+  rms.forEach((v,i) => {
+    if (v > umbral){
+      if (!dentro){ dentro = true; ini = i; }
+      sil = 0;
+    } else if (dentro){
+      if (++sil >= minSil){ dentro = false; segmentos.push([ini*0.02, (i-sil)*0.02]); }
+    }
+  });
+  if (dentro) segmentos.push([ini*0.02, rms.length*0.02]);
+  return segmentos;
+}
+
+document.getElementById('auto').onclick = () => {
+  const seg = detectarCortes();
+  if (seg.length < 4){
+    statusEl.textContent = `Solo encontré ${seg.length} bloques de voz (esperaba 4). ` +
+      'Ajusta los sliders a mano mirando la forma de onda en CapCut.';
+    return;
+  }
+  T.hook  = +seg[1][0].toFixed(2);
+  T.curve = +seg[2][0].toFixed(2);
+  T.cta   = +seg[seg.length-1][0].toFixed(2);
+  cachedCards = null; pintarSliders(); drawFrame(T.total);
+  statusEl.textContent = `Cortes detectados: intro ${T.hook}s · nº dorado ${T.curve}s · CTA ${T.cta}s. ` +
+    'Previsualiza y retoca si algo baila.';
+};
+
+// ── Grabación ────────────────────────────────────────────────────────────────
+// MP4 primero (CapCut lo traga siempre). isTypeSupported() MIENTE en máquinas sin
+// codificador H.264: devuelve true y luego no emite un byte. Se sondea de verdad.
+const MIMES_MUDO  = ['video/mp4;codecs=avc1.640028', 'video/mp4',
+                     'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+const extDe = m => m.startsWith('video/mp4') ? 'mp4' : 'webm';
+const TIMESLICE = 200, FLUSH_MS = 350, MIN_FPS = 24;
+let mimeCache = null;
+
+function pistaAudio(){
+  if (!audioEl.src) return null;
+  audioCtx = audioCtx || new AudioContext();
+  if (!fuenteNodo){
+    fuenteNodo = audioCtx.createMediaElementSource(audioEl);
+    destinoNodo = audioCtx.createMediaStreamDestination();
+    fuenteNodo.connect(destinoNodo);
+    fuenteNodo.connect(audioCtx.destination);   // para oírlo mientras
+  }
+  return destinoNodo.stream.getAudioTracks()[0];
+}
+
+function armarStream(){
+  const v = canvas.captureStream(60).getVideoTracks();
+  const a = pistaAudio();
+  return new MediaStream(a ? [...v, a] : v);
+}
+
+/** Sondea SOLO VÍDEO (canvas, sin pista de audio). Crítico: con audio adjunto, un contenedor
+ *  cuyo codificador de vídeo no existe igual emite bytes (los del audio) y el sondeo daría un
+ *  falso positivo -> archivo con voz y sin imagen. El vídeo se valida aislado. */
+async function sondearVideo(mime){
+  try {
+    const soloVideo = new MediaStream(canvas.captureStream(60).getVideoTracks());
+    const rec = new MediaRecorder(soloVideo, {mimeType: mime, videoBitsPerSecond: 2_000_000});
+    let bytes = 0;
+    rec.ondataavailable = e => { bytes += e.data.size; };
+    const fin = new Promise(r => rec.onstop = r);
+    rec.start(100);
+    await new Promise(res => {
+      const t0 = performance.now();
+      (function l(){ drawFrame(((performance.now()-t0)/1000) % T.total);
+        performance.now()-t0 < 400 ? requestAnimationFrame(l) : res(); })();
+    });
+    await new Promise(r => setTimeout(r, 200));
+    rec.stop(); await fin;
+    return bytes > 0;
+  } catch(e){ return false; }
+}
+
+// Del contenedor de vídeo que SÍ funciona, se deriva la variante con audio de su misma familia.
+const CON_AUDIO = {
+  'video/mp4;codecs=avc1.640028': ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4'],
+  'video/mp4':                    ['video/mp4'],
+  'video/webm;codecs=vp9':        ['video/webm;codecs=vp9,opus', 'video/webm'],
+  'video/webm;codecs=vp8':        ['video/webm;codecs=vp8,opus', 'video/webm'],
+  'video/webm':                   ['video/webm'],
+};
+
+async function elegirMime(){
+  if (mimeCache) return mimeCache;
+  let base = null;
+  for (const m of MIMES_MUDO){
+    if (!MediaRecorder.isTypeSupported(m)) continue;
+    if (await sondearVideo(m)) { base = m; break; }
+  }
+  if (!base) throw new Error('ni MP4 ni WebM producen vídeo aquí. Usa Chrome o Edge.');
+  if (!audioEl.src) { mimeCache = base; return base; }
+
+  const cand = (CON_AUDIO[base] || []).find(m => MediaRecorder.isTypeSupported(m));
+  if (!cand) throw new Error(`${base} graba vídeo pero no admite audio en este navegador.`);
+  mimeCache = cand;
+  return cand;
+}
+
+async function grabar(){
+  if (document.hidden) throw new Error('la pestaña está en segundo plano. Ponla al frente.');
+  let seFue = false;
+  const vigia = () => { if (document.hidden) seFue = true; };
+  document.addEventListener('visibilitychange', vigia);
+  try {
+    const mime = await elegirMime();
+    const rec = new MediaRecorder(armarStream(), {mimeType: mime, videoBitsPerSecond: 12_000_000});
+    const trozos = [];
+    rec.ondataavailable = e => { if (e.data.size) trozos.push(e.data); };
+    const parado = new Promise(r => rec.onstop = r);
+
+    rec.start(TIMESLICE);
+    const frames = await new Promise(res => reproducir(T.total, res));
+    await new Promise(r => setTimeout(r, FLUSH_MS));
+    rec.stop(); await parado;
+
+    if (seFue) throw new Error('cambiaste de pestaña: la animación se congela y el vídeo sale ' +
+                               'a saltos. Reintenta sin tocar nada.');
+    const fps = frames / T.total;
+    if (fps < MIN_FPS) throw new Error(`solo ${fps.toFixed(0)} fps (se esperan ~60). ` +
+                                       'Cierra pestañas pesadas.');
+    const blob = new Blob(trozos, {type: mime.split(';')[0]});
+    if (blob.size < 5000) throw new Error(`grabación vacía (${blob.size} bytes).`);
+    blob.fps = Math.round(fps); blob.ext = extDe(mime); blob.conAudio = !!audioEl.src;
+    return blob;
+  } finally { document.removeEventListener('visibilitychange', vigia); }
+}
+
+function descargar(blob, nombre){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+document.getElementById('rec').onclick = async () => {
+  const btns = document.querySelectorAll('button');
+  btns.forEach(b => b.disabled = true);
+  statusEl.textContent = `Grabando ${T.total.toFixed(1)}s… deja la pestaña al frente.`;
+  try {
+    const blob = await grabar();
+    descargar(blob, `net-worthy-short-${canvas.width}x${canvas.height}.${blob.ext}`);
+    statusEl.textContent = `Listo: ${blob.ext.toUpperCase()} · ${Math.round(blob.size/1024)} KB · ` +
+      `${blob.fps} fps · ${blob.conAudio ? 'con voz' : 'MUDO'}.`;
+  } catch (err) {
+    statusEl.textContent = '⚠ No se descargó nada — ' + err.message;
+  } finally {
+    btns.forEach(b => b.disabled = false);
+    document.getElementById('auto').disabled = !pcm;
+  }
+};
+
+document.getElementById('png').onclick = () => {
+  drawFrame(T.cta - 0.05);      // el frame del número dorado, antes de que entre el CTA
+  canvas.toBlob(b => {
+    descargar(b, `net-worthy-miniatura-${canvas.width}x${canvas.height}.png`);
+    statusEl.textContent = 'Miniatura descargada.';
+  }, 'image/png');
+};
+
+pintarSliders();
+drawFrame(T.total);
+</script>
+</body>
+</html>
