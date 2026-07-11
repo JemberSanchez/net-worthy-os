@@ -71,6 +71,51 @@ algoritmo no empuja long-form** (se construiría capacidad que nadie ve todavía
 en cambio, **paga ya** porque mejora los Shorts (que son el alcance real). Cuando el canal demuestre
 tracción, el long-form es una **extensión** de esto, no un motor nuevo.
 
+## El sistema dual-modo COMPLETO (el destino)
+
+El objetivo del usuario: un solo sistema que hace **Short** y **Video**, con un **selector de modo**.
+Diseño del estado final:
+
+### 1. Formato como dato (no cableado)
+```js
+FORMATS = {
+  short:  { w:1080, h:1920, safe:{top:190,bottom:360,left:70,right:130} },  // 9:16
+  video:  { w:1920, h:1080, safe:{top:60, bottom:90, left:80, right:80} },  // 16:9
+  square: { w:1080, h:1080, safe:{top:80, bottom:120,left:80, right:80} },  // 1:1
+}
+```
+Un **selector de modo** en la UI cambia el formato activo → `canvas.w/h` y `SAFE` salen de ahí.
+El scroll de escala `s` ya deriva de `min(W,H)`; el resto de posiciones deben pasar de píxeles
+absolutos a **fracciones de la caja segura** (hoy son absolutas verticales). Ese es el trabajo real
+del modo Video: **cada escena necesita su layout por formato**, no solo un reescalado (dos barras
+que en 9:16 van estrechas y altas, en 16:9 van anchas y a media altura — es rediseño, no zoom).
+
+### 2. El proyecto declara su modo
+Un **Short** = formato `short`, una voz continua, 1 escena base + overlays (lo de hoy).
+Un **Video** = formato `video`, una **timeline de segmentos**, cada uno con su escena, sus datos,
+su clip de voz y sus subtítulos → render por segmentos → **ffmpeg concatena** (rompe el muro de RAM).
+
+### 3. La misma biblioteca de escenas, con layout por formato
+`chart`, `columns`, `titulo`, `outro` (ya) + `capitulo`, `stat`, `bullets`, `cita`, `lower-third`,
+`fuente`. Cada una: `dibujar(t, W, H, s, alpha, opts)` que se posiciona **relativa a la caja segura**,
+así sirve en 9:16 y en 16:9.
+
+## Plan por fases (con puerta de evidencia)
+
+| Fase | Qué | Coste | Cuándo |
+|---|---|---|---|
+| **0 ✓** | Compositor multi-escena + portada/outro (hecho) | — | hecho |
+| **1** | Medir el S3 (sábado 12) + producir S1 | horas | **primero** |
+| **2** | Formato como dato + selector de modo + relativizar layouts a la caja segura (Short queda idéntico, pixel a pixel) | 1 sesión | tras medir |
+| **3** | Modo Video: timeline de segmentos + voz por segmento + render por segmentos + ffmpeg concat | 2-3 sesiones | si Fase 1 da tracción |
+| **4** | Biblioteca de escenas long-form (capítulo, stat, bullets, cita, lower-third, fuente) | continuo | con contenido real |
+
+**La puerta es la Fase 1.** Construir Fases 3-4 antes de medir es construir capacidad que nadie ve
+todavía — el error que `POLITICA.md` existe para evitar. Un profesional del crecimiento **domina el
+formato que da alcance (Shorts) y mide, ANTES de invertir días en long-form para 0 suscriptores.**
+"El mejor sistema" para este canal HOY = el mejor sistema de Shorts + una arquitectura que se
+**extiende** a Video sin reescribir. Eso es lo que se está construyendo.
+
 ## Nota: post-roll (outro al final de un Short)
 La escena `outro` está lista, pero encadenarla DESPUÉS de la voz de un Short necesita dos cosas
 pequeñas: (a) extender `T.total` con silencio de cola; (b) que `reproducir()` pase a reloj de pared
