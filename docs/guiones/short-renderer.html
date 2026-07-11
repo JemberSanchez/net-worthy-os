@@ -50,7 +50,8 @@
   <label style="font-size:13px;color:var(--grey)">Short:
     <select id="short" style="font:inherit;background:#0d1c16;color:var(--paper);border:1px solid #2b4238;border-radius:6px;padding:6px 9px">
       <option value="s3-stat">S3 · stat — la curva (publicado)</option>
-      <option value="s1-story">S1 · story — dos columnas ($0 vs $1,000,000+)</option>
+      <option value="s1-story">S1 · story — dos columnas (publicado)</option>
+      <option value="s2-contrarian">S2 · contrarian — checklist STILL BROKE (fuel/engine)</option>
     </select>
   </label>
 </div>
@@ -220,6 +221,45 @@ const SHORTS = {
       // el texto cinético diseñado por escena es el caption y no depende del troceo del audio.
       subtitulos: [],
       curvaLlegaEn: "$1,000,000+",     // la barra derecha llega al tope cuando la voz lo dice
+      omitirEnSubtitulos: [],
+    },
+  },
+
+  's2-contrarian': {
+    ref: 'build-wealth-short-02-contrarian',
+    escena: 'checklist',               // el esfuerzo se marca ✓... y aun así STILL BROKE
+    voz: 'voz-short-02.mp3',           // exporta la voz de CapCut (Firme Pilot) con ESTE nombre
+    // Reencuadre no-humillante: NO "los hábitos no sirven" — la disciplina es COMBUSTIBLE
+    // (se honra), pero sin motor no hay avance. Secuencia: portada → checklist → insight → CTA.
+    items: ['SKIP THE COFFEE', 'WAKE UP AT 5AM', 'BUDGET EVERY DOLLAR'],
+    sello: 'STILL BROKE.',
+    cta: ['COULD YOU PUT $50 A MONTH', 'INTO AN ENGINE?'],
+    ctaSub: 'tell me below',
+    ctaDim: 0.74,                      // el sello STILL BROKE queda justo bajo el CTA: atenuar más
+    ctaY: 0.40,                        // ...y el CTA sube al hueco libre (el sello vive en 0.58H)
+    spec: [],
+    overlays: [
+      {escena:'titulo', desde:0, hasta:1.6, fadeOut:0.5,
+       lineas:['YOU DID', 'EVERYTHING RIGHT.'], sub:"so why are you still broke?"},
+      {escena:'principle', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3,
+       bloques:[
+         {kicker:'DISCIPLINE', verbo:'IS THE FUEL',   sub:'it burns every single day',  icono:'flat'},
+         {kicker:'AN ASSET',   verbo:'IS THE ENGINE', sub:'it turns fuel into motion',  icono:'up'},
+       ]},
+    ],
+    demo: { hook: 5.5, draw: 8.0, curve: 12.0, cta: 26.0, total: 30.0 },
+    guion: {
+      grupos: [
+        {id:'grind',  texto: "You skipped the coffee, you wake up at five, and you budget every dollar. And you're still broke."},
+        {id:'why',    texto: "Here's the part nobody says out loud: discipline alone can't build wealth, because a habit only moves the money you already have."},
+        {id:'engine', texto: "Discipline is fuel, and fuel without an engine goes nowhere. An asset is the engine. It takes what you save and turns it into money you didn't work for."},
+        {id:'cta',    texto: "You already have the fuel. So could you put fifty dollars a month into an engine? Tell me below."},
+      ],
+      cifras: [
+        ["fifty dollars a month", "$50"],
+      ],
+      subtitulos: [],                  // cada tramo tiene su escena con texto propio
+      curvaLlegaEn: "$50",             // draw no mueve nada en checklist; ancla válida para el .srt
       omitirEnSubtitulos: [],
     },
   },
@@ -656,17 +696,20 @@ function tarjetasDeSRT(cues){
  *  (Antes las frases estaban cableadas al S3 — "put in", "that gap" — y con otro Short fallaban
  *  las tres en silencio.) Contrato de grupos: [intro, <hook>, <curve>, ..., <cta>]. */
 const normalizarTexto = s => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
-function cueDeFrase(cues, frase, nPalabras){
+function cueDeFrase(cues, frase, nPalabras, desde = -1){
   const objetivo = normalizarTexto(frase).split(' ').slice(0, nPalabras).join(' ');
   if (!objetivo) return null;
-  return cues.find(c => normalizarTexto(c.texto).includes(objetivo)) || null;
+  return cues.find(c => c.t0 >= desde && normalizarTexto(c.texto).includes(objetivo)) || null;
 }
 function cortesDeSRT(cues){
   const g = SHORT.guion.grupos;
-  const busca = texto => cueDeFrase(cues, texto, 3) || cueDeFrase(cues, texto, 2);
-  const h = busca(g[1].texto);
-  const c = busca(g[2].texto);
-  const q = busca(g[g.length-1].texto);
+  // Prefijos LARGOS primero (uno corto puede repetirse en otra frase del guion: el "you already
+  // have" del S2 enganchaba el grupo equivocado) y MONOTONÍA: cada corte busca tras el anterior.
+  const busca = (texto, desde) => cueDeFrase(cues, texto, 5, desde) || cueDeFrase(cues, texto, 4, desde)
+                               || cueDeFrase(cues, texto, 3, desde) || cueDeFrase(cues, texto, 2, desde);
+  const h = busca(g[1].texto, -1);
+  const c = busca(g[2].texto, h ? h.t0 + 0.01 : -1);
+  const q = busca(g[g.length-1].texto, c ? c.t0 + 0.01 : (h ? h.t0 + 0.01 : -1));
   return {hook: h && h.t0, curve: c && c.t0, cta: q && q.t0};
 }
 
@@ -854,7 +897,9 @@ function drawCTA(t, W, H, s){
   if (a <= 0) return;
   const e = easeOut(a);
   ctx.save();
-  ctx.globalAlpha = e * 0.52;                    // oscurece, pero el nº dorado debe seguir vivo
+  // oscurecido por Short: 0.52 deja vivo el nº dorado del S3; un fondo denso (checklist del S2,
+  // con el sello justo bajo el CTA) necesita más para que el texto no pelee con lo de atrás
+  ctx.globalAlpha = e * (CFG.ctaDim || 0.52);
   ctx.fillStyle = P.ink; ctx.fillRect(0,0,W,H);
   ctx.restore();
 
@@ -868,7 +913,8 @@ function drawCTA(t, W, H, s){
     size *= 0.94;
   }
   const salto = size*1.24;
-  const cy = H*0.46 + (1-e)*50*s;
+  // altura por Short: en el S2 el sello STILL BROKE vive en 0.58H y el sub del CTA le caía encima
+  const cy = H*(CFG.ctaY || 0.46) + (1-e)*50*s;
   CFG.cta.forEach((linea,i) => {
     text(linea, W/2, cy + i*salto, {size, weight:800, color:P.paper, alpha:e, stroke:10*s});
   });
@@ -1169,6 +1215,8 @@ function drawPrinciple(t, W, H, s, a, ov){
     if (tipo === 'up'){                                                    // ↑ compone
       ctx.moveTo(cx, cy + 20*s); ctx.lineTo(cx, cy - 14*s);
       ctx.moveTo(cx - 15*s, cy - 2*s); ctx.lineTo(cx, cy - 18*s); ctx.lineTo(cx + 15*s, cy - 2*s);
+    } else if (tipo === 'flat'){                                           // — sin motor no hay avance
+      ctx.moveTo(cx - 34*s, cy); ctx.lineTo(cx + 34*s, cy);
     } else {                                                               // ⇄ va y vuelve: no crece
       const w = 34*s, yA = cy - 9*s, yB = cy + 9*s;
       ctx.moveTo(cx - w, yA); ctx.lineTo(cx + w, yA);
@@ -1196,16 +1244,70 @@ function drawPrinciple(t, W, H, s, a, ov){
     ctx.restore();
   };
 
-  const oscila = 7*s * Math.sin(tl * 2.1);                 // el dinero que solo SE MUEVE: va y vuelve
-  const flota  = -5*s * (0.5 + 0.5*Math.sin(tl * 1.6));    // el que TRABAJA: empuja hacia arriba
-  // arriba: el hábito MUEVE (gris, neutro) · abajo: el activo MULTIPLICA (verde, brillo)
-  bloque(H*0.36, clamp01(tl / 0.5),        'A HABIT', P.grey,  'MOVES MONEY', P.grey,
-         'money you already have', null, 'side', oscila, 0);
+  const oscila = 7*s * Math.sin(tl * 2.1);                 // el perdedor: se mueve pero no avanza
+  const flota  = -5*s * (0.5 + 0.5*Math.sin(tl * 1.6));    // el ganador: empuja hacia arriba
+  // Los bloques vienen del overlay (ov.bloques); sin datos, el contraste del S1. El estilo va
+  // por POSICIÓN: arriba el neutro (gris, oscila), abajo el ganador (verde, brillo, flota).
+  const bloques = ov.bloques || [
+    {kicker:'A HABIT',  verbo:'MOVES MONEY', sub:'money you already have', icono:'side'},
+    {kicker:'AN ASSET', verbo:'MAKES MONEY', sub:'while you sleep',        icono:'up'},
+  ];
+  bloque(H*0.36, clamp01(tl / 0.5),       bloques[0].kicker, P.grey,  bloques[0].verbo, P.grey,
+         bloques[0].sub, null, bloques[0].icono, oscila, 0);
   ctx.save(); ctx.globalAlpha = a * clamp01((tl-0.6)/0.5); ctx.strokeStyle = P.brass;
   ctx.lineWidth = 3*s; ctx.setLineDash([6*s,9*s]);
   ctx.beginPath(); ctx.moveTo(W*0.24, H*0.475); ctx.lineTo(W*0.76, H*0.475); ctx.stroke(); ctx.restore();
-  bloque(H*0.59, clamp01((tl-0.9) / 0.5),  'AN ASSET', P.brass, 'MAKES MONEY', P.growth,
-         'while you sleep', 'rgba(31,158,110,0.6)', 'up', 0, flota);
+  bloque(H*0.59, clamp01((tl-0.9) / 0.5), bloques[1].kicker, P.brass, bloques[1].verbo, P.growth,
+         bloques[1].sub, 'rgba(31,158,110,0.6)', bloques[1].icono, 0, flota);
+}
+
+// ── Escena S2 (contrarian): el checklist del esfuerzo — todo ✓ y aun así STILL BROKE ──
+// Los ítems del sacrificio entran y se marcan uno a uno (la voz los va diciendo); cuando la
+// historia revienta ("and you're still broke"), cae el sello y una línea PLANA: el esfuerzo
+// sin motor no dibuja pendiente. Datos por Short: CFG.items / CFG.sello.
+function drawChecklist(t, W, H, s){
+  const items = CFG.items || [];
+  const fin = Math.max(1.2, T.hook);              // los ítems se reparten el tramo hasta el sello
+  const x0 = 235*s, cy0 = 560*s, salto = 150*s;
+  items.forEach((it, i) => {
+    const tIn = (i + 0.35) * (fin / (items.length + 0.7));
+    const aI = clamp01((t - tIn) / 0.35);
+    if (aI <= 0) return;
+    const e = easeOut(aI), y = cy0 + i*salto + (1 - e)*34*s;
+    text(it, x0, y, {size:54*s, weight:700, color:P.paper, align:'left', alpha:e, stroke:8*s});
+    const aC = clamp01((t - tIn - 0.28) / 0.25);   // el check cae un pelín después del texto
+    if (aC > 0){
+      const eC = easeOut(aC), cx = 160*s, cyC = y - 18*s;
+      ctx.save(); ctx.globalAlpha = eC;
+      ctx.strokeStyle = P.growth; ctx.lineWidth = 3*s;
+      ctx.beginPath(); ctx.arc(cx, cyC, 26*s, 0, Math.PI*2); ctx.stroke();
+      ctx.lineWidth = 5*s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(cx-10*s, cyC+1*s); ctx.lineTo(cx-2*s, cyC+9*s); ctx.lineTo(cx+11*s, cyC-8*s);
+      ctx.stroke(); ctx.restore();
+    }
+  });
+  // el sello, ligeramente girado y con golpe — y debajo la línea PLANA con su etiqueta
+  const aS = clamp01((t - T.hook) / 0.45);
+  if (aS > 0){
+    const eS = easeOut(aS);
+    let esc = 1; const d = t - T.hook;
+    if (d > 0 && d < 0.5) esc = 1 + 0.18*Math.sin(Math.PI*(d/0.5));
+    ctx.save();
+    ctx.translate(W/2, 1120*s); ctx.rotate(-0.045); ctx.scale(esc, esc);
+    text(CFG.sello || 'STILL BROKE.', 0, 0, {size:92*s, weight:800, color:'#C0968C', stroke:12*s, spacing:1*s});
+    ctx.restore();
+    const p = clamp01((t - T.hook - 0.35) / 0.8);
+    if (p > 0){
+      const xb = lerp(W*0.22, W*0.78, easeOut(p)), yL = 1235*s;
+      ctx.save(); ctx.globalAlpha = eS*0.9;
+      ctx.strokeStyle = P.grey; ctx.lineWidth = 5*s; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(W*0.22, yL); ctx.lineTo(xb, yL); ctx.stroke();
+      ctx.fillStyle = P.paper; ctx.beginPath(); ctx.arc(xb, yL, 7*s, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      text('EFFORT', W*0.22, 1290*s, {size:22*s, weight:600, color:P.grey, align:'left', alpha:eS*0.7, spacing:4*s});
+      text('GROWTH: 0', W*0.78, 1290*s, {size:22*s, weight:600, color:'#C0968C', align:'right', alpha:eS*0.7, spacing:4*s});
+    }
+  }
 }
 
 // ── Registro de escenas: añadir una escena = añadir una entrada aquí (no tocar drawFrame) ──
@@ -1218,6 +1320,7 @@ const SCENES = {
     if (aChart > 0) drawChart(t, W, H, s, aChart);
   },
   columns:   (t, W, H, s) => drawColumns(t, W, H, s),    // dos columnas del S1
+  checklist: (t, W, H, s) => drawChecklist(t, W, H, s),  // checklist del esfuerzo del S2
   titulo:    (t, W, H, s, a, ov) => drawTitulo(t, W, H, s, a, ov),
   principle: (t, W, H, s, a, ov) => drawPrinciple(t, W, H, s, a, ov),
   outro:     (t, W, H, s, a, ov) => drawOutro(t, W, H, s, a, ov),
@@ -1274,16 +1377,18 @@ function drawFrame(t){
   // aviso YMYL: DENTRO de la zona segura. Abajo del todo lo tapaba el título del vídeo,
   // y un descargo que nadie ve no protege nada.
   // 22px, no 19: a 19px el aviso es ilegible en un móvil, y un descargo ilegible no protege nada.
-  if (CFG.escena === 'columns'){
-    text('Illustrative example · Investing involves risk of loss',
-         W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
-    text('Past results don’t guarantee future returns · Not financial advice',
-         W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
-  } else {
+  // El texto con tasa es SOLO de la escena chart (usa CFG.rate); cualquier otra escena lleva
+  // el aviso genérico — sin esto, un Short sin proyección imprimía "Illustrative · NaN%".
+  if (CFG.escena === 'chart'){
     const rPct = +(CFG.rate*100).toFixed(1);
     text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
          W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
     text('S&P 500 ≈10%/yr nominal since 1957 · Not financial advice',
+         W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
+  } else {
+    text('Illustrative example · Investing involves risk of loss',
+         W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
+    text('Past results don’t guarantee future returns · Not financial advice',
          W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
   }
 

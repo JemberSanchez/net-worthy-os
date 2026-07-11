@@ -60,17 +60,19 @@ accionable, no acusatorio. Alineado con el S2 ("Discipline is fuel. Fuel with no
 `ref: build-wealth-short-02-contrarian`
 
 **Voz:**
+**Voz (pegar en el TTS — 477 caracteres, UN bloque de CapCut; frases completas para el oído):**
 ```
-Skip the coffee. Wake up at five in the morning. Budget every dollar. You've done it all — and you're still broke.
-
-Here's why: habits don't build wealth. Assets do.
-
-A habit only moves money you already have from one pocket to another. It never makes money. Discipline is fuel. Fuel with no engine goes nowhere.
-
-Could you do fifty a month? Comment below.
+You skipped the coffee, you wake up at five, and you budget every dollar. And you're still broke. Here's the part nobody says out loud: discipline alone can't build wealth, because a habit only moves the money you already have. Discipline is fuel, and fuel without an engine goes nowhere. An asset is the engine. It takes what you save and turns it into money you didn't work for. You already have the fuel. So could you put fifty dollars a month into an engine? Tell me below.
 ```
-**Texto en pantalla:** `HABITS WON'T MAKE YOU RICH` → `HABITS ❌  ASSETS ✅` → `FUEL ≠ ENGINE`
-**Pexels:** `alarm clock 5am dark bedroom` · `hands typing budget spreadsheet` · `pouring coffee slow motion` · `car engine turning` · `person on phone banking app`
+**Reencuadre (2026-07-11):** fuera "habits don't build wealth / HABITS ❌" (humilla y es falso — ver
+memoria del S1). El eje: la disciplina es **COMBUSTIBLE** (se honra: "you already have the fuel"),
+pero sin **MOTOR** no hay avance. El activo es el motor. CTA accionable, no acusatorio.
+**Secuencia en el motor (LISTA — `s2-contrarian` en el selector):** portada `YOU DID / EVERYTHING
+RIGHT.` → **checklist** (SKIP THE COFFEE ✓ / WAKE UP AT 5AM ✓ / BUDGET EVERY DOLLAR ✓ → sello
+`STILL BROKE.` + línea plana EFFORT→GROWTH: 0) → **insight** `DISCIPLINE IS THE FUEL` (—) vs
+`AN ASSET IS THE ENGINE` (↑) → CTA `COULD YOU PUT $50 A MONTH INTO AN ENGINE?`.
+**Voz:** CapCut TTS Firme Pilot (la misma de S3/S1) → exportar como `data/voz-short-02.mp3`.
+**Hora:** 11:30 local (la misma del S1 — la hora fija aísla el gancho).
 
 ---
 
