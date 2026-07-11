@@ -190,6 +190,12 @@ const SHORTS = {
     cta: ['YOUR NEXT $100:', 'LEAVE OR WORK?'],
     ctaSub: 'tell me below',
     spec: [],                          // el texto de escena lo pinta drawColumns; no hay spec drop
+    // PORTADA (cold-open): tapa el llenado de barras los primeros ~1.9s y se disuelve en la escena.
+    // Va sobre la voz "Two men. Same salary." — no cambia ningún corte, así que no desincroniza nada.
+    overlays: [
+      {escena:'titulo', desde:0, hasta:1.9, fadeOut:0.55,
+       lineas:['TWO MEN.', 'SAME SALARY.'], sub:'same discipline.'},
+    ],
     // Reloj de PREVISUALIZACIÓN (sin voz). Cuando cargues el MP3, calibrarAuto lo reescribe
     // contra el guion y luego "Previsualiza y verifica". Estos números son solo para VER la escena.
     demo: { hook: 3.4, draw: 9.0, curve: 13.0, cta: 28.0, total: 32.0 },
@@ -1082,6 +1088,73 @@ function drawColumns(t, W, H, s){
   cifra(cxR, yR, conteo,             P.paper, easeOut(aCifraR), 'rgba(31,158,110,0.6)');
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// COMPOSITOR MULTI-ESCENA — la base para Shorts de varias escenas (y, más adelante,
+// long-form). Un Short define una ESCENA BASE (corre toda la voz) y, opcional, OVERLAYS
+// (portada, cierre) con su ventana de tiempo. Cada overlay respeta una alpha entrante, así
+// se funde con la base SIN tocar el interior de la escena. Todo f(t) puro: el exportador MP4
+// re-renderiza offline y cada frame debe ser idéntico.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── Escena PORTADA: un cold-open que cubre la base y se disuelve para revelarla ──
+function drawTitulo(t, W, H, s, a, ov){
+  const lineas = (ov && ov.lineas) || ['TWO MEN.', 'SAME SALARY.'];
+  ctx.save(); ctx.globalAlpha = a;                       // fondo de marca: tapa la base mientras a≈1
+  ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H);
+  const gr = ctx.createRadialGradient(W/2, H*0.42, 0, W/2, H*0.42, Math.max(W,H)*0.7);
+  gr.addColorStop(0, 'rgba(31,158,110,0.13)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  const e = easeOut(clamp01(t / 0.6)), cy = H*0.40, salto = 98*s;
+  ctx.save(); ctx.translate(W/2, cy); ctx.scale(0.95 + 0.05*e, 0.95 + 0.05*e); ctx.translate(-W/2, -cy);
+  lineas.forEach((l, i) => text(l, W/2, cy + i*salto,
+    {size:84*s, weight:800, color: i === lineas.length-1 ? P.brass : P.paper,
+     alpha:a, spacing:2*s, stroke:12*s}));
+  ctx.restore();
+  const yR = cy + lineas.length*salto - 20*s;
+  ctx.save(); ctx.globalAlpha = a * easeOut(clamp01((t - 0.25) / 0.5));
+  ctx.strokeStyle = P.brass; ctx.lineWidth = 5*s; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(W/2 - 150*s, yR); ctx.lineTo(W/2 + 150*s, yR); ctx.stroke(); ctx.restore();
+  if (ov && ov.sub)
+    text(ov.sub.toUpperCase(), W/2, yR + 62*s, {size:30*s, weight:600, color:P.grey, alpha:a, spacing:5*s});
+}
+
+// ── Escena CIERRE: tarjeta de marca (reutilizable en cualquier Short / long-form) ──
+function drawOutro(t, W, H, s, a, ov){
+  ctx.save(); ctx.globalAlpha = a * 0.9; ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H); ctx.restore();
+  const cy = H*0.42;
+  text('NET WORTHY', W/2, cy, {size:94*s, weight:800, color:P.brass, alpha:a, spacing:6*s, stroke:12*s});
+  text((ov && ov.handle) || '@networthytv', W/2, cy + 76*s,
+       {size:40*s, weight:600, color:P.paper, alpha:a*0.9, spacing:3*s});
+  text((ov && ov.linea) || 'FOLLOW FOR MORE', W/2, cy + 178*s,
+       {size:34*s, weight:700, color:P.growth, alpha:a, spacing:4*s});
+}
+
+// ── Registro de escenas: añadir una escena = añadir una entrada aquí (no tocar drawFrame) ──
+const SCENES = {
+  chart: (t, W, H, s) => {                               // curva del S3: intro (spec) -> gráfica
+    const fade = 0.45;
+    const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
+    const aChart = clamp01((t - (T.hook - fade)) / fade);
+    if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
+    if (aChart > 0) drawChart(t, W, H, s, aChart);
+  },
+  columns: (t, W, H, s) => drawColumns(t, W, H, s),      // dos columnas del S1
+  titulo:  (t, W, H, s, a, ov) => drawTitulo(t, W, H, s, a, ov),
+  outro:   (t, W, H, s, a, ov) => drawOutro(t, W, H, s, a, ov),
+};
+
+/** Alpha de un overlay según su ventana [desde,hasta] (segundos o función de T) y sus fundidos. */
+function alphaVentana(t, ov){
+  const d = typeof ov.desde === 'function' ? ov.desde() : ov.desde;
+  const h = typeof ov.hasta === 'function' ? ov.hasta() : ov.hasta;
+  if (t < d || t >= h) return 0;
+  let a = 1;
+  if (ov.fadeIn)  a = Math.min(a, clamp01((t - d) / ov.fadeIn));
+  if (ov.fadeOut) a = Math.min(a, clamp01((h - t) / ov.fadeOut));
+  return a;
+}
+
 // ── Frame completo (PURA: mismo t -> mismo frame) ─────────────────────────────
 function drawFrame(t){
   const W = canvas.width, H = canvas.height, s = Math.min(W,H)/1080;
@@ -1094,17 +1167,11 @@ function drawFrame(t){
   text('NET WORTHY', W/2, (SAFE.top + 24)*s, {size:26*s, weight:700, color:P.brass,
        alpha:0.9, spacing:6*s});
 
-  // escena central: la curva (stat) o las dos columnas (story). El resto del frame es común.
-  if (CFG.escena === 'columns'){
-    drawColumns(t, W, H, s);
-  } else {
-    // crossfade intro -> gráfica
-    const fade = 0.45;
-    const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
-    const aChart = clamp01((t - (T.hook - fade)) / fade);
-
-    if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
-    if (aChart > 0) drawChart(t, W, H, s, aChart);
+  // ESCENA BASE (del registro) + OVERLAYS de composición (portada, cierre). El resto es común.
+  (SCENES[CFG.escena] || SCENES.chart)(t, W, H, s);
+  if (CFG.overlays) for (const ov of CFG.overlays){
+    const a = alphaVentana(t, ov);
+    if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
   }
 
   // subtítulos (tiempos SIEMPRE medidos). Posición por escena: en la gráfica van al centro;

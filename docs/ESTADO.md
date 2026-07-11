@@ -78,7 +78,12 @@ compuesta, número dorado, CTA y subtítulos quemados, con la voz incrustada. **
 su `escena` (`chart` = curva del S3 · `columns` = dos columnas del S1), su `voz` (`data/voz-short-NN.mp3`),
 su guion y su CTA. La escena `columns` narra SPENT vs OWNED con monedas por las ramas, año corriendo,
 conteo al millón, fuga y chispas — **todo determinista** (`drawFrame` sigue siendo pura: verificado
-por comparación de píxeles). Hay un **checklist de producción que se marca solo** (voz → calibración →
+por comparación de píxeles). **Desde 2026-07-10 (tarde) hay COMPOSITOR MULTI-ESCENA**: un Short tiene
+una escena base + `overlays[]` componibles (portada, cierre) que se funden por alpha sin tocar el
+interior de la base. El S1 estrena una **portada** ("TWO MEN. / SAME SALARY.") que se disuelve en las
+columnas. Escenas registradas: `chart`, `columns`, `titulo`, `outro`. Arquitectura completa y ruta a
+long-form (8-10 min) en **`docs/ARQUITECTURA-MULTIESCENA.md`** — el cuello de botella no son las
+escenas (ya están) sino memoria (ffmpeg + render por segmentos), voz por segmento y layout horizontal. Hay un **checklist de producción que se marca solo** (voz → calibración →
 previsualización entera → MP4). Guards añadidos tras auditoría: sin voz o sin cortes medidos no se
 graba (ahora también en el camino MP4), el audio decodificado se suelta al cambiar de Short (antes el
 S1 habría salido CON LA VOZ DEL S3), la calibración manual del S3 solo se aplica si el S3 está activo,
