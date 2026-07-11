@@ -4,10 +4,11 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
-> **Última actualización: 2026-07-10 (tarde).** Estado en una línea:
-> *el Short #1 está PUBLICADO; `production_outcome = 0`; lo único que importa es MEDIR el sábado 12.
-> El S1 está LISTO EN EL MOTOR (escena de columnas + guion reencuadrado + runbook): solo falta que
-> el usuario grabe la voz. Guía paso a paso: `docs/guiones/PRODUCCION-S1.md`.*
+> **Última actualización: 2026-07-11.** Estado en una línea:
+> *DOS Shorts PUBLICADOS (S3 stat el 07-10, S1 story multi-escena el 07-11); `production_outcome = 0`;
+> lo único que importa es MEDIR — el S3 el sábado 12, el S1 ~48h tras publicar (~13). ADN de ambos
+> registrado (3/10 instrumentados). POR CONFIRMAR del S1: hora local, variante de voz CapCut, horas
+> (`record-cost`). URLs y contexto de ambos en la tabla `production_context`.*
 
 ---
 
