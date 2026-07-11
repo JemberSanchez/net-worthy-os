@@ -35,13 +35,14 @@ lo sabe y `dna` no mezclará peras con manzanas.
 ## S1 · GANCHO DE HISTORIA  → `hook_type: story`
 `ref: build-wealth-short-01-story`
 
-**Voz (pegar en el TTS — 462 caracteres, entra en UN bloque de CapCut, tope 500):**
+**Voz (pegar en el TTS — 486 caracteres, entra en UN bloque de CapCut, tope 500):**
 ```
-Two men. Same salary. Same discipline. Thirty years later, one has almost nothing. The other, over a million. Same money in. The difference? One spent his paycheck. The other owned things that paid him back. His habits didn't fail him. A habit moves money you already have. An asset makes money while you sleep. You already have the discipline. The only question is where you point it. So your next hundred dollars: does it leave, or does it work? Tell me below.
+Two men, same salary, same discipline. Thirty years later, one has almost nothing while the other has over a million — same money in. The difference? One spent his paycheck; the other owned things that paid him back. His habits didn't fail him: a habit just moves money you already have, but an asset makes money while you sleep. You've got the hard part — the discipline. The question is where you point it. So, your next hundred dollars: does it leave, or does it work? Tell me below.
 ```
-> CapCut TTS tope 500 chars/bloque. Este guion cabe en uno. Si lo alargas, pártelo en 2 bloques de
-> texto en la timeline (cada uno con su TTS) y exporta el audio junto — el calibrador del motor
-> trabaja sobre el MP3 final, le da igual en cuántos trozos lo grabaste.
+> **Puntuación PENSADA para el TTS:** CapCut mete una pausa en cada PUNTO, así que la primera versión
+> (16 puntos) sonaba entrecortada. Ésta tiene 9, y usa comas/guiones/punto y coma que fluyen. Si algún
+> día alargas el guion por encima de 500, pártelo en 2 bloques de texto en CapCut (cada uno con su TTS)
+> y exporta el audio junto — el calibrador trabaja sobre el MP3 final, le da igual en cuántos trozos.
 **Reencuadre (2026-07-10):** el eje ya NO es *hábitos vs activos* (dicotomía falsa y que aleja al
 viewer: invertir $500/mes ES un hábito, y el CTA "¿cuál eres tú?" humilla a media audiencia). El eje
 es **qué hace el dinero: se MUEVE (se gasta, se va) o se MULTIPLICA (se posee, compone)**. Mismo

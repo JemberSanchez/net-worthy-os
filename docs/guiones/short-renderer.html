@@ -190,29 +190,33 @@ const SHORTS = {
     cta: ['YOUR NEXT $100:', 'LEAVE OR WORK?'],
     ctaSub: 'tell me below',
     spec: [],                          // el texto de escena lo pinta drawColumns; no hay spec drop
-    // PORTADA (cold-open): tapa el llenado de barras los primeros ~1.9s y se disuelve en la escena.
-    // Va sobre la voz "Two men. Same salary." — no cambia ningún corte, así que no desincroniza nada.
+    // SECUENCIA DE ESCENAS (multi-escena real): portada -> columnas (mecánica) -> insight -> CTA.
+    //  · titulo   0–1.9s: cold-open que se disuelve en las columnas (sobre "Two men. Same salary").
+    //  · columns  (escena base) narra el mismo-sueldo-final-opuesto y aterriza $0 vs $1,000,000+.
+    //  · principle desde T.curve: cubre el hold estático con el insight MOVES vs MAKES (el caption
+    //    es el texto de la escena; por eso subtitulos:[] — se acabaron las tarjetas troceadas).
     overlays: [
-      {escena:'titulo', desde:0, hasta:1.9, fadeOut:0.55,
+      {escena:'titulo',    desde:0, hasta:1.9, fadeOut:0.55,
        lineas:['TWO MEN.', 'SAME SALARY.'], sub:'same discipline.'},
+      {escena:'principle', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3},
     ],
     // Reloj de PREVISUALIZACIÓN (sin voz). Cuando cargues el MP3, calibrarAuto lo reescribe
     // contra el guion y luego "Previsualiza y verifica". Estos números son solo para VER la escena.
     demo: { hook: 3.4, draw: 9.0, curve: 13.0, cta: 28.0, total: 32.0 },
     guion: {
       grupos: [
-        {id:'setup',     texto: "Two men. Same salary. Same discipline."},
-        {id:'diverge',   texto: "Thirty years later, one has almost nothing. The other, over a million. Same money in. The difference? One spent his paycheck. The other owned things that paid him back."},
-        {id:'principle', texto: "His habits didn't fail him. A habit moves money you already have. An asset makes money while you sleep. You already have the discipline. The only question is where you point it."},
-        {id:'cta',       texto: "So your next hundred dollars: does it leave, or does it work? Tell me below."},
+        {id:'setup',     texto: "Two men, same salary, same discipline."},
+        {id:'diverge',   texto: "Thirty years later, one has almost nothing while the other has over a million — same money in. The difference? One spent his paycheck; the other owned things that paid him back."},
+        {id:'principle', texto: "His habits didn't fail him: a habit just moves money you already have, but an asset makes money while you sleep. You've got the hard part — the discipline. The question is where you point it."},
+        {id:'cta',       texto: "So, your next hundred dollars: does it leave, or does it work? Tell me below."},
       ],
       cifras: [
         ["over a million", "$1,000,000+"],
       ],
-      // 'principle' SÍ lleva subtítulos: son ~15s de voz tras la revelación y sin ellos la
-      // pantalla se queda quieta — muerte de retención. Van en la zona libre izquierda
-      // (la barra SPENT drenada la despeja); setup/diverge los narra la escena, cta el texto grande.
-      subtitulos: ['principle'],
+      // Sin subtítulos quemados: cada tramo tiene su ESCENA con texto propio (portada, columnas,
+      // insight MOVES/MAKES, CTA). Las tarjetas troceadas por las pausas de la voz se veían mal;
+      // el texto cinético diseñado por escena es el caption y no depende del troceo del audio.
+      subtitulos: [],
       curvaLlegaEn: "$1,000,000+",     // la barra derecha llega al tope cuando la voz lo dice
       omitirEnSubtitulos: [],
     },
@@ -1130,6 +1134,48 @@ function drawOutro(t, W, H, s, a, ov){
        {size:34*s, weight:700, color:P.growth, alpha:a, spacing:4*s});
 }
 
+// ── Escena INSIGHT (S1): el corazón del mensaje, MOVES vs MAKES. Sustituye el "hold" estático de
+//    ~15s por una escena con reveal — más creativa, y el texto ES el caption (sin subtítulos raros). ──
+function drawPrinciple(t, W, H, s, a, ov){
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H);   // cubre las columnas
+  const gr = ctx.createRadialGradient(W/2, H*0.47, 0, W/2, H*0.47, Math.max(W,H)*0.7);
+  gr.addColorStop(0, 'rgba(31,158,110,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  const t0 = typeof ov.desde === 'function' ? ov.desde() : (ov.desde || 0), tl = t - t0;
+  const bloque = (cy, aB, kicker, kColor, verbo, vColor, sub, glow, flecha) => {
+    if (aB <= 0.01) return;
+    const e = easeOut(aB);
+    text(kicker, W/2, cy - 66*s, {size:30*s, weight:700, color:kColor, alpha:a*aB, spacing:6*s});
+    ctx.save();
+    ctx.translate(W/2, cy); ctx.scale(0.96 + 0.04*e, 0.96 + 0.04*e); ctx.translate(-W/2, -cy);
+    if (glow){ ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 26*s; }
+    text(verbo, W/2, cy, {size:96*s, weight:800, color:vColor, alpha:a*aB, stroke:11*s, spacing:1*s});
+    if (glow) ctx.restore();
+    ctx.restore();
+    text(sub.toUpperCase(), W/2, cy + 52*s, {size:26*s, weight:600, color:P.grey, alpha:a*aB*0.9, spacing:3*s});
+    // flecha: '→' el dinero que solo se MUEVE (sale de lado) · '↑' el que MULTIPLICA (sube)
+    ctx.save(); ctx.globalAlpha = a*aB; ctx.strokeStyle = vColor; ctx.lineWidth = 6*s;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const ax = W/2 + 250*s, ay = cy - 8*s, w = 26*s;
+    if (glow){ ctx.shadowColor = glow; ctx.shadowBlur = 12*s; }
+    ctx.beginPath();
+    if (flecha === 'up'){ ctx.moveTo(ax-w, ay+w*0.6); ctx.lineTo(ax, ay-w*0.6); ctx.lineTo(ax+w, ay+w*0.6); }
+    else { ctx.moveTo(ax-w, ay-w*0.7); ctx.lineTo(ax+w, ay-w*0.7);              // ida
+           ctx.moveTo(ax+w, ay+w*0.7); ctx.lineTo(ax-w, ay+w*0.7); }            // y vuelta: no crece
+    ctx.stroke(); ctx.restore();
+  };
+  // arriba: el hábito MUEVE (gris, neutro) · abajo: el activo MULTIPLICA (verde, brillo)
+  bloque(H*0.36, clamp01(tl / 0.5),        'A HABIT', P.grey,  'MOVES MONEY', P.grey,
+         'money you already have', null, 'side');
+  ctx.save(); ctx.globalAlpha = a * clamp01((tl-0.6)/0.5); ctx.strokeStyle = P.brass;
+  ctx.lineWidth = 3*s; ctx.setLineDash([6*s,9*s]);
+  ctx.beginPath(); ctx.moveTo(W*0.24, H*0.475); ctx.lineTo(W*0.76, H*0.475); ctx.stroke(); ctx.restore();
+  bloque(H*0.59, clamp01((tl-0.9) / 0.5),  'AN ASSET', P.brass, 'MAKES MONEY', P.growth,
+         'while you sleep', 'rgba(31,158,110,0.6)', 'up');
+}
+
 // ── Registro de escenas: añadir una escena = añadir una entrada aquí (no tocar drawFrame) ──
 const SCENES = {
   chart: (t, W, H, s) => {                               // curva del S3: intro (spec) -> gráfica
@@ -1139,9 +1185,10 @@ const SCENES = {
     if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
     if (aChart > 0) drawChart(t, W, H, s, aChart);
   },
-  columns: (t, W, H, s) => drawColumns(t, W, H, s),      // dos columnas del S1
-  titulo:  (t, W, H, s, a, ov) => drawTitulo(t, W, H, s, a, ov),
-  outro:   (t, W, H, s, a, ov) => drawOutro(t, W, H, s, a, ov),
+  columns:   (t, W, H, s) => drawColumns(t, W, H, s),    // dos columnas del S1
+  titulo:    (t, W, H, s, a, ov) => drawTitulo(t, W, H, s, a, ov),
+  principle: (t, W, H, s, a, ov) => drawPrinciple(t, W, H, s, a, ov),
+  outro:     (t, W, H, s, a, ov) => drawOutro(t, W, H, s, a, ov),
 };
 
 /** Alpha de un overlay según su ventana [desde,hasta] (segundos o función de T) y sus fundidos. */
