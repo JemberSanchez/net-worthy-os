@@ -10,16 +10,21 @@
 
 1. CapCut → texto a voz → voz **"Firme Pilot"** (la MISMA del S3: si cambias la voz, rompes la
    comparabilidad del experimento).
-2. Pega EXACTAMENTE este guion — **486 caracteres, entra en UN bloque** (CapCut tope 500).
-   (También está en `shorts-pack-01.md`.) Puntuación pensada para que el TTS NO suene entrecortado.
+2. Pega EXACTAMENTE este guion — **494 caracteres, entra en UN bloque** (CapCut tope 500).
+   (También está en `shorts-pack-01.md`.) Son frases completas para que el TTS no suene robótico.
 
 ```
-Two men, same salary, same discipline. Thirty years later, one has almost nothing while the other has over a million — same money in. The difference? One spent his paycheck; the other owned things that paid him back. His habits didn't fail him: a habit just moves money you already have, but an asset makes money while you sleep. You've got the hard part — the discipline. The question is where you point it. So, your next hundred dollars: does it leave, or does it work? Tell me below.
+Two men earn the same salary and work just as hard. Thirty years later, one has almost nothing while the other has over a million, on the same money in. So what changed? One spent his paycheck, and the other owned things that paid him back. His habits never failed him. A habit only moves money you already have, but an asset earns while you sleep. You already have the hard part; the only question is where you point it. So does your next hundred dollars leave, or does it work? Tell me below.
 ```
-> **Por qué esta puntuación:** CapCut mete una pausa en cada PUNTO. La primera versión tenía 16 y
-> sonaba a tirones; ésta tiene 9 y fluye. Si alargas un guion por encima de 500, pártelo en **2
-> bloques de texto** en CapCut (cada uno con su TTS) y exporta el audio junto: el calibrador trabaja
-> sobre el MP3 final y le da igual en cuántos trozos lo grabaste.
+> **Escrito para el OÍDO.** El TTS lee los fragmentos ("Two men. Same salary.") a tirones, robótico.
+> Estas son frases completas que fluyen. La PORTADA en pantalla sigue siendo punchy (`TWO MEN` /
+> `SAME SALARY`) — es la voz la que fluye, no el texto. Si un guion pasa de 500, pártelo en 2 bloques
+> de texto en CapCut y exporta el audio junto.
+
+**Voz robótica, plan B:** si aun así la voz "Firme Pilot" te suena a robot, prueba otra voz de CapCut
+más natural en el mismo panel de TTS. Cambiar de voz rompe la comparabilidad con el S3 (anótalo en el
+ADN como `{"block":"voice","technique":"capcut_tts_<voz>"}`), pero una voz que engancha vale más que
+la comparabilidad de un experimento con n=1.
 
 3. Exporta **solo el audio** a MP3 y guárdalo como **`data/voz-short-01.mp3`** (ese nombre exacto:
    el botón "🎙 Usar la voz del proyecto" lo busca ahí).

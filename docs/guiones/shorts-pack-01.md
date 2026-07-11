@@ -35,14 +35,16 @@ lo sabe y `dna` no mezclará peras con manzanas.
 ## S1 · GANCHO DE HISTORIA  → `hook_type: story`
 `ref: build-wealth-short-01-story`
 
-**Voz (pegar en el TTS — 486 caracteres, entra en UN bloque de CapCut, tope 500):**
+**Voz (pegar en el TTS — 494 caracteres, entra en UN bloque de CapCut, tope 500):**
 ```
-Two men, same salary, same discipline. Thirty years later, one has almost nothing while the other has over a million — same money in. The difference? One spent his paycheck; the other owned things that paid him back. His habits didn't fail him: a habit just moves money you already have, but an asset makes money while you sleep. You've got the hard part — the discipline. The question is where you point it. So, your next hundred dollars: does it leave, or does it work? Tell me below.
+Two men earn the same salary and work just as hard. Thirty years later, one has almost nothing while the other has over a million, on the same money in. So what changed? One spent his paycheck, and the other owned things that paid him back. His habits never failed him. A habit only moves money you already have, but an asset earns while you sleep. You already have the hard part; the only question is where you point it. So does your next hundred dollars leave, or does it work? Tell me below.
 ```
-> **Puntuación PENSADA para el TTS:** CapCut mete una pausa en cada PUNTO, así que la primera versión
-> (16 puntos) sonaba entrecortada. Ésta tiene 9, y usa comas/guiones/punto y coma que fluyen. Si algún
-> día alargas el guion por encima de 500, pártelo en 2 bloques de texto en CapCut (cada uno con su TTS)
-> y exporta el audio junto — el calibrador trabaja sobre el MP3 final, le da igual en cuántos trozos.
+> **Escrito para el OÍDO, no para el ojo.** El TTS lee los FRAGMENTOS ("Two men. Same salary. Same
+> discipline.") de forma robótica, con una pausa dura en cada trozo. Este guion son **frases completas
+> que fluyen** — el TTS las lee natural. OJO: el texto de la PORTADA en pantalla sí es punchy
+> (`TWO MEN` / `SAME SALARY`); es la VOZ la que tiene que fluir, no lo que se lee. Si alargas un guion
+> por encima de 500, pártelo en 2 bloques de texto en CapCut y exporta el audio junto (el calibrador
+> trabaja sobre el MP3 final).
 **Reencuadre (2026-07-10):** el eje ya NO es *hábitos vs activos* (dicotomía falsa y que aleja al
 viewer: invertir $500/mes ES un hábito, y el CTA "¿cuál eres tú?" humilla a media audiencia). El eje
 es **qué hace el dinero: se MUEVE (se gasta, se va) o se MULTIPLICA (se posee, compone)**. Mismo

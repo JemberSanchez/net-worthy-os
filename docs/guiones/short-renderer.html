@@ -205,10 +205,12 @@ const SHORTS = {
     demo: { hook: 3.4, draw: 9.0, curve: 13.0, cta: 28.0, total: 32.0 },
     guion: {
       grupos: [
-        {id:'setup',     texto: "Two men, same salary, same discipline."},
-        {id:'diverge',   texto: "Thirty years later, one has almost nothing while the other has over a million — same money in. The difference? One spent his paycheck; the other owned things that paid him back."},
-        {id:'principle', texto: "His habits didn't fail him: a habit just moves money you already have, but an asset makes money while you sleep. You've got the hard part — the discipline. The question is where you point it."},
-        {id:'cta',       texto: "So, your next hundred dollars: does it leave, or does it work? Tell me below."},
+        // Escrito para el OÍDO: frases COMPLETAS, sin fragmentos ("Two men. Same salary.") que el
+        // TTS lee robótico y a tirones. La portada en pantalla SÍ es punchy; la voz fluye.
+        {id:'setup',     texto: "Two men earn the same salary and work just as hard."},
+        {id:'diverge',   texto: "Thirty years later, one has almost nothing while the other has over a million, on the same money in. So what changed? One spent his paycheck, and the other owned things that paid him back."},
+        {id:'principle', texto: "His habits never failed him. A habit only moves money you already have, but an asset earns while you sleep. You already have the hard part; the only question is where you point it."},
+        {id:'cta',       texto: "So does your next hundred dollars leave, or does it work? Tell me below."},
       ],
       cifras: [
         ["over a million", "$1,000,000+"],
