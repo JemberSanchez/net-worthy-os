@@ -10,19 +10,15 @@
 
 1. CapCut → texto a voz → voz **"Firme Pilot"** (la MISMA del S3: si cambias la voz, rompes la
    comparabilidad del experimento).
-2. Pega EXACTAMENTE este guion (también está en `shorts-pack-01.md`):
+2. Pega EXACTAMENTE este guion — **462 caracteres, entra en UN bloque** (CapCut tope 500).
+   (También está en `shorts-pack-01.md`.)
 
 ```
-Two men. Same salary. Same discipline. Thirty years later, one retires with almost nothing — the other, with over a million. Same money in.
-
-Here's the only difference: one spent his paycheck. The other used it to own things that paid him back.
-
-His habits didn't fail him. A habit just moves money you already have. An asset makes money while you sleep.
-
-You've already got the hard part: the discipline. The only question is where you point it.
-
-So — your next hundred dollars: does it leave, or does it work? Tell me below.
+Two men. Same salary. Same discipline. Thirty years later, one has almost nothing. The other, over a million. Same money in. The difference? One spent his paycheck. The other owned things that paid him back. His habits didn't fail him. A habit moves money you already have. An asset makes money while you sleep. You already have the discipline. The only question is where you point it. So your next hundred dollars: does it leave, or does it work? Tell me below.
 ```
+> Si en el futuro alargas un guion por encima de 500, pártelo en **2 bloques de texto** en la
+> timeline de CapCut (cada uno con su TTS) y exporta el audio junto: el calibrador trabaja sobre
+> el MP3 final y le da igual en cuántos trozos lo grabaste.
 
 3. Exporta **solo el audio** a MP3 y guárdalo como **`data/voz-short-01.mp3`** (ese nombre exacto:
    el botón "🎙 Usar la voz del proyecto" lo busca ahí).
