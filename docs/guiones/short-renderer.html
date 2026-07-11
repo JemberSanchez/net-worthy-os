@@ -987,16 +987,27 @@ function drawColumns(t, W, H, s){
   // ── fuente común + bifurcación: el MISMO sueldo se reparte en dos destinos ("same money in") ──
   // Es el momento que antes faltaba: no se ve QUÉ los separó. Aquí una moneda (el sueldo) se bifurca;
   // la rama que se POSEE sigue sólida y verde, la que se GASTA se apaga y se puntea (el dinero se va).
-  const aSrc = eF * (1 - aNumR);
+  // La bifurcación se despide ANTES de que aterrice el millón: si sigue viva, el número
+  // (con su golpe de escala) pisa la moneda — se vio en el frame del aterrizaje.
+  const aSrc = eF * (1 - clamp01((t - (T.draw - 0.75)) / 0.45));
   if (aSrc > 0.03){
     const ySrc = 402*s, rC = 26*s, forkY = ySrc + rC + 20*s;
     ctx.save(); ctx.globalAlpha = aSrc; ctx.strokeStyle = P.brass; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(W/2, ySrc + rC); ctx.lineTo(W/2, forkY); ctx.stroke(); ctx.restore();   // tallo
-    ctx.save(); ctx.globalAlpha = aSrc; ctx.strokeStyle = P.growth; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxR, yR - 3*s); ctx.stroke(); ctx.restore();     // rama que trabaja
-    ctx.save(); ctx.globalAlpha = aSrc * (1 - eD*0.4); ctx.strokeStyle = loss; ctx.lineWidth = 4*s; ctx.lineCap = 'round';
-    if (eD > 0.05) ctx.setLineDash([6*s, 9*s]);
-    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxL, yL - 3*s); ctx.stroke(); ctx.restore();     // rama que se va
+    // Las DOS ramas nacen IGUALES (brass): "same money in" no puede prejuzgar el final.
+    // Con la divergencia, la del que posee se vuelve verde y la del gasto se apaga y puntea.
+    ctx.save(); ctx.lineWidth = 4*s; ctx.lineCap = 'round';
+    ctx.globalAlpha = aSrc * (1 - eD); ctx.strokeStyle = P.brass;                                        // rama derecha, neutra
+    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxR, yR - 3*s); ctx.stroke();
+    ctx.globalAlpha = aSrc * eD; ctx.strokeStyle = P.growth;                                             // ...que trabaja
+    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxR, yR - 3*s); ctx.stroke();
+    ctx.restore();
+    ctx.save(); ctx.lineWidth = 4*s; ctx.lineCap = 'round';
+    ctx.globalAlpha = aSrc * (1 - eD); ctx.strokeStyle = P.brass;                                        // rama izquierda, neutra
+    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxL, yL - 3*s); ctx.stroke();
+    ctx.globalAlpha = aSrc * eD * 0.7; ctx.strokeStyle = loss; ctx.setLineDash([6*s, 9*s]);              // ...que se va
+    ctx.beginPath(); ctx.moveTo(W/2, forkY); ctx.lineTo(cxL, yL - 3*s); ctx.stroke();
+    ctx.restore();
     ctx.save(); ctx.globalAlpha = aSrc;                                                                  // la moneda: el sueldo común
     ctx.shadowColor = 'rgba(216,178,90,0.5)'; ctx.shadowBlur = 16*s;
     ctx.fillStyle = P.ink; ctx.strokeStyle = P.brass; ctx.lineWidth = 3*s;
@@ -1146,10 +1157,35 @@ function drawPrinciple(t, W, H, s, a, ov){
   ctx.restore();
 
   const t0 = typeof ov.desde === 'function' ? ov.desde() : (ov.desde || 0), tl = t - t0;
-  const bloque = (cy, aB, kicker, kColor, verbo, vColor, sub, glow, flecha) => {
+
+  // Icono con PUNTAS de flecha, ARRIBA del bloque. (El anterior iba al lado del texto: parecía
+  // un "=" y pisaba la "Y" de MONEY; y el kicker quedaba medio oculto tras el verbo — frames revisados.)
+  const icono = (cx, cy, tipo, color, aI, glow) => {
+    if (aI <= 0.01) return;
+    ctx.save(); ctx.globalAlpha = a * aI;
+    ctx.strokeStyle = color; ctx.lineWidth = 6*s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (glow){ ctx.shadowColor = glow; ctx.shadowBlur = 14*s; }
+    ctx.beginPath();
+    if (tipo === 'up'){                                                    // ↑ compone
+      ctx.moveTo(cx, cy + 20*s); ctx.lineTo(cx, cy - 14*s);
+      ctx.moveTo(cx - 15*s, cy - 2*s); ctx.lineTo(cx, cy - 18*s); ctx.lineTo(cx + 15*s, cy - 2*s);
+    } else {                                                               // ⇄ va y vuelve: no crece
+      const w = 34*s, yA = cy - 9*s, yB = cy + 9*s;
+      ctx.moveTo(cx - w, yA); ctx.lineTo(cx + w, yA);
+      ctx.moveTo(cx + w - 12*s, yA - 8*s); ctx.lineTo(cx + w, yA); ctx.lineTo(cx + w - 12*s, yA + 8*s);
+      ctx.moveTo(cx + w, yB); ctx.lineTo(cx - w, yB);
+      ctx.moveTo(cx - w + 12*s, yB - 8*s); ctx.lineTo(cx - w, yB); ctx.lineTo(cx - w + 12*s, yB + 8*s);
+    }
+    ctx.stroke(); ctx.restore();
+  };
+
+  // dx/dy: micro-movimiento determinista — el bloque MOVES oscila (va y vuelve), MAKES flota.
+  const bloque = (cy, aB, kicker, kColor, verbo, vColor, sub, glow, tipo, dx, dy) => {
     if (aB <= 0.01) return;
     const e = easeOut(aB);
-    text(kicker, W/2, cy - 66*s, {size:30*s, weight:700, color:kColor, alpha:a*aB, spacing:6*s});
+    ctx.save(); ctx.translate(dx, dy);
+    icono(W/2, cy - 148*s, tipo, vColor, aB, glow);
+    text(kicker, W/2, cy - 84*s, {size:30*s, weight:700, color:kColor, alpha:a*aB, spacing:6*s});
     ctx.save();
     ctx.translate(W/2, cy); ctx.scale(0.96 + 0.04*e, 0.96 + 0.04*e); ctx.translate(-W/2, -cy);
     if (glow){ ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 26*s; }
@@ -1157,25 +1193,19 @@ function drawPrinciple(t, W, H, s, a, ov){
     if (glow) ctx.restore();
     ctx.restore();
     text(sub.toUpperCase(), W/2, cy + 52*s, {size:26*s, weight:600, color:P.grey, alpha:a*aB*0.9, spacing:3*s});
-    // flecha: '→' el dinero que solo se MUEVE (sale de lado) · '↑' el que MULTIPLICA (sube)
-    ctx.save(); ctx.globalAlpha = a*aB; ctx.strokeStyle = vColor; ctx.lineWidth = 6*s;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    const ax = W/2 + 250*s, ay = cy - 8*s, w = 26*s;
-    if (glow){ ctx.shadowColor = glow; ctx.shadowBlur = 12*s; }
-    ctx.beginPath();
-    if (flecha === 'up'){ ctx.moveTo(ax-w, ay+w*0.6); ctx.lineTo(ax, ay-w*0.6); ctx.lineTo(ax+w, ay+w*0.6); }
-    else { ctx.moveTo(ax-w, ay-w*0.7); ctx.lineTo(ax+w, ay-w*0.7);              // ida
-           ctx.moveTo(ax+w, ay+w*0.7); ctx.lineTo(ax-w, ay+w*0.7); }            // y vuelta: no crece
-    ctx.stroke(); ctx.restore();
+    ctx.restore();
   };
+
+  const oscila = 7*s * Math.sin(tl * 2.1);                 // el dinero que solo SE MUEVE: va y vuelve
+  const flota  = -5*s * (0.5 + 0.5*Math.sin(tl * 1.6));    // el que TRABAJA: empuja hacia arriba
   // arriba: el hábito MUEVE (gris, neutro) · abajo: el activo MULTIPLICA (verde, brillo)
   bloque(H*0.36, clamp01(tl / 0.5),        'A HABIT', P.grey,  'MOVES MONEY', P.grey,
-         'money you already have', null, 'side');
+         'money you already have', null, 'side', oscila, 0);
   ctx.save(); ctx.globalAlpha = a * clamp01((tl-0.6)/0.5); ctx.strokeStyle = P.brass;
   ctx.lineWidth = 3*s; ctx.setLineDash([6*s,9*s]);
   ctx.beginPath(); ctx.moveTo(W*0.24, H*0.475); ctx.lineTo(W*0.76, H*0.475); ctx.stroke(); ctx.restore();
   bloque(H*0.59, clamp01((tl-0.9) / 0.5),  'AN ASSET', P.brass, 'MAKES MONEY', P.growth,
-         'while you sleep', 'rgba(31,158,110,0.6)', 'up');
+         'while you sleep', 'rgba(31,158,110,0.6)', 'up', 0, flota);
 }
 
 // ── Registro de escenas: añadir una escena = añadir una entrada aquí (no tocar drawFrame) ──
@@ -1213,15 +1243,17 @@ function drawFrame(t){
   g.addColorStop(0,'rgba(31,158,110,0.09)'); g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
-  text('NET WORTHY', W/2, (SAFE.top + 24)*s, {size:26*s, weight:700, color:P.brass,
-       alpha:0.9, spacing:6*s});
-
   // ESCENA BASE (del registro) + OVERLAYS de composición (portada, cierre). El resto es común.
   (SCENES[CFG.escena] || SCENES.chart)(t, W, H, s);
   if (CFG.overlays) for (const ov of CFG.overlays){
     const a = alphaVentana(t, ov);
     if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
   }
+
+  // La marca va DESPUÉS de las escenas: los overlays opacos (portada, insight) la tapaban
+  // y NET WORTHY desaparecía a mitad de video (visto en los frames revisados).
+  text('NET WORTHY', W/2, (SAFE.top + 24)*s, {size:26*s, weight:700, color:P.brass,
+       alpha:0.9, spacing:6*s});
 
   // subtítulos (tiempos SIEMPRE medidos). Posición por escena: en la gráfica van al centro;
   // en las columnas, a la zona libre izquierda (la barra SPENT drenada la despeja) y más

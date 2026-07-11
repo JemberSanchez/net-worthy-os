@@ -6,3 +6,4 @@ venv/
 *.sqlite
 *.db
 .env
+docs/guiones/PREVIEW-*.jpg
