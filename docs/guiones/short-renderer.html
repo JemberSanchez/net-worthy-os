@@ -1286,46 +1286,66 @@ function drawPrinciple(t, W, H, s, a, ov){
 // sin motor no dibuja pendiente. Datos por Short: CFG.items / CFG.sello.
 function drawChecklist(t, W, H, s){
   const items = CFG.items || [];
+  const total = items.length || 1;
   const fin = Math.max(1.2, T.hook);              // los ítems se reparten el tramo hasta el sello
-  const x0 = 235*s, cy0 = 560*s, salto = 150*s;
+  const loss = '#C0968C';
+  const x0 = 200*s, cy0 = 440*s, salto = 128*s;
+  const tCheck = i => (i + 0.35) * (fin / (total + 0.7)) + 0.28;   // instante en que cae cada ✓
+
   items.forEach((it, i) => {
-    const tIn = (i + 0.35) * (fin / (items.length + 0.7));
+    const tIn = (i + 0.35) * (fin / (total + 0.7));
     const aI = clamp01((t - tIn) / 0.35);
     if (aI <= 0) return;
-    const e = easeOut(aI), y = cy0 + i*salto + (1 - e)*34*s;
-    text(it, x0, y, {size:54*s, weight:700, color:P.paper, align:'left', alpha:e, stroke:8*s});
-    const aC = clamp01((t - tIn - 0.28) / 0.25);   // el check cae un pelín después del texto
+    const e = easeOut(aI), y = cy0 + i*salto + (1 - e)*30*s;
+    text(it, x0, y, {size:52*s, weight:700, color:P.paper, align:'left', alpha:e, stroke:8*s});
+    const aC = clamp01((t - tCheck(i)) / 0.25);   // ✓ en BRASS: la disciplina se honra (verde = crecer)
     if (aC > 0){
-      const eC = easeOut(aC), cx = 160*s, cyC = y - 18*s;
-      ctx.save(); ctx.globalAlpha = eC;
-      ctx.strokeStyle = P.growth; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.arc(cx, cyC, 26*s, 0, Math.PI*2); ctx.stroke();
+      const eC = easeOut(aC), cx = 132*s, cyC = y - 17*s;
+      let pop = 1; const dC = t - tCheck(i); if (dC > 0 && dC < 0.4) pop = 1 + 0.25*Math.sin(Math.PI*(dC/0.4));
+      ctx.save(); ctx.globalAlpha = eC; ctx.translate(cx, cyC); ctx.scale(pop, pop);
+      ctx.strokeStyle = P.brass; ctx.lineWidth = 3*s;
+      ctx.beginPath(); ctx.arc(0, 0, 25*s, 0, Math.PI*2); ctx.stroke();
       ctx.lineWidth = 5*s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.beginPath(); ctx.moveTo(cx-10*s, cyC+1*s); ctx.lineTo(cx-2*s, cyC+9*s); ctx.lineTo(cx+11*s, cyC-8*s);
-      ctx.stroke(); ctx.restore();
+      ctx.beginPath(); ctx.moveTo(-10*s, 1*s); ctx.lineTo(-2*s, 9*s); ctx.lineTo(11*s, -8*s); ctx.stroke();
+      ctx.restore();
     }
   });
-  // el sello, ligeramente girado y con golpe — y debajo la línea PLANA con su etiqueta
+
+  // ── DOS BARRAS que cuentan la historia en vivo: EFFORT sube a 100% con cada ✓, GROWTH clavado
+  //    en $0. Llena la zona muerta y hace la prueba VISUAL del contrarian (esfuerzo máximo → cero). ──
+  let effort = 0;
+  items.forEach((it, i) => { effort += clamp01((t - tCheck(i)) / 0.45) / total; });
+  const gauge = (y, label, frac, fillCol, valStr, valCol) => {
+    const bx0 = W*0.13, bw = W*0.74, bh = 26*s, r = bh/2;
+    text(label, bx0, y - 16*s, {size:24*s, weight:700, color:P.grey, align:'left', spacing:4*s});
+    text(valStr, bx0 + bw, y - 16*s, {size:28*s, weight:800, color:valCol, align:'right', spacing:1*s});
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.roundRect(bx0, y, bw, bh, r); ctx.fill();
+    if (frac > 0.001){
+      ctx.fillStyle = fillCol;
+      ctx.beginPath(); ctx.roundRect(bx0, y, Math.max(bh, bw*Math.min(1, frac)), bh, r); ctx.fill();
+    }
+    ctx.restore();
+  };
+  gauge(940*s, 'EFFORT', effort, P.brass, Math.round(effort*100) + '%', P.paper);
+  gauge(1045*s, 'GROWTH', 0, loss, '$0', loss);
+
+  // ── el veredicto: STILL BROKE con golpe + un destello de pérdida (pattern interrupt) ──
   const aS = clamp01((t - T.hook) / 0.45);
   if (aS > 0){
-    const eS = easeOut(aS);
-    let esc = 1; const d = t - T.hook;
-    if (d > 0 && d < 0.5) esc = 1 + 0.18*Math.sin(Math.PI*(d/0.5));
-    ctx.save();
-    ctx.translate(W/2, 1120*s); ctx.rotate(-0.045); ctx.scale(esc, esc);
-    text(CFG.sello || 'STILL BROKE.', 0, 0, {size:92*s, weight:800, color:'#C0968C', stroke:12*s, spacing:1*s});
-    ctx.restore();
-    const p = clamp01((t - T.hook - 0.35) / 0.8);
-    if (p > 0){
-      const xb = lerp(W*0.22, W*0.78, easeOut(p)), yL = 1235*s;
-      ctx.save(); ctx.globalAlpha = eS*0.9;
-      ctx.strokeStyle = P.grey; ctx.lineWidth = 5*s; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(W*0.22, yL); ctx.lineTo(xb, yL); ctx.stroke();
-      ctx.fillStyle = P.paper; ctx.beginPath(); ctx.arc(xb, yL, 7*s, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-      text('EFFORT', W*0.22, 1290*s, {size:22*s, weight:600, color:P.grey, align:'left', alpha:eS*0.7, spacing:4*s});
-      text('GROWTH: 0', W*0.78, 1290*s, {size:22*s, weight:600, color:'#C0968C', align:'right', alpha:eS*0.7, spacing:4*s});
+    const d = t - T.hook;
+    if (d >= 0 && d < 0.4){                          // destello: engancha el ojo en el giro
+      const aF = Math.sin(Math.PI * d/0.4) * 0.22;
+      const gF = ctx.createRadialGradient(W/2, 1200*s, 0, W/2, 1200*s, W*0.7);
+      gF.addColorStop(0, `rgba(192,150,140,${aF})`); gF.addColorStop(1, 'rgba(192,150,140,0)');
+      ctx.save(); ctx.fillStyle = gF; ctx.fillRect(0, 0, W, H); ctx.restore();
     }
+    let esc = 1; if (d > 0 && d < 0.5) esc = 1 + 0.18*Math.sin(Math.PI*(d/0.5));
+    ctx.save();
+    ctx.translate(W/2, 1210*s); ctx.rotate(-0.045); ctx.scale(esc, esc);
+    text(CFG.sello || 'STILL BROKE.', 0, 0, {size:98*s, weight:800, color:loss, stroke:12*s, spacing:1*s});
+    ctx.restore();
   }
 }
 

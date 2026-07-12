@@ -68,9 +68,12 @@ You skipped the coffee, you wake up at five, and you budget every dollar. And yo
 memoria del S1). El eje: la disciplina es **COMBUSTIBLE** (se honra: "you already have the fuel"),
 pero sin **MOTOR** no hay avance. El activo es el motor. CTA accionable, no acusatorio.
 **Secuencia en el motor (LISTA — `s2-contrarian` en el selector):** portada `YOU DID / EVERYTHING
-RIGHT.` → **checklist** (SKIP THE COFFEE ✓ / WAKE UP AT 5AM ✓ / BUDGET EVERY DOLLAR ✓ → sello
-`STILL BROKE.` + línea plana EFFORT→GROWTH: 0) → **insight** `DISCIPLINE IS THE FUEL` (—) vs
-`AN ASSET IS THE ENGINE` (↑) → CTA `COULD YOU PUT $50 A MONTH INTO AN ENGINE?`.
+RIGHT.` → **checklist** (SKIP THE COFFEE ✓ / WAKE UP AT 5AM ✓ / BUDGET EVERY DOLLAR ✓, checks en
+BRASS = disciplina honrada) con **dos barras en vivo: `EFFORT` sube 33→67→100% con cada ✓, `GROWTH`
+clavado en `$0`** → sello `STILL BROKE.` con golpe + destello → **insight** `DISCIPLINE IS THE FUEL`
+(—) vs `AN ASSET IS THE ENGINE` (↑) → CTA `COULD YOU PUT $50 A MONTH INTO AN ENGINE?`.
+El contraste EFFORT 100% / GROWTH $0 ES la prueba visual del contrarian, sin humillar (esfuerzo real,
+pero sin motor no crece).
 **Voz:** CapCut TTS Firme Pilot (la misma de S3/S1) → exportar como `data/voz-short-02.mp3`.
 **Hora:** 11:30 local (la misma del S1 — la hora fija aísla el gancho).
 
