@@ -4,11 +4,13 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
-> **Última actualización: 2026-07-11.** Estado en una línea:
-> *DOS Shorts PUBLICADOS (S3 stat el 07-10, S1 story multi-escena el 07-11); `production_outcome = 0`;
-> lo único que importa es MEDIR — el S3 el sábado 12, el S1 ~48h tras publicar (~13). ADN de ambos
-> registrado (3/10 instrumentados). POR CONFIRMAR del S1: hora local, variante de voz CapCut, horas
-> (`record-cost`). URLs y contexto de ambos en la tabla `production_context`.*
+> **Última actualización: 2026-07-11 (noche).** Estado en una línea:
+> *DOS Shorts PUBLICADOS (S3 stat 07-10 02:00, S1 story 07-11 11:30, misma voz Firme Pilot);
+> `production_outcome = 0`; lo que importa es MEDIR — S3 el sábado 12, S1 el ~13. 3/10 instrumentados.
+> S2 LISTO en el motor (falta su voz: `data/voz-short-02.mp3`, publicar 11:30). El motor ahora es
+> **DUAL-MODO**: Short 9:16 + Video 16:9 con timeline de segmentos, 10 escenas y export streaming
+> sin techo de RAM (e2e verificado) — ver `docs/ARQUITECTURA-MULTIESCENA.md`. Pendiente del S1:
+> horas para `record-cost`.*
 
 ---
 

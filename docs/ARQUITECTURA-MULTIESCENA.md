@@ -102,19 +102,20 @@ así sirve en 9:16 y en 16:9.
 
 ## Plan por fases (con puerta de evidencia)
 
-| Fase | Qué | Coste | Cuándo |
-|---|---|---|---|
-| **0 ✓** | Compositor multi-escena + portada/outro (hecho) | — | hecho |
-| **1** | Medir el S3 (sábado 12) + producir S1 | horas | **primero** |
-| **2** | Formato como dato + selector de modo + relativizar layouts a la caja segura (Short queda idéntico, pixel a pixel) | 1 sesión | tras medir |
-| **3** | Modo Video: timeline de segmentos + voz por segmento + render por segmentos + ffmpeg concat | 2-3 sesiones | si Fase 1 da tracción |
-| **4** | Biblioteca de escenas long-form (capítulo, stat, bullets, cita, lower-third, fuente) | continuo | con contenido real |
+| Fase | Qué | Estado |
+|---|---|---|
+| **0 ✓** | Compositor multi-escena + portada/outro | hecho |
+| **1** | Medir el S3 (sábado 12) + S1 (dom 13) + producir S2/S4/S5 | **en curso — sigue siendo la puerta del aprendizaje** |
+| **2 ✓** | Formato como dato (`FORMATS`) + selector de modo Short/Video + layouts relativos a la caja segura (Shorts idénticos al píxel: verificado) | hecho 2026-07-11 |
+| **3 ✓** | Modo Video: timeline de segmentos (`VIDEOS[...]`, crossfade entre segmentos) + voz POR SEGMENTO (`sg.pcm`) + **export streaming a disco vía OPFS** — sin ffmpeg y SIN techo de RAM (solo tablas de tamaños en memoria; e2e verificado: MP4 reproducible, duración y 1920×1080 correctos) | hecho 2026-07-11 |
+| **4 ◐** | Biblioteca long-form: capítulo ✓, stat ✓, bullets ✓, cita ✓ (+ titulo/principle/outro reutilizables) — faltan lower-third y fuente | en curso |
 
-**La puerta es la Fase 1.** Construir Fases 3-4 antes de medir es construir capacidad que nadie ve
-todavía — el error que `POLITICA.md` existe para evitar. Un profesional del crecimiento **domina el
-formato que da alcance (Shorts) y mide, ANTES de invertir días en long-form para 0 suscriptores.**
-"El mejor sistema" para este canal HOY = el mejor sistema de Shorts + una arquitectura que se
-**extiende** a Video sin reescribir. Eso es lo que se está construyendo.
+**Nota de gobernanza:** las Fases 2-3 se construyeron ANTES de medir por decisión explícita del
+usuario (2026-07-11), consciente de que adelanta la puerta de evidencia de `POLITICA.md`. Se hizo
+aditivo y gateado por modo: el pipeline de Shorts no se tocó (regresión verificada al píxel).
+**Pendiente del modo Video para producción real:** cargar voces reales por segmento desde
+`data/` (hoy `sg.pcm` se puebla por código), calibración por segmento, y contenido real de 8-15 min
+(la timeline escala: más minutos = más filas en `segmentos`, no más motor).
 
 ## Nota: post-roll (outro al final de un Short)
 La escena `outro` está lista, pero encadenarla DESPUÉS de la voz de un Short necesita dos cosas

@@ -47,6 +47,17 @@
 </h1>
 
 <div class="row">
+  <label style="font-size:13px;color:var(--grey)">Modo:
+    <select id="modo" style="font:inherit;background:#0d1c16;color:var(--paper);border:1px solid #2b4238;border-radius:6px;padding:6px 9px">
+      <option value="short">SHORT · 9:16</option>
+      <option value="video">VIDEO · 16:9 (long-form)</option>
+    </select>
+  </label>
+  <label id="lbl-proyecto" style="font-size:13px;color:var(--grey);display:none">Video:
+    <select id="proyecto" style="font:inherit;background:#0d1c16;color:var(--paper);border:1px solid #2b4238;border-radius:6px;padding:6px 9px">
+      <option value="demo-500">DEMO · The $500 Plan</option>
+    </select>
+  </label>
   <label style="font-size:13px;color:var(--grey)">Short:
     <select id="short" style="font:inherit;background:#0d1c16;color:var(--paper);border:1px solid #2b4238;border-radius:6px;padding:6px 9px">
       <option value="s3-stat">S3 · stat — la curva (publicado)</option>
@@ -137,8 +148,16 @@ const P = { ink:'#0A1A14', growth:'#1F9E6E', brass:'#D8B25A', paper:'#F4F6F3', g
  *  - YouTube Shorts: ~350px abajo (canal, título, música) · 120px a la derecha (like/compartir)
  *  - Facebook Reels: ~290px abajo (caption y botones) · ~65px a los lados
  *  Nada importante fuera de esto. El nº dorado y el aviso YMYL vivían en la franja tapada. */
-const SAFE = { top: 190, bottom: 360, left: 70, right: 130 };
-const SAFE_BOT = 1920 - SAFE.bottom;   // 1560: por debajo, no se ve en el móvil
+// ── FORMATO COMO DATO: el sistema es dual-modo (Short 9:16 · Video 16:9). El factor de
+//    escala s = min(W,H)/1080 vale 1 en AMBOS formatos, así que las escenas que se posicionan
+//    con fracciones de W/H y unidades *s sirven en los dos sin reescalado raro. ──
+const FORMATS = {
+  short: { w:1080, h:1920, safe:{ top:190, bottom:360, left:70,  right:130 } },  // UI de YT/FB
+  video: { w:1920, h:1080, safe:{ top:60,  bottom:90,  left:80,  right:80  } },  // 16:9 long-form
+};
+let MODO = 'short';
+let SAFE = FORMATS.short.safe;
+let SAFE_BOT = FORMATS.short.h - SAFE.bottom;   // por debajo, no se ve en el móvil
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DATOS: un Short es esto. El resto del archivo es MOTOR y no se toca.
@@ -1310,6 +1329,88 @@ function drawChecklist(t, W, H, s){
   }
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// BIBLIOTECA LONG-FORM — escenas autocontenidas: animan relativo a su propio arranque
+// (t ya llega LOCAL al segmento), pintan su fondo con la alpha entrante y se posicionan
+// por fracciones de W/H + unidades *s ⇒ sirven en 9:16 y 16:9 sin reescalado raro.
+// ═════════════════════════════════════════════════════════════════════════════
+
+function fondoEscena(W, H, a, tinte = 0.10){
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, Math.max(W,H)*0.7);
+  g.addColorStop(0, `rgba(31,158,110,${tinte})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+}
+
+// ── CAPÍTULO: divisor con número + título (el respiro que estructura un video largo) ──
+function drawCapitulo(t, W, H, s, a, ov){
+  fondoEscena(W, H, a, 0.12);
+  const e = easeOut(clamp01(t / 0.6));
+  text(`CHAPTER ${String(ov.num || 1).padStart(2, '0')}`, W/2, H*0.40 - 90*s,
+       {size:30*s, weight:700, color:P.brass, alpha:a*e, spacing:8*s});
+  ctx.save(); ctx.translate(W/2, H*0.44); ctx.scale(0.95 + 0.05*e, 0.95 + 0.05*e); ctx.translate(-W/2, -H*0.44);
+  text(ov.titulo || '', W/2, H*0.44, {size:88*s, weight:800, color:P.paper, alpha:a*e, stroke:11*s});
+  ctx.restore();
+  const aR = easeOut(clamp01((t - 0.3) / 0.5));
+  ctx.save(); ctx.globalAlpha = a * aR;
+  ctx.strokeStyle = P.brass; ctx.lineWidth = 5*s; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(W/2 - 150*s*aR, H*0.44 + 70*s); ctx.lineTo(W/2 + 150*s*aR, H*0.44 + 70*s); ctx.stroke();
+  ctx.restore();
+  if (ov.sub) text(ov.sub.toUpperCase(), W/2, H*0.44 + 128*s,
+                   {size:28*s, weight:600, color:P.grey, alpha:a*aR, spacing:4*s});
+}
+
+// ── STAT GIGANTE: un número que CUENTA (pow 1.6: se siente compuesto) + kicker + sub ──
+function drawStatBig(t, W, H, s, a, ov){
+  fondoEscena(W, H, a);
+  const dur = Math.max(0.8, ov.conteo_s || 2.2);
+  const p = clamp01(t / dur), val = Math.round((ov.valor || 0) * Math.pow(p, 1.6));
+  const str = (ov.prefijo ?? '$') + val.toLocaleString('en-US') + (p >= 1 ? (ov.sufijo || '') : '');
+  text((ov.kicker || '').toUpperCase(), W/2, H*0.40 - 110*s,
+       {size:30*s, weight:700, color:P.brass, alpha:a, spacing:6*s});
+  let esc = 1; const d = t - dur;
+  if (d > 0 && d < 0.5) esc = 1 + 0.14*Math.sin(Math.PI*(d/0.5));
+  else if (d >= 0.5) esc = 1 + 0.010*Math.sin((d-0.5)*2.2);       // respira: nunca frame muerto
+  ctx.save(); ctx.translate(W/2, H*0.46); ctx.scale(esc, esc);
+  ctx.shadowColor = 'rgba(31,158,110,0.55)'; ctx.shadowBlur = 30*s;
+  text(str, 0, 0, {size:150*s, weight:800, color:P.paper, alpha:a, stroke:14*s});
+  ctx.restore();
+  if (ov.sub) text(ov.sub.toUpperCase(), W/2, H*0.46 + 96*s,
+                   {size:28*s, weight:600, color:P.grey, alpha:a*clamp01((t-dur*0.7)/0.4), spacing:3*s});
+}
+
+// ── BULLETS: puntos que entran uno a uno con su check — genérico (pasos, mitos, señales) ──
+function drawBullets(t, W, H, s, a, ov){
+  fondoEscena(W, H, a);
+  const items = ov.items || [];
+  if (ov.titulo) text(ov.titulo.toUpperCase(), W/2, H*0.20,
+                      {size:34*s, weight:700, color:P.brass, alpha:a, spacing:5*s});
+  const cy0 = H*0.32, salto = Math.min(150*s, (H*0.58) / Math.max(1, items.length));
+  const x0 = W/2 - 300*s;
+  items.forEach((it, i) => {
+    const aI = clamp01((t - (0.35 + i * (ov.cadencia_s || 1.6))) / 0.4);
+    if (aI <= 0) return;
+    const e = easeOut(aI), y = cy0 + i*salto + (1-e)*30*s;
+    ctx.save(); ctx.globalAlpha = a*e;
+    ctx.strokeStyle = P.growth; ctx.lineWidth = 5*s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(x0 - 52*s, y - 16*s); ctx.lineTo(x0 - 42*s, y - 6*s); ctx.lineTo(x0 - 26*s, y - 26*s);
+    ctx.stroke(); ctx.restore();
+    text(it, x0, y, {size:46*s, weight:700, color:P.paper, align:'left', alpha:a*e, stroke:8*s});
+  });
+}
+
+// ── CITA: una frase con peso + autor. Pausa emocional entre capítulos. ──
+function drawCita(t, W, H, s, a, ov){
+  fondoEscena(W, H, a, 0.07);
+  const e = easeOut(clamp01(t / 0.7));
+  text('“', W/2 - 300*s, H*0.32, {size:120*s, weight:800, color:P.brass, alpha:a*e*0.6});
+  const lineas = ov.lineas || [];
+  lineas.forEach((l, i) => text(l, W/2, H*0.40 + i*68*s,
+    {size:48*s, weight:700, color:P.paper, alpha:a*easeOut(clamp01((t - 0.2 - i*0.25)/0.5)), stroke:8*s}));
+  if (ov.autor) text(('— ' + ov.autor).toUpperCase(), W/2, H*0.40 + lineas.length*68*s + 60*s,
+    {size:28*s, weight:600, color:P.brass, alpha:a*easeOut(clamp01((t - 0.5 - lineas.length*0.25)/0.5)), spacing:4*s});
+}
+
 // ── Registro de escenas: añadir una escena = añadir una entrada aquí (no tocar drawFrame) ──
 const SCENES = {
   chart: (t, W, H, s) => {                               // curva del S3: intro (spec) -> gráfica
@@ -1324,6 +1425,11 @@ const SCENES = {
   titulo:    (t, W, H, s, a, ov) => drawTitulo(t, W, H, s, a, ov),
   principle: (t, W, H, s, a, ov) => drawPrinciple(t, W, H, s, a, ov),
   outro:     (t, W, H, s, a, ov) => drawOutro(t, W, H, s, a, ov),
+  // biblioteca long-form (también usables como overlays en Shorts):
+  capitulo:  (t, W, H, s, a, ov) => drawCapitulo(t, W, H, s, a, ov),
+  stat:      (t, W, H, s, a, ov) => drawStatBig(t, W, H, s, a, ov),
+  bullets:   (t, W, H, s, a, ov) => drawBullets(t, W, H, s, a, ov),
+  cita:      (t, W, H, s, a, ov) => drawCita(t, W, H, s, a, ov),
 };
 
 /** Alpha de un overlay según su ventana [desde,hasta] (segundos o función de T) y sus fundidos. */
@@ -1346,11 +1452,25 @@ function drawFrame(t){
   g.addColorStop(0,'rgba(31,158,110,0.09)'); g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
-  // ESCENA BASE (del registro) + OVERLAYS de composición (portada, cierre). El resto es común.
-  (SCENES[CFG.escena] || SCENES.chart)(t, W, H, s);
-  if (CFG.overlays) for (const ov of CFG.overlays){
-    const a = alphaVentana(t, ov);
-    if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
+  if (MODO === 'video'){
+    // TIMELINE: segmento activo en tiempo LOCAL + crossfade de 0.45s con el siguiente
+    const k = SEGS.findIndex(sg => t < sg.t1);
+    const seg = k >= 0 ? SEGS[k] : SEGS[SEGS.length - 1];
+    if (seg){
+      (SCENES[seg.escena] || SCENES.titulo)(t - seg.t0, W, H, s, 1, seg);
+      const nx = k >= 0 ? SEGS[k + 1] : null;
+      if (nx){
+        const aX = clamp01((t - (seg.t1 - 0.45)) / 0.45);
+        if (aX > 0.001) (SCENES[nx.escena] || SCENES.titulo)(Math.max(0, t - nx.t0 + 0.45), W, H, s, aX, nx);
+      }
+    }
+  } else {
+    // ESCENA BASE (del registro) + OVERLAYS de composición (portada, cierre). El resto es común.
+    (SCENES[CFG.escena] || SCENES.chart)(t, W, H, s);
+    if (CFG.overlays) for (const ov of CFG.overlays){
+      const a = alphaVentana(t, ov);
+      if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
+    }
   }
 
   // La marca va DESPUÉS de las escenas: los overlays opacos (portada, insight) la tapaban
@@ -1361,7 +1481,7 @@ function drawFrame(t){
   // subtítulos (tiempos SIEMPRE medidos). Posición por escena: en la gráfica van al centro;
   // en las columnas, a la zona libre izquierda (la barra SPENT drenada la despeja) y más
   // estrechos, para no pisar la barra verde (arranca en x≈661) ni la insignia VS.
-  if (t >= T.hook && t < T.cta){
+  if (MODO !== 'video' && t >= T.hook && t < T.cta){
     const c = cards().find(k => t >= k.t0 && t < k.t1);
     if (c){
       const dentro = clamp01((t - c.t0) / 0.12);
@@ -1372,24 +1492,27 @@ function drawFrame(t){
     }
   }
 
-  drawCTA(t, W, H, s);
+  if (MODO !== 'video') drawCTA(t, W, H, s);      // en video el cierre es un segmento (outro)
 
   // aviso YMYL: DENTRO de la zona segura. Abajo del todo lo tapaba el título del vídeo,
   // y un descargo que nadie ve no protege nada.
   // 22px, no 19: a 19px el aviso es ilegible en un móvil, y un descargo ilegible no protege nada.
   // El texto con tasa es SOLO de la escena chart (usa CFG.rate); cualquier otra escena lleva
   // el aviso genérico — sin esto, un Short sin proyección imprimía "Illustrative · NaN%".
+  // posiciones RELATIVAS a la caja segura: en 16:9 las coordenadas absolutas de retrato caían
+  // fuera del lienzo. En Short da exactamente los mismos píxeles de siempre (1487/1524).
+  const yAviso1 = (SAFE_BOT - 73)*s, yAviso2 = (SAFE_BOT - 36)*s;
   if (CFG.escena === 'chart'){
     const rPct = +(CFG.rate*100).toFixed(1);
     text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
-         W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
+         W/2, yAviso1, {size:22*s, color:P.paper, alpha:0.52});
     text('S&P 500 ≈10%/yr nominal since 1957 · Not financial advice',
-         W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
+         W/2, yAviso2, {size:22*s, color:P.paper, alpha:0.52});
   } else {
     text('Illustrative example · Investing involves risk of loss',
-         W/2, 1487*s, {size:22*s, color:P.paper, alpha:0.52});
+         W/2, yAviso1, {size:22*s, color:P.paper, alpha:0.52});
     text('Past results don’t guarantee future returns · Not financial advice',
-         W/2, 1524*s, {size:22*s, color:P.paper, alpha:0.52});
+         W/2, yAviso2, {size:22*s, color:P.paper, alpha:0.52});
   }
 
   // diagnóstico (nunca se graba)
@@ -1422,6 +1545,18 @@ let verificado = false, exportado = false;
 function pintarChecklist(){
   const ul = document.getElementById('checklist-items');
   if (!ul) return;
+  if (MODO === 'video'){
+    const voces = SEGS.filter(sg => sg.pcm).length;
+    ul.innerHTML = [
+      `<li style="color:var(--growth)">✅ Proyecto: <b>${CFG.ref}</b> · ${SEGS.length} segmentos · ${T.total.toFixed(1)}s · 1920×1080</li>`,
+      `<li style="color:${voces===SEGS.length?'var(--growth)':'var(--paper)'}">${voces===SEGS.length?'✅':'⬜'} Voces por segmento: ${voces}/${SEGS.length} (el export las exige; el preview no)</li>`,
+      `<li style="color:${verificado?'var(--growth)':'var(--paper)'}">${verificado?'✅':'⬜'} Previsualizar ENTERO (▶)</li>`,
+      `<li style="color:${exportado?'var(--growth)':'var(--paper)'}">${exportado?'✅':'⬜'} Exportar MP4 (⏺ streaming a disco — sin techo de RAM)</li>`,
+    ].join('');
+    document.getElementById('checklist-post').innerHTML =
+      'Modo VIDEO: la timeline vive en <code>VIDEOS[...]</code> — más minutos = más segmentos, no más motor.';
+    return;
+  }
   const conVoz = !!(audioEl.src && pcm);
   const pasos = [
     [true, `Short: <b>${CFG.ref}</b>${CFG.demo ? '' : ' — PUBLICADO (solo re-render)'}`],
@@ -1487,6 +1622,9 @@ function cargarShort(key){
   if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera a que termine para cambiar de Short.'; return; }
   sesion++; corriendo = false; audioEl.pause(); audioEl.removeAttribute('src');
   pcm = null; mimeCache = null;
+  MODO = 'short'; VIDEO = null; aplicarFormato('short');
+  const selModo = document.getElementById('modo');
+  if (selModo){ selModo.value = 'short'; document.getElementById('lbl-proyecto').style.display = 'none'; }
   SHORT = SHORTS[key]; CFG = SHORT;
   D = CFG.pmt ? series() : null;
   MAXY = D ? D.finalTotal * 1.18 : 0;
@@ -1509,6 +1647,74 @@ function cargarShort(key){
     : `Short ${key}: calibración a mano cargada. Carga data/${CFG.voz} y pulsa Grabar.`;
 }
 document.getElementById('short').onchange = e => cargarShort(e.target.value);
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MODO VIDEO (16:9, long-form) — un VIDEO es una TIMELINE de segmentos. Cada segmento:
+// escena de la biblioteca + sus datos + duración (cuando cargue su voz, la voz manda).
+// El reloj global se mapea a tiempo LOCAL del segmento; entre segmentos hay crossfade.
+// Escalable a 8-15 min: son más filas en `segmentos`, no más motor.
+// ═════════════════════════════════════════════════════════════════════════════
+const VIDEOS = {
+  'demo-500': {
+    ref: 'video-demo-500-plan',
+    escena: 'timeline',
+    titulo: 'The $500 Plan (demo del motor)',
+    segmentos: [
+      {escena:'titulo',    dur:4.5, lineas:['THE $500 PLAN'], sub:'how ordinary money compounds'},
+      {escena:'capitulo',  dur:4.0, num:1, titulo:'WHY CASH LOSES', sub:'inflation never sleeps'},
+      {escena:'stat',      dur:7.0, kicker:'$500 a month · 30 years', valor:610000,
+                           sub:'in today’s money, after inflation', conteo_s:2.6},
+      {escena:'principle', dur:8.0, desde:0, bloques:[
+        {kicker:'A HABIT',  verbo:'MOVES MONEY', sub:'money you already have', icono:'side'},
+        {kicker:'AN ASSET', verbo:'MAKES MONEY', sub:'while you sleep',        icono:'up'}]},
+      {escena:'bullets',   dur:8.5, titulo:'The plan', cadencia_s:1.8,
+                           items:['OPEN A BROKERAGE ACCOUNT','AUTOMATE $500 ON PAYDAY','BUY THE WHOLE MARKET','DON’T TOUCH IT']},
+      {escena:'cita',      dur:6.0, lineas:['Someone is sitting in the shade today','because someone planted','a tree a long time ago.'],
+                           autor:'Warren Buffett'},
+      {escena:'outro',     dur:4.5, handle:'@networthytv', linea:'FOLLOW FOR THE FULL SERIES'},
+    ],
+  },
+};
+let VIDEO = null;      // proyecto activo en modo video
+let SEGS = [];         // timeline resuelta: [{...segmento, t0, t1}]
+
+function aplicarFormato(modo){
+  const f = FORMATS[modo === 'video' ? 'video' : 'short'];
+  SAFE = f.safe; SAFE_BOT = f.h - f.safe.bottom;
+  if (canvas.width !== f.w){ canvas.width = f.w; canvas.height = f.h; }
+}
+
+function resolverTimeline(){
+  SEGS = []; let acc = 0;
+  for (const sg of (VIDEO ? VIDEO.segmentos : [])){
+    const d = sg.durReal || sg.dur || 5;                 // la voz real (durReal) manda sobre dur
+    SEGS.push({...sg, t0: acc, t1: acc + d}); acc += d;
+  }
+  return acc;
+}
+
+function cargarVideo(key){
+  if (!VIDEOS[key]) return;
+  if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera para cambiar.'; return; }
+  sesion++; corriendo = false; audioEl.pause(); audioEl.removeAttribute('src');
+  pcm = null; mimeCache = null; srtCards = null; cortesMedidos = false; cachedCards = null;
+  verificado = false; exportado = false;
+  MODO = 'video'; VIDEO = VIDEOS[key]; CFG = VIDEO;
+  aplicarFormato('video');
+  const total = resolverTimeline();
+  // T en video: total manda; el resto son valores inertes (drawCTA/subtítulos van gateados por MODO)
+  Object.assign(T, {hook:0.5, draw:1.0, curve:1.5, cta:Math.max(2, total-1), total, spec:[]});
+  document.getElementById('modo').value = 'video';
+  document.getElementById('lbl-proyecto').style.display = '';
+  pintarSliders();
+  drawFrame(Math.min(1.0, total));
+  statusEl.textContent = `Video "${key}": ${SEGS.length} segmentos · ${total.toFixed(1)}s · 1920×1080. Previsualiza (▶).`;
+}
+document.getElementById('modo').onchange = e => {
+  if (e.target.value === 'video') cargarVideo(document.getElementById('proyecto').value);
+  else { document.getElementById('lbl-proyecto').style.display = 'none'; cargarShort(document.getElementById('short').value); }
+};
+document.getElementById('proyecto').onchange = e => cargarVideo(e.target.value);
 
 // ── Audio: carga + detección de silencios ─────────────────────────────────────
 let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
@@ -1784,11 +1990,11 @@ const cede = () => new Promise(r => {
   ch.port2.postMessage(0);
 });
 
-async function h264Disponible(){
+async function h264Disponible(bitrate = 14_000_000){
   if (typeof VideoEncoder === 'undefined' || typeof AudioEncoder === 'undefined') return null;
   for (const c of CODECS_H264){
     const cfg = {codec:c, width:canvas.width, height:canvas.height,
-                 bitrate:14_000_000, framerate:FPS_MP4, avc:{format:'avc'}, latencyMode:'quality'};
+                 bitrate, framerate:FPS_MP4, avc:{format:'avc'}, latencyMode:'quality'};
     try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; } catch(e){}
   }
   return null;
@@ -1868,6 +2074,128 @@ async function exportarMP4(progreso){
   blob.conAudio = !!audio;
   blob.frames = tamanos.length;
   return blob;
+}
+
+// ── EXPORT LONG-FORM: streaming a disco (OPFS) — SIN techo de RAM ─────────────
+// El exportador de Shorts acumula los chunks en memoria (a 14 Mbps, 10 min ≈ 1 GB y la
+// pestaña muere). Aquí cada chunk codificado se ESCRIBE al archivo según sale:
+// ftyp | mdat en streaming | moov al final, y se parchea el tamaño del mdat. En RAM
+// solo quedan las tablas de tamaños (~4 B/frame: 15 min ≈ 27.000 frames ≈ 110 KB).
+async function sinkOPFS(nombre){
+  const root = await navigator.storage.getDirectory();
+  const fh = await root.getFileHandle(nombre, {create: true});
+  const w = await fh.createWritable();                   // trunca si existía
+  let pos = 0;
+  return {
+    tell: () => pos,
+    escribir: async b => { await w.write(b); pos += b.length; },
+    parchear: async (offset, b) => { await w.write({type:'write', position: offset, data: b}); },
+    cerrar: async () => { await w.close(); return await fh.getFile(); },
+  };
+}
+
+async function exportarMP4Video(progreso){
+  const BITRATE = 10_000_000;                 // 1080p long-form: 10 Mbps sobra (YouTube re-encodea)
+  const cfg = await h264Disponible(BITRATE);
+  if (!cfg) throw new Error('este navegador no sabe codificar H.264 con WebCodecs.');
+  const sink = await sinkOPFS('networthy-video.mp4');
+
+  await sink.escribir(caja('ftyp', s4('isom'), b32(512), s4('isom'), s4('iso2'), s4('avc1'), s4('mp41')));
+  const posMdat = sink.tell();
+  await sink.escribir(unir([b32(8), s4('mdat')]));       // tamaño provisional: se parchea al final
+
+  // VÍDEO en streaming: cada chunk sale del encoder y va directo a disco (cola preserva el orden)
+  const nF = Math.max(1, Math.round(T.total * FPS_MP4));
+  const tamanos = [], claves = [];
+  let desc = null, fallo = null, cola = Promise.resolve();
+  const venc = new VideoEncoder({
+    output: (chunk, meta) => {
+      if (!desc && meta?.decoderConfig?.description) desc = new Uint8Array(meta.decoderConfig.description);
+      const b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+      tamanos.push(b.length);
+      if (chunk.type === 'key') claves.push(tamanos.length);
+      cola = cola.then(() => sink.escribir(b));
+    },
+    error: e => { fallo = e; },
+  });
+  venc.configure(cfg);
+  for (let i = 0; i < nF; i++){
+    if (fallo) throw fallo;
+    drawFrame(Math.min(i / FPS_MP4, T.total));
+    const vf = new VideoFrame(canvas, {timestamp: Math.round(i * 1e6 / FPS_MP4),
+                                       duration: Math.round(1e6 / FPS_MP4)});
+    venc.encode(vf, {keyFrame: i % (FPS_MP4 * 2) === 0});
+    vf.close();
+    if (venc.encodeQueueSize > 6) await cede();
+    if (i % 30 === 0) progreso?.(0.03 + 0.77 * i / nF);
+  }
+  await venc.flush(); venc.close();
+  if (fallo) throw fallo;
+  if (!desc) throw new Error('el codificador no devolvió la cabecera avcC.');
+  await cola;
+  const bytesVideo = sink.tell() - posMdat - 8;
+
+  // AUDIO: las voces de cada segmento, EN ORDEN, como una sola pista AAC continua
+  progreso?.(0.84);
+  const sr = SEGS[0].pcm.sampleRate;
+  if (SEGS.some(sg => sg.pcm.sampleRate !== sr))
+    throw new Error('las voces de los segmentos tienen sampleRate distinto: exporta todas igual.');
+  const ch = Math.min(2, Math.max(...SEGS.map(sg => sg.pcm.numberOfChannels)));
+  const aTam = []; let aDesc = null, aFallo = null, colaA = Promise.resolve();
+  const aenc = new AudioEncoder({
+    output: (chunk, meta) => {
+      if (!aDesc && meta?.decoderConfig?.description) aDesc = new Uint8Array(meta.decoderConfig.description);
+      const b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+      aTam.push(b.length);
+      colaA = colaA.then(() => sink.escribir(b));
+    },
+    error: e => { aFallo = e; },
+  });
+  aenc.configure({codec:'mp4a.40.2', sampleRate: sr, numberOfChannels: ch, bitrate: 160_000});
+  let muestras = 0;
+  for (const sg of SEGS){
+    const L = sg.pcm.getChannelData(0);
+    const R = ch > 1 && sg.pcm.numberOfChannels > 1 ? sg.pcm.getChannelData(1) : null;
+    for (let off = 0; off < sg.pcm.length; off += 1024){
+      if (aFallo) throw aFallo;
+      const len = Math.min(1024, sg.pcm.length - off);
+      const data = new Float32Array(len * ch);
+      data.set(L.subarray(off, off + len), 0);
+      if (ch > 1) data.set((R || L).subarray(off, off + len), len);
+      const ad = new AudioData({format:'f32-planar', sampleRate: sr, numberOfFrames: len,
+                                numberOfChannels: ch, timestamp: Math.round(muestras / sr * 1e6), data});
+      aenc.encode(ad); ad.close();
+      muestras += len;
+      if (aenc.encodeQueueSize > 16) await cede();
+    }
+  }
+  await aenc.flush(); aenc.close();
+  if (aFallo) throw aFallo;
+  if (!aDesc) throw new Error('el codificador de audio no devolvió la cabecera AAC.');
+  await colaA;
+
+  // MOOV al final + parche del tamaño real del mdat
+  progreso?.(0.96);
+  const MTS = 1000, vDelta = 1000;
+  const durMovie = Math.round(Math.max(tamanos.length / FPS_MP4, muestras / sr) * MTS);
+  const offV = posMdat + 8, offA = offV + bytesVideo;
+  const avc1 = caja('avc1', ceros(6), b16(1), b16(0), b16(0), ceros(12), b16(canvas.width), b16(canvas.height),
+                    b32(0x00480000), b32(0x00480000), b32(0), b16(1), ceros(32), b16(0x0018), b16(0xFFFF),
+                    caja('avcC', desc));
+  const trakV = trak(1, durMovie, FPS_MP4 * 1000, tamanos.length * vDelta, true, canvas.width, canvas.height,
+                     stbl(avc1, tamanos.length, vDelta, tamanos, offV, claves));
+  const mp4a = caja('mp4a', ceros(6), b16(1), b16(0), b16(0), b32(0), b16(ch), b16(16),
+                    b16(0), b16(0), b32(sr << 16), esds(aDesc));
+  const trakA = trak(2, durMovie, sr, aTam.length * 1024, false, 0, 0,
+                     stbl(mp4a, aTam.length, 1024, aTam, offA, null));
+  const mvhd = cajaF('mvhd', 0, 0, b32(0), b32(0), b32(MTS), b32(durMovie), b32(0x00010000),
+                     b16(0x0100), b16(0), ceros(8), MATRIZ, ceros(24), b32(3));
+  const posMoov = sink.tell();
+  await sink.escribir(caja('moov', mvhd, trakV, trakA));
+  await sink.parchear(posMdat, b32(posMoov - posMdat));
+  const file = await sink.cerrar();
+  file.ext = 'mp4'; file.fps = FPS_MP4; file.conAudio = true; file.frames = tamanos.length;
+  return file;
 }
 
 // ── Grabación (respaldo: solo si no hay WebCodecs/H.264) ─────────────────────
@@ -1997,14 +2325,23 @@ document.getElementById('rec').onclick = async () => {
   // bueno— exportaba mudo o con el reloj demo sin quejarse):
   //  · sin voz no hay Short: un vídeo mudo nunca es válido
   //  · sin cortes MEDIDOS (calibración/.srt/sliders) los visuales van desincronizados de la voz
-  if (!audioEl.src || !pcm){
-    statusEl.textContent = `⚠ No hay voz cargada. Carga data/${CFG.voz} (o tu MP3) antes de grabar.`;
-    return;
-  }
-  if (!cortesMedidos){
-    statusEl.textContent = '⚠ Los cortes no están medidos sobre TU audio. Recarga el MP3 ' +
-      '(se calibra solo), o carga el .srt de CapCut, o ajusta los sliders con el reloj activado.';
-    return;
+  if (MODO === 'video'){
+    // en video la voz va POR SEGMENTO (sg.pcm); sin todas las voces no se graba (mudo = inválido)
+    const faltan = SEGS.filter(sg => !sg.pcm).length;
+    if (!SEGS.length || faltan){
+      statusEl.textContent = `⚠ Export de VIDEO: faltan las voces de ${faltan}/${SEGS.length} segmentos.`;
+      return;
+    }
+  } else {
+    if (!audioEl.src || !pcm){
+      statusEl.textContent = `⚠ No hay voz cargada. Carga data/${CFG.voz} (o tu MP3) antes de grabar.`;
+      return;
+    }
+    if (!cortesMedidos){
+      statusEl.textContent = '⚠ Los cortes no están medidos sobre TU audio. Recarga el MP3 ' +
+        '(se calibra solo), o carga el .srt de CapCut, o ajusta los sliders con el reloj activado.';
+      return;
+    }
   }
   const btns = document.querySelectorAll('button, select');
   btns.forEach(b => b.disabled = true);
@@ -2016,7 +2353,14 @@ document.getElementById('rec').onclick = async () => {
   try {
     const cfg = await h264Disponible();
     let blob;
-    if (cfg){
+    if (MODO === 'video'){
+      // LONG-FORM: streaming a disco (OPFS) — sin techo de RAM, 8-15 min posibles
+      if (!cfg) throw new Error('sin WebCodecs H.264 no hay export de video largo.');
+      statusEl.textContent = `Renderizando VIDEO (${T.total.toFixed(0)}s) en streaming a disco…`;
+      blob = await exportarMP4Video(p => {
+        statusEl.textContent = `Renderizando VIDEO… ${Math.round(p*100)}% (streaming a disco, RAM plana)`;
+      });
+    } else if (cfg){
       // CAMINO BUENO: MP4 (H.264 + AAC). Directo a YouTube y Facebook, sin CapCut.
       statusEl.textContent = `Renderizando MP4 a ${FPS_MP4} fps… puedes cambiar de pestaña.`;
       blob = await exportarMP4(p => {
