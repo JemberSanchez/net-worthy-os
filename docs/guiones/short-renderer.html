@@ -2010,7 +2010,9 @@ const cede = () => new Promise(r => {
   ch.port2.postMessage(0);
 });
 
-async function h264Disponible(bitrate = 14_000_000){
+// 24 Mbps para Shorts 1080x1920: menos banding en el degradado y bordes de texto más limpios,
+// y aguanta mejor la recompresión de YouTube/Facebook. (Long-form pasa su propio bitrate.)
+async function h264Disponible(bitrate = 24_000_000){
   if (typeof VideoEncoder === 'undefined' || typeof AudioEncoder === 'undefined') return null;
   for (const c of CODECS_H264){
     const cfg = {codec:c, width:canvas.width, height:canvas.height,
