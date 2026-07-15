@@ -385,7 +385,12 @@ function segmentarVoz(buffer, {umbralRel = 0.05, minSilMs = 250, ventanaMs = 10}
     let a = 0; for (let j = 0; j < W; j++){ const v = d[i+j]; a += v*v; }
     rms.push(Math.sqrt(a/W));
   }
-  const pico = Math.max(...rms), thr = pico * umbralRel;
+  // umbral ADAPTATIVO: en voz limpia (piso≈0) = pico*umbralRel (idéntico a antes → S3 no cambia);
+  // en voces con más ruido de fondo, sube con el piso para no partir dentro de las palabras.
+  const pico = Math.max(...rms);
+  const orden = [...rms].sort((a,b) => a-b);
+  const piso = orden[Math.floor(orden.length * 0.1)] || 0;      // percentil 10 = suelo de silencio
+  const thr = Math.max(pico * umbralRel, piso * 2.5);
   const minSil = Math.round(minSilMs / ventanaMs);
   const t = i => i * ventanaMs / 1000;
   const segs = []; let dentro = false, ini = 0, sil = 0;
@@ -556,10 +561,17 @@ function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
 
 /** Todo junto: audio + guion -> cortes, spec drop sincronizado y subtítulos. */
 function calibrarAuto(buffer, guion){
-  const segs = segmentarVoz(buffer);
   const sils = guion.grupos.map(g => g.texto.split(/\s+/).reduce((a,w) => a + silabas(w), 0));
-  const rep = repartirGrupos(segs, sils);
-  if (!rep) throw new Error(`solo ${segs.length} bloques de voz para ${sils.length} grupos del guion.`);
+  // FALLBACK robusto: si una voz pausa poco entre frases, 250ms deja menos bloques que grupos y
+  // fallaba. Se reintenta con pausas cada vez más cortas hasta encontrar suficientes. 250ms clava
+  // el S3 (no cambia); los reintentos solo entran cuando el default no alcanza.
+  let segs = segmentarVoz(buffer), rep = repartirGrupos(segs, sils);
+  for (const ms of [200, 170, 140, 120]){
+    if (rep) break;
+    segs = segmentarVoz(buffer, {minSilMs: ms}); rep = repartirGrupos(segs, sils);
+  }
+  if (!rep) throw new Error(`solo ${segs.length} bloques de voz para ${sils.length} grupos, ni ` +
+    `bajando el umbral de pausa. Sube el volumen de la voz o usa el .srt / los sliders.`);
 
   const porGrupo = rep.rangos.map(([i,j], k) => {
     const misSegs = segs.slice(i, j+1);
