@@ -1,5 +1,9 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> **⚠ LEE PRIMERO `docs/AUDITORIA.md` (2026-07-15):** juicio profesional del proyecto. Resumen:
+> motor potente, cerebro DORMIDO — 3 videos publicados y `production_outcome`=0. La mejora #1 no es
+> otra feature: es CERRAR EL LOOP (registrar analytics+outcome) + volumen/cadencia + distribución.
+>
 > **Para el nuevo chat:** lee este archivo entero antes de tocar nada. Luego `CLAUDE.md`,
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
