@@ -7,3 +7,7 @@ venv/
 *.db
 .env
 docs/guiones/PREVIEW-*.jpg
+# exportaciones de render (voz + video): artefactos, no fuente — no inflar el repo
+*.mp4
+*.MP3
+docs/guiones/*.mp3
