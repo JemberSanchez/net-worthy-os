@@ -8,18 +8,23 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
-> **Última actualización: 2026-07-15.** Estado en una línea:
+> **Última actualización: 2026-07-15 (loop cerrado).** Estado en una línea:
 > *TRES Shorts PUBLICADOS (S3 stat 07-10 02:00 · S1 story 07-11 11:30 · S2 contrarian 07-12 10:58,
 > misma voz Firme Pilot). Facebook: S1 259 vistas/3 int · S2 218/1 · S3 67/1 (S3 confundido por la
-> hora 02:00). `production_outcome = 0` — el moat sigue vacío. **El próximo Short está LISTO: 'FED'
-> (catch-up, gancho brutal + bullets + stat 4%), voz ya en `data/voz-short-fed.mp3`, calibrada
-> (verificada) — el usuario lo publica una MAÑANA, no hoy.** Motor: 24 Mbps + diseño de sonido
-> procedural (sfx) + calibrador robusto. Las 4 voces reales están en `data/` (gitignored).*
+> hora 02:00). **✅ LOOP CERRADO: `production_outcome` = 3 filas** (S1 0.35 · S2 0.29 · S3 0.09,
+> convención `success = vistas_48h / 750`), analytics con vistas FB, `dna` ya calibra (PROVISIONAL,
+> n=1). El próximo Short está LISTO: 'FED' (catch-up), voz en `data/voz-short-fed.mp3`, calibrada —
+> el usuario lo publica una MAÑANA. Motor: 24 Mbps + sfx procedural + calibrador robusto. Las 4 voces
+> reales en `data/` (gitignored).*
 >
-> **⚠ PRIORIDAD #1 (auditoría): NO es otra feature. Es CERRAR EL LOOP** — `record-analytics` +
-> `record-cost` + `record-outcome` de los 3 publicados con los números de Facebook de arriba, +
-> volumen/cadencia (1/día, misma hora mañana) + distribución (TikTok/IG Reels) + arreglar `decide`
-> (saca ruido de nombres de fuente). Detalle: `docs/AUDITORIA.md`.
+> **✅ PRIORIDAD #1 (cerrar el loop) — HECHA el 2026-07-15.** Registrados los 3 outcomes + analytics
+> (vistas). De paso se cazó y arregló un bug: `production_analytics` en la BD no tenía columna `views`
+> (esquema viejo; `CREATE TABLE IF NOT EXISTS` no migra) → `init()` ahora migra idempotente, +2 tests
+> (94 verdes), commit `4981900`. El S2 no tenía DNA: registrado.
+> **Pendiente para enriquecer:** CTR/retención por bloque desde YouTube Studio (fracción 0..1) y
+> horas reales de trabajo por Short (`record-cost`). **Siguiente prioridad:** volumen/cadencia (1/día
+> misma hora) + distribución (TikTok/IG Reels) + arreglar `decide` (ruido de nombres de fuente).
+> Detalle: `docs/AUDITORIA.md`.
 
 ---
 
