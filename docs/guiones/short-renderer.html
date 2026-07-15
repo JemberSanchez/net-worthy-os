@@ -63,6 +63,7 @@
       <option value="s3-stat">S3 · stat — la curva (publicado)</option>
       <option value="s1-story">S1 · story — dos columnas (publicado)</option>
       <option value="s2-contrarian">S2 · contrarian — checklist STILL BROKE (fuel/engine)</option>
+      <option value="fed-catchup">FED · catch-up — gancho brutal + bullets + stat 4%</option>
     </select>
   </label>
 </div>
@@ -199,7 +200,8 @@ const SHORTS = {
   's1-story': {
     ref: 'build-wealth-short-01-story',
     escena: 'columns',                 // mismo sueldo, misma disciplina, distinta DIRECCIÓN del dinero
-    voz: 'voz-short-01.mp3',           // data/<voz>: exporta la voz de CapCut con ESTE nombre
+    voz: 'voz-short-01.mp3',
+    sfx: true,                        // diseño de sonido procedural en el export           // data/<voz>: exporta la voz de CapCut con ESTE nombre
     // Reencuadre 2026-07-10: el eje NO es hábitos vs activos (falso: invertir es un hábito; y humilla
     // al viewer). Es qué hace el dinero: se MUEVE (se gasta, se va) o se MULTIPLICA (se posee, compone).
     // El gancho es la HISTORIA, no una proyección: no lleva pmt/years/rate ni curva.
@@ -247,7 +249,8 @@ const SHORTS = {
   's2-contrarian': {
     ref: 'build-wealth-short-02-contrarian',
     escena: 'checklist',               // el esfuerzo se marca ✓... y aun así STILL BROKE
-    voz: 'voz-short-02.mp3',           // exporta la voz de CapCut (Firme Pilot) con ESTE nombre
+    voz: 'voz-short-02.mp3',
+    sfx: true,                        // diseño de sonido procedural en el export           // exporta la voz de CapCut (Firme Pilot) con ESTE nombre
     // Reencuadre no-humillante: NO "los hábitos no sirven" — la disciplina es COMBUSTIBLE
     // (se honra), pero sin motor no hay avance. Secuencia: portada → checklist → insight → CTA.
     items: ['SKIP THE COFFEE', 'WAKE UP AT 5AM', 'BUDGET EVERY DOLLAR'],
@@ -279,6 +282,44 @@ const SHORTS = {
       ],
       subtitulos: [],                  // cada tramo tiene su escena con texto propio
       curvaLlegaEn: "$50",             // draw no mueve nada en checklist; ancla válida para el .srt
+      omitirEnSubtitulos: [],
+    },
+  },
+
+  'fed-catchup': {
+    ref: 'fed-savings-catchup-2026-07',
+    escena: 'vacio',                   // se compone por overlays: gancho -> bullets -> stat -> CTA
+    voz: 'voz-short-fed.mp3',
+    sfx: true,                         // diseño de sonido procedural mezclado en el export
+    // TEMA elegido por DATOS: 'fed' es lo más caliente hoy (2.6M vistas). Catch-up explainer con
+    // hechos corroborados (PPI cae lo más desde la pandemia; mercado descarta subida; ahorro ~4%).
+    // Gancho reescrito para PARAR EL DEDO: pérdida + "tú" directo, no "esto es lo que pasó".
+    cta: ['4% OR 0%?', 'CHECK YOUR ACCOUNT'],
+    ctaSub: 'tell me below',
+    spec: [],
+    overlays: [
+      {escena:'gancho', desde:0, hasta:2.2, fadeOut:0.5,
+       lineas:['YOUR SAVINGS', 'ARE LOSING.'], sub:"here's what just changed"},
+      {escena:'bullets', desde:2.0, hasta:()=>T.curve, fadeIn:0.4, fadeOut:0.3,
+       titulo:'what just changed', cadencia_s:2.6,
+       items:['INFLATION IS COOLING', 'NO RATE HIKE EXPECTED', 'SAVINGS STILL PAY ~4%']},
+      {escena:'stat', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3,
+       kicker:'your cash could earn', valor:4, prefijo:'', sufijo:'%',
+       sub:'is it — or is it sitting at zero?', conteo_s:1.3},
+    ],
+    demo: { hook: 4.5, draw: 8.0, curve: 12.5, cta: 24.0, total: 28.0 },
+    guion: {
+      grupos: [
+        {id:'setup',   texto: "Here's what just changed with your money."},
+        {id:'changed', texto: "Inflation is cooling. Wholesale prices just fell the most since the pandemic, and the market no longer expects the Fed to raise rates this month. The new Fed chair isn't promising anything."},
+        {id:'payoff',  texto: "But one thing is clear right now: savings accounts still pay about four percent, and that may not last. If your cash sits in a regular account earning nothing, it's quietly losing to inflation."},
+        {id:'cta',     texto: "So is your money earning four percent, or zero? Tell me below."},
+      ],
+      cifras: [
+        ["about four percent", "4%"],
+      ],
+      subtitulos: [],
+      curvaLlegaEn: "4%",              // el stat 4% entra en T.curve; ancla válida para el .srt
       omitirEnSubtitulos: [],
     },
   },
@@ -1381,8 +1422,12 @@ function drawCapitulo(t, W, H, s, a, ov){
 }
 
 // ── STAT GIGANTE: un número que CUENTA (pow 1.6: se siente compuesto) + kicker + sub ──
+// tiempo LOCAL: como overlay cronometrado (Short) resta ov.desde; como segmento (Video) t ya es local.
+const localT = (t, ov) => (ov && ov.desde != null) ? t - (typeof ov.desde === 'function' ? ov.desde() : ov.desde) : t;
+
 function drawStatBig(t, W, H, s, a, ov){
   fondoEscena(W, H, a);
+  t = localT(t, ov);
   const dur = Math.max(0.8, ov.conteo_s || 2.2);
   const p = clamp01(t / dur), val = Math.round((ov.valor || 0) * Math.pow(p, 1.6));
   const str = (ov.prefijo ?? '$') + val.toLocaleString('en-US') + (p >= 1 ? (ov.sufijo || '') : '');
@@ -1402,6 +1447,7 @@ function drawStatBig(t, W, H, s, a, ov){
 // ── BULLETS: puntos que entran uno a uno con su check — genérico (pasos, mitos, señales) ──
 function drawBullets(t, W, H, s, a, ov){
   fondoEscena(W, H, a);
+  t = localT(t, ov);
   const items = ov.items || [];
   if (ov.titulo) text(ov.titulo.toUpperCase(), W/2, H*0.20,
                       {size:34*s, weight:700, color:P.brass, alpha:a, spacing:5*s});
@@ -1432,7 +1478,29 @@ function drawCita(t, W, H, s, a, ov){
 }
 
 // ── Registro de escenas: añadir una escena = añadir una entrada aquí (no tocar drawFrame) ──
+// ── GANCHO: abridor que PARA EL DEDO — el reclamo más punzante, grande, con punch + flash + shake.
+//    El primer segundo es el 80% de frenar el scroll: aquí es agresivo, no una tarjeta tranquila. ──
+function drawGancho(t, W, H, s, a, ov){
+  t = localT(t, ov);
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H);
+  const gr = ctx.createRadialGradient(W/2, H*0.42, 0, W/2, H*0.42, Math.max(W,H)*0.72);
+  gr.addColorStop(0, 'rgba(31,158,110,0.15)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); ctx.restore();
+  if (t < 0.22){ ctx.save(); ctx.globalAlpha = a*(1 - t/0.22)*0.55; ctx.fillStyle = P.paper; ctx.fillRect(0,0,W,H); ctx.restore(); }
+  const e = easeOut(clamp01(t / 0.18)), esc = 1.30 - 0.30*e;   // 1.30 -> 1.0: golpe de entrada
+  const shake = t < 0.12 ? Math.sin(t*150) * (1 - t/0.12) * 7*s : 0;
+  const lineas = (ov && ov.lineas) || ['STOP.'], cy = H*0.42, salto = 106*s;
+  ctx.save(); ctx.translate(W/2 + shake, cy); ctx.scale(esc, esc); ctx.translate(-W/2, -cy);
+  lineas.forEach((l, i) => text(l, W/2, cy + i*salto,
+    {size:98*s, weight:800, color: i === lineas.length-1 ? '#C0968C' : P.paper, alpha:a, stroke:13*s, spacing:1*s}));
+  ctx.restore();
+  if (ov && ov.sub) text(ov.sub.toUpperCase(), W/2, cy + lineas.length*salto + 30*s,
+    {size:28*s, weight:600, color:P.brass, alpha:a*easeOut(clamp01((t-0.3)/0.5)), spacing:4*s});
+}
+
 const SCENES = {
+  vacio: () => {},                                      // base neutra: el Short se compone por overlays
+  gancho:(t, W, H, s, a, ov) => drawGancho(t, W, H, s, a, ov),
   chart: (t, W, H, s) => {                               // curva del S3: intro (spec) -> gráfica
     const fade = 0.45;
     const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
@@ -2022,6 +2090,49 @@ async function h264Disponible(bitrate = 24_000_000){
   return null;
 }
 
+// ── DISEÑO DE SONIDO PROCEDURAL — resuelve el "no hay música/SFX" sin archivos ni copyright.
+//    Genera bass+whoosh en el gancho (el golpe que retiene), ticks suaves en los cortes y un pad
+//    grave muy bajo, y lo MEZCLA con la voz. Nivel bajo (la voz manda) + soft-limit (sin clipping).
+//    Se genera y codifica UNA vez, así que puede usar ruido aleatorio (no rompe la pureza del video). ──
+function construirMezcla(pcm, ch, N, beats){
+  const sr = pcm.sampleRate;
+  const d = new Float32Array(N);                       // pista de diseño (mono)
+  const thump = (t0, freq, decay, amp) => {            // golpe grave (bass)
+    const i0 = Math.max(0, Math.floor(t0*sr));
+    for (let i = i0; i < Math.min(N, i0 + decay*4*sr); i++){
+      const tt = (i - i0)/sr; d[i] += amp * Math.sin(2*Math.PI*freq*tt) * Math.exp(-tt/decay);
+    }
+  };
+  const whoosh = (t0, dur, amp) => {                   // ruido filtrado (paso-bajo 1 polo) con envolvente
+    const i0 = Math.max(0, Math.floor(t0*sr)), n = Math.floor(dur*sr); let lp = 0;
+    for (let k = 0; k < n; k++){
+      const i = i0 + k; if (i >= N) break;
+      lp += ((Math.random()*2-1) - lp) * 0.15;          // suaviza el ruido -> whoosh, no estática
+      d[i] += amp * lp * Math.sin(Math.PI * k/n);
+    }
+  };
+  const pad = (amp) => {                               // pad grave (quinta) muy bajo, con tremolo lento
+    for (let i = 0; i < N; i++){
+      const t = i/sr, trem = 0.6 + 0.4*Math.sin(2*Math.PI*0.12*t);
+      d[i] += amp * trem * (Math.sin(2*Math.PI*110*t) + 0.6*Math.sin(2*Math.PI*165*t));
+    }
+  };
+  pad(0.028);
+  whoosh(0.0, 0.40, 0.16); thump(0.03, 60, 0.22, 0.30);              // el gancho: para el dedo
+  for (const b of (beats || [])) if (b > 0.15 && b < N/sr - 0.15){    // cada corte narrativo
+    whoosh(b - 0.12, 0.26, 0.09); thump(b, 95, 0.10, 0.11);
+  }
+  // mezcla en cada canal (copia de la voz) + soft-limit tanh (nunca clippea)
+  const out = [];
+  for (let c = 0; c < ch; c++){
+    const src = pcm.getChannelData(Math.min(c, pcm.numberOfChannels - 1));
+    const o = new Float32Array(N);
+    for (let i = 0; i < N; i++) o[i] = Math.tanh((src[i] + d[i]) * 1.08) * 0.94;
+    out.push(o);
+  }
+  return out;
+}
+
 async function exportarMP4(progreso){
   const cfg = await h264Disponible();
   if (!cfg) throw new Error('este navegador no sabe codificar H.264 con WebCodecs.');
@@ -2070,14 +2181,16 @@ async function exportarMP4(progreso){
     });
     aenc.configure({codec:'mp4a.40.2', sampleRate:sr, numberOfChannels:ch, bitrate:160_000});
 
-    const L = pcm.getChannelData(0), R = ch > 1 ? pcm.getChannelData(1) : null;
     const limite = Math.min(pcm.length, Math.ceil(T.total * sr));
+    // canales: voz sola, o voz + diseño de sonido procedural (si el Short lo pide con sfx:true)
+    const canales = CFG.sfx
+      ? construirMezcla(pcm, ch, limite, [T.hook, T.curve, T.cta])
+      : Array.from({length: ch}, (_, c) => pcm.getChannelData(Math.min(c, pcm.numberOfChannels - 1)));
     for (let off = 0; off < limite; off += 1024){
       if (aFallo) throw aFallo;
       const len = Math.min(1024, limite - off);
       const data = new Float32Array(len * ch);
-      data.set(L.subarray(off, off + len), 0);
-      if (R) data.set(R.subarray(off, off + len), len);
+      for (let c = 0; c < ch; c++) data.set(canales[c].subarray(off, off + len), c*len);
       const ad = new AudioData({format:'f32-planar', sampleRate:sr, numberOfFrames:len,
                                 numberOfChannels:ch, timestamp: Math.round(off / sr * 1e6), data});
       aenc.encode(ad); ad.close();
