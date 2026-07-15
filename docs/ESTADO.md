@@ -8,13 +8,18 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
-> **Última actualización: 2026-07-11 (noche).** Estado en una línea:
-> *DOS Shorts PUBLICADOS (S3 stat 07-10 02:00, S1 story 07-11 11:30, misma voz Firme Pilot);
-> `production_outcome = 0`; lo que importa es MEDIR — S3 el sábado 12, S1 el ~13. 3/10 instrumentados.
-> S2 LISTO en el motor (falta su voz: `data/voz-short-02.mp3`, publicar 11:30). El motor ahora es
-> **DUAL-MODO**: Short 9:16 + Video 16:9 con timeline de segmentos, 10 escenas y export streaming
-> sin techo de RAM (e2e verificado) — ver `docs/ARQUITECTURA-MULTIESCENA.md`. Pendiente del S1:
-> horas para `record-cost`.*
+> **Última actualización: 2026-07-15.** Estado en una línea:
+> *TRES Shorts PUBLICADOS (S3 stat 07-10 02:00 · S1 story 07-11 11:30 · S2 contrarian 07-12 10:58,
+> misma voz Firme Pilot). Facebook: S1 259 vistas/3 int · S2 218/1 · S3 67/1 (S3 confundido por la
+> hora 02:00). `production_outcome = 0` — el moat sigue vacío. **El próximo Short está LISTO: 'FED'
+> (catch-up, gancho brutal + bullets + stat 4%), voz ya en `data/voz-short-fed.mp3`, calibrada
+> (verificada) — el usuario lo publica una MAÑANA, no hoy.** Motor: 24 Mbps + diseño de sonido
+> procedural (sfx) + calibrador robusto. Las 4 voces reales están en `data/` (gitignored).*
+>
+> **⚠ PRIORIDAD #1 (auditoría): NO es otra feature. Es CERRAR EL LOOP** — `record-analytics` +
+> `record-cost` + `record-outcome` de los 3 publicados con los números de Facebook de arriba, +
+> volumen/cadencia (1/día, misma hora mañana) + distribución (TikTok/IG Reels) + arreglar `decide`
+> (saca ruido de nombres de fuente). Detalle: `docs/AUDITORIA.md`.
 
 ---
 
@@ -176,17 +181,23 @@ cuadra. Y **nunca** llamar al S&P "sólido" o "seguro": cayó **-57%** en 2007-0
 
 ---
 
-## 9. QUÉ HACER DESPUÉS (en este orden)
-1. **Sábado 12: MEDIR.** `record-analytics` + `record-cost` + `record-outcome` + `dna`. Nada más.
-2. **Producir el S1** (`hook_type=story`). La escena de dos columnas **YA EXISTE** y el guion se
-   **reencuadró** (2026-07-10): el eje ya no es "hábitos vs activos" (falso y humilla al viewer),
-   es **qué hace el dinero — se GASTA (SPENT, $0) o se POSEE (OWNED, $1M+)** — respetando la
-   disciplina. Solo falta: **que el usuario grabe la voz** (CapCut TTS "Firme Pilot" →
-   `data/voz-short-01.mp3`). Todo el paso a paso, textos de subida y comandos de anotación:
-   **`docs/guiones/PRODUCCION-S1.md`**. Guion en `shorts-pack-01.md`.
-3. Luego S2 (`contrarian`), S4 (`shock`), S5 (`question`). **Uno al día.**
-   Los 5 comparten tema, voz y estilo: **la única variable es el gancho.** Es un experimento con la
-   variable aislada, que es lo que exige la Regla 3.
+## 9. QUÉ HACER DESPUÉS (reordenado por la AUDITORÍA 2026-07-15 — leer `docs/AUDITORIA.md`)
+1. **CERRAR EL LOOP DE MEDICIÓN (prioridad #1, ~15 min, no es una feature).** Registrar los 3 Shorts
+   publicados con los números de Facebook (S1 259 vistas/3 int · S2 218/1 · S3 67/1):
+   `record-analytics` (vistas + `traffic_source`; CTR/retención solo si hay YouTube Studio, como
+   **fracción 0..1**) + `record-cost` (horas reales — preguntar al usuario) + `record-outcome <ref>
+   <0..1>` + `dna`. Contexto (URLs/hora/voz) ya está en `production_context`. **Sin esto el sistema
+   no aprende nada y todo lo demás es a ciegas.**
+2. **Publicar el 'FED'** (ya montado y calibrado; voz en `data/voz-short-fed.mp3`). El usuario publica
+   una MAÑANA (su franja fija, ~11:30 — aísla la hora como el resto). Título/desc en el historial de
+   chat y en el runbook. Tras 48h: medir y registrar (paso 1).
+3. **Volumen + cadencia + distribución:** 1 Short/día a la misma hora; subir el MISMO MP4 también a
+   **TikTok e Instagram Reels** (3× at-bats, coste ~0). Quedan S4 (`shock`) y S5 (`question`) del
+   pack + temas por datos (warren/housing/gold del youtube-scan).
+4. **Arreglar `decide`** (stoplist de nombres de fuente: saca "cryptonews net", "empery digital"…) →
+   que el sistema vuelva a elegir tema. Y **tests del motor** (deuda: 2.558 líneas sin cobertura).
+5. **Sync por palabra** en checklist/bullets (usar los tiempos que el calibrador ya calcula) — el
+   arreglo de fondo de la desincronía. Verificar contra las voces reales que están en `data/`.
 
 **NO construir un generador de posts de texto.** Verificado: el alcance orgánico de una Página de
 Facebook es el **1-6% de sus seguidores**, y el canal tiene **cero**. Los posts de texto no se
