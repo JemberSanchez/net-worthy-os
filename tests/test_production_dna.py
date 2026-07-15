@@ -43,6 +43,30 @@ class ProductionDnaTest(unittest.TestCase):
         self.assertAlmostEqual(r["ctr"], 0.06)
         self.assertEqual(r["traffic_source"], "browse")
 
+    def test_analytics_persists_views(self):
+        production_dna.record_dna(self.con, production_ref="v1", blocks=[])
+        production_dna.record_analytics(self.con, production_ref="v1", views=259,
+                                        traffic_source="reels")
+        r = self.con.execute("SELECT views FROM production_analytics WHERE production_ref='v1'").fetchone()
+        self.assertEqual(r["views"], 259)
+
+    def test_init_migrates_legacy_analytics_without_views(self):
+        # Regresión: una BD creada antes de que el esquema ganara `views` no tiene esa columna.
+        # CREATE TABLE IF NOT EXISTS no la añade -> los INSERT petaban. init() debe curarla.
+        con = store.connect(":memory:")
+        con.execute("CREATE TABLE production_analytics ("
+                    "production_ref TEXT PRIMARY KEY, ctr REAL, avd_pct REAL, retention_avg REAL, "
+                    "traffic_source TEXT, retention_by_block TEXT, measured_at INTEGER NOT NULL)")
+        con.commit()
+        self.assertNotIn("views", {r[1] for r in con.execute("PRAGMA table_info(production_analytics)")})
+        production_dna.init(con)  # migración idempotente
+        self.assertIn("views", {r[1] for r in con.execute("PRAGMA table_info(production_analytics)")})
+        production_dna.record_dna(con, production_ref="v1", blocks=[])
+        production_dna.record_analytics(con, production_ref="v1", views=67)  # ya no peta
+        self.assertEqual(
+            con.execute("SELECT views FROM production_analytics WHERE production_ref='v1'").fetchone()["views"], 67)
+        con.close()
+
     def test_analytics_rejects_percent_style_input(self):
         # YouTube Studio muestra "CTR 4.5%": teclear 4.5 debe RECHAZARSE, no envenenar el dataset
         production_dna.record_dna(self.con, production_ref="v1", blocks=[])

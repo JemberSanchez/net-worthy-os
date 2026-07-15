@@ -54,8 +54,20 @@ CREATE TABLE IF NOT EXISTS production_cost (
 """
 
 
+def _ensure_columns(con: sqlite3.Connection, table: str, columns: dict[str, str]) -> None:
+    """Añade columnas que faltan en una tabla ya existente. `CREATE TABLE IF NOT EXISTS` NO
+    migra: si el esquema gana una columna nueva, una BD creada con el esquema viejo se queda
+    sin ella y los INSERT petan en silencio. Idempotente."""
+    have = {r[1] for r in con.execute(f"PRAGMA table_info({table})")}
+    for name, decl in columns.items():
+        if name not in have:
+            con.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+
+
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA)
+    # Migraciones idempotentes para BDs creadas antes de que el esquema ganara estas columnas.
+    _ensure_columns(con, "production_analytics", {"views": "INTEGER"})
     con.commit()
 
 
