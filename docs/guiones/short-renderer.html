@@ -2073,9 +2073,9 @@ function aplicarCalibracion(cal, dur){
  *  Sin esto hay que calcularlo a mano por Short: en el FED el conteo de 1.3s dejaba el número
  *  aterrizando a 16.69s mientras la voz no decía "4%" hasta 18.44s — 1.8s adelantado, y se nota.
  *  El golpe de sonido cuelga de conteo_s (eventosSonido), así que también se sincroniza solo. */
-function autoSyncStat(cal){
+function autoSyncStat(cal, cfg = CFG){
   if (!cal || cal.cifra_t0 == null) return;
-  const st = (CFG.overlays || []).find(o => o.escena === 'stat');
+  const st = (cfg.overlays || []).find(o => o.escena === 'stat');
   if (!st) return;
   const desde = typeof st.desde === 'function' ? st.desde() : st.desde;
   const dur = cal.cifra_t0 - desde;
@@ -2300,10 +2300,10 @@ async function h264Disponible(bitrate = 24_000_000){
  *  audio reaccione a lo que pasa en pantalla (tick por bullet, riser+impacto en el stat). Los
  *  tiempos coinciden con cuándo drawBullets/drawStatBig animan. Shorts sin esos overlays -> solo
  *  los beats de siempre (comportamiento idéntico; el S3 publicado no cambia). */
-function eventosSonido(){
-  const ev = {beats: [T.hook, T.curve, T.cta], ticks: [], risers: [], hits: []};
+function eventosSonido(cfg = CFG, t = T){
+  const ev = {beats: [t.hook, t.curve, t.cta], ticks: [], risers: [], hits: []};
   const val = x => typeof x === 'function' ? x() : (x || 0);
-  for (const o of (CFG.overlays || [])){
+  for (const o of (cfg.overlays || [])){
     if (o.escena === 'bullets'){
       const d0 = val(o.desde), cad = o.cadencia_s || 1.6, n = (o.items || []).length;
       for (let i = 0; i < n; i++) ev.ticks.push(d0 + 0.35 + i * cad);   // == drawBullets
