@@ -16,8 +16,17 @@
 > calibra (PROVISIONAL, n=1). **Hallazgo: las plataformas se contradicen** (FB story≈contrarian≫stat;
 > YT stat≈story≫contrarian), ~10x más alcance en FB que en YT; el gancho stat queda EXONERADO (mejor
 > en YT). El próximo Short está LISTO: 'FED' (catch-up), voz en `data/voz-short-fed.mp3`, calibrada —
-> el usuario lo publica una MAÑANA. Motor: 24 Mbps + sfx procedural + calibrador robusto. Las 4 voces
-> reales en `data/` (gitignored).*
+> **se publica MAÑANA 2026-07-16 entre 9:00 y 11:30am (hora local, UTC-5)** — franja sana comparable
+> con S1/S2. Motor: 24 Mbps + sfx procedural + calibrador robusto. Las 4 voces reales en `data/`
+> (gitignored).*
+>
+> **🛡 AUDITORÍA DE INGENIERÍA (07-15, `docs/AUDITORIA-INGENIERIA.md`):** veredicto — la arquitectura
+> es correcta y NO debe evolucionar, debe PROTEGERSE. Implementado: comando **`backup`** (zip fechado
+> del moat: SQLite consistente + voces + JSONs → `backups/`, gitignored; **copiarlo a nube/USB es del
+> humano**), `status` muestra predicciones vencidas + **`resolve-prediction`** (cierra el ciclo
+> epistémico del kernel), filtro anti-autobombo de canales en la demanda, guards de entrada,
+> `http.server` ya no se expone a la LAN. **⚠ PENDIENTE HUMANO: crear repo remoto privado y
+> `git push` — el código sigue viviendo en UN solo disco.** 98 tests verdes.
 >
 > **✅ PRIORIDAD #1 (cerrar el loop) — HECHA el 2026-07-15.** Registrados los 3 outcomes + analytics
 > (vistas). De paso se cazó y arregló un bug: `production_analytics` en la BD no tenía columna `views`
