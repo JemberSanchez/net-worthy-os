@@ -64,6 +64,7 @@
       <option value="s1-story">S1 · story — dos columnas (publicado)</option>
       <option value="s2-contrarian">S2 · contrarian — checklist STILL BROKE (fuel/engine)</option>
       <option value="fed-catchup">FED · catch-up — gancho brutal + bullets + stat 4%</option>
+      <option value="housing-catchup">HOUSING · catch-up — priced out + bullets + stat 6.49%</option>
     </select>
   </label>
 </div>
@@ -320,6 +321,45 @@ const SHORTS = {
       ],
       subtitulos: [],
       curvaLlegaEn: "4%",              // el stat 4% entra en T.curve; ancla válida para el .srt
+      omitirEnSubtitulos: [],
+    },
+  },
+  'housing-catchup': {
+    ref: 'housing-affordability-catchup-2026-07',
+    escena: 'vacio',                   // se compone por overlays: gancho -> bullets -> stat -> CTA
+    voz: 'voz-short-housing.mp3',      // el usuario la genera en CapCut TTS Firme Pilot
+    sfx: true,
+    // TEMA por DATOS: 'housing market' es el pick de `decide` (RPM $70, alta demanda). Hechos
+    // CORROBORADOS (RSS ingerido 2026-07 + Freddie Mac): precios de vivienda en MÁXIMO HISTÓRICO
+    // (varias fuentes); hipoteca 30 años ~6.49% estancada (Freddie Mac, esta semana); inflación del
+    // alquiler enfriándose (SoCal a mínimo de 5 años). Marco SIN humillar (memoria): culpa al
+    // MERCADO, no a la persona. CTA binario/opinable para generar comentarios (auditoría).
+    cta: ['TEAM RENT', 'OR TEAM BUY?'],
+    ctaSub: 'tell me below',
+    spec: [],
+    overlays: [
+      {escena:'gancho', desde:0, hasta:2.2, fadeOut:0.5,
+       lineas:['PRICED OUT?', "IT'S NOT YOU."], sub:"here's what just changed"},
+      {escena:'bullets', desde:2.0, hasta:()=>T.curve, fadeIn:0.4, fadeOut:0.3,
+       titulo:'what just changed', cadencia_s:2.6,
+       items:['HOME PRICES HIT A RECORD', '30-YR MORTGAGE STUCK ~6.5%', 'BUT RENT IS COOLING']},
+      {escena:'stat', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3,
+       kicker:'the average 30-year mortgage', valor:6.49, decimales:2, prefijo:'', sufijo:'%',
+       sub:"rates aren't falling — they're stuck", conteo_s:1.3},
+    ],
+    demo: { hook: 3.0, draw: 8.0, curve: 15.0, cta: 27.0, total: 31.0 },
+    guion: {
+      grupos: [
+        {id:'setup',   texto: "Here's what just changed with the housing market."},
+        {id:'changed', texto: "Home prices just hit an all-time high. The average thirty-year mortgage is stuck near six and a half percent. And buying a home is about as unaffordable as it's been in decades. But here's the part nobody mentions: rent inflation is actually cooling, in some cities to a five-year low."},
+        {id:'payoff',  texto: "So if you feel priced out, it isn't you. The math got harder, not you. And renting a little longer isn't falling behind — it's a strategy, not a failure."},
+        {id:'cta',     texto: "So right now, are you team rent, or team buy? Tell me below."},
+      ],
+      cifras: [
+        ["six and a half percent", "~6.5%"],
+      ],
+      subtitulos: [],
+      curvaLlegaEn: "~6.5%",
       omitirEnSubtitulos: [],
     },
   },
@@ -1441,8 +1481,15 @@ function drawStatBig(t, W, H, s, a, ov){
   fondoEscena(W, H, a);
   t = localT(t, ov);
   const dur = Math.max(0.8, ov.conteo_s || 2.2);
-  const p = clamp01(t / dur), val = Math.round((ov.valor || 0) * Math.pow(p, 1.6));
-  const str = (ov.prefijo ?? '$') + val.toLocaleString('en-US') + (p >= 1 ? (ov.sufijo || '') : '');
+  const p = clamp01(t / dur);
+  // 'decimales' opcional: las cifras financieras suelen ser decimales (6.49%). Sin el parámetro,
+  // dec=0 y el comportamiento es idéntico al anterior (entero redondeado). Retrocompatible.
+  const dec = ov.decimales || 0;
+  const raw = (ov.valor || 0) * Math.pow(p, 1.6);
+  const val = dec ? +raw.toFixed(dec) : Math.round(raw);
+  const str = (ov.prefijo ?? '$')
+    + val.toLocaleString('en-US', {minimumFractionDigits: dec, maximumFractionDigits: dec})
+    + (p >= 1 ? (ov.sufijo || '') : '');
   text((ov.kicker || '').toUpperCase(), W/2, H*0.40 - 110*s,
        {size:30*s, weight:700, color:P.brass, alpha:a, spacing:6*s});
   let esc = 1; const d = t - dur;
