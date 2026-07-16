@@ -222,6 +222,48 @@ def fetch_theme_demand_full() -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def backup_snapshot(db_path: Path | None = None, data_dir: Path | None = None,
+                    dest_dir: Path | None = None, now: int | None = None) -> Path:
+    """Backup del MOAT: zip fechado con snapshot CONSISTENTE del SQLite + todo data/ (JSONs, MP3s).
+
+    El SQLite se copia vía la API de backup (con.backup): consistente aunque haya conexiones
+    abiertas — un copy del archivo a pelo puede llevarse un estado a medio commit. El resto de
+    data/ (voces, instrumentación) entra tal cual. El zip queda en dest_dir (default:
+    ROOT/backups, gitignored): la copia a nube/USB es del humano — un backup en el MISMO disco
+    solo protege de borrados, no de fallos de disco."""
+    import time as _time
+    import zipfile
+
+    db_path = db_path or config.DB_PATH
+    data_dir = data_dir or config.DATA_DIR
+    dest_dir = dest_dir or (config.ROOT / "backups")
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    stamp = _time.strftime("%Y%m%d-%H%M%S", _time.localtime(now or _time.time()))
+    out = dest_dir / f"omega-backup-{stamp}.zip"
+
+    snap = dest_dir / f".snapshot-{stamp}.sqlite"
+    try:
+        if db_path.exists():
+            src = sqlite3.connect(db_path)
+            dst = sqlite3.connect(snap)
+            try:
+                src.backup(dst)
+            finally:
+                dst.close()
+                src.close()
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
+            if snap.exists():
+                zf.write(snap, arcname=f"data/{db_path.name}")
+            if data_dir.exists():
+                for f in sorted(data_dir.iterdir()):
+                    # el snapshot ya representa la DB; los .bak viejos no aportan
+                    if f.is_file() and f.name != db_path.name and not f.name.startswith(db_path.name + ".bak"):
+                        zf.write(f, arcname=f"data/{f.name}")
+    finally:
+        snap.unlink(missing_ok=True)
+    return out
+
+
 def theme_demand_scanned_at() -> int | None:
     """Epoch del último escaneo de demanda (para saber si el cache está fresco). None si no hay."""
     try:

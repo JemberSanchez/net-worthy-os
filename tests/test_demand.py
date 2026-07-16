@@ -34,6 +34,29 @@ class ThemeDemandTest(unittest.TestCase):
         self.assertEqual(by_term["bitcoin"]["videos"], 2)
         self.assertNotIn("gold", by_term)  # aparece en un solo video -> ruido descartado
 
+    def test_channel_name_terms_filtered_per_video(self):
+        # ANTI-AUTOBOMBO: "CryptoNews Net" pone su marca en sus títulos -> min_videos no protege
+        # (el mismo canal aporta los 2 videos). El término derivado del propio canal se descarta.
+        spam = [dict(_video("a", "CryptoNews Net: Bitcoin update", 900), channel="CryptoNews Net"),
+                dict(_video("b", "CryptoNews Net daily market recap", 800), channel="CryptoNews Net"),
+                _video("c", "Bitcoin halving explained", 100)]
+        by_term = {r["term"]: r for r in demand.theme_demand(spam, min_videos=2)}
+        self.assertNotIn("cryptonews net", by_term)   # marca del canal: fuera
+        self.assertNotIn("cryptonews", by_term)
+        self.assertIn("bitcoin", by_term)             # tema real: sobrevive (videos a + c)
+        self.assertEqual(by_term["bitcoin"]["videos"], 2)
+
+    def test_channel_phrase_survives_if_other_channels_use_it(self):
+        # si OTROS canales usan la frase como tema real, no se pierde: solo se filtra
+        # en los videos del canal homónimo.
+        videos = [dict(_video("a", "Housing Market crash?", 500), channel="Housing Market TV"),
+                  dict(_video("b", "Housing market forecast 2027", 700), channel="Alice"),
+                  dict(_video("c", "The housing market is frozen", 300), channel="Bob")]
+        by_term = {r["term"]: r for r in demand.theme_demand(videos, min_videos=2)}
+        self.assertIn("housing market", by_term)
+        self.assertEqual(by_term["housing market"]["videos"], 2)      # b + c (a filtrado)
+        self.assertEqual(by_term["housing market"]["total_views"], 1000)
+
     def test_scan_nicho_dedupes_videos_across_queries(self):
         # el mismo video "x" sale en dos búsquedas -> debe contarse UNA vez
         calls = {"q1": [_video("x", "Ethereum staking guide", 500)],

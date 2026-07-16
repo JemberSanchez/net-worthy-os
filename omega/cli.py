@@ -19,7 +19,9 @@ Comandos:
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
-  python -m omega.cli status     # estado de la base de conocimiento
+  python -m omega.cli resolve-prediction <id> <outcome> [nota]  # cierra una predicción vencida
+  python -m omega.cli backup     # zip fechado del moat (SQLite+voces+JSONs) -> copiar a nube/USB
+  python -m omega.cli status     # estado de la base + predicciones vencidas sin resolver
 """
 from __future__ import annotations
 import sys
@@ -456,12 +458,20 @@ def cmd_record_analytics() -> None:
               "traffic_source, retention_by_block.")
         return
     d = json.loads(path.read_text(encoding="utf-8"))
+    if not d.get("production_ref") or str(d["production_ref"]).startswith("<"):
+        print(f"Rechazado: falta 'production_ref' en {path} (o quedó el placeholder).")
+        return
     con = kstore.connect(str(config.DB_PATH))
     production_dna.init(con)
-    production_dna.record_analytics(
-        con, production_ref=d["production_ref"], ctr=d.get("ctr"), avd_pct=d.get("avd_pct"),
-        retention_avg=d.get("retention_avg"), views=d.get("views"),
-        traffic_source=d.get("traffic_source"), retention_by_block=d.get("retention_by_block"))
+    try:
+        production_dna.record_analytics(
+            con, production_ref=d["production_ref"], ctr=d.get("ctr"), avd_pct=d.get("avd_pct"),
+            retention_avg=d.get("retention_avg"), views=d.get("views"),
+            traffic_source=d.get("traffic_source"), retention_by_block=d.get("retention_by_block"))
+    except ValueError as exc:
+        print(f"Rechazado: {exc}")
+        con.close()
+        return
     print(f"Analíticas registradas: {d['production_ref']}.")
     con.close()
 
@@ -540,7 +550,12 @@ def cmd_record_outcome() -> None:
     if len(sys.argv) < 4:
         print("Uso: record-outcome <production_ref> <success 0..1>")
         return
-    ref, success = sys.argv[2], float(sys.argv[3])
+    ref = sys.argv[2]
+    try:
+        success = float(sys.argv[3])
+    except ValueError:
+        print(f"Rechazado: '{sys.argv[3]}' no es un número. success va en [0,1] (ej. 0.35).")
+        return
     con = kstore.connect(str(config.DB_PATH))
     for mod in (patterns, decisions):
         mod.init(con)
@@ -574,9 +589,69 @@ def cmd_learnings() -> None:
 
 
 def cmd_status() -> None:
+    from .reasoning import store as kstore
+
     db.init()
     print(f"Base de conocimiento: {db.count_total()} documentos observados")
     print(f"DB: {config.DB_PATH}")
+
+    # Deuda epistémica visible: predicciones cuya fecha de verificación llegó y nadie resolvió.
+    # Sin esto, 'decide' acumula predicciones que jamás se comprueban (el fallo nº1 del kernel)
+    # y la calibración ("¿cuando decimos 70% acertamos 70%?") es inevaluable.
+    con = kstore.connect(str(config.DB_PATH))
+    kstore.init(con)
+    due = kstore.due_predictions(con)
+    if due:
+        print(f"\n⚠ {len(due)} predicción(es) VENCIDAS sin resolver (deuda epistémica):")
+        for p in due:
+            print(f"  #{p['id']}  {p['statement'][:70]}")
+            print(f"        vencía {_fmt(p['expected_verification_at'])} | criterio: {p['refutation_criterion'][:60]}")
+        print("Resuélvelas: python -m omega.cli resolve-prediction <id> <confirmed|refuted|inconclusive> [nota]")
+    else:
+        print("Sin predicciones vencidas pendientes.")
+    con.close()
+
+
+def cmd_resolve_prediction() -> None:
+    """Cierra el ciclo epistémico: resuelve una predicción vencida contra la realidad observada.
+    Resolver NO actualiza la creencia (No Silent Learning): eso es un paso explícito aparte."""
+    from .reasoning import store as kstore
+
+    if len(sys.argv) < 4:
+        print("Uso: resolve-prediction <id> <confirmed|refuted|inconclusive> [nota]")
+        print("Las pendientes salen en 'status'.")
+        return
+    try:
+        pid = int(sys.argv[2])
+    except ValueError:
+        print(f"Rechazado: '{sys.argv[2]}' no es un id numérico de predicción.")
+        return
+    outcome = sys.argv[3]
+    note = " ".join(sys.argv[4:]).strip()
+    con = kstore.connect(str(config.DB_PATH))
+    kstore.init(con)
+    try:
+        kstore.resolve_prediction(con, pid, outcome=outcome, note=note)
+    except ValueError as exc:
+        print(f"Rechazado: {exc}")
+        con.close()
+        return
+    print(f"Predicción #{pid} -> {outcome}. La calibración del kernel acumula.")
+    cal = kstore.calibration(con)
+    if cal:
+        print("Calibración (confianza declarada vs acierto real):")
+        for b in cal:
+            print(f"  banda {b['band']:.1f}: {b['actual_rate']:.0%} real (n={b['n']})")
+    con.close()
+
+
+def cmd_backup() -> None:
+    """Backup del MOAT (SQLite consistente + voces + JSONs) en un zip fechado. El dataset es el
+    activo del proyecto y vive gitignored en un solo disco: sin esto, un fallo de disco lo borra."""
+    out = db.backup_snapshot()
+    size_mb = out.stat().st_size / (1024 * 1024)
+    print(f"Backup creado: {out}  ({size_mb:.1f} MB)")
+    print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
 def main(argv: list[str]) -> int:
@@ -599,6 +674,8 @@ def main(argv: list[str]) -> int:
         "record-outcome": cmd_record_outcome,
         "learnings": cmd_learnings,
         "hypotheses": cmd_hypotheses,
+        "resolve-prediction": cmd_resolve_prediction,
+        "backup": cmd_backup,
         "status": cmd_status,
     }
     if len(argv) < 1 or argv[0] not in cmds:

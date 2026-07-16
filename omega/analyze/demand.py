@@ -8,6 +8,7 @@ sale en videos ignorados, no. Ese es el detector de temas serio que faltaba.
 from __future__ import annotations
 from collections import defaultdict
 
+from .momentum import _TOKEN as _TOKEN_WORDS  # mismo regex de token que los títulos
 from .momentum import _terms  # mismo tokenizador (unigramas + bigramas, stopwords EN/ES)
 
 
@@ -15,13 +16,23 @@ def theme_demand(videos: list[dict], min_videos: int = 2) -> list[dict]:
     """Ranking de términos por vistas totales acumuladas en los títulos de los videos.
 
     min_videos: un término debe aparecer en >=N videos distintos para contar (anti-ruido:
-    evita que un único video viral infle un término que solo él usa)."""
+    evita que un único video viral infle un término que solo él usa).
+
+    ANTI-AUTOBOMBO: un canal que pone su nombre en sus títulos ("CryptoNews Net: ...") convierte
+    su marca en falso "tema de demanda" — y min_videos no protege (el mismo canal aporta N
+    videos). Por eso un término cuyas palabras salgan todas del nombre del PROPIO canal se
+    descarta para ese video. Si otros canales usan la frase como tema real, sobrevive por ellos.
+    Es filtro en origen, no stoplist manual (que sería deuda de mantenimiento infinita)."""
     views: dict[str, int] = defaultdict(int)
     count: dict[str, int] = defaultdict(int)
     examples: dict[str, list[str]] = defaultdict(list)
 
     for v in videos:
+        # misma normalización que _terms (lowercase + apóstrofe tipográfico -> ASCII)
+        channel_words = set(_TOKEN_WORDS.findall((v.get("channel") or "").lower().replace("’", "'")))
         for t in _terms(v.get("title", "")):
+            if channel_words and set(t.split()) <= channel_words:
+                continue  # autobombo: el término ES (parte de) el nombre del canal
             views[t] += v.get("views", 0)
             count[t] += 1
             if len(examples[t]) < 2:

@@ -11,3 +11,5 @@ docs/guiones/PREVIEW-*.jpg
 *.mp4
 *.MP3
 docs/guiones/*.mp3
+# backups del moat (zip fechado de data/): van a nube/USB, no al repo
+backups/
