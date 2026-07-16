@@ -90,6 +90,23 @@
     la animación se dibuja siguiendo su tiempo. Sin audio, el vídeo sale mudo.
   </div>
 
+  <h2 style="margin-top:8px">1.5 · Música de fondo <span style="color:var(--brass)">(opcional, sube producción)</span></h2>
+  <div class="row" style="justify-content:flex-start">
+    <button id="musica-proyecto" class="ghost">🎵 Usar música del proyecto (data/musica.mp3)</button>
+    <button id="musica-quitar" class="ghost">✕ Sin música</button>
+  </div>
+  <input type="file" id="musica-file" accept="audio/*">
+  <div class="row" style="justify-content:flex-start; gap:8px; align-items:center">
+    <label class="note" style="margin:0">Volumen música</label>
+    <input type="range" id="musica-vol" min="0" max="40" value="16" style="width:180px">
+    <span id="musica-vol-lbl" class="note" style="margin:0">0.16</span>
+  </div>
+  <div class="note" style="text-align:left">
+    Música con derechos comerciales cross-plataforma (p.ej. <strong>Pixabay Music</strong>, CC0).
+    Guárdala como <code>data/musica.mp3</code> y pulsa el botón, o cárgala a mano. Se mezcla
+    <strong>por debajo de la voz</strong> (ducking: la voz siempre manda), en loop y con fade.
+  </div>
+
   <h2 style="margin-top:8px">2 · Carga el .srt de CapCut <span style="color:var(--growth)">(esto arregla el desfase)</span></h2>
   <input type="file" id="srt" accept=".srt,text/plain">
   <div class="note" style="text-align:left">
@@ -1865,6 +1882,7 @@ document.getElementById('proyecto').onchange = e => cargarVideo(e.target.value);
 
 // ── Audio: carga + detección de silencios ─────────────────────────────────────
 let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
+let musicaPcm = null, musicaGain = 0.16;   // música de fondo opcional (mezcla con ducking en el export)
 
 document.getElementById('mp3').onchange = e => { if (e.target.files[0]) usarAudio(e.target.files[0]); };
 
@@ -1882,6 +1900,35 @@ document.getElementById('voz-proyecto').onclick = async () => {
       'Abre la página desde http://localhost:8765/docs/guiones/short-renderer.html, ' +
       `o usa el selector de arriba con: Proyecto AI\\data\\${CFG.voz}`;
   }
+};
+
+// ── MÚSICA de fondo (opcional) ──────────────────────────────────────────────
+async function cargarMusica(f){
+  audioCtx = audioCtx || new AudioContext();
+  const ab = await f.arrayBuffer();
+  musicaPcm = await audioCtx.decodeAudioData(ab.slice(0));
+  const dur = musicaPcm.duration.toFixed(1);
+  statusEl.textContent = `🎵 Música cargada (${dur}s, se mezcla en loop bajo la voz al Grabar). ` +
+    `Volumen ${musicaGain.toFixed(2)}. Previsualiza NO la reproduce; entra en el MP4.`;
+}
+document.getElementById('musica-proyecto').onclick = async () => {
+  statusEl.textContent = 'Buscando data/musica.mp3…';
+  try {
+    const r = await fetch('../../data/musica.mp3');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    await cargarMusica(new File([await r.blob()], 'musica.mp3', {type:'audio/mpeg'}));
+  } catch (err) {
+    statusEl.textContent = '⚠ No encontré data/musica.mp3 (' + err.message + '). ' +
+      'Descarga una pista CC0 (Pixabay Music), guárdala ahí, o cárgala con el selector de música.';
+  }
+};
+document.getElementById('musica-file').onchange = e => { if (e.target.files[0]) cargarMusica(e.target.files[0]); };
+document.getElementById('musica-quitar').onclick = () => {
+  musicaPcm = null; statusEl.textContent = 'Música quitada: el MP4 saldrá solo con voz' + (' (+sfx)');
+};
+document.getElementById('musica-vol').oninput = e => {
+  musicaGain = (+e.target.value) / 100;
+  document.getElementById('musica-vol-lbl').textContent = musicaGain.toFixed(2);
 };
 
 async function usarAudio(f){
@@ -2192,6 +2239,43 @@ function construirMezcla(pcm, ch, N, beats){
   return out;
 }
 
+/** Mezcla MÚSICA de fondo bajo la voz. `canales` ya trae la voz (+sfx). Devuelve canales nuevos.
+ *  Profesional, no "música a todo volumen encima":
+ *   · DUCKING sidechain — la música baja donde hay voz (envolvente de la voz), la voz SIEMPRE manda.
+ *   · LOOP — la música cubre todo el vídeo aunque sea más corta.
+ *   · FADE in/out — entra y sale suave, nunca corta seco.
+ *   · SOFT-LIMIT tanh — la suma jamás clippea.
+ *  gain: volumen base de la música (0..1). duck: cuánto la agacha la voz (0..1). */
+function mezclarMusica(canales, music, N, sr, {gain = 0.16, duck = 0.80, fadeIn = 0.6, fadeOut = 1.2} = {}){
+  // envolvente de la voz (attack rápido, release lento) -> sidechain suave, sin bombeo brusco
+  const voz = canales[0];
+  const env = new Float32Array(N);
+  const atk = Math.exp(-1 / (0.010 * sr)), rel = Math.exp(-1 / (0.180 * sr));
+  let e = 0, mx = 1e-6;
+  for (let i = 0; i < N; i++){
+    const x = Math.abs(voz[i]);
+    e = x > e ? atk * e + (1 - atk) * x : rel * e + (1 - rel) * x;
+    env[i] = e; if (e > mx) mx = e;
+  }
+  const mLen = music.length, mCh = music.numberOfChannels;
+  const fi = Math.max(1, Math.floor(fadeIn * sr)), fo = Math.max(1, Math.floor(fadeOut * sr));
+  const out = [];
+  for (let c = 0; c < canales.length; c++){
+    const v = canales[c];
+    const m = music.getChannelData(Math.min(c, mCh - 1));
+    const o = new Float32Array(N);
+    for (let i = 0; i < N; i++){
+      const g = gain * (1 - duck * (env[i] / mx));          // la voz agacha la música
+      let fade = 1;
+      if (i < fi) fade = i / fi; else if (i > N - fo) fade = (N - i) / fo;
+      const mus = m[i % mLen] * g * fade;                   // loop por módulo
+      o[i] = Math.tanh((v[i] + mus) * 1.02) * 0.96;         // nunca clippea
+    }
+    out.push(o);
+  }
+  return out;
+}
+
 async function exportarMP4(progreso){
   const cfg = await h264Disponible();
   if (!cfg) throw new Error('este navegador no sabe codificar H.264 con WebCodecs.');
@@ -2242,9 +2326,11 @@ async function exportarMP4(progreso){
 
     const limite = Math.min(pcm.length, Math.ceil(T.total * sr));
     // canales: voz sola, o voz + diseño de sonido procedural (si el Short lo pide con sfx:true)
-    const canales = CFG.sfx
+    let canales = CFG.sfx
       ? construirMezcla(pcm, ch, limite, [T.hook, T.curve, T.cta])
       : Array.from({length: ch}, (_, c) => pcm.getChannelData(Math.min(c, pcm.numberOfChannels - 1)));
+    // música de fondo (opcional): mezcla con ducking bajo la voz. Si no se cargó, no toca nada.
+    if (musicaPcm) canales = mezclarMusica(canales, musicaPcm, limite, sr, {gain: musicaGain});
     for (let off = 0; off < limite; off += 1024){
       if (aFallo) throw aFallo;
       const len = Math.min(1024, limite - off);
