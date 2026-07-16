@@ -8,6 +8,32 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
+> ## 🔴 2026-07-16 — FED PUBLICADO. LO ÚNICO QUE IMPORTA: **MEDIRLO EL VIERNES 18/07**
+> **4º Short PUBLICADO** hoy 10:55am local (15:55 UTC), franja sana:
+> ref `fed-savings-catchup-2026-07` · [YT nT8V0JHKD-M](https://youtube.com/shorts/nT8V0JHKD-M) ·
+> [FB](https://www.facebook.com/share/r/1DPe5fKhxi/) · título *"Is Your Cash Earning 4% — Or Zero?"*
+> ADN instrumentado (`hook=shock`, 9 bloques, 32s) + contexto completo. Baseline verificado: 0 vistas.
+>
+> **⚠ EL VIERNES 18/07 (48h):** `record-analytics` + `record-outcome` + `dna`. Las vistas de YouTube
+> salen por API sola: `youtube.video_stats(['nT8V0JHKD-M'])`. Las de Facebook las copia el usuario.
+>
+> **⚠ AVISO DE ATRIBUCIÓN (está en `production_context`):** el FED estrena **4 variables nuevas a la
+> vez** — música, sonido sincronizado a eventos, fondo vivo y sync del número. S1/S2/S3 no llevan
+> ninguna. Si rinde distinto, la causa puede ser **cualquiera de las 4 + el tema + el gancho**. n=1:
+> NO atribuir a una sola cosa.
+>
+> **Motor — capacidades de producción nuevas (todas verificadas, 7 commits, ya en el remote):**
+> música de fondo con **ducking sidechain** (`data/musica.mp3`, se oye también en previsualización) ·
+> **sonido sincronizado a eventos** (tick por bullet, riser al stat, golpe cuando el número aterriza) ·
+> **fondo vivo** (drift del glow) · **iconos vectoriales semánticos** en bullets · stat con **decimales** ·
+> sync del stat calibrado a la palabra hablada.
+>
+> **Siguiente Short en cola: HOUSING** (`housing-affordability-catchup-2026-07`, tema por datos: RPM $70).
+> Montado y verificado visualmente; **le falta la VOZ** (guion de 2 bloques en `docs/guiones/`, CapCut
+> Firme Pilot → `data/voz-short-housing.mp3`). Al tenerla: calibrar su `conteo_s` como se hizo con el FED.
+>
+> ---
+>
 > **Última actualización: 2026-07-15 (loop cerrado).** Estado en una línea:
 > *TRES Shorts PUBLICADOS (S3 stat 07-10 02:00 · S1 story 07-11 11:30 · S2 contrarian 07-12 10:58,
 > misma voz Firme Pilot). Facebook: S1 259 vistas/3 int · S2 218/1 · S3 67/1 (S3 confundido por la
