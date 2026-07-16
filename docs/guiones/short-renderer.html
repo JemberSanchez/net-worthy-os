@@ -2208,9 +2208,32 @@ async function h264Disponible(bitrate = 24_000_000){
 //    Genera bass+whoosh en el gancho (el golpe que retiene), ticks suaves en los cortes y un pad
 //    grave muy bajo, y lo MEZCLA con la voz. Nivel bajo (la voz manda) + soft-limit (sin clipping).
 //    Se genera y codifica UNA vez, así que puede usar ruido aleatorio (no rompe la pureza del video). ──
-function construirMezcla(pcm, ch, N, beats){
+/** Deriva los TIEMPOS de los eventos de sonido de la estructura del Short activo, para que el
+ *  audio reaccione a lo que pasa en pantalla (tick por bullet, riser+impacto en el stat). Los
+ *  tiempos coinciden con cuándo drawBullets/drawStatBig animan. Shorts sin esos overlays -> solo
+ *  los beats de siempre (comportamiento idéntico; el S3 publicado no cambia). */
+function eventosSonido(){
+  const ev = {beats: [T.hook, T.curve, T.cta], ticks: [], risers: [], hits: []};
+  const val = x => typeof x === 'function' ? x() : (x || 0);
+  for (const o of (CFG.overlays || [])){
+    if (o.escena === 'bullets'){
+      const d0 = val(o.desde), cad = o.cadencia_s || 1.6, n = (o.items || []).length;
+      for (let i = 0; i < n; i++) ev.ticks.push(d0 + 0.35 + i * cad);   // == drawBullets
+    }
+    if (o.escena === 'stat'){
+      const d0 = val(o.desde);
+      ev.risers.push(d0);                            // barrido entrando
+      ev.hits.push(d0 + (o.conteo_s || 1.3));        // impacto cuando el número aterriza
+    }
+  }
+  return ev;
+}
+
+function construirMezcla(pcm, ch, N, ev){
+  ev = ev || {beats: []};
   const sr = pcm.sampleRate;
   const d = new Float32Array(N);                       // pista de diseño (mono)
+  const dentro = i => i >= 0 && i < N;
   const thump = (t0, freq, decay, amp) => {            // golpe grave (bass)
     const i0 = Math.max(0, Math.floor(t0*sr));
     for (let i = i0; i < Math.min(N, i0 + decay*4*sr); i++){
@@ -2231,11 +2254,31 @@ function construirMezcla(pcm, ch, N, beats){
       d[i] += amp * trem * (Math.sin(2*Math.PI*110*t) + 0.6*Math.sin(2*Math.PI*165*t));
     }
   };
+  // tick: pluck corto y agudo -> feedback de cada bullet/check (el "clic" que hace interactivo)
+  const tick = (t0, amp = 0.09) => {
+    const i0 = Math.floor(t0*sr);
+    for (let k = 0; k < 0.07*sr; k++){ const i = i0+k; if (!dentro(i)) break; const tt = k/sr;
+      d[i] += amp * (Math.sin(2*Math.PI*1100*tt) + 0.5*Math.sin(2*Math.PI*1650*tt)) * Math.exp(-tt/0.028); }
+  };
+  // riser: barrido ascendente (el filtro se abre) -> crea tensión ENTRANDO a un momento
+  const riser = (tEnd, dur = 0.7, amp = 0.08) => {
+    const i0 = Math.floor((tEnd-dur)*sr), n = Math.floor(dur*sr); let lp = 0;
+    for (let k = 0; k < n; k++){ const i = i0+k; if (!dentro(i)) continue; const p = k/n;
+      lp += ((Math.random()*2-1) - lp) * (0.05 + 0.25*p); d[i] += amp * lp * p*p; }
+  };
+  // sparkle: destello brillante con tremolo -> el número ATERRIZA (payoff)
+  const sparkle = (t0, amp = 0.07) => {
+    const i0 = Math.floor(t0*sr);
+    for (let k = 0; k < 0.5*sr; k++){ const i = i0+k; if (!dentro(i)) break; const tt = k/sr;
+      d[i] += amp * (Math.sin(2*Math.PI*2200*tt) + 0.6*Math.sin(2*Math.PI*3300*tt))
+                  * Math.exp(-tt/0.12) * (0.5 + 0.5*Math.sin(2*Math.PI*11*tt)); }
+  };
   pad(0.028);
   whoosh(0.0, 0.40, 0.16); thump(0.03, 60, 0.22, 0.30);              // el gancho: para el dedo
-  for (const b of (beats || [])) if (b > 0.15 && b < N/sr - 0.15){    // cada corte narrativo
-    whoosh(b - 0.12, 0.26, 0.09); thump(b, 95, 0.10, 0.11);
-  }
+  for (const b of (ev.beats  || [])) if (b > 0.15 && b < N/sr - 0.15){ whoosh(b - 0.12, 0.26, 0.09); thump(b, 95, 0.10, 0.11); }
+  for (const t of (ev.ticks  || [])) if (t > 0.05 && t < N/sr) tick(t);
+  for (const t of (ev.risers || [])) if (t > 0.80 && t < N/sr) riser(t);
+  for (const t of (ev.hits   || [])) if (t > 0.10 && t < N/sr){ thump(t, 80, 0.14, 0.16); sparkle(t); }
   // mezcla en cada canal (copia de la voz) + soft-limit tanh (nunca clippea)
   const out = [];
   for (let c = 0; c < ch; c++){
@@ -2335,7 +2378,7 @@ async function exportarMP4(progreso){
     const limite = Math.min(pcm.length, Math.ceil(T.total * sr));
     // canales: voz sola, o voz + diseño de sonido procedural (si el Short lo pide con sfx:true)
     let canales = CFG.sfx
-      ? construirMezcla(pcm, ch, limite, [T.hook, T.curve, T.cta])
+      ? construirMezcla(pcm, ch, limite, eventosSonido())
       : Array.from({length: ch}, (_, c) => pcm.getChannelData(Math.min(c, pcm.numberOfChannels - 1)));
     // música de fondo (opcional): mezcla con ducking bajo la voz. Si no se cargó, no toca nada.
     if (musicaPcm) canales = mezclarMusica(canales, musicaPcm, limite, sr, {gain: musicaGain});
