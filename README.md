@@ -1,106 +1,136 @@
-# Content Intelligence OS — "El Analista" (MVP)
+# Content Intelligence OS — canal **Net Worthy**
 
-Sistema de inteligencia para creación de contenido. **No es un generador de videos.**
-Es un laboratorio que observa el mercado, detecta qué temas suben/bajan y propone
-las mejores ideas respaldadas por evidencia.
+Un sistema que **decide QUÉ contenido crear** (por datos: demanda real + RPM) y **acumula qué
+funciona** (un dataset calibrado por resultados medidos). **No es un generador de videos** — el
+video es el primer producto; el activo durable es el conocimiento calibrado.
 
-## Principio rector (léelo antes de tocar nada)
-
-> El sistema aprende observando el mercado **externo** (N grande: miles de publicaciones
-> de terceros), **no** de tu propia producción (N diminuto: 2-3 videos/día).
->
-> Tus videos no son el experimento que genera conocimiento — son la capa de
-> **validación** que confirma o refuta hipótesis ya formadas observando a otros.
-
-A 2-3 videos/día es estadísticamente imposible "aprender de tus resultados". Por eso
-la inteligencia vive en la observación externa. No lo olvides al añadir features.
-
-## Decisiones estratégicas tomadas
-
-- **Plataforma primaria: YouTube** (mejor fuente de datos vía API gratuita + mejor techo
-  de ingresos: largo +8min paga $2-10 RPM). Shorts = embudo de descubrimiento, no ingreso.
-- **Distribución secundaria gratis:** un asset → cross-post a Facebook Reels y TikTok (+1min).
-- **Formato:** sesga a +1min / largo. El video corto (42s) es el formato **peor pagado**
-  en todas las plataformas; sirve para crecer audiencia, no para monetizar.
-- **Presupuesto $0:** todo local (SQLite, RSS sin key, análisis stdlib). Se migra a
-  Postgres/embeddings/API cuando entre dinero y volumen lo justifique.
-
-## Arquitectura (estado actual)
+> Nicho: finanzas / inversiones / crypto, faceless, audiencia EN. Canal: **Net Worthy** (@networthytv).
 
 ```
-RSS (sin key) ──► SQLite (observed_content) ──► momentum (alza/caída) ──► reporte + prompt
-   [sources/]          [db.py]                     [analyze/]              [cli.py]
+SISTEMA decide QUÉ (tema, por demanda+RPM)  →  el humano piensa el CÓMO (ángulo estructurado)
+                                            →  SISTEMA acumula QUÉ FUNCIONA (outcome medido)
 ```
 
-Diseñado para crecer sin reescribir: las fuentes son plugins (`sources/base.py`),
-el almacenamiento está aislado (`db.py`), el análisis es reemplazable (`analyze/`).
+El valor no está en acertar el primer video, sino en que **cada video publicado mejora las
+decisiones del siguiente**. Un sistema que adivina se estanca; uno que mide mejora para siempre.
+
+---
+
+## Por qué este repo es interesante (para un ojo técnico)
+
+- **Kernel de razonamiento domain-agnostic** (`omega/reasoning/`) con un **test de pureza por AST**
+  que garantiza que no se cuela nada de dominio (video) en el núcleo. El kernel solo hace
+  `score = confianza + Σ peso·feature`; no conoce el significado de las features.
+- **Cada creencia es una predicción falsable.** Una decisión crea una `prediction` con método de
+  verificación, criterio de refutación pre-comprometido y fecha de evaluación. Sin esos tres campos
+  no es una predicción, es una opinión — y el código lo rechaza. La calibración mide *"cuando
+  decimos 70%, ¿acertamos ~70%?"*.
+- **"No Silent Learning" como enforcement estructural**, no como convención: la confianza de una
+  creencia solo se puede mutar por un único camino que exige causa válida + rationale, y deja log
+  append-only. No existe otro setter.
+- **Guards de captura-en-origen**: las métricas se validan al entrar (fracción vs porcentaje,
+  rangos, tags obligatorios del vocabulario controlado). Un `4.5` donde va `0.045` se rechaza en vez
+  de envenenar el dataset en silencio.
+- **Anti-sobreingeniería como política escrita** (`docs/POLITICA.md`): el motor está **congelado**;
+  no se añade capacidad sin que un experimento publicado revele la limitación. El progreso se mide
+  en **filas del dataset**, no en commits.
+- **Cero fricción de despliegue**: SQLite, una sola dependencia de runtime (`feedparser`),
+  `anthropic` opcional. Arranca en cualquier máquina, sin build. Modo **$0** honesto: sin API key,
+  el sistema piensa con tu cuenta de Claude vía export-prompt y acumula igual.
+
+Auditorías de ingeniería y de producto en `docs/AUDITORIA-INGENIERIA.md` y `docs/AUDITORIA.md`.
+
+---
+
+## Arquitectura
+
+```
+feeds.json (12 RSS) ──► sources/rss ─┐
+YouTube Data API ──────► sources/youtube ─┤  captura
+                                          ▼
+                    omega.sqlite  (observed_content · theme_demand · scanned_video)
+                                          │
+        extractors/* ──► signals          analyze/ (demand · momentum · monetization/RPM)
+                                          ▼
+                    analyze/hypothesis_engine   (DOMINIO: interpreta señales)
+                                          ▼
+      reasoning/*  ── KERNEL domain-agnostic (beliefs · predicciones falsables ·
+                       decision_engine · abstención como decisión de 1ª clase · calibración)
+                                          ▼
+      creative/*   ── CKB de patrones · decisiones justificadas ·
+                       production_dna + analytics + outcome  ◄── EL MOAT (qué funciona, medido)
+                                          ▼
+                                cli.py  (dispatch, stdlib pura)
+
+   docs/guiones/short-renderer.html  ── motor de video CONGELADO (HTML sin dependencias:
+      genera el Short entero + voz + subtítulos quemados → MP4 H.264/AAC). Acoplado al
+      cerebro SOLO por archivos (data/voz-*.mp3 + JSONs de instrumentación).
+```
+
+La ruta de crecimiento está aislada: fuentes como plugins (`sources/base.py`), almacenamiento tras
+`db.py` (migración futura a Postgres+pgvector sin tocar el resto), análisis reemplazable.
+
+---
+
+## Estado actual
+
+- **3 Shorts publicados** (S1 story · S2 contrarian · S3 stat), instrumentados con su ADN.
+- **Loop de medición CERRADO**: `production_outcome` con resultados medidos en YouTube + Facebook;
+  `dna` ya calibra por tipo de gancho/historia/CTA (marcado PROVISIONAL mientras n es bajo —
+  correcto). Hallazgo real: las plataformas se contradicen (~10× más alcance en FB que en YT), la
+  variable dominante hoy es la plataforma, no el gancho.
+- **98 tests verdes** (`python -m unittest discover -s tests -q`).
+- **Hito activo**: 10 videos instrumentados con ADN + resultado + coste antes de tratar cualquier
+  patrón como hipótesis.
+
+---
 
 ## Uso
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt          # única dep de runtime: feedparser
 
-# Inteligencia / observación
-python -m omega.cli ingest       # captura RSS -> SQLite. CORRE ESTO A DIARIO.
-python -m omega.cli trends       # reporte de temas en alza/caída
-python -m omega.cli signals      # extrae señales (extractores-plugin) de lo observado
-python -m omega.cli decide       # Decision Record diario: 3 candidatos o ABSTENERSE (explicable)
+# --- Diario: observar y decidir ---
+python -m omega.cli ingest               # captura RSS -> SQLite (correr a diario)
+python -m omega.cli youtube-scan         # demanda REAL por tema (vistas de YouTube)
+python -m omega.cli signals              # extrae señales de lo observado
+python -m omega.cli decide               # Decision Record: mejor tema por demanda+RPM, o ABSTENERSE
+#   atajo de los cuatro: .claude/commands/daily.md  (/daily)
 
-# Director creativo
-python -m omega.cli patterns     # Creative Knowledge Base (vocabulario de craft)
-python -m omega.cli combine <s>  # divergencia: k encuadres distintos de un sujeto
-python -m omega.cli think <s>    # el director PIENSA un sujeto (LLM si hay key; si no, modo $0)
+# --- Pensar un ángulo (LLM si hay ANTHROPIC_API_KEY; si no, modo $0 export-prompt) ---
+python -m omega.cli think "<tema>"       # -> paquete para pegar en Claude -> record-think
 
-python -m omega.cli status       # estado de la base de conocimiento
+# --- Tras publicar: cerrar el loop (esto es lo que llena el moat) ---
+python -m omega.cli record-dna <file>            # el 'cómo se hizo' (antes de publicar)
+python -m omega.cli record-analytics <file>      # el 'qué pasó' (vistas, CTR, retención)
+python -m omega.cli record-cost <file>           # horas reales -> rendimiento por hora
+python -m omega.cli record-outcome <ref> <0..1>  # el resultado medido
+python -m omega.cli dna                          # dataset + calibración por dimensión
+
+# --- Higiene del sistema ---
+python -m omega.cli status               # estado + predicciones vencidas sin resolver
+python -m omega.cli resolve-prediction <id> <confirmed|refuted|inconclusive> [nota]
+python -m omega.cli backup               # zip fechado del moat -> COPIAR a nube/USB
 ```
 
-## Flujo de trabajo $0 (con tu cuenta de Claude, manual)
+`YOUTUBE_API_KEY` (y opcional `ANTHROPIC_API_KEY`) van en un `.env` en la raíz (gitignored).
 
-Sin API key, el sistema piensa con **tu** Claude (claude.ai / Claude Code) y acumula el
-conocimiento igual que si fuera automático. Por cada video:
+---
 
-```bash
-# 1. El sistema arma el "paquete de pensamiento"
-python -m omega.cli think "tu tema"
-#    -> data/think_pack.txt (3 pasos) + data/think_result.template.json
+## Documentación
 
-# 2. Pega data/think_pack.txt en tu Claude. Responde los 3 pasos.
+| Documento | Qué es |
+|---|---|
+| `docs/ESTADO.md` | Traspaso — **empieza aquí**; trae las trampas conocidas. |
+| `docs/POLITICA.md` | Política de ingeniería: congela el motor, genera datos. |
+| `docs/VISION.md` | Arquitectura y visión a largo plazo. |
+| `docs/AUDITORIA-INGENIERIA.md` | Auditoría de ingeniería (nivel Principal Engineer). |
+| `docs/AUDITORIA.md` | Auditoría de producto/crecimiento. |
+| `docs/guiones/` | Guiones, motor de video, calibración de voz. |
 
-# 3. Devuelve el resultado al sistema:
-#    copia la plantilla a data/think_result.json, rellena "angle" y "pattern_tags", y:
-python -m omega.cli record-think
+---
 
-# 4. Produce y publica el video con ese ángulo.
+## Licencia
 
-# 5. Tras publicar, registra cómo rindió (0..1):
-python -m omega.cli record-outcome <id-del-video> 0.85
-
-# 6. Mira si el sistema aprende de verdad:
-python -m omega.cli learnings    # patrón de craft -> tasa de éxito real
-```
-
-**Cuándo comprar la API key:** si tras ~10-15 videos `learnings` muestra patrones con tasas
-**altas y distintas entre sí**, el sistema aprende algo real → automatiza poniendo
-`ANTHROPIC_API_KEY` (el mismo `think` empieza a pensar solo). Si las tasas son ruidosas/iguales,
-aún no vale la pena pagar.
-
-**Importante:** el momentum solo tiene señal real tras correr `ingest` varios días
-seguidos (necesita baseline histórico). El día 1 todo "sube desde 0". Automatiza
-`ingest` con el Programador de tareas de Windows (1-2 veces/día).
-
-## Roadmap
-
-- **Fase 1 — El Analista (ACTUAL):** observar externo → detectar tendencias → proponer.
-- **Fase 1.5:** fuente YouTube Data API (key gratis) + Reddit API. Sustituir term-momentum
-  por clustering semántico (TF-IDF, luego embeddings) → temas reales, no palabras sueltas.
-- **Fase 2 — El Productor:** pipeline de generación (guión→voz→video) con proveedores
-  intercambiables + panel de revisores LLM (storytelling, retención, riesgo de políticas).
-- **Fase 3 — El Científico:** captura de métricas en el tiempo + calibración de revisores
-  contra resultados reales + actualización bayesiana de hipótesis. Bucle cerrado.
-
-## Deuda técnica conocida
-
-- `term-momentum` cuenta palabras sueltas, no temas. Es un placeholder honesto; el salto
-  a clusters semánticos es la Fase 1.5.
-- Baseline vacío en arranque (inherente; se cura con uso diario).
-- Pulido cosmético en el formato del reporte (prefijo `+` en momentum negativos).
+Propietario — **todos los derechos reservados**. Ver [`LICENSE`](LICENSE). El código es visible
+para evaluación; su uso, copia, distribución o derivados requieren permiso escrito del autor.
