@@ -658,6 +658,9 @@ function calibrarAuto(buffer, guion){
   return {
     cuts: Object.fromEntries(Object.entries(cuts).map(([k,v]) => [k, +v.toFixed(2)])),
     spec,
+    // cuándo EMPIEZA a decirse la cifra grande. `cuts.draw` ya guardaba el FINAL (t1); esto es el
+    // arranque, y es el ancla para que el número del stat aterrice JUSTO sobre la palabra.
+    cifra_t0: tok ? +tok.t0.toFixed(2) : null,
     cards: cards.map(c => ({t0:+c.t0.toFixed(2), t1:+c.t1.toFixed(2), t:c.palabras.join(' ')})),
     diag: {bloques: segs.length, grupos: sils.length, silabas_por_seg: +rep.rate.toFixed(2),
            error_reparto: +rep.error.toFixed(2)},
@@ -2059,8 +2062,25 @@ function aplicarCalibracion(cal, dur){
   srtCards = cal.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
   cortesMedidos = true;
   cachedCards = null;
+  autoSyncStat(cal);              // el número del stat aterriza sobre la palabra hablada
   pintarSliders();
   drawFrame(T.curve + 0.3);
+}
+
+/** AUTO-SYNC del stat: ajusta `conteo_s` para que el número TERMINE de contar justo cuando la voz
+ *  EMPIEZA a decir la cifra (cal.cifra_t0, derivado de `guion.curvaLlegaEn`).
+ *
+ *  Sin esto hay que calcularlo a mano por Short: en el FED el conteo de 1.3s dejaba el número
+ *  aterrizando a 16.69s mientras la voz no decía "4%" hasta 18.44s — 1.8s adelantado, y se nota.
+ *  El golpe de sonido cuelga de conteo_s (eventosSonido), así que también se sincroniza solo. */
+function autoSyncStat(cal){
+  if (!cal || cal.cifra_t0 == null) return;
+  const st = (CFG.overlays || []).find(o => o.escena === 'stat');
+  if (!st) return;
+  const desde = typeof st.desde === 'function' ? st.desde() : st.desde;
+  const dur = cal.cifra_t0 - desde;
+  if (!(dur > 0)) return;                       // la cifra se dice antes del stat: no tocar
+  st.conteo_s = +Math.max(0.8, Math.min(6, dur)).toFixed(2);   // acotado: ni brusco ni eterno
 }
 
 /** Segmenta por energía: ventanas de 20ms, silencio = RMS bajo durante >=250ms.
