@@ -11,9 +11,11 @@
 > **Última actualización: 2026-07-15 (loop cerrado).** Estado en una línea:
 > *TRES Shorts PUBLICADOS (S3 stat 07-10 02:00 · S1 story 07-11 11:30 · S2 contrarian 07-12 10:58,
 > misma voz Firme Pilot). Facebook: S1 259 vistas/3 int · S2 218/1 · S3 67/1 (S3 confundido por la
-> hora 02:00). **✅ LOOP CERRADO: `production_outcome` = 3 filas** (S1 0.35 · S2 0.29 · S3 0.09,
-> convención `success = vistas_48h / 750`), analytics con vistas FB, `dna` ya calibra (PROVISIONAL,
-> n=1). El próximo Short está LISTO: 'FED' (catch-up), voz en `data/voz-short-fed.mp3`, calibrada —
+> hora 02:00). **✅ LOOP CERRADO: `production_outcome` = 3 filas** — medido en YT+FB (YT 22/21/9 ·
+> FB 67/259/218), `success = alcance_total(FB+YT)/750` → S1 0.37 · S2 0.30 · S3 0.12, `dna` ya
+> calibra (PROVISIONAL, n=1). **Hallazgo: las plataformas se contradicen** (FB story≈contrarian≫stat;
+> YT stat≈story≫contrarian), ~10x más alcance en FB que en YT; el gancho stat queda EXONERADO (mejor
+> en YT). El próximo Short está LISTO: 'FED' (catch-up), voz en `data/voz-short-fed.mp3`, calibrada —
 > el usuario lo publica una MAÑANA. Motor: 24 Mbps + sfx procedural + calibrador robusto. Las 4 voces
 > reales en `data/` (gitignored).*
 >
