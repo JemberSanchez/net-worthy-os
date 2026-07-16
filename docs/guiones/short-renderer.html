@@ -1794,6 +1794,7 @@ function reproducir(hasta, alTerminar){
   const usaAudio = !!audioEl.src;
   const t0 = performance.now();
   if (usaAudio){ audioEl.currentTime = 0; audioEl.play().catch(()=>{}); }
+  arrancarMusicaPreview();           // la música se OYE en el preview (loop, sin ducking)
   let frames = 0;
   (function loop(){
     if (mia !== sesion) return;      // otro play tomó el relevo
@@ -1805,7 +1806,7 @@ function reproducir(hasta, alTerminar){
     // audioEl.ended es la única señal fiable de que el audio acabó.
     const acabo = usaAudio ? (audioEl.ended || t >= hasta - 0.02) : (t >= hasta);
     if (!acabo && corriendo) raf = requestAnimationFrame(loop);
-    else { corriendo = false; audioEl.pause(); if (alTerminar) alTerminar(frames); }
+    else { corriendo = false; audioEl.pause(); pararMusicaPreview(); if (alTerminar) alTerminar(frames); }
   })();
 }
 document.getElementById('play').onclick = () => {
@@ -1814,7 +1815,7 @@ document.getElementById('play').onclick = () => {
   // reproducir() no llama al callback cuando otro play/stop toma el relevo)
   reproducir(T.total, () => { verificado = true; pintarChecklist(); });
 };
-document.getElementById('stop').onclick = () => { sesion++; corriendo = false; audioEl.pause(); };
+document.getElementById('stop').onclick = () => { sesion++; corriendo = false; audioEl.pause(); pararMusicaPreview(); };
 
 /** Cambia el Short activo. Rehace la serie (solo si el Short lleva proyección), reinicia el reloj
  *  desde su calibración/demo y descarta TODO lo del Short anterior — incluido el audio decodificado:
@@ -1823,7 +1824,7 @@ document.getElementById('stop').onclick = () => { sesion++; corriendo = false; a
 function cargarShort(key){
   if (!SHORTS[key]) return;
   if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera a que termine para cambiar de Short.'; return; }
-  sesion++; corriendo = false; audioEl.pause(); audioEl.removeAttribute('src');
+  sesion++; corriendo = false; audioEl.pause(); pararMusicaPreview(); audioEl.removeAttribute("src");
   pcm = null; mimeCache = null;
   MODO = 'short'; VIDEO = null; aplicarFormato('short');
   const selModo = document.getElementById('modo');
@@ -1899,7 +1900,7 @@ function resolverTimeline(){
 function cargarVideo(key){
   if (!VIDEOS[key]) return;
   if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera para cambiar.'; return; }
-  sesion++; corriendo = false; audioEl.pause(); audioEl.removeAttribute('src');
+  sesion++; corriendo = false; audioEl.pause(); pararMusicaPreview(); audioEl.removeAttribute("src");
   pcm = null; mimeCache = null; srtCards = null; cortesMedidos = false; cachedCards = null;
   verificado = false; exportado = false;
   MODO = 'video'; VIDEO = VIDEOS[key]; CFG = VIDEO;
@@ -1922,6 +1923,25 @@ document.getElementById('proyecto').onchange = e => cargarVideo(e.target.value);
 // ── Audio: carga + detección de silencios ─────────────────────────────────────
 let audioCtx = null, fuenteNodo = null, destinoNodo = null, pcm = null;
 let musicaPcm = null, musicaGain = 0.16;   // música de fondo opcional (mezcla con ducking en el export)
+let musicaNode = null, musicaGainNode = null;   // reproducción EN VIVO durante la previsualización
+
+/** Arranca la música en la previsualización (loop, ganancia = musicaGain). Así se OYE la mezcla al
+ *  previsualizar, sin tener que grabar el MP4. Nota: aquí NO hay ducking (el export sí lo aplica),
+ *  así que en el MP4 la música suena algo más baja bajo la voz. Sirve para ajustar el nivel a oído. */
+function arrancarMusicaPreview(){
+  pararMusicaPreview();
+  if (!musicaPcm) return;
+  audioCtx = audioCtx || new AudioContext();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const src = audioCtx.createBufferSource(); src.buffer = musicaPcm; src.loop = true;
+  const g = audioCtx.createGain(); g.gain.value = musicaGain;
+  src.connect(g).connect(audioCtx.destination); src.start();
+  musicaNode = src; musicaGainNode = g;
+}
+function pararMusicaPreview(){
+  if (musicaNode){ try { musicaNode.stop(); } catch(e){} musicaNode.disconnect(); musicaNode = null; }
+  musicaGainNode = null;
+}
 
 document.getElementById('mp3').onchange = e => { if (e.target.files[0]) usarAudio(e.target.files[0]); };
 
@@ -1947,8 +1967,8 @@ async function cargarMusica(f){
   const ab = await f.arrayBuffer();
   musicaPcm = await audioCtx.decodeAudioData(ab.slice(0));
   const dur = musicaPcm.duration.toFixed(1);
-  statusEl.textContent = `🎵 Música cargada (${dur}s, se mezcla en loop bajo la voz al Grabar). ` +
-    `Volumen ${musicaGain.toFixed(2)}. Previsualiza NO la reproduce; entra en el MP4.`;
+  statusEl.textContent = `🎵 Música cargada (${dur}s). Pulsa ▶ Previsualizar para OÍRLA con la voz ` +
+    `(ajusta el volumen con el slider en vivo). En el MP4 se mezcla con ducking bajo la voz.`;
 }
 document.getElementById('musica-proyecto').onclick = async () => {
   statusEl.textContent = 'Buscando data/musica.mp3…';
@@ -1963,11 +1983,13 @@ document.getElementById('musica-proyecto').onclick = async () => {
 };
 document.getElementById('musica-file').onchange = e => { if (e.target.files[0]) cargarMusica(e.target.files[0]); };
 document.getElementById('musica-quitar').onclick = () => {
-  musicaPcm = null; statusEl.textContent = 'Música quitada: el MP4 saldrá solo con voz' + (' (+sfx)');
+  musicaPcm = null; pararMusicaPreview();
+  statusEl.textContent = 'Música quitada: el MP4 saldrá solo con voz (+sfx).';
 };
 document.getElementById('musica-vol').oninput = e => {
   musicaGain = (+e.target.value) / 100;
   document.getElementById('musica-vol-lbl').textContent = musicaGain.toFixed(2);
+  if (musicaGainNode) musicaGainNode.gain.value = musicaGain;   // ajuste EN VIVO durante el preview
 };
 
 async function usarAudio(f){
