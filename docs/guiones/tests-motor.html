@@ -121,6 +121,36 @@ document.getElementById('motor').onload = () => {
     return (ticksOk && hitOk && riserOk) ? true : `ticks=${ev.ticks} hits=${ev.hits} risers=${ev.risers}`;
   });
 
+  // ── CADENCIA de bullets (anti pantalla-congelada) ──────────────────────
+  check('cadenciaBullets: si el Short la fija, manda', () => {
+    return W.cadenciaBullets({cadencia_s:2.6, desde:0, hasta:13, items:['a','b','c']}) === 2.6
+      ? true : 'ignoró la cadencia explícita';
+  });
+
+  // el test flojo (50-90%) dejó pasar un off-by-one que dejaba 6.4s muertos: ahora exige 68-85%
+  check('cadenciaBullets: el ÚLTIMO item entra al 68-85% del tramo (mata el hold muerto)', () => {
+    const casos = [ {win:13, n:3}, {win:18, n:3}, {win:9, n:4}, {win:20, n:5} ];
+    for (const {win, n} of casos){
+      const items = Array.from({length:n}, (_,i)=>'x'+i);
+      const cad = W.cadenciaBullets({desde:2, hasta:2+win, items});
+      const frac = (0.35 + (n-1)*cad) / win;
+      if (frac < 0.68 || frac > 0.85)
+        return `win=${win} n=${n}: el último entra al ${(frac*100).toFixed(0)}% (fuera de 68-85%)`;
+    }
+    return true;
+  });
+
+  check('cadenciaBullets: acepta desde/hasta como funciones', () => {
+    const cad = W.cadenciaBullets({desde:()=>2, hasta:()=>15, items:['a','b','c']});
+    return cad > 0.6 ? true : `dio ${cad}`;
+  });
+
+  check('cadenciaBullets: ventana inválida o 1 solo item -> default seguro', () => {
+    const neg = W.cadenciaBullets({desde:10, hasta:2, items:['a','b']});
+    const uno = W.cadenciaBullets({desde:0, hasta:10, items:['a']});   // n-1 = 0: no dividir por cero
+    return (neg === 1.6 && uno === 1.6) ? true : `neg=${neg} uno=${uno}`;
+  });
+
   // ── AUTO-SYNC del stat ─────────────────────────────────────────────────
   check('autoSyncStat: el conteo termina cuando la voz EMPIEZA la cifra', () => {
     const st = {escena:'stat', desde:()=>10, conteo_s:1.3};
@@ -147,6 +177,39 @@ document.getElementById('motor').onload = () => {
     const st = {escena:'stat', desde:()=>10, conteo_s:1.3};
     W.autoSyncStat({cifra_t0: 4}, {overlays:[st]});       // duración negativa -> ignorar
     return st.conteo_s === 1.3 ? true : `lo cambió a ${st.conteo_s}`;
+  });
+
+  // ── ZONAS SEGURAS: nada pisa la franja que tapan las plataformas ───────
+  // (cazado a ojo en el housing: "YOU'RE NOT BEHIND" iba de x≈20 a 1057 -> los botones de Shorts
+  //  se comen los 130 de la derecha. Un test lo caza siempre; mi ojo, solo a veces.)
+  check('ningún Short pinta texto fuera de las zonas seguras', () => {
+    const c = W.document.querySelector('canvas'), cx = c.getContext('2d');
+    const S = {top:190, bottom:360, left:70, right:130};   // documentadas en el motor
+    // las claves salen del <select> (SHORTS es const: invisible desde fuera)
+    const sel = [...W.document.querySelectorAll('select')]
+      .find(s => [...s.options].some(o => /^(s\d|fed|housing)/.test(o.value)));
+    if (!sel) return 'no encontré el selector de Shorts';
+    const shorts = [...sel.options].map(o => o.value);
+    const malos = [];
+    for (const k of shorts){
+      sel.value = k; sel.dispatchEvent(new W.Event('change', {bubbles:true}));
+      for (let t = 0.5; t < 32; t += 0.6){
+        W.drawFrame(t);
+        // franjas prohibidas: izquierda y derecha
+        for (const [x0, w, lado] of [[0, S.left, 'izq'], [c.width - S.right, S.right, 'der']]){
+          const d = cx.getImageData(x0, S.top, w, c.height - S.top - S.bottom).data;
+          for (let i = 0; i < d.length; i += 4){
+            // texto = píxel claro (el fondo verde oscuro nunca pasa de ~40)
+            if (d[i] > 170 && d[i+1] > 170 && d[i+2] > 170){
+              malos.push(`${k} t=${t.toFixed(1)} ${lado}`); i = d.length; break;
+            }
+          }
+        }
+        if (malos.length > 3) break;
+      }
+      if (malos.length > 3) break;
+    }
+    return malos.length === 0 ? true : `texto invadiendo: ${malos.slice(0,3).join(' · ')}`;
   });
 
   // ── DETERMINISMO de drawFrame (el export offline depende de esto) ──────

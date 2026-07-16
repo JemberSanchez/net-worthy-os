@@ -357,13 +357,24 @@ const SHORTS = {
     overlays: [
       {escena:'gancho', desde:0, hasta:2.2, fadeOut:0.5,
        lineas:['PRICED OUT?', "IT'S NOT YOU."], sub:"here's what just changed"},
+      // sin cadencia_s: se DERIVA de la ventana -> los 3 hechos se reparten por todo el tramo
+      // hablado en vez de amontonarse y dejar 8s congelados (el fallo medido en el FED).
       {escena:'bullets', desde:2.0, hasta:()=>T.curve, fadeIn:0.4, fadeOut:0.3,
-       titulo:'what just changed', cadencia_s:2.6,
+       titulo:'what just changed',
        items:['HOME PRICES HIT A RECORD', '30-YR MORTGAGE STUCK ~6.5%', 'BUT RENT IS COOLING'],
        iconos:['up:loss', 'pct:grey', 'down:growth']},   // ↑ caro · % coste · ↓ alivio (semántico)
-      {escena:'stat', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3,
-       kicker:'the average 30-year mortgage', valor:6.49, decimales:2, prefijo:'', sufijo:'%',
-       sub:"rates aren't falling — they're stuck", conteo_s:1.3},
+      // El PAYOFF ("no eres tú, la matemática se puso dura, alquilar es estrategia") pide un
+      // reencuadre, NO una cifra. Antes había aquí un stat con el 6.49% — pero la voz dice esa
+      // cifra en el grupo ANTERIOR (`changed`), así que el número salía sobre palabras que no
+      // hablaban de él, y el auto-sync no podía arreglarlo (duración negativa). El 6.5% ya vive
+      // en el bullet 2, que es su sitio. Marco SIN humillar (memoria): culpa al mercado.
+      {escena:'principle', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3,
+       // verbos CORTOS (<=13 chars): "YOU'RE NOT BEHIND" (17) se salía de las zonas seguras
+       // (medido: iba de x≈20 a 1057 sobre 1080; los botones de Shorts tapan los 130 de la derecha).
+       bloques:[
+         {kicker:'THE MATH', verbo:'GOT HARDER',  sub:'record prices, rates stuck',   icono:'up'},
+         {kicker:'YOU',      verbo:"DIDN'T FAIL", sub:'renting longer is a strategy', icono:'flat'},
+       ]},
     ],
     demo: { hook: 3.0, draw: 8.0, curve: 15.0, cta: 27.0, total: 31.0 },
     guion: {
@@ -721,13 +732,36 @@ let MAXY = D ? D.finalTotal * 1.18 : 0;
 // ── Dibujo de texto ───────────────────────────────────────────────────────────
 function font(px, w){ return `${w||400} ${px}px "Segoe UI", Inter, system-ui, sans-serif`; }
 
+/** AUTO-AJUSTE a la zona segura: si el texto no cabe entre SAFE.left y SAFE.right, se ENCOGE.
+ *  text() es el embudo por el que pasa TODO el texto del motor, así que ponerlo aquí protege a las
+ *  11 escenas de golpe — presentes y futuras.
+ *
+ *  El porqué (cazado por el test de zonas seguras, no por mi ojo): el CTA del S3 publicado
+ *  ("WITH $50 A MONTH?") metía el "?" en los 130px de la derecha, justo donde Shorts pinta los
+ *  botones de like/comentar. Estaba tapado y nadie lo vio en 3 videos.
+ *  `sinAjuste:true` como escape para textos que deban desbordar a propósito. */
 function text(str, x, y, {size=40, weight=400, color=P.paper, align='center', alpha=1,
-                          spacing=0, stroke=0}={}){
+                          spacing=0, stroke=0, sinAjuste=false}={}){
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.font = font(size, weight);
   ctx.textAlign = align;
   try { ctx.letterSpacing = spacing + 'px'; } catch(e){}
+
+  if (!sinAjuste){
+    const k = Math.min(canvas.width, canvas.height) / 1080;   // SAFE va en unidades de diseño
+    const izq = SAFE.left * k, der = canvas.width - SAFE.right * k;
+    const disp = align === 'center' ? 2 * Math.min(x - izq, der - x)
+               : align === 'left'   ? der - x
+                                    : x - izq;
+    // 0.97: deja un pelo de margen. Sin él el texto queda BESANDO la línea de la zona segura y el
+    // antialiasing del borde sangra dentro (medido: 17 px del "?" del S3 justo en x=950).
+    const util = disp * 0.97;
+    if (util > 0){
+      const w = ctx.measureText(str).width;        // letterSpacing ya aplicado arriba
+      if (w > util) ctx.font = font(size * (util / w), weight);
+    }
+  }
   if (stroke){
     ctx.lineWidth = stroke; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round';
     ctx.strokeText(str, x, y);
@@ -1038,7 +1072,10 @@ function drawCTA(t, W, H, s){
 
   // "WITH $50 A MONTH?" a 84px mide ~1075px sobre un lienzo de 1080: tocaba los dos bordes.
   // Se encoge hasta caber con margen, en vez de recortarse en el móvil.
-  const maxW = W*0.86;
+  // BUG cazado por el test de zonas seguras: W*0.86 (=928px) asumía márgenes SIMÉTRICOS, pero
+  // SAFE es asimétrico (izq 70 / der 130). Un texto centrado solo dispone de 2*min(...) = 820px,
+  // así que "cabía" según esta cuenta y aun así el "?" del S3 caía bajo los botones de Shorts.
+  const maxW = 2 * Math.min(W/2 - SAFE.left*s, (W - SAFE.right*s) - W/2) * 0.97;
   let size = 84*s;
   for (let i=0; i<8; i++){
     ctx.font = font(size, 800);
@@ -1551,16 +1588,35 @@ function dibujarIcono(spec, cx, cy, r){
   fn(cx, cy, r); ctx.restore();
 }
 
+/** Cadencia de los bullets. Si el Short no la fija, se DERIVA de la ventana de la escena para que
+ *  los items se repartan por TODO el tramo hablado.
+ *
+ *  El porqué (medido en el FED): 3 bullets con cadencia fija de 2.6s entraban en 2.35/4.95/7.55 y
+ *  luego la pantalla quedaba CONGELADA 8 segundos de los 13 que dura la escena. Ese es el "se ve
+ *  plano": no faltan escenas, sobra tiempo muerto dentro de ellas. Con la cadencia derivada, el
+ *  último item entra al ~72% del tramo y el hold sobrante baja a ~3s. */
+function cadenciaBullets(ov){
+  if (ov.cadencia_s) return ov.cadencia_s;               // si el Short la fija, manda
+  const val = x => typeof x === 'function' ? x() : (x || 0);
+  const win = val(ov.hasta) - val(ov.desde);
+  const n = (ov.items || []).length;
+  if (!(win > 0) || n < 2) return 1.6;
+  // el ÚLTIMO item entra al ~75% de la ventana. Ojo: el último está en (n-1)*cad, no en n*cad
+  // (dividir por n deja el último a mitad de tramo y no arregla el hold: medido, 6.4s muertos).
+  return Math.max(0.6, +((win * 0.75) / (n - 1)).toFixed(2));
+}
+
 function drawBullets(t, W, H, s, a, ov){
   fondoEscena(W, H, a);
   t = localT(t, ov);
   const items = ov.items || [];
+  const cad = cadenciaBullets(ov);
   if (ov.titulo) text(ov.titulo.toUpperCase(), W/2, H*0.20,
                       {size:34*s, weight:700, color:P.brass, alpha:a, spacing:5*s});
   const cy0 = H*0.32, salto = Math.min(150*s, (H*0.58) / Math.max(1, items.length));
   const x0 = W/2 - 300*s;
   items.forEach((it, i) => {
-    const aI = clamp01((t - (0.35 + i * (ov.cadencia_s || 1.6))) / 0.4);
+    const aI = clamp01((t - (0.35 + i * cad)) / 0.4);
     if (aI <= 0) return;
     const e = easeOut(aI), y = cy0 + i*salto + (1-e)*30*s;
     ctx.save(); ctx.globalAlpha = a*e;
@@ -2305,8 +2361,8 @@ function eventosSonido(cfg = CFG, t = T){
   const val = x => typeof x === 'function' ? x() : (x || 0);
   for (const o of (cfg.overlays || [])){
     if (o.escena === 'bullets'){
-      const d0 = val(o.desde), cad = o.cadencia_s || 1.6, n = (o.items || []).length;
-      for (let i = 0; i < n; i++) ev.ticks.push(d0 + 0.35 + i * cad);   // == drawBullets
+      const d0 = val(o.desde), cad = cadenciaBullets(o), n = (o.items || []).length;
+      for (let i = 0; i < n; i++) ev.ticks.push(+(d0 + 0.35 + i * cad).toFixed(2));   // == drawBullets
     }
     if (o.escena === 'stat'){
       const d0 = val(o.desde);
