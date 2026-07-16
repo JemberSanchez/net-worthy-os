@@ -1967,8 +1967,23 @@ async function cargarMusica(f){
   const ab = await f.arrayBuffer();
   musicaPcm = await audioCtx.decodeAudioData(ab.slice(0));
   const dur = musicaPcm.duration.toFixed(1);
-  statusEl.textContent = `🎵 Música cargada (${dur}s). Pulsa ▶ Previsualizar para OÍRLA con la voz ` +
-    `(ajusta el volumen con el slider en vivo). En el MP4 se mezcla con ducking bajo la voz.`;
+  // AUTO-GAIN: si ya hay voz, la música se nivela SOLA contra ella (no hay que ajustar a oído).
+  let nota = '';
+  if (pcm){
+    const g = gainMusicaAuto(pcm, musicaPcm);
+    if (g){
+      musicaGain = g;
+      const s = document.getElementById('musica-vol');
+      if (s) s.value = Math.round(g * 100);
+      const lbl = document.getElementById('musica-vol-lbl');
+      if (lbl) lbl.textContent = g.toFixed(2);
+      nota = ` · 🎚 volumen CALIBRADO SOLO a ${g.toFixed(2)} (-20 dB bajo tu voz)`;
+    }
+  } else {
+    nota = ' · ⚠ carga la voz primero y recarga la música para que se calibre sola';
+  }
+  statusEl.textContent = `🎵 Música cargada (${dur}s)${nota}. Pulsa ▶ Previsualizar para OÍRLA con ` +
+    `la voz. En el MP4 se mezcla con ducking bajo la voz.`;
 }
 document.getElementById('musica-proyecto').onclick = async () => {
   statusEl.textContent = 'Buscando data/musica.mp3…';
@@ -2341,6 +2356,34 @@ function construirMezcla(pcm, ch, N, ev){
     out.push(o);
   }
   return out;
+}
+
+/** AUTO-GAIN de música: calcula la ganancia que deja la música `objetivo_dB` por DEBAJO del nivel
+ *  de la VOZ HABLADA. Track-INDEPENDIENTE: una pista floja y una fuerte acaban al mismo nivel
+ *  percibido, así no hay que ajustar el slider a oído cada vez que se cambia de música.
+ *
+ *  Clave: la voz se mide SOLO donde habla. Un TTS tiene ~40% de silencios; promediarlos hundiría
+ *  el nivel medio y la música saldría demasiado alta. Se usa un umbral relativo al pico.
+ *  -20 dB bajo la voz es el rango de locución con música de fondo (radio/documental). */
+function gainMusicaAuto(vozBuf, musicBuf, objetivo_dB = -20){
+  const rmsHabla = (buf) => {
+    const d = buf.getChannelData(0);
+    let pico = 0;
+    for (let i = 0; i < d.length; i++){ const x = Math.abs(d[i]); if (x > pico) pico = x; }
+    const umbral = pico * 0.08;                       // por debajo de esto: silencio, no cuenta
+    let sum = 0, n = 0;
+    for (let i = 0; i < d.length; i++){ if (Math.abs(d[i]) > umbral){ sum += d[i]*d[i]; n++; } }
+    return n ? Math.sqrt(sum / n) : 0;
+  };
+  const rmsPlano = (buf) => {
+    const d = buf.getChannelData(0);
+    let s = 0; for (let i = 0; i < d.length; i++) s += d[i]*d[i];
+    return Math.sqrt(s / d.length);
+  };
+  const v = rmsHabla(vozBuf), m = rmsPlano(musicBuf);
+  if (!v || !m) return null;
+  const g = (v * Math.pow(10, objetivo_dB / 20)) / m;
+  return Math.max(0.02, Math.min(0.50, +g.toFixed(3)));   // acotado: ni inaudible ni tapando
 }
 
 /** Mezcla MÚSICA de fondo bajo la voz. `canales` ya trae la voz (+sfx). Devuelve canales nuevos.
