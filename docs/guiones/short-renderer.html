@@ -1467,7 +1467,8 @@ function drawChecklist(t, W, H, s){
 
 function fondoEscena(W, H, a, tinte = 0.10){
   ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H);
-  const g = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, Math.max(W,H)*0.7);
+  const [dx, dy] = _drift(Math.min(W,H)/1080);   // mismo drift que el fondo base: coherente y vivo
+  const g = ctx.createRadialGradient(W/2+dx, H*0.45+dy, 0, W/2+dx, H*0.45+dy, Math.max(W,H)*0.7);
   g.addColorStop(0, `rgba(31,158,110,${tinte})`); g.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
 }
@@ -1608,11 +1609,18 @@ function alphaVentana(t, ov){
 }
 
 // ── Frame completo (PURA: mismo t -> mismo frame) ─────────────────────────────
+// Drift lentísimo del centro del glow (dos períodos incomensurables ~11s y ~8s): ningún frame
+// queda muerto, pero es sub-perceptual y NO mueve texto ni zonas seguras. Puro en t -> determinista.
+let _tGlobal = 0;
+const _drift = s => [Math.sin(_tGlobal * 0.57) * 24 * s, Math.sin(_tGlobal * 0.79 + 1.1) * 16 * s];
+
 function drawFrame(t){
   const W = canvas.width, H = canvas.height, s = Math.min(W,H)/1080;
+  _tGlobal = t;
 
   ctx.fillStyle = P.ink; ctx.fillRect(0,0,W,H);
-  const g = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, Math.max(W,H)*0.75);
+  const [dx, dy] = _drift(s);
+  const g = ctx.createRadialGradient(W/2+dx, H*0.45+dy, 0, W/2+dx, H*0.45+dy, Math.max(W,H)*0.75);
   g.addColorStop(0,'rgba(31,158,110,0.09)'); g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
