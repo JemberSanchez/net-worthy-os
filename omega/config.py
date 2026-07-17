@@ -43,10 +43,21 @@ TOP_N = 15
 #   demand_momentum = log2 del cambio de demanda entre escaneos. #2: demanda SUBIENDO = indicador
 #                     adelantado (entrar en la ola, no en el pico). Necesita >=2 escaneos.
 #   monetization    = RPM del sub-nicho (0..1). Rentabilidad, NO viralidad: no todas las vistas
-#                     valen igual en $. Prior declarado (se corrige con RPM real medido). Peso par
-#                     con demand A PROPÓSITO: el dinero pesa tanto como la atención.
+#                     valen igual en $. Prior declarado (se corrige con RPM real medido).
+#
+# ── PERFIL DE FASE: CRECIMIENTO (2026-07-16) ─────────────────────────────────────────────────
+# monetization pesaba 0.30, PAR con demand ("el dinero pesa tanto como la atención"). Eso es
+# correcto para un canal CON audiencia y falso para este: el canal tiene 1 suscriptor y 52 vistas
+# totales, y un RPM de $70 sobre 0 vistas son $0. Optimizar dinero-por-espectador antes de tener
+# espectadores es optimizar la variable equivocada — y de hecho es lo que puso la Fed y el housing
+# por delante: ganaron por PRECIO, no por atractivo.
+# Mientras la meta sea ALCANCE, el dinero pesa poco y la atención manda.
+#
+# ⚠ REVERTIR a monetization 0.30 / demand 0.30 cuando el canal tenga audiencia real (orden de
+#   ~1.000 subs o vistas que ya no dependan del cold-start). Es un cambio de FASE, no una verdad:
+#   a partir de ahí el RPM vuelve a ser dinero de verdad y el criterio original recupera sentido.
 DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30,
-                    "demand": 0.30, "gap": 0.15, "demand_momentum": 0.15, "monetization": 0.30}
+                    "demand": 0.45, "gap": 0.20, "demand_momentum": 0.20, "monetization": 0.10}
 ABSTAIN_THRESHOLD = 0.50          # si el mejor score < umbral -> ABSTENERSE
 PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
 

@@ -155,6 +155,62 @@ class MonetizationTest(unittest.TestCase):
         self.assertLess(mon.monetization_score("crypto news"), 0.2)
 
 
+class MonetizationNotContaminatedByExampleTest(unittest.TestCase):
+    """REGRESIÓN (2026-07-16): el RPM se mide sobre el TÉRMINO, nunca sobre el título ajeno.
+
+    Bug real, cazado en producción: 'housing market' (baseline $12) heredaba $70 porque el
+    `example` — un título de OTRO canal traído por el scan — decía "Mortgage Rates". Ese +0.3
+    de score le hacía GANAR `decide`, y con él se eligió el tema de un video real. El ejemplo
+    es incidental (se elige arbitrariamente entre los del scan): dejar que decida el RPM hace
+    que la elección de tema dependa de qué título haya pescado YouTube ese día.
+    Misma clase que el bug de 'justin verlander' vía "OR retirement": texto ajeno contamina.
+    """
+
+    def setUp(self):
+        import tempfile
+        from omega import config, db
+        self.config, self.db = config, db
+        self._saved_path = config.DB_PATH
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
+        self._tmp.close()
+        config.DB_PATH = self._tmp.name
+        db.init()
+
+    def tearDown(self):
+        self.config.DB_PATH = self._saved_path
+        os.unlink(self._tmp.name)
+
+    def _monetization_of(self, term, example):
+        import json
+        from omega.analyze import hypothesis_engine
+        from omega.reasoning import hypotheses, signals
+        self.db.upsert_theme_demand(
+            [{"term": term, "total_views": 700_000, "videos": 8, "avg_views": 87_500,
+              "examples": [example]}], scanned_at=1000)
+        with self.db.connect() as con:
+            signals.init(con)          # el engine lee `signal` (prevalencia) y escribe `hypothesis`
+            hypotheses.init(con)
+            hypothesis_engine.generate(con)
+            for row in hypotheses.list_candidates(con, domain="content"):
+                ev = json.loads(row["evidence"])
+                if ev["signals"][0]["value"] == term:
+                    return ev["features"]["monetization"]
+        self.fail(f"no se generó hipótesis para {term!r}")
+
+    def test_example_title_does_not_inflate_rpm(self):
+        # el término es baseline ($12 -> 0.171); el título ajeno menciona "Mortgage" ($70 -> 1.0)
+        monet = self._monetization_of(
+            "housing market", "Housing Market Update: Home Prices, Mortgage Rates & Outlook")
+        self.assertAlmostEqual(monet, 0.171, places=3)
+
+    def test_rpm_is_independent_of_which_example_was_scraped(self):
+        # el MISMO término no puede puntuar distinto según el título que pescara el scan
+        a = self._monetization_of("housing market", "Housing Market Update: Mortgage Rates")
+        self.tearDown(); self.setUp()
+        b = self._monetization_of("housing market", "Housing Market: what nobody tells you")
+        self.assertEqual(a, b)
+
+
 class DemandCacheTest(unittest.TestCase):
     def setUp(self):
         # DB temporal aislada: repuntamos config.DB_PATH a un archivo en memoria por proceso

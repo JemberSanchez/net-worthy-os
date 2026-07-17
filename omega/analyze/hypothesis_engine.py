@@ -135,15 +135,21 @@ def generate(con: sqlite3.Connection, *, domain: str = "content",
             # una candidata fuerte por sí misma (la feature 'demand' aporta el resto del score).
             conf = max(0.05, min(0.85, 0.50 + 0.08 * m - 0.20 * contradiction))
             example = row["example"] or ""
-            monet_text = f"{term} {example}"
-            monet = monetization_score(monet_text)
+            # El RPM se mide SOLO sobre el término. Antes era f"{term} {example}", y el `example`
+            # es el título de un video AJENO elegido arbitrariamente entre los del scan: 'housing
+            # market' (baseline $12) heredaba $70 porque un título de otro canal decía "Mortgage
+            # Rates". Eso le daba +0.3 al score y le hacía GANAR `decide`; sin el accidente el
+            # ganador era otro. Misma clase de bug que 'justin verlander' vía "OR retirement":
+            # texto ajeno contaminando la señal. La vía RSS (arriba) ya puntuaba solo el término:
+            # esto además elimina que el mismo tema puntúe distinto según por dónde entre.
+            monet = monetization_score(term)
             for_ev = [f"demanda real: {row['total_views']:,} vistas en YouTube (nicho)",
                       f"tema específico (frase) presente en {row['videos']} videos distintos"]
             if gap >= 0.5:
                 for_ev.append(f"hueco: {avg_views.get(term, 0):,} vistas/video (poca oferta, mucha demanda)")
             if dm > 0.1:
                 for_ev.append(f"demanda EN ALZA: momentum {dm} entre escaneos (adelantarse)")
-            for_ev.append(f"RPM sub-nicho ~${rpm_prior(monet_text)} (prior de monetización)")
+            for_ev.append(f"RPM sub-nicho ~${rpm_prior(term)} (prior de monetización)")
             for_ev.append(f"ej.: {example}" if example else "originado por demanda")
             evidence = {
                 "features": {"momentum": round(m, 3), "prevalence": prevalence.get(term, 0),
