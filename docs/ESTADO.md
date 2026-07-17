@@ -1,5 +1,34 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶ PLAN DE MAÑANA 2026-07-17 (acordado con el usuario) — empieza por aquí
+>
+> **1. S1 → Instagram Reels + TikTok.** La jugada de mayor valor y coste CERO: es el mejor activo
+>    del canal (221 espectadores, evergreen, `story=character`) y **nadie lo ha visto ahí**; los
+>    dos perfiles llevan vacíos desde el 07-16. (TikTok sigue con el perfil incompleto: Nombre
+>    "Net Worthy" ⏰ candado 7 días, foto, bio — y conectar YouTube desde la APP móvil.)
+> **2. HOUSING (tribunal) → YouTube + Facebook.** Le falta SOLO la voz: `docs/guiones/TTS-housing.txt`
+>    → CapCut Firme Pilot → `data/voz-short-housing.mp3`. El motor calibra el resto solo.
+> **3. 🔴 MEDIR RETENCIÓN de los dos.** No vistas: la CURVA (Studio + panel de FB). Van 4 Shorts
+>    publicados y **0 con retención registrada** — es la variable que decide la distribución y la
+>    única que explica el PORQUÉ. `retention_by_block` está vacío en los 4.
+>
+> **Por qué el housing sale aunque `decide` lo mande al último (0.570) y sea NOTICIA** (la
+> categoría que en 39 despegues ajenos no aparece ni una vez): **el FED también es noticia**, así
+> que boletín-noticia vs tribunal-noticia es una comparación **LIMPIA del tratamiento** — la
+> categoría está controlada en ambos. **Expectativa honesta: el housing puede ganar al FED por
+> goleada y aun así hacer ~40 vistas.** Sería una victoria INFORMATIVA (el molde tribunal
+> funciona), no de negocio. Si el molde aguanta → Caso #002 sobre un tema EVERGREEN, que es donde
+> hay techo. **No esperar una explosión: ningún canal de la muestra explotó en su 5º vídeo.**
+>
+> **Después: WARREN BUFFETT** — personaje + evergreen + (si el molde aguanta) tratamiento tribunal.
+> Es donde convergen las 5 señales del día: `decide` limpio (0.658, único sobre el umbral), el ADN
+> propio (el único `story=character` es el mejor Short), los outliers reales (clips de Dave Ramsey
+> x1.000 y SHAQ x705) y `docs/VIRALIDAD.md`.
+> ⚠ Antes de producirlo: **verificar el ruido indio** en la demanda de 'warren buffett' — el
+> ejemplo top del scan es *"Rakesh Jhunjhunwala - India's Warren Buffett"*. Mismo patrón que el
+> ruido de 'share market' que ya se limpió. Si la mitad del scan es de India, la demanda es un
+> espejismo.
+>
 > ## 📊 2026-07-16 (noche) — **`docs/VIRALIDAD.md`: casi todo lo que creíamos del formato es FALSO**
 >
 > Primer estudio con datos AJENOS (543 Shorts EN de finanzas por API, n útil 39). **Léelo antes de
