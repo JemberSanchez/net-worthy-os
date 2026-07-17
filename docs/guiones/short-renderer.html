@@ -64,7 +64,7 @@
       <option value="s1-story">S1 · story — dos columnas (publicado)</option>
       <option value="s2-contrarian">S2 · contrarian — checklist STILL BROKE (fuel/engine)</option>
       <option value="fed-catchup">FED · catch-up — gancho brutal + bullets + stat 4%</option>
-      <option value="housing-catchup">HOUSING · catch-up — priced out + bullets + stat 6.49%</option>
+      <option value="housing-catchup">HOUSING · TRIBUNAL — The People vs. Your Rent (caso #001)</option>
     </select>
   </label>
 </div>
@@ -351,38 +351,48 @@ const SHORTS = {
     // (varias fuentes); hipoteca 30 años ~6.49% estancada (Freddie Mac, esta semana); inflación del
     // alquiler enfriándose (SoCal a mínimo de 5 años). Marco SIN humillar (memoria): culpa al
     // MERCADO, no a la persona. CTA binario/opinable para generar comentarios (auditoría).
-    cta: ['TEAM RENT', 'OR TEAM BUY?'],
-    ctaSub: 'tell me below',
+    // ── TRATAMIENTO: TRIBUNAL (elegido por cálculo, no por gusto) ─────────────────────────────
+    // Se evaluaron los 12 tratamientos del combinator contra las restricciones REALES del canal:
+    //  · YMYL  -> un tribunal PRESENTA PRUEBAS y el jurado decide. El formato ES el disclaimer:
+    //            no aconsejamos, exponemos el caso. (El documental de naturaleza se descartó:
+    //            ahí el espectador es el ANIMAL observado -> condescendiente, choca con la regla
+    //            de no humillar.)
+    //  · NO HUMILLAR -> el espectador es el JURADO, no el acusado. Se acusa al MERCADO.
+    //  · CREDIBILIDAD -> el formato TOMA PRESTADA autoridad (pruebas, ambas partes), no la gasta.
+    //  · ABURRIDO -> conflicto + tensión + stakes (CKB: clear_conflict, tension, stakes).
+    //  · VOZ -> Firme Pilot (grave, calmada) = fiscal/juez. Coste cero.
+    //  · ENGAGEMENT -> el CTA es el VEREDICTO: la respuesta binaria es el comentario.
+    // Los HECHOS son idénticos a la versión boletín y siguen corroborados. El humor está en el
+    // ENCUADRE, nunca en los datos.
+    cta: ['YOUR VERDICT?', 'TEAM RENT OR BUY'],
+    ctaSub: 'the jury decides below',
     spec: [],
     overlays: [
-      {escena:'gancho', desde:0, hasta:2.2, fadeOut:0.5,
-       lineas:['PRICED OUT?', "IT'S NOT YOU."], sub:"here's what just changed"},
-      // sin cadencia_s: se DERIVA de la ventana -> los 3 hechos se reparten por todo el tramo
+      {escena:'gancho', desde:0, hasta:2.4, fadeOut:0.5,
+       lineas:['THE PEOPLE', 'vs. YOUR RENT'], sub:'case #001 · now in session'},
+      // sin cadencia_s: se DERIVA de la ventana -> los hechos se reparten por todo el tramo
       // hablado en vez de amontonarse y dejar 8s congelados (el fallo medido en el FED).
-      {escena:'bullets', desde:2.0, hasta:()=>T.curve, fadeIn:0.4, fadeOut:0.3,
-       titulo:'what just changed',
-       items:['HOME PRICES HIT A RECORD', '30-YR MORTGAGE STUCK ~6.5%', 'BUT RENT IS COOLING'],
+      {escena:'bullets', desde:2.2, hasta:()=>T.curve, fadeIn:0.4, fadeOut:0.3,
+       titulo:'the evidence',
+       items:['EXHIBIT A: RECORD PRICES', 'EXHIBIT B: MORTGAGE ~6.5%', 'DEFENSE: RENT IS COOLING'],
        iconos:['up:loss', 'pct:grey', 'down:growth']},   // ↑ caro · % coste · ↓ alivio (semántico)
-      // El PAYOFF ("no eres tú, la matemática se puso dura, alquilar es estrategia") pide un
-      // reencuadre, NO una cifra. Antes había aquí un stat con el 6.49% — pero la voz dice esa
-      // cifra en el grupo ANTERIOR (`changed`), así que el número salía sobre palabras que no
-      // hablaban de él, y el auto-sync no podía arreglarlo (duración negativa). El 6.5% ya vive
-      // en el bullet 2, que es su sitio. Marco SIN humillar (memoria): culpa al mercado.
+      // El banquillo. Sustituye al stat que estaba MAL puesto aquí: la voz dice el 6.49% en el
+      // grupo ANTERIOR, así que el número salía sobre palabras que no hablaban de él y el
+      // auto-sync no podía arreglarlo (duración negativa). El 6.5% vive ahora en el Exhibit B.
+      // Verbos <=13 chars por las zonas seguras.
       {escena:'principle', desde:()=>T.curve, hasta:()=>T.cta + 0.2, fadeIn:0.45, fadeOut:0.3,
-       // verbos CORTOS (<=13 chars): "YOU'RE NOT BEHIND" (17) se salía de las zonas seguras
-       // (medido: iba de x≈20 a 1057 sobre 1080; los botones de Shorts tapan los 130 de la derecha).
        bloques:[
-         {kicker:'THE MATH', verbo:'GOT HARDER',  sub:'record prices, rates stuck',   icono:'up'},
-         {kicker:'YOU',      verbo:"DIDN'T FAIL", sub:'renting longer is a strategy', icono:'flat'},
+         {kicker:'THE MARKET', verbo:'IS ON TRIAL',  sub:'record prices, rates stuck', icono:'up'},
+         {kicker:'YOU',        verbo:'ARE THE JURY', sub:'not the defendant',          icono:'flat'},
        ]},
     ],
     demo: { hook: 3.0, draw: 8.0, curve: 15.0, cta: 27.0, total: 31.0 },
     guion: {
       grupos: [
-        {id:'setup',   texto: "Here's what just changed with the housing market."},
-        {id:'changed', texto: "Home prices just hit an all-time high. The average thirty-year mortgage is stuck near six and a half percent. And buying a home is about as unaffordable as it's been in decades. But here's the part nobody mentions: rent inflation is actually cooling, in some cities to a five-year low."},
-        {id:'payoff',  texto: "So if you feel priced out, it isn't you. The math got harder, not you. And renting a little longer isn't falling behind — it's a strategy, not a failure."},
-        {id:'cta',     texto: "So right now, are you team rent, or team buy? Tell me below."},
+        {id:'setup',   texto: "Case number one. The people versus your rent."},
+        {id:'changed', texto: "The prosecution presents its evidence. Exhibit A: home prices just hit an all-time high. Exhibit B: the average thirty-year mortgage is stuck near six and a half percent. Together, they make buying about as unaffordable as it's been in decades. The defense calls one witness: rent inflation is cooling, in some cities to a five-year low."},
+        {id:'payoff',  texto: "Now, a word from the bench. You are not on trial here. The market is. Renting a little longer isn't a failure. It's a plea of patience."},
+        {id:'cta',     texto: "Jury, what's your verdict? Team rent, or team buy?"},
       ],
       cifras: [
         ["six and a half percent", "~6.5%"],
