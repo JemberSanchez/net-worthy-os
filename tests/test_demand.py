@@ -155,6 +155,77 @@ class MonetizationTest(unittest.TestCase):
         self.assertLess(mon.monetization_score("crypto news"), 0.2)
 
 
+class AbstainIsReachableTest(unittest.TestCase):
+    """REGRESIÓN (2026-07-16): la abstención tiene que ser ALCANZABLE.
+
+    El umbral era 0.50 = exactamente la confianza base de un candidato de la vía demanda. Como
+    score = confianza + Σ peso·feature y las features de demanda son >= 0, todo candidato pasaba
+    SIEMPRE: el sistema no podía decir 'hoy no hay nada bueno' aunque no lo hubiera.
+    """
+
+    def test_threshold_is_above_demand_path_base_confidence(self):
+        from omega import config
+        # confianza base vía demanda: 0.50 + 0.08*momentum - 0.20*contradiction, con momentum 0
+        base_conf = 0.50
+        self.assertGreater(
+            config.ABSTAIN_THRESHOLD, base_conf,
+            "el umbral debe exigir features REALES por encima de la confianza base, "
+            "o la abstención es inalcanzable por construcción")
+
+
+class DemandMomentumNeedsBaselineTest(unittest.TestCase):
+    """REGRESIÓN (2026-07-16): sin baseline no hay momentum — no un momentum inventado.
+
+    Un término ausente del escaneo previo daba old=0 -> log2(v+1) -> capado a 2.0 -> +0.40 al
+    score, IDÉNTICO para 1.000 vistas que para 700.000. Casi el máximo de `demand` (+0.45): un
+    término nuevo por variación del basket ganaba `decide` por goleada. Y 'nuevo' no es 'emergente'.
+    """
+
+    def setUp(self):
+        import tempfile
+        from omega import config, db
+        self.config, self.db = config, db
+        self._saved_path = config.DB_PATH
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
+        self._tmp.close()
+        config.DB_PATH = self._tmp.name
+        db.init()
+
+    def tearDown(self):
+        self.config.DB_PATH = self._saved_path
+        os.unlink(self._tmp.name)
+
+    def _scan(self, rows, at):
+        # el momentum se lee de theme_demand_history (no del cache de upsert_theme_demand)
+        self.db.append_theme_demand_history(
+            [{"term": t, "total_views": v, "videos": 3} for t, v in rows], scanned_at=at)
+
+    def test_term_without_baseline_scores_zero_momentum(self):
+        self._scan([("old topic", 100_000)], at=1000)
+        self._scan([("old topic", 100_000), ("brand new topic", 1_000)], at=2000)
+        dmom = self.db.fetch_demand_momentum()
+        self.assertNotIn("brand new topic", dmom,
+                         "un término sin baseline no puede puntuar momentum: no es medible")
+        self.assertEqual(dmom.get("brand new topic", 0.0), 0.0)
+
+    def test_real_growth_still_measured(self):
+        # el arreglo NO puede matar la señal legítima: con baseline, el crecimiento se mide
+        self._scan([("real topic", 100_000)], at=1000)
+        self._scan([("real topic", 200_000)], at=2000)
+        self.assertAlmostEqual(self.db.fetch_demand_momentum()["real topic"], 1.0, places=2)  # 2x
+
+    def test_a_new_term_cannot_outscore_a_term_with_real_demand(self):
+        from omega import config
+        w = config.DECISION_WEIGHTS
+        self._scan([("real topic", 700_000)], at=1000)
+        self._scan([("real topic", 770_000), ("noise", 1_000)], at=2000)
+        dmom = self.db.fetch_demand_momentum()
+        aporte_ruido = w["demand_momentum"] * dmom.get("noise", 0.0)
+        aporte_real = w["demand_momentum"] * dmom.get("real topic", 0.0)
+        self.assertEqual(aporte_ruido, 0.0)
+        self.assertGreater(aporte_real, aporte_ruido)
+
+
 class MonetizationNotContaminatedByExampleTest(unittest.TestCase):
     """REGRESIÓN (2026-07-16): el RPM se mide sobre el TÉRMINO, nunca sobre el título ajeno.
 
@@ -280,19 +351,26 @@ class DemandMomentumTest(unittest.TestCase):
             [{"term": "build wealth", "total_views": 1_000_000, "videos": 5}], scanned_at=1000)
         self.assertEqual(self.db.fetch_demand_momentum(), {})  # sin baseline, sin señal
 
-    def test_rising_demand_is_positive_new_term_is_high(self):
-        # escaneo 1 (baseline)
+    def test_rising_demand_is_positive_new_term_has_no_momentum(self):
+        # CAMBIADO 2026-07-16. Este test exigía que un término NUEVO puntuara momentum alto
+        # (>5, capado luego a 2.0 = +0.40 al score). La intención era "detectar demanda
+        # emergente antes que el resto"; el efecto medido fue otro: un término nuevo de 1.000
+        # vistas puntuaba IGUAL que uno de 700.000 y ganaba `decide` por encima de términos con
+        # demanda real (Warren Buffett aporta +0.112 en total). Y un término "nuevo" no es
+        # demanda emergente: casi siempre es que el basket de queries pescó algo distinto.
+        # Sin baseline el momentum no es medible -> 0. La demanda emergente real se ve en el
+        # escaneo siguiente, ya con baseline.
         self.db.append_theme_demand_history([
             {"term": "build wealth", "total_views": 1_000_000, "videos": 5},
         ], scanned_at=1000)
-        # escaneo 2: 'build wealth' duplica; 'ai stocks' es NUEVO (demanda emergente)
+        # escaneo 2: 'build wealth' duplica; 'ai stocks' aparece por primera vez
         self.db.append_theme_demand_history([
             {"term": "build wealth", "total_views": 2_000_000, "videos": 6},
             {"term": "ai stocks", "total_views": 3_000_000, "videos": 4},
         ], scanned_at=2000)
         mom = self.db.fetch_demand_momentum()
         self.assertAlmostEqual(mom["build wealth"], 1.0, places=1)  # log2(2M/1M) ~ 1.0 (duplicó)
-        self.assertGreater(mom["ai stocks"], 5)                     # término nuevo -> momentum alto
+        self.assertNotIn("ai stocks", mom)                          # sin baseline -> no medible
 
 
 class DemandFeatureInScoreTest(unittest.TestCase):

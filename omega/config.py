@@ -58,7 +58,14 @@ TOP_N = 15
 #   a partir de ahí el RPM vuelve a ser dinero de verdad y el criterio original recupera sentido.
 DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30,
                     "demand": 0.45, "gap": 0.20, "demand_momentum": 0.20, "monetization": 0.10}
-ABSTAIN_THRESHOLD = 0.50          # si el mejor score < umbral -> ABSTENERSE
+# si el mejor score < umbral -> ABSTENERSE.
+# Estaba en 0.50, que es EXACTAMENTE la confianza base de un candidato de la vía demanda
+# (0.50 + 0.08*momentum - 0.20*contradiction, con momentum 0 -> 0.50). Como score = confianza +
+# Σ peso·feature y las features de demanda son >= 0, TODO candidato pasaba SIEMPRE: la abstención
+# —que el kernel documenta como "decisión válida de primera clase"— era inalcanzable. El sistema
+# estaba obligado a elegir algo cada día aunque no tuviera nada bueno.
+# 0.60 exige que las features aporten >= +0.10 REAL sobre la confianza base para no abstenerse.
+ABSTAIN_THRESHOLD = 0.60
 PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
 
 # Búsquedas que definen el NICHO en YouTube (finanzas/inversiones/crypto, audiencia EN).

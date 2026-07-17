@@ -146,8 +146,17 @@ def fetch_demand_momentum() -> dict[str, float]:
     """log2(vistas_ahora / vistas_escaneo_anterior) por término, entre los DOS últimos escaneos.
 
     Mide si la DEMANDA de un tema SUBE (indicador adelantado). Con <2 escaneos -> {} (momentum 0,
-    igual que el momentum de RSS necesita baseline). Un término nuevo respecto al escaneo previo
-    puntúa alto: demanda emergente = justo lo que queremos detectar antes que el resto."""
+    igual que el momentum de RSS necesita baseline).
+
+    Un término SIN baseline en el escaneo previo NO puntúa: sale del dict -> momentum 0.
+    Antes se le aplicaba old=0 -> log2(v+1) -> ratio enorme -> capado a 2.0 -> +0.40 al score,
+    IGUAL para un término de 1.000 vistas que para uno de 700.000 (el cap aplasta la diferencia).
+    Eso es casi el máximo que puede aportar `demand` (+0.45), así que cualquier término nuevo
+    ganaba `decide` por goleada — y "nuevo" no significa demanda emergente: significa que el
+    basket de queries pescó algo distinto. Sin baseline el momentum NO ES MEDIBLE, y el propio
+    docstring ya exigía baseline a nivel global: esto lo hace coherente a nivel de término.
+    El precio: la demanda de verdad emergente tarda un escaneo más en verse. Aceptable —
+    inventarse un momentum es peor que esperar."""
     import math
     try:
         with connect() as con:
@@ -163,7 +172,8 @@ def fetch_demand_momentum() -> dict[str, float]:
                 "SELECT term, total_views FROM theme_demand_history WHERE scanned_at=?", (prev,))}
     except sqlite3.OperationalError:
         return {}
-    return {term: round(math.log2((v + 1) / (old.get(term, 0) + 1)), 3) for term, v in cur.items()}
+    return {term: round(math.log2((v + 1) / (old[term] + 1)), 3)
+            for term, v in cur.items() if term in old}
 
 
 def replace_scanned_videos(videos: list[dict], scanned_at: int) -> int:
