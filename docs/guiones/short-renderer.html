@@ -368,13 +368,17 @@ const SHORTS = {
     ctaSub: 'the jury decides below',
     spec: [],
     overlays: [
+      // El gancho ES la prueba A (el cargo: estás priced out) -> pérdida primal en 1s, dentro del
+      // juicio. Por eso la evidencia se numera desde la B: dos "Exhibit A" distintos romperían el
+      // marco. Se descartó 'THE PEOPLE / vs. YOUR RENT' aquí: intriga cerebral, ~2s en aterrizar,
+      // y confundiría el experimento del viernes (tribunal vs boletín) con un gancho más flojo.
       {escena:'gancho', desde:0, hasta:2.4, fadeOut:0.5,
-       lineas:['THE PEOPLE', 'vs. YOUR RENT'], sub:'case #001 · now in session'},
+       lineas:['EXHIBIT A:', "YOU'RE PRICED OUT"], sub:'case #001 · now in session'},
       // sin cadencia_s: se DERIVA de la ventana -> los hechos se reparten por todo el tramo
       // hablado en vez de amontonarse y dejar 8s congelados (el fallo medido en el FED).
       {escena:'bullets', desde:2.2, hasta:()=>T.curve, fadeIn:0.4, fadeOut:0.3,
        titulo:'the evidence',
-       items:['EXHIBIT A: RECORD PRICES', 'EXHIBIT B: MORTGAGE ~6.5%', 'DEFENSE: RENT IS COOLING'],
+       items:['EXHIBIT B: RECORD PRICES', 'EXHIBIT C: MORTGAGE ~6.5%', 'DEFENSE: RENT IS COOLING'],
        iconos:['up:loss', 'pct:grey', 'down:growth']},   // ↑ caro · % coste · ↓ alivio (semántico)
       // El banquillo. Sustituye al stat que estaba MAL puesto aquí: la voz dice el 6.49% en el
       // grupo ANTERIOR, así que el número salía sobre palabras que no hablaban de él y el
@@ -389,8 +393,8 @@ const SHORTS = {
     demo: { hook: 3.0, draw: 8.0, curve: 15.0, cta: 27.0, total: 31.0 },
     guion: {
       grupos: [
-        {id:'setup',   texto: "Case number one. The people versus your rent."},
-        {id:'changed', texto: "The prosecution presents its evidence. Exhibit A: home prices just hit an all-time high. Exhibit B: the average thirty-year mortgage is stuck near six and a half percent. Together, they make buying about as unaffordable as it's been in decades. The defense calls one witness: rent inflation is cooling, in some cities to a five-year low."},
+        {id:'setup',   texto: "Exhibit A. You're priced out. Case number one: the people versus your rent."},
+        {id:'changed', texto: "The prosecution presents its evidence. Exhibit B: home prices just hit an all-time high. Exhibit C: the average thirty-year mortgage is stuck near six and a half percent. Together, they make buying about as unaffordable as it's been in decades. The defense calls one witness: rent inflation is cooling, in some cities to a five-year low."},
         {id:'payoff',  texto: "Now, a word from the bench. You are not on trial here. The market is. Renting a little longer isn't a failure. It's a plea of patience."},
         {id:'cta',     texto: "Jury, what's your verdict? Team rent, or team buy?"},
       ],
