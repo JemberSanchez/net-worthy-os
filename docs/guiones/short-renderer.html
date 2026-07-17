@@ -2666,7 +2666,11 @@ async function exportarMP4(progreso){
                                        duration: Math.round(1e6 / FPS_MP4)});
     venc.encode(vf, {keyFrame: i % (FPS_MP4 * 2) === 0});
     vf.close();
-    if (venc.encodeQueueSize > 6) await cede();
+    // WHILE, no IF: si el codificador va más lento que el bucle (portátil, software, 1080x1920),
+    // hay que ESPERAR a que la cola drene, no ceder una vez y seguir metiendo frames. Con `if` la
+    // cola crecía sin límite en videos largos (55s = 1650 frames) -> backlog enorme -> el flush se
+    // colgaba/moría. Con `while` la cola queda acotada a ~6 frames y la RAM se mantiene plana.
+    while (venc.encodeQueueSize > 6){ if (fallo) throw fallo; await cede(); }
     if (i % 10 === 0) progreso?.(0.05 + 0.75 * i / nF);
   }
   await venc.flush(); venc.close();
@@ -2703,7 +2707,8 @@ async function exportarMP4(progreso){
       const ad = new AudioData({format:'f32-planar', sampleRate:sr, numberOfFrames:len,
                                 numberOfChannels:ch, timestamp: Math.round(off / sr * 1e6), data});
       aenc.encode(ad); ad.close();
-      if (aenc.encodeQueueSize > 16) await cede();
+      while (aenc.encodeQueueSize > 16){ if (aFallo) throw aFallo; await cede(); }   // while, no if
+      if ((off & 0x3FFFF) === 0) progreso?.(0.85 + 0.09 * off / limite);   // 85->94% visible
     }
     await aenc.flush(); aenc.close();
     if (aFallo) throw aFallo;
@@ -2712,6 +2717,7 @@ async function exportarMP4(progreso){
   }
 
   progreso?.(0.95);
+  await cede();                          // deja pintar el 95% antes del muxeo (síncrono)
   const blob = muxMP4({trozos, tamanos, claves, desc, w:canvas.width, h:canvas.height}, audio);
   blob.ext = 'mp4';
   blob.fps = FPS_MP4;
