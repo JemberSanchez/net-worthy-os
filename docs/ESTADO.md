@@ -1,5 +1,29 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## 📊 2026-07-16 (noche) — **`docs/VIRALIDAD.md`: casi todo lo que creíamos del formato es FALSO**
+>
+> Primer estudio con datos AJENOS (543 Shorts EN de finanzas por API, n útil 39). **Léelo antes de
+> proponer cualquier cambio de formato.** Lo valioso son los NEGATIVOS:
+> **la duración NO predice nada** (parecía 57s vs nuestros 30s → era CONFOUNDER del tamaño del
+> canal; dentro de canales pequeños 31-36s vs 38s, y los despegues van de **17s a 130s**) ·
+> **el título casi no distingue** · **"más escenas/más producción" no aparece**: el mejor de la
+> muestra hizo **25,5M con 26.800 subs en 17 SEGUNDOS**, y otro 9,8M con 3.890 subs en **6s**.
+> Corrobora el dato propio: el FED es el Short más producido del canal y el peor.
+>
+> **Lo que SÍ:** **ninguno de los 39 despegues es NOTICIA** (edades 133-352 días, siguen
+> acumulando = evergreen) — y `youtube-scan` usa `publishedAfter=30d`, así que **el evergreen es
+> invisible para `decide`**. Tres formatos despegan y **el boletín no es ninguno**: clip de persona
+> real · demo visual/challenge · explicador con la promesa desnuda en el título. Benchmark de
+> engagement: **likes/vista 1%-3,7%**. Reproducible: `research/viral_collect.py` + `viral_compare.py`.
+>
+> **El cerebro, arreglado hoy (3 bugs medidos, 104 tests verdes):** el RPM lo decidía un **título
+> ajeno** ('housing' heredaba $70 por la palabra "Mortgage" de otro canal) → ganaba `decide`;
+> **la abstención era inalcanzable** (umbral 0.50 = confianza base exacta); y **un término nuevo
+> compraba el primer puesto** (+0.400 por ruido de muestreo, con 1.000 vistas igual que con
+> 700.000). Perfil de **fase CRECIMIENTO**: monetization 0.30→0.10, demand 0.30→0.45 —
+> **⚠ REVERTIR cuando haya audiencia**. `decide` limpio ahora: **`warren buffett` 0.658** (único
+> sobre el umbral), housing cae a 0.570.
+>
 > **⚠ LEE PRIMERO `docs/AUDITORIA.md` (2026-07-15):** juicio profesional del proyecto. Resumen:
 > motor potente, cerebro DORMIDO — 3 videos publicados y `production_outcome`=0. La mejora #1 no es
 > otra feature: es CERRAR EL LOOP (registrar analytics+outcome) + volumen/cadencia + distribución.
