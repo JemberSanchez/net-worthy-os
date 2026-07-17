@@ -242,8 +242,9 @@ document.getElementById('motor').onload = () => {
   check('series(): el Buffett reproduce la carta de Berkshire ($100 en 1965 -> ~$5.5M)', () => {
     W.cargarShort('buffett-time');
     const s = W.series();
-    // lump 100 · 60 años · 19,9525% ANUAL (CAGR implícito de la carta). contrib PLANO en 100.
-    const ok = (s.n === 60 && s.finalContrib === 100 && Math.abs(s.finalTotal - 5502477) < 2000);
+    // lump 100 · 60 años · 19,9525% anual, sub-muestreado a MESES (n=720) con tasa mensual
+    // equivalente -> curva fluida, MISMO final al céntimo. contrib PLANO en 100.
+    const ok = (s.n === 720 && s.finalContrib === 100 && Math.abs(s.finalTotal - 5502477) < 2000);
     W.cargarShort('s3-stat');                 // deja el motor como estaba para los tests siguientes
     return ok ? true : `Buffett mal: total=${s.finalTotal} contrib=${s.finalContrib} n=${s.n}`;
   });

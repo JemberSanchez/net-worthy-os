@@ -793,10 +793,14 @@ S.forEach((el,i) => el.addEventListener('input', () => {
  *  Sin `lump` ni `compound` el comportamiento es BIT A BIT el de antes (lo fija un test). */
 function series(){
   const anual = CFG.compound === 'annual';
-  const n = anual ? CFG.years : CFG.years*12;
-  const r = anual ? CFG.rate  : CFG.rate/12;
+  // SIEMPRE a resolución MENSUAL (n = años*12): así la curva se dibuja FLUIDA (~720 puntos, no 60
+  // -> la explosión final deja de verse poligonal). El compuesto anual se conserva EXACTO usando
+  // la tasa mensual equivalente (1+r)^(1/12)-1: el valor en cada aniversario y el final coinciden
+  // al céntimo con componer una vez al año. El S3 (nominal/12) queda BIT A BIT igual.
+  const n = CFG.years*12;
+  const r = anual ? Math.pow(1+CFG.rate, 1/12) - 1 : CFG.rate/12;
   const lump = CFG.lump || 0;
-  const pmt  = CFG.pmt  || 0;
+  const pmt  = CFG.pmt  || 0;   // ningún Short anual usa pmt; si lo hiciera, contrib lo cuenta mensual
   const total = [], contrib = [];
   let bal = lump;
   for (let i=1; i<=n; i++){ bal = bal*(1+r) + pmt; total.push(bal); contrib.push(lump + pmt*i); }
@@ -1065,13 +1069,12 @@ function drawChart(t, W, H, s, alpha, soloLinea=false){
   ctx.globalAlpha = alpha;
   ctx.beginPath(); ctx.moveTo(x0,yBot); ctx.lineTo(x1,yBot);
   ctx.strokeStyle='#2B4238'; ctx.lineWidth=2*s; ctx.stroke();
-  // índice del año: mensual -> yr*12; anual (Buffett) -> yr. Sin esto, con compuesto ANUAL
-  // (D.n=60) todos los años >=5 caían en yr*12>59 -> i=59 -> se AMONTONABAN en el borde derecho.
-  // Y a 60 años, paso 10 (no 5): 0,10,..,60 = 7 etiquetas legibles en vez de 13 apretadas.
-  const idxDeAnio = yr => Math.min(D.n-1, CFG.compound === 'annual' ? yr : yr*12);
+  // A 60 años, paso 10 (no 5): 0,10,..,60 = 7 etiquetas legibles en vez de 13 apretadas.
+  // El índice es yr*12 para todos (la serie es mensual siempre): el S3 queda idéntico.
   const pasoAnios = CFG.years > 35 ? 10 : 5;
   for (let yr=0; yr<=CFG.years; yr+=pasoAnios){
-    text(String(yr), px(idxDeAnio(yr)), yBot+34*s, {size:22*s, color:P.grey, alpha:alpha*0.75});
+    const i = Math.min(D.n-1, yr*12);
+    text(String(yr), px(i), yBot+34*s, {size:22*s, color:P.grey, alpha:alpha*0.75});
   }
   ctx.restore();
 
