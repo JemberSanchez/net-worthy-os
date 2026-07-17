@@ -1,0 +1,26 @@
+BUFFETT · "Time, not talent" — Short #6
+Voz: CapCut TTS "Firme Pilot" (la misma de S1/S2/S3/FED/housing — NO la cambies: cambiar de motor
+de voz rompe la comparabilidad).
+Guardar como: data/voz-short-buffett.mp3
+
+Pega el texto de abajo TAL CUAL, de una sola toma. Los cortes NO los marcas tú: el calibrador del
+motor los deduce del audio. No metas pausas artificiales ni cambies la puntuación.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────
+
+Warren Buffett bought his first stock at eleven. He didn't have a billion dollars until fifty-six. Forty-five years in between. Everyone calls that getting rich late. It's the exact opposite. Here's what a hundred dollars did if you handed it to him in nineteen sixty-five. Sixty years later, five and a half million dollars. You put in one hundred dollars. Everything above that line is time doing the work, not you. Now the part nobody says. Berkshire returned about twenty percent a year. The market returned ten point four, before inflation. Not even double. But stretched over sixty years, that gap is the difference between thirty-nine thousand dollars and five and a half million. You will never get Buffett's twenty percent. You don't need it. His edge wasn't the return. It was the clock. What age were you when you bought your first share? Drop the number.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────
+
+Al tenerla:
+1. Servir por http://localhost:8765/docs/guiones/short-renderer.html
+2. Selector -> "BUFFETT · Time, not talent"  ->  "🎙 Usar la voz del proyecto"
+   El motor calibra SOLO: cortes, subtítulos, cadencia, el sync del "$5,500,000" sobre la palabra,
+   y el gain de la música. (Antes de cargar la voz, la preview hereda los subtítulos del S3 —
+   es normal, se corrige al calibrar.)
+3. Revisar la previsualización entera -> "⏺ Grabar y descargar"
+4. 🔴 Tras publicar: MEDIR RETENCIÓN (Studio + panel FB), no solo vistas.
+
+Nota de honestidad para la descripción del vídeo (YouTube/FB), por YMYL:
+- El 20% de Berkshire es NOMINAL (antes de inflación) y NADIE lo replica.
+- La curva de $100 es ilustrativa del interés compuesto, no una recomendación.
