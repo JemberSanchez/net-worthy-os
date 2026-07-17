@@ -572,6 +572,22 @@ function repartirGrupos(segs, silsPorGrupo){
 
 /** Reparte las palabras de un grupo sobre SU tiempo de voz, saltándose las pausas. */
 function alinearPalabras(texto, segs){
+  // Divide en FRASES (el TTS pausa en la puntuación -> cada frase suele ser un bloque de voz).
+  // Si el nº de frases == nº de bloques, se ancla CADA frase a SU bloque real: la primera palabra
+  // de cada frase cae en el inicio real de su bloque, sin deriva entre frases. Antes se repartía
+  // TODO el grupo a un ritmo global y una frase hablada despacio empujaba la siguiente palabra al
+  // hueco de silencio anterior (medido: "Everyone" salía a 7.36 y la voz lo decía a 7.86).
+  const alinearEn = (palabras, s0, s1) => {
+    const sl = palabras.map(silabas);
+    const rate = (sl.reduce((a,b)=>a+b,0) || 1) / (s1 - s0);
+    let t = s0;
+    return palabras.map((w,i) => { const a = t; t += sl[i]/rate; return {w, t0:a, t1:t}; });
+  };
+  const frases = (texto.match(/[^.?!]+[.?!]*/g) || [texto]).map(f => f.trim()).filter(Boolean);
+  if (frases.length === segs.length){                 // caso limpio: 1 frase = 1 bloque
+    return frases.flatMap((fr, k) => alinearEn(fr.split(/\s+/).filter(Boolean), segs[k][0], segs[k][1]));
+  }
+  // FALLBACK (frases != bloques): reparto global de siempre — comportamiento previo intacto.
   const pal = texto.split(/\s+/).filter(Boolean);
   const sl = pal.map(silabas);
   const Ds = segs.reduce((a,s) => a + (s[1]-s[0]), 0);
