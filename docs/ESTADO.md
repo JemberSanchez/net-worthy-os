@@ -8,6 +8,85 @@
 > `docs/POLITICA.md` y `docs/VISION.md`. Ruta: `C:\Users\Asus\Desktop\Proyecto AI`
 > (repo git, rama `master`). Hay memoria en `~/.claude/projects/.../memory/` que se carga sola.
 >
+> ## 🎬 2026-07-16 (tarde) — EL SALTO CREATIVO: **el housing ya NO es un boletín, es un TRIBUNAL**
+>
+> **La corrección del usuario que cambió el rumbo (hazle caso, tenía razón):** llevábamos horas
+> puliendo la EJECUCIÓN (niveles de audio, sync, zonas seguras) de un formato que es **un boletín de
+> noticias con tipografía bonita** (gancho → 3 bullets → número → CTA). Lo hace todo canal de
+> finanzas. Y el dato lo confirma: **el mejor Short del canal (S1, 259 vistas FB) es el ÚNICO que
+> cuenta una historia**; FED y housing eran más boletines. También dijo, con razón, que **la voz
+> CapCut le gusta y no es el problema** — yo insistía en ElevenLabs; el problema era el ENCUADRE.
+>
+> **La maquinaria de diferenciación YA EXISTÍA sin usar:** `combinator.py` tiene 12 tratamientos
+> (documental, terror, anime, thriller, noir, atraco, comedia, cuento, naturaleza, **tribunal**…) y
+> el CKB tiene `novel_combination`, `pattern_break`, `humor_absurd`, `series_potential`.
+>
+> **HOUSING = `TRIBUNAL` (Caso #001: "The People vs. Your Rent").** Elegido evaluando los 12 contra
+> las restricciones reales: **YMYL** (un tribunal presenta PRUEBAS y decide el jurado → *el formato
+> ES el disclaimer*) · **no humillar** (el espectador es el **JURADO**, no el acusado; se acusa al
+> MERCADO — por eso se DESCARTÓ el documental de naturaleza: ahí el espectador es el animal
+> observado = condescendiente) · **credibilidad** (toma prestada autoridad) · **voz** (Firme Pilot =
+> fiscal, coste cero) · **engagement** (el CTA ES el veredicto: un ROL, no una petición).
+> Línea clave del banquillo: **"You are not on trial here. The market is."**
+> Hechos IDÉNTICOS y corroborados. El humor está en el ENCUADRE, nunca en los datos.
+>
+> **⚠ PENDIENTE ABIERTO (decisión del usuario):** el gancho del tribunal es más flojo que el del FED.
+> "YOUR SAVINGS ARE LOSING" (pérdida, primal, 1s) le gana a "THE PEOPLE vs. YOUR RENT" (intriga,
+> cerebral, 2s). Propuesta sin aplicar: `EXHIBIT A: / YOU'RE PRICED OUT` (visceral + dentro del
+> juicio). **El usuario no había respondido.**
+>
+> **EL EXPERIMENTO DEL VIERNES, ahora sí interesante:** FED (boletín) vs HOUSING (tribunal) — misma
+> voz, misma calidad técnica, mismo canal. La pregunta ya no es "¿qué gancho?" sino **"¿ser distinto
+> compensa?"**. Si el tribunal despega → molde replicable (`Caso #002: El Pueblo vs. Tu Tarjeta`).
+>
+> **HOUSING: le falta SOLO la VOZ.** Guion tribunal en 2 bloques (CapCut Firme Pilot) → guardar como
+> `data/voz-short-housing.mp3`. Al cargarla, el motor calibra TODO solo. El guion exacto está en
+> `SHORTS['housing-catchup'].guion.grupos` de `short-renderer.html`.
+>
+> ### Motor — lo que se automatizó hoy (todo verificado, 19 tests verdes)
+> | Antes (a mano) | Ahora (solo) |
+> |---|---|
+> | Volumen de música a oído | **auto-gain** a −20 dB bajo la voz, **independiente de la pista** |
+> | Calcular cuándo aterriza el número | **auto-sync** sobre la palabra hablada (+ el golpe de sonido) |
+> | Cadencia de bullets fija | **derivada** de la ventana (mató 8s de pantalla congelada → 2.89s) |
+> | Texto que se salía de pantalla | **auto-ajuste** en `text()` (embudo de TODO el texto) |
+>
+> Además: música con **ducking** (suena también en previsualización), **sonido sincronizado a
+> eventos** (tick por bullet, riser, golpe), **fondo vivo** (drift), **iconos vectoriales
+> semánticos**, stat con **decimales**.
+>
+> **🔴 BUG CAZADO EN UN VIDEO PUBLICADO:** el `?` de "WITH $50 A MONTH?" del **S3** caía bajo los
+> botones de Shorts (los 130px derechos). Causa raíz: el CTA usaba `maxW = W*0.86` asumiendo
+> márgenes SIMÉTRICOS, pero SAFE es asimétrico (izq 70 / der 130). **Ya arreglado** — importa porque
+> el S3 se re-renderiza para IG/TikTok. Lo cazó el **test**, no el ojo.
+>
+> ### Tests del motor (NUEVO) — `docs/guiones/tests-motor.html`
+> 19 verdes. Página autocontenida (iframe + aserciones, **sin Node ni dependencias**). Ábrela por
+> `http://localhost:8765/docs/guiones/tests-motor.html`. Cubre auto-gain, mezcla/ducking,
+> eventosSonido, autoSyncStat, cadenciaBullets, determinismo de `drawFrame`, y un **barrido de zonas
+> seguras** por los 5 Shorts frame a frame. **Corre esto antes de tocar el motor.**
+>
+> ### Distribución (nuevo hoy)
+> - **Instagram** `@networthytv`: creado, **profesional**, perfil listo, **vinculado a la Página** vía
+>   Meta Business Suite → se puede publicar a FB+IG a la vez ("Crear reel").
+> - **TikTok** `@networthytv`: creado pero **perfil INCOMPLETO**. Falta: Nombre → **"Net Worthy"**
+>   (⏰ candado de 7 días), foto (logo), bio. Y **desde la APP MÓVIL**: Editar perfil → **Social** →
+>   conectar **YouTube** (← el negocio) e Instagram. Sin mínimo de seguidores. NO pasar a Business
+>   (pierde música). Facebook: no tiene enlace nativo, saltar.
+> - **Música**: `data/Musica.mp3` = *Corporate Ambient Piano* (Rockot, Pixabay CC0). La M mayúscula
+>   NO importa en Windows (verificado: el fetch la encuentra).
+> - **Plan**: re-renderizar S1/S2/S3 con el motor de hoy y subirlos **uno por día** a IG/TikTok
+>   (nunca los han visto) → siembra los perfiles + construye cadencia, sin producir nada nuevo.
+>
+> ### Monetización — verificado, la estrategia es CORRECTA
+> - **TikTok Creator Rewards: NO disponible en Colombia** (depende de dónde estás TÚ, no del idioma
+>   ni de la audiencia). Da igual: paga céntimos. **TikTok es distribución, no ingreso.**
+> - **YouTube YPP: SÍ (195 países, Colombia incluida)** y **el RPM lo marca dónde está tu ESPECTADOR**
+>   (CPM EE.UU. ≈ $32). Contenido EN + audiencia gringa + cobrar desde Colombia = **la jugada correcta**.
+> - El dinero real: **long-form de YouTube + marcas** (las marcas no dependen de país). Shorts = embudo.
+>
+> ---
+>
 > ## 🔴 2026-07-16 — FED PUBLICADO. LO ÚNICO QUE IMPORTA: **MEDIRLO EL VIERNES 18/07**
 > **4º Short PUBLICADO** hoy 10:55am local (15:55 UTC), franja sana:
 > ref `fed-savings-catchup-2026-07` · [YT nT8V0JHKD-M](https://youtube.com/shorts/nT8V0JHKD-M) ·
