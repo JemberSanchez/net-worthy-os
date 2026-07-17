@@ -431,6 +431,7 @@ const SHORTS = {
     cta: ['WHAT AGE DID', 'YOU START?'],
     ctaSub: 'drop your number · zero counts',
     lump: 100, years: 60, rate: 0.199525, compound: 'annual',
+    ghostCurve: true,                  // la curva crece tenue tras el gancho: movimiento desde el frame 1
     // Aviso HONESTO y explícito: la tasa es NOMINAL (no real), y nadie replica el 19,9% de BRK.
     // El derivado por defecto diría "20% after inflation" — falso y contrario al propio guion.
     aviso: ['Illustrative · Berkshire 1965–2024, ~20%/yr nominal · before inflation',
@@ -1015,7 +1016,10 @@ function drawHook(t, W, H, s){
 }
 
 // ── Escena 2-4: la gráfica ────────────────────────────────────────────────────
-function drawChart(t, W, H, s, alpha){
+// `soloLinea` (curva-fantasma): dibuja SOLO rejilla + línea creciendo, sin el número gigante ni
+// el gap ni las etiquetas. Se usa para pintar la curva TENUE detrás del gancho -> movimiento
+// desde el frame 1 (lo que hacen los demos virales). Opt-in por Short (CFG.ghostCurve).
+function drawChart(t, W, H, s, alpha, soloLinea=false){
   // Todo dentro de SAFE: fuera de ahí lo tapa la interfaz de YouTube/Facebook.
   // x1 deja 20px extra: la etiqueta "30" va centrada en x1 y asomaba por la derecha.
   const x0 = 160*s, x1 = W - SAFE.right - 20*s;
@@ -1026,7 +1030,10 @@ function drawChart(t, W, H, s, alpha){
 
   // La curva TERMINA de dibujarse cuando la voz dice "$610,000" (T.draw), no cuando le apetece.
   // Si el contador llega a la cifra 3s después de oírla, el clímax se deshincha.
-  const arranque = T.hook + 0.4;
+  // Con ghostCurve la línea arranca casi en el frame 0 (crece tenue bajo el gancho); sin él,
+  // tras el gancho, como siempre (el S3 no cambia). `fin` sigue atado a T.draw: la curva termina
+  // de explotar cuando la voz dice la cifra, ghost o no.
+  const arranque = CFG.ghostCurve ? 0.3 : T.hook + 0.4;
   const fin = Math.max(arranque + 1, T.draw);
   const p = clamp01((t - arranque) / (fin - arranque));
   const idx = Math.max(0, Math.floor(p * (D.n-1)));
@@ -1058,14 +1065,18 @@ function drawChart(t, W, H, s, alpha){
   ctx.globalAlpha = alpha;
   ctx.beginPath(); ctx.moveTo(x0,yBot); ctx.lineTo(x1,yBot);
   ctx.strokeStyle='#2B4238'; ctx.lineWidth=2*s; ctx.stroke();
-  for (let yr=0; yr<=CFG.years; yr+=5){
-    const i = Math.min(D.n-1, yr*12);
-    text(String(yr), px(i), yBot+34*s, {size:22*s, color:P.grey, alpha:alpha*0.75});
+  // índice del año: mensual -> yr*12; anual (Buffett) -> yr. Sin esto, con compuesto ANUAL
+  // (D.n=60) todos los años >=5 caían en yr*12>59 -> i=59 -> se AMONTONABAN en el borde derecho.
+  // Y a 60 años, paso 10 (no 5): 0,10,..,60 = 7 etiquetas legibles en vez de 13 apretadas.
+  const idxDeAnio = yr => Math.min(D.n-1, CFG.compound === 'annual' ? yr : yr*12);
+  const pasoAnios = CFG.years > 35 ? 10 : 5;
+  for (let yr=0; yr<=CFG.years; yr+=pasoAnios){
+    text(String(yr), px(idxDeAnio(yr)), yBot+34*s, {size:22*s, color:P.grey, alpha:alpha*0.75});
   }
   ctx.restore();
 
   // área del gap (degradado, no plano: en plano sale marrón oliva sobre el verde)
-  if (aGap > 0){
+  if (aGap > 0 && !soloLinea){
     ctx.save(); ctx.globalAlpha = aGap*alpha;
     ctx.beginPath(); ctx.moveTo(px(0), py(D.total[0]));
     for (let i=1;i<=idx;i++) ctx.lineTo(px(i), py(D.total[i]));
@@ -1094,26 +1105,29 @@ function drawChart(t, W, H, s, alpha){
   ctx.beginPath(); ctx.arc(px(idx), py(D.total[idx]), 11*s, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 
-  // contador (golpe justo al terminar de dibujarse)
+  // contador (golpe justo al terminar de dibujarse). En modo fantasma NO se pinta: el número
+  // gigante competiría con el gancho por el centro de la pantalla.
   const shown = D.total[idx];
-  let esc = 1;
-  const dPunch = t - fin;
-  if (dPunch > 0 && dPunch < 0.55) esc = 1 + 0.13*Math.sin(Math.PI*(dPunch/0.55));
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
-  ctx.shadowColor='rgba(31,158,110,0.5)'; ctx.shadowBlur=26*s;
-  text(money(shown), 0, 0, {size:96*s, weight:800, color:P.paper});
-  ctx.restore();
-  text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${Math.min(CFG.years, Math.floor(idx/12)+1)}`,
-       W/2, head + 186*s, {size:22*s, weight:600, color:P.brass, alpha:alpha*0.85, spacing:4*s});
+  if (!soloLinea){
+    let esc = 1;
+    const dPunch = t - fin;
+    if (dPunch > 0 && dPunch < 0.55) esc = 1 + 0.13*Math.sin(Math.PI*(dPunch/0.55));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
+    ctx.shadowColor='rgba(31,158,110,0.5)'; ctx.shadowBlur=26*s;
+    text(money(shown), 0, 0, {size:96*s, weight:800, color:P.paper});
+    ctx.restore();
+    text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${Math.min(CFG.years, Math.floor(idx/12)+1)}`,
+         W/2, head + 186*s, {size:22*s, weight:600, color:P.brass, alpha:alpha*0.85, spacing:4*s});
+  }
 
   // "YOU PAID IN $180,000" va PEGADO a la línea de aportes, dentro de la gráfica.
   // Antes era una columna abajo, en la franja que tapa la interfaz. Y el contador de arriba ya
   // dice el total, así que la columna "YOU WALK AWAY WITH" solo repetía.
   // Aparece cuando la curva ya llegó, FIJA en el extremo de la línea gris. Si la persigue
   // mientras se dibuja, el ojo va al texto que se mueve en vez de a la curva que explota.
-  if (p >= 0.995){
+  if (p >= 0.995 && !soloLinea){
     const aP = clamp01((t - T.draw) / 0.4);
     const etq = 'YOU PAID IN ' + money(D.finalContrib);
     const yE = py(D.finalContrib) + 52*s;
@@ -1758,10 +1772,17 @@ function drawGancho(t, W, H, s, a, ov){
 const SCENES = {
   vacio: () => {},                                      // base neutra: el Short se compone por overlays
   gancho:(t, W, H, s, a, ov) => drawGancho(t, W, H, s, a, ov),
-  chart: (t, W, H, s) => {                               // curva del S3: intro (spec) -> gráfica
+  chart: (t, W, H, s) => {                               // intro (spec) -> gráfica
     const fade = 0.45;
-    const aHook  = 1 - clamp01((t - (T.hook - fade)) / fade);
     const aChart = clamp01((t - (T.hook - fade)) / fade);
+    const aHook  = 1 - aChart;
+    // Curva-fantasma (opt-in): la línea crece TENUE detrás del gancho -> movimiento desde el
+    // frame 1 (lo que hacen los demos virales). Se dibuja PRIMERO, para quedar por DEBAJO del
+    // gancho. Su alfa cae a 0 cuando el chart completo toma el relevo -> sin doble trazo.
+    if (CFG.ghostCurve){
+      const ghostA = 0.16 * clamp01(t/0.6) * (1 - aChart);
+      if (ghostA > 0.003) drawChart(t, W, H, s, ghostA, true);
+    }
     if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
     if (aChart > 0) drawChart(t, W, H, s, aChart);
   },
