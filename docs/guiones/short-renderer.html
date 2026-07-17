@@ -2429,12 +2429,16 @@ function muxMP4(v, a){
   const durMovie = Math.round(Math.max(segV, segA) * MTS);
 
   const ftyp = caja('ftyp', s4('isom'), b32(512), s4('isom'), s4('iso2'), s4('avc1'), s4('mp41'));
-  const datosV = unir(v.trozos), datosA = a ? unir(a.trozos) : new Uint8Array(0);
-  const mdatCuerpo = unir([datosV, datosA]);
-  const mdat = unir([b32(mdatCuerpo.length + 8), s4('mdat'), mdatCuerpo]);
+  // NO se concatenan los chunks: un Short de 48s a 24 Mbps son ~144 MB, y fusionar en datosV +
+  // mdatCuerpo + mdat eran TRES copias completas (~576 MB de pico) -> la pestaña moría en el
+  // muxeo (el crash "al 80%"). El Blob acepta el array de trozos tal cual; los offsets salen de
+  // los tamaños, que ya tengo. Mismos bytes exactos, pico ~144 MB en vez de ~576.
+  const sum = arr => arr.reduce((n, x) => n + x, 0);
+  const tamVideo = sum(v.tamanos), tamAudio = a ? sum(a.tamanos) : 0;
+  const mdatHeader = unir([b32(tamVideo + tamAudio + 8), s4('mdat')]);   // solo la cabecera (8 B)
 
   const offV = ftyp.length + 8;
-  const offA = offV + datosV.length;
+  const offA = offV + tamVideo;
 
   const avc1 = caja('avc1', ceros(6), b16(1), b16(0), b16(0), ceros(12), b16(v.w), b16(v.h),
                     b32(0x00480000), b32(0x00480000), b32(0), b16(1), ceros(32), b16(0x0018), b16(0xFFFF),
@@ -2453,7 +2457,12 @@ function muxMP4(v, a){
                      b16(0x0100), b16(0), ceros(8), MATRIZ, ceros(24), b32(traks.length + 1));
   const moov = caja('moov', mvhd, ...traks);
 
-  return new Blob([ftyp, mdat, moov], {type: 'video/mp4'});
+  // mdat = cabecera + TODOS los chunks de vídeo, luego los de audio (el orden que esperan offV/offA).
+  // El Blob los ensambla sin copiarlos a un buffer contiguo -> mismos bytes, sin el pico de RAM.
+  const partes = [ftyp, mdatHeader, ...v.trozos];
+  if (a) partes.push(...a.trozos);
+  partes.push(moov);
+  return new Blob(partes, {type: 'video/mp4'});
 }
 
 // ── el exportador ────────────────────────────────────────────────────────────

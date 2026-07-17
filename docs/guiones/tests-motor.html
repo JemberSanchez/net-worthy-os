@@ -27,11 +27,9 @@
 <script>
 const out = document.getElementById('out');
 let pass = 0, fail = 0;
+const pendientes = [];               // tests async: se esperan antes del resumen
 
-function check(nombre, fn){
-  let okv, detalle = '';
-  try { const r = fn(); okv = r === true; if (!okv) detalle = String(r); }
-  catch (e){ okv = false; detalle = 'EXCEPCIÓN: ' + e.message; }
+function pinta(nombre, okv, detalle){
   okv ? pass++ : fail++;
   const d = document.createElement('div');
   d.className = 't';
@@ -39,9 +37,21 @@ function check(nombre, fn){
                 `<span class="n">${nombre}</span><span class="d">${detalle}</span>`;
   out.appendChild(d);
 }
+// fn puede ser síncrona (devuelve true|detalle) o async (Promise de lo mismo).
+function check(nombre, fn){
+  try {
+    const r = fn();
+    if (r && typeof r.then === 'function'){
+      pendientes.push(r.then(v => pinta(nombre, v === true, v === true ? '' : String(v)))
+                       .catch(e => pinta(nombre, false, 'EXCEPCIÓN: ' + e.message)));
+      return;
+    }
+    pinta(nombre, r === true, r === true ? '' : String(r));
+  } catch (e){ pinta(nombre, false, 'EXCEPCIÓN: ' + e.message); }
+}
 const cerca = (a, b, tol) => Math.abs(a-b) <= tol ? true : `esperaba ~${b} (±${tol}), dio ${a}`;
 
-document.getElementById('motor').onload = () => {
+document.getElementById('motor').onload = async () => {
   const W = document.getElementById('motor').contentWindow;
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const SR = 48000;
@@ -249,6 +259,28 @@ document.getElementById('motor').onload = () => {
     return ok ? true : `Buffett mal: total=${s.finalTotal} contrib=${s.finalContrib} n=${s.n}`;
   });
 
+  // ── MUXER MP4: estructura válida sin concatenar en RAM (crash "al 80%") ──
+  // Un Short largo (48s a 24Mbps ~144MB) moría al muxear porque se concatenaba 3x (~576MB).
+  // Ahora el Blob toma los trozos directamente; este test fija que los offsets siguen cuadrando.
+  check('muxMP4: cajas ftyp|mdat|moov y el mdat mide cabecera+video+audio', async () => {
+    const mk = (n, f) => { const b = new Uint8Array(n); b.fill(f); return b; };
+    const v = {trozos:[mk(10,1),mk(20,2),mk(30,3)], tamanos:[10,20,30], claves:[1],
+               desc:new Uint8Array([0,1,2,3]), w:1080, h:1920};
+    const a = {trozos:[mk(5,7),mk(7,8)], tamanos:[5,7], desc:new Uint8Array([9,9]), sr:48000, ch:2};
+    const buf = new Uint8Array(await W.muxMP4(v, a).arrayBuffer());
+    const be32 = o => (buf[o]<<24|buf[o+1]<<16|buf[o+2]<<8|buf[o+3])>>>0;
+    const typ = o => String.fromCharCode(buf[o+4],buf[o+5],buf[o+6],buf[o+7]);
+    const cajas = []; let o=0; while(o<buf.length){const sz=be32(o);cajas.push([typ(o),sz,o]);if(sz<=0)break;o+=sz;}
+    const orden = cajas.map(c=>c[0]).join(',');
+    if (orden !== 'ftyp,mdat,moov') return `cajas ${orden}`;
+    const mdat = cajas.find(c=>c[0]==='mdat');
+    if (mdat[1] !== 8+60+12) return `mdat ${mdat[1]}, esperaba ${8+60+12}`;
+    if (buf[mdat[2]+8] !== 1) return 'el video no empieza en mdat+8';
+    const offA = cajas[0][1] + 8 + 60;                 // ftyp + cabecera mdat + tamVideo
+    if (buf[offA] !== 7) return 'el audio no empieza en offV+tamVideo';
+    return true;
+  });
+
   // ── STAT con decimales (retrocompatibilidad) ──────────────────────────
   check('construirMezcla: no clippea con la voz + sfx', () => {
     const N = voz.length;
@@ -257,6 +289,7 @@ document.getElementById('motor').onload = () => {
     return mx <= 0.95 ? true : `pico ${mx.toFixed(3)}`;
   });
 
+  await Promise.all(pendientes);              // espera los tests async (p.ej. el muxer lee el Blob)
   const res = document.getElementById('res');
   res.textContent = fail === 0 ? `✅ ${pass} tests PASAN` : `❌ ${fail} FALLAN de ${pass+fail}`;
   res.className = fail === 0 ? 'ok' : 'bad';
