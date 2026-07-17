@@ -65,6 +65,7 @@
       <option value="s2-contrarian">S2 · contrarian — checklist STILL BROKE (fuel/engine)</option>
       <option value="fed-catchup">FED · catch-up — gancho brutal + bullets + stat 4%</option>
       <option value="housing-catchup">HOUSING · TRIBUNAL — The People vs. Your Rent (caso #001)</option>
+      <option value="buffett-time">BUFFETT · Time, not talent — $100 en 1965 (demo visual)</option>
     </select>
   </label>
 </div>
@@ -406,6 +407,56 @@ const SHORTS = {
       omitirEnSubtitulos: [],
     },
   },
+
+  'buffett-time': {
+    ref: 'buffett-time-not-talent-2026-07',
+    escena: 'chart',                   // la DEMO VISUAL es la curva: plana 40 años -> vertical
+    voz: 'voz-short-buffett.mp3',
+    sfx: true,
+    // ── TEMA por DATOS: `warren buffett` ganó `decide` LIMPIO (0.658, único sobre el umbral 0.60)
+    // por demanda real (642.505 vistas) y momentum real (+0.145) — no por RPM ($12, aporta 0.017).
+    // ── FORMATO por DATOS (docs/VIRALIDAD.md, 543 Shorts ajenos): personaje + evergreen + demo
+    // visual. De 39 despegues, CERO son noticia. El boletín no aparece ni una vez.
+    //
+    // ⚠ LA MENTIRA QUE ESTE SHORT NO CUENTA: "$114.75 -> $140.000 millones" es FALSO. Ese $114.75
+    // compuesto al 19,95% durante 85 años da $574M: explica el 0,41% de su fortuna. El resto vino
+    // del float de las aseguradoras, comisiones del partnership y comprar empresas enteras — nada
+    // replicable. Por eso la curva NO es su patrimonio: es "$100 puestos con él en 1965", que sí
+    // es demostrable y sale de la carta anual de Berkshire (SEC).
+    //
+    // rate 0.199525 = el CAGR IMPLÍCITO EXACTO de la carta (1+5.502.284/100)^(1/60)-1. La carta lo
+    // redondea a "19,9%", pero con 0.199 la curva daría $5,36M y no cuadraría con la cifra que
+    // dice la voz. Con 0.199525 -> $5.502.384, al dólar.
+    spec: ['AGE 11: $114.75', 'AGE 56: $1 BILLION', '45 YEARS APART'],
+    cta: ['WHAT AGE DID', 'YOU START?'],
+    ctaSub: 'drop your number · zero counts',
+    lump: 100, years: 60, rate: 0.199525, compound: 'annual',
+    // Aviso HONESTO y explícito: la tasa es NOMINAL (no real), y nadie replica el 19,9% de BRK.
+    // El derivado por defecto diría "20% after inflation" — falso y contrario al propio guion.
+    aviso: ['Illustrative · Berkshire 1965–2024, ~20%/yr nominal · before inflation',
+            'No one replicates this · Past results ≠ future · Not financial advice'],
+    // sin pmt: es un capital ÚNICO. `contrib` queda plano en $100 -> el área bajo la curva ES el
+    // trabajo del tiempo, y la etiqueta "YOU PAID IN $100" del chart cae con su semántica exacta.
+
+    guion: {
+      grupos: [
+        {id:'intro',   texto: "Warren Buffett bought his first stock at eleven. He didn't have a billion dollars until fifty-six."},
+        {id:'thesis',  texto: "Forty-five years in between. Everyone calls that getting rich late. It's the exact opposite."},
+        {id:'proof',   texto: "Here's what a hundred dollars did if you handed it to him in nineteen sixty-five. Sixty years later, five and a half million dollars."},
+        {id:'payoff',  texto: "You put in one hundred dollars. Everything above that line is time doing the work, not you."},
+        {id:'honesty', texto: "Now the part nobody says. Berkshire returned about twenty percent a year. The market returned ten point four, before inflation. Not even double. But stretched over sixty years, that gap is the difference between thirty-nine thousand dollars and five and a half million."},
+        {id:'lesson',  texto: "You will never get Buffett's twenty percent. You don't need it. His edge wasn't the return. It was the clock."},
+        {id:'cta',     texto: "What age were you when you bought your first share? Drop the number."},
+      ],
+      cifras: [
+        ["five and a half million dollars", "$5,500,000"],
+        ["thirty-nine thousand dollars",    "$39,154"],
+      ],
+      subtitulos: ['thesis', 'payoff', 'honesty', 'lesson'],
+      curvaLlegaEn: "$5,500,000",       // la curva termina cuando la voz acaba de decir la cifra
+      omitirEnSubtitulos: [],
+    },
+  },
 };
 
 let SHORT = SHORTS['s3-stat'];
@@ -731,16 +782,30 @@ S.forEach((el,i) => el.addEventListener('input', () => {
 }));
 
 // ── Serie compuesta real (nada escrito a mano) ────────────────────────────────
+/** total = lo que vale · contrib = lo que PUSISTE (plano si no hay aportaciones).
+ *  El área entre las dos ES el trabajo del tiempo: esa es la semántica del chart.
+ *
+ *  `lump` (capital inicial) y `compound:'annual'` se añadieron para el Short de Buffett:
+ *  su curva no es "$500 al mes desde cero" sino "$100 puestos una vez en 1965". Y las tasas
+ *  de la carta anual de Berkshire son ANUALES: componerlas por meses (r/12, 12n) daría
+ *  $13,9M en vez de $5,5M — un 150% de error en el número más grande de la pantalla.
+ *  Sin `lump` ni `compound` el comportamiento es BIT A BIT el de antes (lo fija un test). */
 function series(){
-  const n = CFG.years*12, r = CFG.rate/12;
+  const anual = CFG.compound === 'annual';
+  const n = anual ? CFG.years : CFG.years*12;
+  const r = anual ? CFG.rate  : CFG.rate/12;
+  const lump = CFG.lump || 0;
+  const pmt  = CFG.pmt  || 0;
   const total = [], contrib = [];
-  let bal = 0;
-  for (let i=1; i<=n; i++){ bal = bal*(1+r) + CFG.pmt; total.push(bal); contrib.push(CFG.pmt*i); }
+  let bal = lump;
+  for (let i=1; i<=n; i++){ bal = bal*(1+r) + pmt; total.push(bal); contrib.push(lump + pmt*i); }
   return {total, contrib, n, finalTotal: total[n-1], finalContrib: contrib[n-1],
           gap: total[n-1]-contrib[n-1]};
 }
-// Solo los Shorts con proyección (pmt) tienen serie compuesta. El 'story' no lleva curva.
-let D = CFG.pmt ? series() : null;
+// Solo los Shorts con proyección tienen serie compuesta. El 'story' no lleva curva.
+// `lump` cuenta como proyección: el Buffett es un capital único ($100 en 1965) SIN aportaciones,
+// y mirando solo pmt se habría quedado sin curva (D=null) en silencio.
+let D = (CFG.pmt || CFG.lump) ? series() : null;
 let MAXY = D ? D.finalTotal * 1.18 : 0;
 
 // ── Dibujo de texto ───────────────────────────────────────────────────────────
@@ -971,13 +1036,24 @@ function drawChart(t, W, H, s, alpha){
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  // rejilla
+  // rejilla — paso "bonito" (1/2/5 · 10^n) para ~6 líneas a CUALQUIER escala.
+  // Antes el paso era fijo $100.000: bien para el S3 ($720k -> 7 líneas), pero el Buffett
+  // ($6,5M) daba 65 líneas amontonadas e ilegibles y etiquetas "$6400k". Ahora se adapta.
+  const pasoBonito = raw => {
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  };
+  // /8 (no /6) a propósito: deja el S3 EXACTO en $100.000 (7 líneas, como se publicó) y da al
+  // Buffett $1.000.000 (6 líneas). Verificado numéricamente antes de tocar.
+  const paso = pasoBonito(MAXY / 8);
+  const etiquetaY = v => v >= 1e6 ? '$' + +(v/1e6).toFixed(1) + 'M' : '$' + Math.round(v/1000) + 'k';
   ctx.strokeStyle = '#1E362C'; ctx.lineWidth = 1.5*s;
   ctx.globalAlpha = alpha*0.5;
-  for (let v=100000; v<=MAXY; v+=100000){
+  for (let v=paso; v<=MAXY; v+=paso){
     const y = py(v);
     ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
-    text('$'+(v/1000)+'k', x0-14*s, y+8*s, {size:23*s, color:P.grey, align:'right', alpha:alpha});
+    text(etiquetaY(v), x0-14*s, y+8*s, {size:23*s, color:P.grey, align:'right', alpha:alpha});
   }
   ctx.globalAlpha = alpha;
   ctx.beginPath(); ctx.moveTo(x0,yBot); ctx.lineTo(x1,yBot);
@@ -1778,7 +1854,14 @@ function drawFrame(t){
   // posiciones RELATIVAS a la caja segura: en 16:9 las coordenadas absolutas de retrato caían
   // fuera del lienzo. En Short da exactamente los mismos píxeles de siempre (1487/1524).
   const yAviso1 = (SAFE_BOT - 73)*s, yAviso2 = (SAFE_BOT - 36)*s;
-  if (CFG.escena === 'chart'){
+  // Un Short puede DECLARAR su aviso exacto (CFG.aviso = [l1, l2]). Es lo correcto en YMYL:
+  // el aviso derivado de CFG.rate asume que la tasa es REAL (tras inflación), cierto para el S3
+  // (7% real) pero FALSO para el Buffett (19,95% NOMINAL) — sin esto imprimía "20% a year after
+  // inflation", lo contrario de la verdad y de su propio guion. Sin CFG.aviso el S3 no cambia.
+  if (CFG.aviso){
+    text(CFG.aviso[0], W/2, yAviso1, {size:22*s, color:P.paper, alpha:0.52});
+    text(CFG.aviso[1], W/2, yAviso2, {size:22*s, color:P.paper, alpha:0.52});
+  } else if (CFG.escena === 'chart'){
     const rPct = +(CFG.rate*100).toFixed(1);
     text(`Illustrative · ${rPct}% a year after inflation · before taxes & fees`,
          W/2, yAviso1, {size:22*s, color:P.paper, alpha:0.52});
@@ -1903,7 +1986,7 @@ function cargarShort(key){
   const selModo = document.getElementById('modo');
   if (selModo){ selModo.value = 'short'; document.getElementById('lbl-proyecto').style.display = 'none'; }
   SHORT = SHORTS[key]; CFG = SHORT;
-  D = CFG.pmt ? series() : null;
+  D = (CFG.pmt || CFG.lump) ? series() : null;   // `lump` también es proyección (ver series())
   MAXY = D ? D.finalTotal * 1.18 : 0;
   // El S3 arranca con su calibración MANUAL puesta (incluye subtítulos). El story no tiene voz
   // todavía: sin tiempos medidos no hay subtítulos, y grabar sigue vetado hasta calibrar.

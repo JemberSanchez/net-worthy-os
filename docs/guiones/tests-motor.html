@@ -228,6 +228,26 @@ document.getElementById('motor').onload = () => {
     return a !== b ? true : 'el drift del glow no se mueve';
   });
 
+  // ── SERIE COMPUESTA: capital inicial + compuesto anual (Buffett) sin romper el S3 ──
+  // series() cierra sobre CFG. cargarShort la reasigna -> W.series() da la del Short activo.
+  check('series(): el S3 (publicado) NO se movió ni un céntimo tras añadir lump/annual', () => {
+    W.cargarShort('s3-stat');                 // síncrono: fija SHORT/CFG/D
+    const s = W.series();
+    // pmt 500 · 30 años · 7% mensual: valores CONGELADOS (el S3 está en la calle)
+    return (s.n === 360 && Math.abs(s.finalContrib - 180000) < 0.5
+            && Math.abs(s.finalTotal - 609985.5) < 0.5 && Math.abs(s.gap - 429985.5) < 0.5)
+      ? true : `S3 cambió: total=${s.finalTotal} contrib=${s.finalContrib} gap=${s.gap} n=${s.n}`;
+  });
+
+  check('series(): el Buffett reproduce la carta de Berkshire ($100 en 1965 -> ~$5.5M)', () => {
+    W.cargarShort('buffett-time');
+    const s = W.series();
+    // lump 100 · 60 años · 19,9525% ANUAL (CAGR implícito de la carta). contrib PLANO en 100.
+    const ok = (s.n === 60 && s.finalContrib === 100 && Math.abs(s.finalTotal - 5502477) < 2000);
+    W.cargarShort('s3-stat');                 // deja el motor como estaba para los tests siguientes
+    return ok ? true : `Buffett mal: total=${s.finalTotal} contrib=${s.finalContrib} n=${s.n}`;
+  });
+
   // ── STAT con decimales (retrocompatibilidad) ──────────────────────────
   check('construirMezcla: no clippea con la voz + sfx', () => {
     const N = voz.length;
