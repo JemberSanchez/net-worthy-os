@@ -30,18 +30,23 @@
 > Línea clave del banquillo: **"You are not on trial here. The market is."**
 > Hechos IDÉNTICOS y corroborados. El humor está en el ENCUADRE, nunca en los datos.
 >
-> **⚠ PENDIENTE ABIERTO (decisión del usuario):** el gancho del tribunal es más flojo que el del FED.
-> "YOUR SAVINGS ARE LOSING" (pérdida, primal, 1s) le gana a "THE PEOPLE vs. YOUR RENT" (intriga,
-> cerebral, 2s). Propuesta sin aplicar: `EXHIBIT A: / YOU'RE PRICED OUT` (visceral + dentro del
-> juicio). **El usuario no había respondido.**
+> **✅ GANCHO RESUELTO (2026-07-16, decisión del usuario) — `EXHIBIT A: / YOU'RE PRICED OUT`.**
+> El anterior ("THE PEOPLE vs. YOUR RENT") era intriga cerebral y tardaba ~2s; su rival del
+> experimento (el FED, "YOUR SAVINGS ARE LOSING") es pérdida primal en 1s. Con ganchos desiguales el
+> viernes NO se podría separar el tratamiento del gancho. Ahora el gancho ES la prueba A (el cargo)
+> → visceral sin salirse del juicio. **La evidencia se renumeró a B/C** (dos "Exhibit A" distintos
+> romperían el marco). Verificado: 19 tests del motor + frame del gancho renderizado y MIRADO.
+> Commit `b7074f4`. **Ya NO queda ninguna decisión abierta: el housing depende solo de la VOZ.**
 >
 > **EL EXPERIMENTO DEL VIERNES, ahora sí interesante:** FED (boletín) vs HOUSING (tribunal) — misma
 > voz, misma calidad técnica, mismo canal. La pregunta ya no es "¿qué gancho?" sino **"¿ser distinto
 > compensa?"**. Si el tribunal despega → molde replicable (`Caso #002: El Pueblo vs. Tu Tarjeta`).
 >
-> **HOUSING: le falta SOLO la VOZ.** Guion tribunal en 2 bloques (CapCut Firme Pilot) → guardar como
-> `data/voz-short-housing.mp3`. Al cargarla, el motor calibra TODO solo. El guion exacto está en
-> `SHORTS['housing-catchup'].guion.grupos` de `short-renderer.html`.
+> **HOUSING: le falta SOLO la VOZ.** Guion listo para pegar en CapCut (Firme Pilot, de una toma):
+> **`docs/guiones/TTS-housing.txt`** → guardar como `data/voz-short-housing.mp3`. Al cargarla, el
+> motor calibra TODO solo (cortes, subtítulos, cadencia, sync del ~6.5%, gain de música).
+> La fuente de verdad del guion es `SHORTS['housing-catchup'].guion.grupos` en `short-renderer.html`;
+> `TTS-housing.txt` es una copia para pegar — **si cambias uno, cambia el otro**.
 >
 > ### Motor — lo que se automatizó hoy (todo verificado, 19 tests verdes)
 > | Antes (a mano) | Ahora (solo) |

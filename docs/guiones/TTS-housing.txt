@@ -1,0 +1,25 @@
+HOUSING · TRIBUNAL — Caso #001: The People vs. Your Rent
+Voz: CapCut TTS "Firme Pilot" (la misma de S1/S2/S3/FED — no la cambies: cambiar de motor de voz
+rompe la comparabilidad del experimento del viernes).
+Guardar como: data/voz-short-housing.mp3
+
+Pega el texto de abajo TAL CUAL, de una sola toma. Los cortes NO los marcas tú: el calibrador del
+motor los deduce del audio (segmenta por energía y reparte los grupos con programación dinámica).
+No metas pausas artificiales ni cambies la puntuación: los puntos y los dos puntos son lo que le da
+el ritmo de sala de juicio.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────
+
+Exhibit A. You're priced out. Case number one: the people versus your rent. The prosecution presents its evidence. Exhibit B: home prices just hit an all-time high. Exhibit C: the average thirty-year mortgage is stuck near six and a half percent. Together, they make buying about as unaffordable as it's been in decades. The defense calls one witness: rent inflation is cooling, in some cities to a five-year low. Now, a word from the bench. You are not on trial here. The market is. Renting a little longer isn't a failure. It's a plea of patience. Jury, what's your verdict? Team rent, or team buy?
+
+──────────────────────────────────────────────────────────────────────────────────────────────────
+
+Al tenerla:
+1. Servir por http://localhost:8765/docs/guiones/short-renderer.html  (con file:// el fetch se bloquea)
+2. Selector -> "HOUSING · TRIBUNAL"  ->  "🎙 Usar la voz del proyecto"
+   El motor calibra SOLO: cortes, subtítulos, cadencia de bullets, el sync del "~6.5%" sobre la
+   palabra hablada, y el gain de la música a -20 dB bajo la voz.
+3. Revisar la previsualización entera (el checklist se marca solo) -> "⏺ Grabar y descargar"
+
+Si algo del audio no cuadra, corre ANTES los tests del motor:
+   http://localhost:8765/docs/guiones/tests-motor.html   (19 verdes)
