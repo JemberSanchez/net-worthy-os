@@ -427,7 +427,11 @@ const SHORTS = {
     // rate 0.199525 = el CAGR IMPLÍCITO EXACTO de la carta (1+5.502.284/100)^(1/60)-1. La carta lo
     // redondea a "19,9%", pero con 0.199 la curva daría $5,36M y no cuadraría con la cifra que
     // dice la voz. Con 0.199525 -> $5.502.384, al dólar.
-    spec: ['AGE 11: $114.75', 'AGE 56: $1 BILLION', '45 YEARS APART'],
+    // DOS líneas, no tres: el intro tiene 2 frases ("...at eleven." / "...until fifty-six."), así
+    // que cada línea del gancho tiene su propio segmento de voz que la ancla. Con 3 líneas, la 3ª
+    // ("45 YEARS APART") no tenía frase y se colapsaba sobre la 2ª al calibrar con la voz real.
+    // Además es redundante: la voz dice "Forty-five years in between" en el grupo siguiente.
+    spec: ['AGE 11: $114.75', 'AGE 56: $1 BILLION'],
     cta: ['WHAT AGE DID', 'YOU START?'],
     ctaSub: 'drop your number · zero counts',
     lump: 100, years: 60, rate: 0.199525, compound: 'annual',
@@ -995,6 +999,11 @@ function drawHook(t, W, H, s){
   const p = clamp01(t / T.hook);
   const cy = H*0.44;
   const tams = [96, 116, 96];
+  // El bloque se centra en `cy` sea cual sea el nº de líneas: (i - (n-1)/2). Con 3 líneas da
+  // (i-1) -> IDÉNTICO al S3; con 2 líneas queda centrado en vez de colgar arriba. La 2ª línea
+  // (índice 1) es la dorada: en un gancho de 2 líneas es el contraste (p.ej. "$1 BILLION").
+  const nLin = CFG.spec.length;
+  const mid = (nLin - 1) / 2;
   // cada línea entra justo ANTES de que la voz la diga (T.spec, medido sobre el audio).
   // La primera aparece en el frame 1: en Shorts, un arranque en negro es un swipe.
   CFG.spec.forEach((linea, i) => {
@@ -1004,17 +1013,19 @@ function drawHook(t, W, H, s){
     const color = i === 1 ? P.brass : P.paper;
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 20*s;
-    text(linea, W/2, cy + (i-1)*150*s + dy,
+    text(linea, W/2, cy + (i-mid)*150*s + dy,
          {size: tams[i]*s, weight:800, color, alpha:easeOut(a), spacing: i===1 ? 8*s : 0});
     ctx.restore();
   });
-  // línea dorada que crece bajo el bloque
+  // línea dorada que crece bajo el bloque (bajo la última línea, sea cual sea el nº de líneas)
   const a = clamp01((p - 0.72) / 0.18);
   if (a > 0){
+    // 80px bajo la última línea (cy + mid*150). Con 3 líneas (mid=1) da cy+230 EXACTO -> S3 igual.
+    const yUnder = cy + mid*150*s + 80*s;
     const w = 260*s * easeOut(a);
     ctx.save(); ctx.globalAlpha = easeOut(a);
     ctx.strokeStyle = P.brass; ctx.lineWidth = 5*s; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(W/2-w/2, cy + 230*s); ctx.lineTo(W/2+w/2, cy + 230*s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W/2-w/2, yUnder); ctx.lineTo(W/2+w/2, yUnder); ctx.stroke();
     ctx.restore();
   }
 }
