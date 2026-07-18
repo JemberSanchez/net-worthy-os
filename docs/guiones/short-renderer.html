@@ -436,6 +436,12 @@ const SHORTS = {
     ctaSub: 'drop your number · zero counts',
     lump: 100, years: 60, rate: 0.199525, compound: 'annual',
     ghostCurve: true,                  // la curva crece tenue tras el gancho: movimiento desde el frame 1
+    // ── EXPERIMENTO #001 RITMO (docs/EXPERIMENTO-RITMO.md): el dato del 07-18 mostró que el gancho
+    // engancha (59 vistas de 3s, récord) pero la retención cae a los 3-10s. Hipótesis: la ESTASIS
+    // del gancho (dos líneas que entran y se quedan quietas ~6s) hace scrollear. `ritmo` activa el
+    // Motion Budget v1 SOLO en este Short (opt-in): micro-movimiento continuo + un beat en el hueco
+    // muerto del gancho + curva-fantasma más viva. S3/S1/S2/FED quedan idénticos (no llevan flag).
+    ritmo: true,
     // Aviso HONESTO y explícito: la tasa es NOMINAL (no real), y nadie replica el 19,9% de BRK.
     // El derivado por defecto diría "20% after inflation" — falso y contrario al propio guion.
     aviso: ['Illustrative · Berkshire 1965–2024, ~20%/yr nominal · before inflation',
@@ -1020,6 +1026,38 @@ function drawHook(t, W, H, s){
   // (índice 1) es la dorada: en un gancho de 2 líneas es el contraste (p.ej. "$1 BILLION").
   const nLin = CFG.spec.length;
   const mid = (nLin - 1) / 2;
+
+  // ── RITMO v1 (opt-in CFG.ritmo, docs/EXPERIMENTO-RITMO.md) ──────────────────────────────────
+  // Respiración sub-perceptual de TODO el bloque (0.6%, ~lento) -> el cuadro nunca queda del todo
+  // quieto, pero no marea (el techo del budget). Puro en t -> determinista. S3 no la lleva.
+  const breath = CFG.ritmo ? 1 + 0.006*Math.sin(t*1.8) : 1;
+  ctx.save();
+  if (breath !== 1){ ctx.translate(W/2, cy); ctx.scale(breath, breath); ctx.translate(-W/2, -cy); }
+
+  // El HUECO MUERTO del gancho: la voz dice "fifty-six" al final, así que de p~0.26 a ~0.80 SOLO
+  // "AGE 11" está en pantalla (~4s sin cambio) = el acantilado de retención. La curva-fantasma ahí
+  // es plana (los 40 primeros años del compuesto SON planos: es la tesis). Lo que llena el hueco es
+  // una línea de tiempo con los AÑOS corriendo: es LITERAL "forty-five years in between" -> motion
+  // que el ojo sigue y que ADEMÁS cuenta la historia. Se apaga al aterrizar AGE 56.
+  if (CFG.ritmo && nLin === 2){
+    const q   = clamp01((p - 0.26) / (0.78 - 0.26));                     // recorrido 0..1
+    // in rápido; se QUEDA como conector "45 YEARS" entre AGE 11 y AGE 56 hasta el traspaso a la
+    // curva (el crossfade del gancho, vía aHook del caller, lo desvanece del todo -> sin corte).
+    const aTL = clamp01((p - 0.26)/0.06) * clamp01((0.97 - p)/0.05);     // fundido in/out
+    if (aTL > 0.001){
+      const tx0 = W/2 - 300*s, tx1 = W/2 + 300*s, ty = cy + 6*s, mx = lerp(tx0, tx1, q);
+      ctx.save(); ctx.globalAlpha = aTL; ctx.lineCap = 'round';
+      ctx.strokeStyle = '#2B4238'; ctx.lineWidth = 4*s;                  // riel completo (tenue)
+      ctx.beginPath(); ctx.moveTo(tx0, ty); ctx.lineTo(tx1, ty); ctx.stroke();
+      ctx.strokeStyle = P.brass;  ctx.lineWidth = 4*s;                   // recorrido cumplido
+      ctx.beginPath(); ctx.moveTo(tx0, ty); ctx.lineTo(mx, ty); ctx.stroke();
+      ctx.fillStyle = P.brass; ctx.beginPath(); ctx.arc(mx, ty, 8*s, 0, Math.PI*2); ctx.fill();
+      text(Math.round(q*45) + ' YEARS', mx, ty - 26*s,
+           {size: 28*s, weight:700, color:P.brass, alpha:aTL});
+      ctx.restore();
+    }
+  }
+
   // cada línea entra justo ANTES de que la voz la diga (T.spec, medido sobre el audio).
   // La primera aparece en el frame 1: en Shorts, un arranque en negro es un swipe.
   CFG.spec.forEach((linea, i) => {
@@ -1044,6 +1082,7 @@ function drawHook(t, W, H, s){
     ctx.beginPath(); ctx.moveTo(W/2-w/2, yUnder); ctx.lineTo(W/2+w/2, yUnder); ctx.stroke();
     ctx.restore();
   }
+  ctx.restore();   // cierra el save() de la respiración RITMO v1 (balancea la pila)
 }
 
 // ── Escena 2-4: la gráfica ────────────────────────────────────────────────────
