@@ -473,7 +473,7 @@ const SHORTS = {
   // ── SHORT #7 · RONALD READ — el conserje que murió con $8M (secuela de Buffett) ────────────────
   'read-janitor': {
     ref: 'ronald-read-janitor-2026-07',
-    escena: 'chart',
+    escena: 'snowball',                 // DIFERENCIADOR propio (no la curva de Buffett): el snowball
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,
     // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
@@ -1888,6 +1888,85 @@ function drawGancho(t, W, H, s, a, ov){
     {size:28*s, weight:600, color:P.brass, alpha:a*easeOut(clamp01((t-0.3)/0.5)), spacing:4*s});
 }
 
+// ── Escena: SNOWBALL (Read #7) — el snowball de dividendos: rueda, crece y REINVIERTE ──────────
+// Diferenciador PROPIO (no reusar la curva de Buffett — memoria: cada Short necesita su visual). La
+// MASA de la bola ∝ el valor (área ∝ valor, radio ∝ √valor): pequeña mucho tiempo, luego enorme =
+// compounding, la misma verdad que la curva pero con otra piel. Rueda cuesta abajo; cada ~1.5s un
+// dividendo (moneda dorada) cae y se ABSORBE con un pulso -> "reinvertir". El valor sigue la serie D
+// -> aterriza EXACTO en $8M. `soloBola`: modo fantasma (rueda tenue bajo el gancho). PURA en t.
+function drawSnowball(t, W, H, s, alpha, soloBola=false){
+  const arranque = CFG.ghostCurve ? 0.3 : T.hook + 0.3;
+  const fin = Math.max(arranque + 1, T.draw);
+  const p = clamp01((t - arranque) / (fin - arranque));
+  const idx = Math.max(0, Math.floor(p * (D.n - 1)));
+  const val = D.total[idx];
+
+  const rMin = 9*s, rMax = 150*s;
+  // gx1 deja rMax de aire a la derecha: la bola llena (r=rMax) NO invade los 130px de botones de Shorts.
+  const gx0 = 175*s, gx1 = W - SAFE.right - rMax - 12*s;
+  const gy0 = 720*s, gy1 = 1225*s;
+  const slopeY = x => lerp(gy0, gy1, (x - gx0) / (gx1 - gx0));
+
+  // radio: √(valor) -> plano mucho tiempo, luego explota. Pulsos de reinversión deterministas.
+  let pulse = 0; const coins = []; const T0 = arranque + 0.5, PER = 1.5;
+  for (let k = 0; k < 60; k++){
+    const tc = T0 + k*PER; if (tc > fin) break;
+    const age = t - tc;
+    if (age > -0.55 && age < 0.9){ coins.push({age}); if (age > 0 && age < 0.5) pulse += (1 - age/0.5)*0.09; }
+  }
+  const r = lerp(rMin, rMax, Math.sqrt(clamp01(val / D.finalTotal))) * (1 + pulse);
+  const bx = lerp(gx0, gx1, p), by = slopeY(bx) - r;
+
+  ctx.save(); ctx.globalAlpha = alpha;
+
+  ctx.strokeStyle = '#2B4238'; ctx.lineWidth = 3*s; ctx.lineCap = 'round';   // la pendiente
+  ctx.beginPath(); ctx.moveTo(gx0, gy0); ctx.lineTo(gx1, gy1); ctx.stroke();
+
+  if (!soloBola){                                                            // camino compactado (trail)
+    ctx.strokeStyle = 'rgba(244,246,243,0.10)'; ctx.lineWidth = Math.max(2*s, r*0.5); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(gx0, slopeY(gx0)); ctx.lineTo(bx, slopeY(bx)); ctx.stroke();
+  }
+
+  if (!soloBola) for (const c of coins){                                     // dividendos cayendo a la bola
+    if (c.age > 0) continue;
+    const a = clamp01((c.age + 0.55) / 0.55);
+    const cxx = lerp(bx + 55*s, bx, easeOut(a)), cyy = lerp(by - 250*s, by, easeOut(a));
+    ctx.globalAlpha = alpha * (0.35 + 0.65*a); ctx.fillStyle = P.brass;
+    ctx.beginPath(); ctx.arc(cxx, cyy, 9*s, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = alpha;
+  }
+
+  ctx.save();                                                                // la BOLA
+  ctx.shadowColor = 'rgba(216,178,90,0.45)'; ctx.shadowBlur = 30*s;
+  ctx.fillStyle = P.paper; ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  if (pulse > 0.001){                                                        // destello de reinversión
+    ctx.globalAlpha = Math.min(1, alpha * pulse * 6); ctx.strokeStyle = P.brass; ctx.lineWidth = 3*s;
+    ctx.beginPath(); ctx.arc(bx, by, r*1.16, 0, Math.PI*2); ctx.stroke(); ctx.globalAlpha = alpha;
+  }
+  ctx.strokeStyle = P.brass; ctx.lineWidth = Math.max(2*s, r*0.028);
+  ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.stroke();
+  if (r > 24*s){                                                             // arcos: rueda sin deslizar
+    const rot = (bx - gx0) / (rMax*0.42);
+    ctx.strokeStyle = 'rgba(92,110,100,0.55)'; ctx.lineWidth = 2*s;
+    for (let a0 = 0; a0 < Math.PI*2; a0 += Math.PI/3){
+      ctx.beginPath(); ctx.arc(bx, by, r*0.6, rot+a0, rot+a0+0.55); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  if (soloBola) return;
+
+  const head = SAFE.top + 25*s;                                             // valor + YEAR (arriba)
+  let esc = 1; const dP = t - fin;
+  if (dP > 0 && dP < 0.55) esc = 1 + 0.12*Math.sin(Math.PI*(dP/0.55));
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
+  ctx.shadowColor = 'rgba(216,178,90,0.5)'; ctx.shadowBlur = 24*s;
+  text(money(val), 0, 0, {size:96*s, weight:800, color:P.paper}); ctx.restore();
+  text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${Math.min(CFG.years, Math.floor(idx/12)+1)}`,
+       W/2, head + 186*s, {size:22*s, weight:600, color:P.brass, alpha:alpha*0.85, spacing:4*s});
+  text('DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 46*s,
+       {size:20*s, weight:600, color:P.grey, alpha:alpha*0.8, spacing:2*s});
+}
+
 const SCENES = {
   vacio: () => {},                                      // base neutra: el Short se compone por overlays
   gancho:(t, W, H, s, a, ov) => drawGancho(t, W, H, s, a, ov),
@@ -1904,6 +1983,17 @@ const SCENES = {
     }
     if (aHook  > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
     if (aChart > 0) drawChart(t, W, H, s, aChart);
+  },
+  snowball: (t, W, H, s) => {                             // intro (spec) -> snowball de dividendos (Read)
+    const fade = 0.45;
+    const aBall = clamp01((t - (T.hook - fade)) / fade);
+    const aHook = 1 - aBall;
+    if (CFG.ghostCurve){                                  // la bola rueda tenue bajo el gancho
+      const gA = 0.16 * clamp01(t/0.6) * (1 - aBall);
+      if (gA > 0.003) drawSnowball(t, W, H, s, gA, true);
+    }
+    if (aHook > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
+    if (aBall > 0) drawSnowball(t, W, H, s, aBall);
   },
   columns:   (t, W, H, s) => drawColumns(t, W, H, s),    // dos columnas del S1
   checklist: (t, W, H, s) => drawChecklist(t, W, H, s),  // checklist del esfuerzo del S2

@@ -49,7 +49,11 @@ NO es su cartera real (desconocida): es la **mecánica** (reinvertir + tiempo). 
 - **No humilla:** el sujeto es el TIEMPO + el hábito, no el sueldo del espectador.
 
 ## Producción
-- Escena `chart` (curva compuesta) + gancho de contraste 2 líneas. Montado en `SHORTS['read-janitor']`.
+- **Escena PROPIA `snowball`** (NO la curva de Buffett — [[cada-short-necesita-diferenciador]]): una bola
+  rueda cuesta abajo y su MASA ∝ el valor (radio ∝ √valor) → plana mucho tiempo, luego explota =
+  compounding, la misma verdad con otra piel. Cada ~1.5s un dividendo (moneda dorada) se ABSORBE con
+  un pulso = reinvertir. El valor sigue la serie D → aterriza en $8M. Gancho de contraste 2 líneas
+  (compartido). Montado en `SHORTS['read-janitor']` + `SCENES.snowball` + `drawSnowball()`.
 - **Le falta SOLO la VOZ:** `docs/guiones/TTS-read.txt` → CapCut Firme Pilot → `data/voz-short-read.mp3`.
   Al cargarla, el motor calibra todo y la línea de tiempo del ritmo se adapta al timing real.
 - Verificado a ojo (gancho + curva + timeline, frames por POST-server). 23 tests del motor verdes.
