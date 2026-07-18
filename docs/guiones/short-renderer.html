@@ -66,6 +66,7 @@
       <option value="fed-catchup">FED · catch-up — gancho brutal + bullets + stat 4%</option>
       <option value="housing-catchup">HOUSING · TRIBUNAL — The People vs. Your Rent (caso #001)</option>
       <option value="buffett-time">BUFFETT · Time, not talent — $100 en 1965 (demo visual)</option>
+      <option value="read-janitor">RONALD READ · El conserje con $8M — reinvertir + tiempo (#7, ritmo v1)</option>
     </select>
   </label>
 </div>
@@ -465,6 +466,51 @@ const SHORTS = {
       ],
       subtitulos: ['thesis', 'payoff', 'honesty', 'lesson'],
       curvaLlegaEn: "$5,500,000",       // la curva termina cuando la voz acaba de decir la cifra
+      omitirEnSubtitulos: [],
+    },
+  },
+
+  // ── SHORT #7 · RONALD READ — el conserje que murió con $8M (secuela de Buffett) ────────────────
+  'read-janitor': {
+    ref: 'ronald-read-janitor-2026-07',
+    escena: 'chart',
+    voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
+    sfx: true,
+    // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
+    // -> formato probado a nuestro tamaño), personaje relatable (anti-Buffett). CIFRAS VERIFICADAS
+    // (Wikipedia/CNBC 2026-07-18): Ronald Read, gasolinera+conserje JCPenney, m.2014 a los 92, ~$8M
+    // en ~95 blue-chips con dividendos REINVERTIDOS, ~60 años sin vender, evitó tech (círculo de
+    // competencia). Dejó $4.8M al hospital + $1.2M a la biblioteca. Frugal (imperdible, Yaris usado).
+    //
+    // La curva es ILUSTRATIVA (como el $100 de Buffett): la mecánica (reinvertir + tiempo), NO su
+    // cartera real (desconocida). ~$170/mes reinvertido a ~10%/año NOMINAL (retorno total del S&P con
+    // dividendos) durante 60 años -> ~$8M. Nominal vs nominal ($8M de 2014). pmt se afina para que la
+    // curva aterrice EXACTO en la cifra que dice la voz (se verificó `series()` en el motor).
+    spec: ['A JANITOR.', '$8 MILLION.'],
+    cta: ['SKILL, OR', 'JUST TIME?'],
+    ctaSub: 'drop your verdict · team luck or team time',
+    pmt: 170, years: 60, rate: 0.10, compound: 'monthly',
+    ghostCurve: true,
+    ritmo: true,                        // Motion Budget v1 desde el frame 1 (Experimento #001)
+    ritmoYears: 60,                     // los ~60 años comprando y reinvirtiendo — la variable ES el TIEMPO
+    ritmoSep: 210,                      // "$8 MILLION." es corta -> no la encoge text() -> más hueco para el track
+    aviso: ['Illustrative · ~$170/mo reinvested at ~10%/yr nominal (S&P total return) · before inflation',
+            'Blue chips can cut dividends or fail · he held 95 & never sold · Not financial advice'],
+    guion: {
+      grupos: [
+        {id:'intro',   texto:"He pumped gas and cleaned floors his whole life. He died with eight million dollars."},
+        {id:'thesis',  texto:"No big salary. No hot tips. No tech stocks. Just three boring habits, for sixty years."},
+        {id:'proof',   texto:"He bought companies that paid him to hold them, and reinvested every dividend into more shares. Sixty years later, eight million dollars."},
+        {id:'payoff',  texto:"He put in a little at a time. Everything above that line is dividends buying more dividends. The snowball, not the paycheck."},
+        {id:'honesty', texto:"Now the part nobody says. He held ninety-five stocks so one collapse couldn't sink him, and some did cut their dividends. And he never had to sell. Sixty years, no emergency big enough to touch it. That is the rare part, not the picking."},
+        {id:'lesson',  texto:"You don't need his eight million. The engine is the same at any size. Own things that pay you, reinvest, and don't interrupt it."},
+        {id:'cta',     texto:"So, skill, or just time? Could you do it on a gas station paycheck? Team discipline, or team luck?"},
+      ],
+      cifras: [
+        ["eight million dollars", "$8,000,000"],
+      ],
+      subtitulos: ['thesis','payoff','honesty','lesson'],
+      curvaLlegaEn: "$8,000,000",
       omitirEnSubtitulos: [],
     },
   },
@@ -1026,6 +1072,10 @@ function drawHook(t, W, H, s){
   // (índice 1) es la dorada: en un gancho de 2 líneas es el contraste (p.ej. "$1 BILLION").
   const nLin = CFG.spec.length;
   const mid = (nLin - 1) / 2;
+  // Separación entre líneas del gancho. Por defecto 150 (S3/Buffett: sus 2ª líneas son ANCHAS y
+  // text() las auto-encoge, así que la línea de tiempo del ritmo las libra). Un Short con ritmo y una
+  // 2ª línea CORTA (no se encoge, se queda a 116px, más alta) necesita más hueco: CFG.ritmoSep.
+  const sep = CFG.ritmoSep || 150;
 
   // ── RITMO v1 (opt-in CFG.ritmo, docs/EXPERIMENTO-RITMO.md) ──────────────────────────────────
   // Respiración sub-perceptual de TODO el bloque (0.6%, ~lento) -> el cuadro nunca queda del todo
@@ -1052,7 +1102,7 @@ function drawHook(t, W, H, s){
       ctx.strokeStyle = P.brass;  ctx.lineWidth = 4*s;                   // recorrido cumplido
       ctx.beginPath(); ctx.moveTo(tx0, ty); ctx.lineTo(mx, ty); ctx.stroke();
       ctx.fillStyle = P.brass; ctx.beginPath(); ctx.arc(mx, ty, 8*s, 0, Math.PI*2); ctx.fill();
-      text(Math.round(q*45) + ' YEARS', mx, ty - 26*s,
+      text(Math.round(q*(CFG.ritmoYears||45)) + ' YEARS', mx, ty - 26*s,
            {size: 28*s, weight:700, color:P.brass, alpha:aTL});
       ctx.restore();
     }
@@ -1067,15 +1117,15 @@ function drawHook(t, W, H, s){
     const color = i === 1 ? P.brass : P.paper;
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 20*s;
-    text(linea, W/2, cy + (i-mid)*150*s + dy,
+    text(linea, W/2, cy + (i-mid)*sep*s + dy,
          {size: tams[i]*s, weight:800, color, alpha:easeOut(a), spacing: i===1 ? 8*s : 0});
     ctx.restore();
   });
   // línea dorada que crece bajo el bloque (bajo la última línea, sea cual sea el nº de líneas)
   const a = clamp01((p - 0.72) / 0.18);
   if (a > 0){
-    // 80px bajo la última línea (cy + mid*150). Con 3 líneas (mid=1) da cy+230 EXACTO -> S3 igual.
-    const yUnder = cy + mid*150*s + 80*s;
+    // 80px bajo la última línea (cy + mid*sep). Con 3 líneas (mid=1, sep=150) da cy+230 -> S3 igual.
+    const yUnder = cy + mid*sep*s + 80*s;
     const w = 260*s * easeOut(a);
     ctx.save(); ctx.globalAlpha = easeOut(a);
     ctx.strokeStyle = P.brass; ctx.lineWidth = 5*s; ctx.lineCap='round';
