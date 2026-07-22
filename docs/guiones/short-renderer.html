@@ -473,7 +473,7 @@ const SHORTS = {
   // ── SHORT #7 · RONALD READ — el conserje que murió con $8M (secuela de Buffett) ────────────────
   'read-janitor': {
     ref: 'ronald-read-janitor-2026-07',
-    escena: 'snowball',                 // DIFERENCIADOR propio (no la curva de Buffett): el snowball
+    escena: 'portfolio',                // DIFERENCIADOR propio: el tablero de holdings (finance-premium)
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,
     // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
@@ -490,7 +490,9 @@ const SHORTS = {
     cta: ['SKILL, OR', 'JUST TIME?'],
     ctaSub: 'drop your verdict · team luck or team time',
     pmt: 170, years: 60, rate: 0.10, compound: 'monthly',
-    ghostCurve: true,
+    // SIN ghostCurve: el tablero NO se cuela bajo el gancho (evita el doble-número en la transición).
+    // El movimiento del gancho lo da la línea de tiempo del ritmo (0->60 YEARS), no el tablero.
+    ctaDim: 0.82,                       // el tablero es denso: el CTA necesita oscurecer más que el 0.52 del S3
     ritmo: true,                        // Motion Budget v1 desde el frame 1 (Experimento #001)
     ritmoYears: 60,                     // los ~60 años comprando y reinvirtiendo — la variable ES el TIEMPO
     ritmoSep: 210,                      // "$8 MILLION." es corta -> no la encoge text() -> más hueco para el track
@@ -1967,6 +1969,75 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
        {size:20*s, weight:600, color:P.grey, alpha:alpha*0.8, spacing:2*s});
 }
 
+// ── Escena: PORTFOLIO (Read #7) — el tablero de posiciones que se ENCIENDE con los años ─────────
+// Estética finance-premium: un tablero de "holdings" (tiles) sobre el fieltro que se encienden en
+// dorado con los años (acumular posiciones), cada una con un tick verde (acción que sube). Cada tanto
+// una posición reparte un DIVIDENDO verde que sube al contador y se reinvierte. El CONTADOR es el
+// héroe (el número subiendo = lo que engancha a una audiencia de finanzas). Valor sigue D -> $8M.
+function drawPortfolio(t, W, H, s, alpha, ghost=false){
+  const arranque = CFG.ghostCurve ? 0.3 : T.hook + 0.3;
+  const fin = Math.max(arranque + 1, T.draw);
+  const p = clamp01((t - arranque) / (fin - arranque));
+  const idx = Math.max(0, Math.floor(p * (D.n - 1)));
+  const val = D.total[idx];
+
+  const cols = 7, rows = 4, N = cols*rows;
+  const gx0 = 175*s, gx1 = W - SAFE.right - 45*s;
+  const gy0 = 800*s, gy1 = 1250*s;
+  const cx = W/2, cyC = SAFE.top + 165*s, tile = 30*s, rr = 8*s;
+
+  ctx.save(); ctx.globalAlpha = alpha;
+  const litDots = [];
+  for (let i = 0; i < N; i++){
+    const col = i%cols, row = (i/cols|0);
+    const dx = lerp(gx0, gx1, col/(cols-1)), dy = lerp(gy0, gy1, row/(rows-1));
+    const thr = (i*0.61803398875) % 1;                 // orden de encendido disperso (áureo)
+    const on = clamp01((p - thr) / 0.05);
+    ctx.strokeStyle = 'rgba(92,110,100,0.30)'; ctx.lineWidth = 1.5*s;
+    ctx.beginPath(); ctx.roundRect(dx-tile/2, dy-tile/2, tile, tile, rr); ctx.stroke();
+    if (on > 0){
+      litDots.push({dx, dy}); const e = easeOut(on);
+      ctx.save(); ctx.globalAlpha = alpha*e;
+      ctx.shadowColor = 'rgba(216,178,90,0.65)'; ctx.shadowBlur = 16*s*e;
+      ctx.fillStyle = 'rgba(216,178,90,0.16)';
+      ctx.beginPath(); ctx.roundRect(dx-tile/2, dy-tile/2, tile, tile, rr); ctx.fill();
+      ctx.shadowBlur = 0; ctx.strokeStyle = P.brass; ctx.lineWidth = 2*s;
+      ctx.beginPath(); ctx.roundRect(dx-tile/2, dy-tile/2, tile, tile, rr); ctx.stroke();
+      ctx.strokeStyle = P.growth; ctx.lineWidth = 2.4*s; ctx.lineCap = 'round';  // tick: la acción sube
+      ctx.beginPath(); ctx.moveTo(dx-7*s, dy+5*s); ctx.lineTo(dx-1*s, dy-2*s); ctx.lineTo(dx+7*s, dy-6*s); ctx.stroke();
+      ctx.restore();
+    }
+  }
+  if (!ghost){                                          // dividendos verdes reinvirtiéndose al contador
+    const PER = 1.15, T0 = arranque + 1.0;
+    for (let k = 0; k < 90; k++){
+      const tc = T0 + k*PER; if (tc > fin) break;
+      const age = t - tc; if (age < 0 || age > 0.65 || !litDots.length) continue;
+      const src = litDots[(k*13) % litDots.length], a = clamp01(age/0.65);
+      const sx = lerp(src.dx, cx, easeOut(a)), sy = lerp(src.dy, cyC, easeOut(a));
+      ctx.globalAlpha = alpha*(1 - a*a); ctx.fillStyle = P.growth;
+      ctx.shadowColor = 'rgba(31,158,110,0.7)'; ctx.shadowBlur = 10*s;
+      ctx.beginPath(); ctx.arc(sx, sy, 6*s, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; ctx.globalAlpha = alpha;
+    }
+  }
+  ctx.restore();
+  if (ghost) return;
+
+  // El contador HÉROE aparece SOLO cuando el gancho ya se fue -> nunca compite con el "$8 MILLION".
+  const cA = alpha * clamp01((t - (T.hook + 0.12)) / 0.3);
+  if (cA <= 0.001) return;
+  const head = SAFE.top + 25*s;                         // contador HÉROE + año + label
+  let esc = 1; const dP = t - fin; if (dP > 0 && dP < 0.55) esc = 1 + 0.12*Math.sin(Math.PI*(dP/0.55));
+  ctx.save(); ctx.globalAlpha = cA; ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
+  ctx.shadowColor = 'rgba(216,178,90,0.5)'; ctx.shadowBlur = 24*s;
+  text(money(val), 0, 0, {size:100*s, weight:800, color:P.paper}); ctx.restore();
+  const yr = Math.min(CFG.years, Math.floor(idx/12)+1);
+  text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${yr}`, W/2, head + 188*s,
+       {size:22*s, weight:600, color:P.brass, alpha:cA*0.85, spacing:4*s});
+  text(p >= 1 ? '95 COMPANIES · NEVER SOLD' : 'DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 60*s,
+       {size:20*s, weight:600, color:P.grey, alpha:cA*0.8, spacing:2*s});
+}
+
 const SCENES = {
   vacio: () => {},                                      // base neutra: el Short se compone por overlays
   gancho:(t, W, H, s, a, ov) => drawGancho(t, W, H, s, a, ov),
@@ -1994,6 +2065,13 @@ const SCENES = {
     }
     if (aHook > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
     if (aBall > 0) drawSnowball(t, W, H, s, aBall);
+  },
+  portfolio: (t, W, H, s) => {                            // intro (spec) -> tablero de holdings (Read)
+    const fade = 0.45;
+    const aB = clamp01((t - (T.hook - fade)) / fade), aHook = 1 - aB;
+    if (CFG.ghostCurve){ const gA = 0.16 * clamp01(t/0.6) * (1 - aB); if (gA > 0.003) drawPortfolio(t, W, H, s, gA, true); }
+    if (aHook > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
+    if (aB > 0) drawPortfolio(t, W, H, s, aB);
   },
   columns:   (t, W, H, s) => drawColumns(t, W, H, s),    // dos columnas del S1
   checklist: (t, W, H, s) => drawChecklist(t, W, H, s),  // checklist del esfuerzo del S2

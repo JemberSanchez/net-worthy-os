@@ -34,7 +34,7 @@ No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concl
 **Short #1 PUBLICADO** el 2026-07-10 (YouTube Shorts + Facebook Reels), ref
 `build-wealth-short-03-stat`. Pero **`production_outcome` = 0 filas**: el moat no se llena al
 publicar, se llena al MEDIR. **Lo único que importa: el sábado 2026-07-12 correr `record-analytics`
-+ `record-cost` + `record-outcome` + `dna`.** 92 tests verdes. 2 de 10 videos instrumentados, 0 medidos.
++ `record-cost` + `record-outcome` + `dna`.** 104 tests verdes. 2 de 10 videos instrumentados, 0 medidos.
 
 - **Motor de video:** `docs/guiones/short-renderer.html` genera el Short entero (visuales + voz +
   subtítulos quemados) y exporta **MP4 H.264+AAC** listo para subir. Sin CapCut. Datos por Short en

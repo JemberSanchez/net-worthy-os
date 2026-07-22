@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview — Ronald Read (#7) · tablero portfolio</title>
+<style>
+  :root{ --ink:#0A1A14; --brass:#D8B25A; --paper:#F4F6F3; }
+  html,body{ margin:0; height:100%; background:radial-gradient(circle at 50% 30%, #12241c, #060f0b); }
+  body{ display:flex; flex-direction:column; align-items:center; justify-content:center;
+        font-family:"Segoe UI",system-ui,sans-serif; color:var(--paper); gap:14px; padding:16px; box-sizing:border-box; }
+  h1{ font-size:15px; font-weight:600; letter-spacing:2px; color:var(--brass); margin:0; text-transform:uppercase; }
+  #view{ height:min(82vh,900px); aspect-ratio:9/16; border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
+         background:#0A1A14; }
+  .row{ display:flex; gap:10px; align-items:center; }
+  button{ background:#16281f; color:var(--paper); border:1px solid #2B4238; border-radius:9px;
+           padding:8px 16px; font-size:14px; cursor:pointer; }
+  button:hover{ border-color:var(--brass); }
+  #t{ font-variant-numeric:tabular-nums; color:var(--brass); font-size:14px; min-width:66px; text-align:center; }
+  .note{ font-size:12px; color:#7d8f84; max-width:420px; text-align:center; line-height:1.5; }
+  input[type=range]{ width:260px; accent-color:var(--brass); }
+</style>
+</head>
+<body>
+  <h1>Ronald Read #7 · escena "portfolio"</h1>
+  <canvas id="view" width="1080" height="1920"></canvas>
+  <div class="row">
+    <button id="playpause">⏸ Pausa</button>
+    <span id="t">0.0s</span>
+    <input id="scrub" type="range" min="0" max="52" step="0.05" value="0">
+  </div>
+  <p class="note">Bucle de 52s con timing sintético (la voz real lo recalibra sola). El texto de los
+    <b>subtítulos es placeholder</b> hasta que grabes la voz — fíjate en la escena, el contador y el gancho.</p>
+
+  <iframe id="engine" src="short-renderer.html" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;left:-9999px"></iframe>
+
+<script>
+const iframe = document.getElementById('engine');
+const view = document.getElementById('view');
+const vctx = view.getContext('2d');
+const tEl = document.getElementById('t');
+const scrub = document.getElementById('scrub');
+const pp = document.getElementById('playpause');
+const DUR = 52;
+let W = null, playing = true, base = performance.now(), pausedAt = 0;
+
+let api = null;
+iframe.addEventListener('load', () => {
+  const tryStart = () => {
+    const w = iframe.contentWindow;
+    // CFG/T/canvas son let/const en el motor -> NO están en window. Un eval dentro del iframe los
+    // ve por scope léxico y los expone. drawFrame/cargarShort son function -> ya están, pero se
+    // exponen igual por uniformidad. Se reintenta hasta que el motor haya definido todo.
+    let bridged = false;
+    try { w.eval("window.__api = (typeof drawFrame!=='undefined' && typeof cargarShort!=='undefined' && typeof T!=='undefined' && typeof canvas!=='undefined') ? { drawFrame, cargarShort, T, canvas } : null;"); bridged = !!w.__api; } catch(e){}
+    if (!bridged){ return setTimeout(tryStart, 120); }
+    W = w; api = w.__api;
+    api.cargarShort('read-janitor');
+    // timing sintético representativo de una voz de ~52s (spec[1]=AGE 56 entra pronto, como la voz real)
+    Object.assign(api.T, { hook:6.0, draw:20.0, curve:24.0, cta:46.0, total:DUR, spec:[-0.3, 3.0] });
+    base = performance.now();
+    requestAnimationFrame(loop);
+  };
+  tryStart();
+});
+
+function render(t){
+  api.drawFrame(t);
+  vctx.drawImage(api.canvas, 0, 0, view.width, view.height);
+  tEl.textContent = t.toFixed(1) + 's';
+  scrub.value = t;
+}
+function loop(){
+  if (!api){ return; }
+  if (playing){
+    const t = ((performance.now() - base) / 1000) % DUR;
+    render(t);
+  }
+  requestAnimationFrame(loop);
+}
+pp.onclick = () => {
+  playing = !playing;
+  pp.textContent = playing ? '⏸ Pausa' : '▶ Reproducir';
+  if (playing){ base = performance.now() - pausedAt * 1000; }
+};
+scrub.oninput = () => {
+  playing = false; pp.textContent = '▶ Reproducir';
+  pausedAt = parseFloat(scrub.value);
+  if (W){ render(pausedAt); }
+};
+</script>
+</body>
+</html>
