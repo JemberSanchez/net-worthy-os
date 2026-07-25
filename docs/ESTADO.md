@@ -14,15 +14,27 @@
 >
 > **Convención de score confirmada en código:** `success = vistas_totales(FB+YT) / 750`.
 >
-> ### 🔴 Dos Shorts producidos que NO están en el moat
-> - **#6 Buffett** (`buffett-time-not-talent-2026-07`, publicado ~17-jul): tiene `production_context`
->   y `production_analytics`, pero **le falta `record-dna` y `record-outcome`**. No cuenta para el
->   hito ni calibra. ⚠ **Sus analytics son un baseline de ~17h** (230 espectadores, retención 0.109),
->   NO comparables con los 28d de S1/S2. Registrar `230/750` tal cual **envenenaría el dataset**:
->   230 vistas en 17h contra 280 en 28d es rendimiento muy SUPERIOR, no inferior. Hay que **re-medir
->   a 28d** antes de cerrarlo.
+> ### ✅ #6 Buffett CERRADO en el moat (6/10 instrumentados, 5 medidos)
+> Re-medido a 7 días el 24-jul: **FB 245 + YT 11 = 256** → `success = 0.341`. Queda **2º de 5**,
+> entre S1 (0.373) y S2 (0.303). Retención media **11%** (5,9s sobre 55s de video).
+>
+> ⚠ **Corrección de una hipótesis que estuvo escrita aquí y era FALSA.** Este doc llegó a decir que
+> "230 vistas en 17h contra 280 en 28d es rendimiento muy superior". **No lo era.** Contra el
+> baseline de 17h (244 vistas · 59 de 3s · 24m01s), a los SIETE DÍAS sumó **+1 vista y +3 segundos**.
+> El video no estaba acelerando: **flatlineó**. Facebook lo testeó, midió 5,9s de atención media y
+> cortó la distribución. Lección transversal: en Reels **el veredicto llega en las primeras ~17h**;
+> una ventana corta no subestima nada, ya es casi el número final.
+>
+> **Primera curva de retención del canal** (guardada en `production_context.medicion_2026_07_24`):
+> **24,1% a los 3s → 10,0% a los 20s → 11% medio.** El gancho es el mejor del canal (récord de
+> vistas de 3s) y aun así **se cae entre los 3s y los 20s**. Segundo dato independiente que apunta
+> a lo mismo que `docs/EXPERIMENTO-RITMO.md`. Ahí está el problema, no en el gancho.
+> (`reproducciones_1min = 0` es ESTRUCTURAL — el video dura 55s — no una señal de fracaso.)
+>
+> ### 🔴 Sigue fuera del moat
 > - **#7 Ronald Read** (escena PORTFOLIO, commits del 18-jul): montado en el motor, **cero filas en
 >   la DB**. Sin publicar o sin registrar.
+> - **`production_cost` sigue vacío** en los 6: el rendimiento por hora no existe todavía.
 >
 > ### 🔴 La captura de datos está PARADA
 > - Último `ingest`: **2026-07-15**. Últimas `signals`: **2026-07-12**. Van ~10 días sin observar.

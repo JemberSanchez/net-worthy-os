@@ -31,11 +31,12 @@ Hito actual: **10 videos instrumentados**. Progreso = filas del dataset, no comm
 No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
 ## Estado actual (2026-07-24, verificado contra la DB) — LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
-**5 de 10 instrumentados, 4 medidos.** 104 tests verdes. `production_cost` = **0 filas**.
+**6 de 10 instrumentados, 5 medidos.** 117 tests verdes. `production_cost` = **0 filas**.
 Score: `success = vistas_totales(FB+YT) / 750`.
-- **#6 Buffett publicado (~17-jul) pero a medias en el moat:** tiene analytics+context, le falta
-  `record-dna` y `record-outcome`. Sus analytics son un **baseline de 17h**, NO comparable con los
-  28d de S1/S2 → **re-medir a 28d antes de registrar**, o se envenena el dataset.
+- **#6 Buffett CERRADO** (256 vistas → 0.341, 2º de 5). **FLATLINEÓ**: entre las 17h y los 7 días
+  sumó +1 vista. En Reels el veredicto llega en las primeras ~17h — una ventana corta ya es casi
+  el número final. Primera curva de retención del canal: **24,1% a 3s → 10,0% a 20s**. El gancho
+  es el mejor del canal y aun así se cae entre 3s y 20s: **el problema no es el gancho**.
 - **#7 Ronald Read:** montado en el motor (18-jul), **cero filas en la DB**.
 - **⚠ La captura está PARADA:** último `ingest` 15-jul, últimas `signals` 12-jul. **Correr `/daily`
   antes de volver a usar `decide`** — opera sobre un corpus congelado.
@@ -51,8 +52,8 @@ Score: `success = vistas_totales(FB+YT) / 750`.
   voces Default caducan el 31-dic-2026.
 - **Confounder anotado:** el S3 se publicó a las 02:00 hora local con audiencia EN/US. Si retiene
   poco, puede ser la HORA, no el gancho. No atribuirlo a `hook_type`.
-- **Siguiente:** cerrar #6 Buffett en el moat (re-medir 28d → `record-dna` + `record-outcome`) = 6/10,
-  luego #7 Ronald Read = 7/10. Progreso = filas del dataset, no commits.
+- **Siguiente:** #7 Ronald Read (montado en el motor, sin publicar) = 7/10. Progreso = filas del
+  dataset, no commits. La palanca que señalan los datos es la RETENCIÓN entre 3s y 20s, no el gancho.
 - **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen (alcance
   orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
 
