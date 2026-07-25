@@ -113,6 +113,65 @@ class ReasoningKernelTest(unittest.TestCase):
         store.resolve_prediction(self.con, pid, outcome="confirmed", now=now)
         self.assertEqual(store.due_predictions(self.con, now=now), [])
 
+    # --- Guard de instrumento (medir con otra regla no es medir) -------------
+
+    def _sealed(self, version, now=4_000_000):
+        return store.create_prediction(
+            self.con, domain="content", statement="Demanda creciente en torno a 'x'",
+            confidence=0.6, verification_method="momentum de presencia (DF) a 14 días",
+            refutation_criterion="refutada si el crecimiento < +10%",
+            expected_verification_at=now + 1, now=now, instrument_version=version)
+
+    def test_instrument_version_is_sealed_at_creation(self):
+        pid = self._sealed("theme@0.2.0")
+        row = self.con.execute("SELECT instrument_version FROM prediction WHERE id=?",
+                               (pid,)).fetchone()
+        self.assertEqual(row["instrument_version"], "theme@0.2.0")
+
+    def test_changed_instrument_blocks_confirmed_and_refuted(self):
+        # el caso real de las predicciones #15-#18: la línea base se midió con v0.2.0 y el
+        # cierre llegaba con v0.2.1 -> 'refuted' habría enseñado una lección falsa.
+        for outcome in ("confirmed", "refuted"):
+            pid = self._sealed("theme@0.2.0")
+            with self.assertRaises(ValueError) as ctx:
+                store.resolve_prediction(self.con, pid, outcome=outcome,
+                                         current_instrument_version="theme@0.2.1")
+            self.assertIn("instrumento cambió", str(ctx.exception))
+
+    def test_inconclusive_is_always_allowed(self):
+        # la salida honesta nunca se bloquea: es justo la que hay que poder registrar
+        pid = self._sealed("theme@0.2.0")
+        store.resolve_prediction(self.con, pid, outcome="inconclusive",
+                                 current_instrument_version="theme@0.2.1")
+        row = self.con.execute("SELECT outcome FROM prediction WHERE id=?", (pid,)).fetchone()
+        self.assertEqual(row["outcome"], "inconclusive")
+
+    def test_same_instrument_resolves_normally(self):
+        pid = self._sealed("theme@0.2.1")
+        store.resolve_prediction(self.con, pid, outcome="confirmed",
+                                 current_instrument_version="theme@0.2.1")
+        row = self.con.execute("SELECT outcome FROM prediction WHERE id=?", (pid,)).fetchone()
+        self.assertEqual(row["outcome"], "confirmed")
+
+    def test_force_passes_but_leaves_the_change_written_in_the_note(self):
+        pid = self._sealed("theme@0.2.0")
+        store.resolve_prediction(self.con, pid, outcome="confirmed", note="sé lo que hago",
+                                 current_instrument_version="theme@0.2.1", force=True)
+        row = self.con.execute("SELECT resolution_note FROM prediction WHERE id=?",
+                               (pid,)).fetchone()
+        self.assertIn("FORZADA", row["resolution_note"])
+        self.assertIn("theme@0.2.0", row["resolution_note"])
+        self.assertIn("sé lo que hago", row["resolution_note"])
+
+    def test_unsealed_legacy_predictions_still_resolve(self):
+        # las predicciones anteriores al sellado no tienen versión: no se puede comparar,
+        # así que no se bloquean (o el guard rompería una base viva).
+        pid = self._sealed(None)
+        store.resolve_prediction(self.con, pid, outcome="confirmed",
+                                 current_instrument_version="theme@0.2.1")
+        row = self.con.execute("SELECT outcome FROM prediction WHERE id=?", (pid,)).fetchone()
+        self.assertEqual(row["outcome"], "confirmed")
+
     # --- Calibración (el activo medible) ------------------------------------
 
     def test_calibration_reports_predicted_vs_actual(self):

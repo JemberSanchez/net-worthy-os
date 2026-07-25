@@ -25,7 +25,11 @@ def score(hyp_row: sqlite3.Row, weights: dict) -> tuple[float, dict]:
 
 
 def decide(con: sqlite3.Connection, *, domain: str, weights: dict,
-           abstain_threshold: float, horizon_days: int = 14, now: int | None = None) -> dict:
+           abstain_threshold: float, horizon_days: int = 14, now: int | None = None,
+           instrument_version: str | None = None) -> dict:
+    """instrument_version lo APORTA EL DOMINIO (el kernel no puede importar los extractores: lo
+    prohíbe el test de pureza). Se sella en la predicción para que cerrarla más tarde con una
+    versión distinta no pase por medición. Ver `store.resolve_prediction`."""
     now = now or int(time.time())
     cands = hypotheses.list_candidates(con, domain)
     scored = []
@@ -62,7 +66,8 @@ def decide(con: sqlite3.Connection, *, domain: str, weights: dict,
         confidence=best["confidence"],
         verification_method=f"momentum de presencia (DF) a {horizon_days} días",
         refutation_criterion="refutada si el crecimiento de presencia < +10% en el horizonte",
-        expected_verification_at=now + horizon_days * 86400, evidence=ev, now=now)
+        expected_verification_at=now + horizon_days * 86400, evidence=ev, now=now,
+        instrument_version=instrument_version)
 
     opportunities.set_status(con, opp_id, "pursued")
     did = decisions.create_decision(

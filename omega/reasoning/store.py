@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS prediction (
     expected_verification_at INTEGER NOT NULL,
     resolved_at              INTEGER,
     outcome                  TEXT,                  -- confirmed|refuted|inconclusive
-    resolution_note          TEXT
+    resolution_note          TEXT,
+    instrument_version       TEXT                   -- versión del instrumento que midió la línea base
 );
 CREATE INDEX IF NOT EXISTS idx_pred_due ON prediction(expected_verification_at, resolved_at);
 CREATE INDEX IF NOT EXISTS idx_bu_belief ON belief_update(belief_id);
@@ -79,6 +80,11 @@ def connect(path: str) -> sqlite3.Connection:
 
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA)
+    # Migración idempotente: las DBs creadas antes del sellado de instrumento no tienen la
+    # columna, y CREATE TABLE IF NOT EXISTS no la añade. Sin esto, una base viva se rompe.
+    cols = [r[1] for r in con.execute("PRAGMA table_info(prediction)")]
+    if "instrument_version" not in cols:
+        con.execute("ALTER TABLE prediction ADD COLUMN instrument_version TEXT")
     con.commit()
 
 
@@ -159,11 +165,15 @@ def create_prediction(con: sqlite3.Connection, *, domain: str, statement: str,
                       confidence: float, verification_method: str,
                       refutation_criterion: str, expected_verification_at: int,
                       belief_id: int | None = None, evidence: dict | None = None,
-                      now: int | None = None) -> int:
+                      now: int | None = None, instrument_version: str | None = None) -> int:
     """Crea una predicción falsable. Exige los 3 campos que la hacen verificable.
 
     Sin verification_method, refutation_criterion o fecha esperada, lanza ValueError:
     una afirmación sin forma de comprobarla NO es una predicción, es una opinión.
+
+    instrument_version SELLA con qué versión del instrumento se midió la línea base. El kernel no
+    sabe qué instrumento es (un extractor de temas, un scraper, lo que sea): solo sabe que medir
+    el final con una regla distinta a la del principio no es medir. Ver `resolve_prediction`.
     """
     _check_conf(confidence)
     if not verification_method.strip():
@@ -175,26 +185,49 @@ def create_prediction(con: sqlite3.Connection, *, domain: str, statement: str,
     now = now or int(time.time())
     cur = con.execute(
         "INSERT INTO prediction (belief_id, domain, statement, confidence, evidence, "
-        "verification_method, refutation_criterion, created_at, expected_verification_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?)",
+        "verification_method, refutation_criterion, created_at, expected_verification_at, "
+        "instrument_version) VALUES (?,?,?,?,?,?,?,?,?,?)",
         (belief_id, domain, statement, confidence,
          json.dumps(evidence) if evidence else None,
-         verification_method, refutation_criterion, now, expected_verification_at),
+         verification_method, refutation_criterion, now, expected_verification_at,
+         instrument_version),
     )
     con.commit()
     return cur.lastrowid
 
 
 def resolve_prediction(con: sqlite3.Connection, prediction_id: int, *, outcome: str,
-                       note: str = "", now: int | None = None) -> None:
+                       note: str = "", now: int | None = None,
+                       current_instrument_version: str | None = None,
+                       force: bool = False) -> None:
     """Marca una predicción como resuelta. NO toca la confianza de la creencia.
 
     Deliberado: la actualización de la creencia es un paso EXPLÍCITO y separado, vía
     update_belief(cause_type='prediction_resolved'). Resolver no aprende en silencio.
+
+    GUARD DE INSTRUMENTO: si la línea base se midió con una versión y el cierre llega con otra,
+    'confirmed'/'refuted' se RECHAZAN. Medir el final con una regla distinta a la del principio
+    no es medir, y una calibración alimentada con eso miente para siempre. 'inconclusive' siempre
+    se permite (es la salida honesta). `force=True` deja pasar, pero lo deja escrito en la nota.
+    Caso real: las predicciones #15-#18 (2026-07-24) parecían refutables y eran inverificables —
+    el extractor había pasado de v0.2.0 a v0.2.1 dentro del horizonte.
     """
     if outcome not in OUTCOMES:
         raise ValueError(f"outcome inválido: {outcome!r}. Permitidos: {sorted(OUTCOMES)}")
     now = now or int(time.time())
+    sealed = con.execute("SELECT instrument_version FROM prediction WHERE id = ?",
+                         (prediction_id,)).fetchone()
+    sealed_ver = sealed[0] if sealed else None
+    if (sealed_ver and current_instrument_version
+            and sealed_ver != current_instrument_version and outcome != "inconclusive"):
+        if not force:
+            raise ValueError(
+                f"El instrumento cambió durante el horizonte: la línea base se midió con "
+                f"{sealed_ver!r} y ahora corre {current_instrument_version!r}. "
+                f"'{outcome}' no es verificable — usa 'inconclusive' (o force=True si sabes "
+                f"que el cambio no afecta a esta medición).")
+        note = (note + " ").lstrip() + (
+            f"[FORZADA: instrumento {sealed_ver} -> {current_instrument_version}]")
     n = con.execute(
         "UPDATE prediction SET outcome = ?, resolution_note = ?, resolved_at = ? "
         "WHERE id = ? AND resolved_at IS NULL",

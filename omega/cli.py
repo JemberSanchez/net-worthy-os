@@ -43,6 +43,14 @@ def _fmt(epoch: int) -> str:
     return datetime.fromtimestamp(epoch, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
+def _theme_instrument_version() -> str:
+    """Versión del instrumento que produce la señal 'theme' — el que mide la línea base de las
+    predicciones de demanda ('momentum de presencia'). Vive aquí, en el dominio: el kernel no
+    puede importar extractores (test de pureza), así que se la pasamos nosotros."""
+    from .extractors.theme import ThemeExtractor
+    return f"{ThemeExtractor.name}@{ThemeExtractor.version}"
+
+
 def cmd_ingest() -> None:
     db.init()
     feeds = config.load_feeds()
@@ -272,7 +280,8 @@ def cmd_decide() -> None:
     result = decision_engine.decide(
         con, domain="content", weights=config.DECISION_WEIGHTS,
         abstain_threshold=config.ABSTAIN_THRESHOLD,
-        horizon_days=config.PREDICTION_HORIZON_DAYS)
+        horizon_days=config.PREDICTION_HORIZON_DAYS,
+        instrument_version=_theme_instrument_version())
 
     print("=" * 64)
     print(decisions.render_explanation(decisions.explain(con, result["decision_id"])))
@@ -627,11 +636,18 @@ def cmd_resolve_prediction() -> None:
         print(f"Rechazado: '{sys.argv[2]}' no es un id numérico de predicción.")
         return
     outcome = sys.argv[3]
-    note = " ".join(sys.argv[4:]).strip()
+    rest = list(sys.argv[4:])
+    # --force: cerrar aunque el instrumento haya cambiado (queda escrito en la nota).
+    force = "--force" in rest
+    if force:
+        rest.remove("--force")
+    note = " ".join(rest).strip()
     con = kstore.connect(str(config.DB_PATH))
     kstore.init(con)
     try:
-        kstore.resolve_prediction(con, pid, outcome=outcome, note=note)
+        kstore.resolve_prediction(con, pid, outcome=outcome, note=note,
+                                  current_instrument_version=_theme_instrument_version(),
+                                  force=force)
     except ValueError as exc:
         print(f"Rechazado: {exc}")
         con.close()
