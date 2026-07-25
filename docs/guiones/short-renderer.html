@@ -521,8 +521,17 @@ const SHORTS = {
     // curva aterrice EXACTO en la cifra que dice la voz (se verificó `series()` en el motor).
     spec: ['A JANITOR.', '$8 MILLION.'],
     cta: ['SKILL, OR', 'JUST TIME?'],
-    ctaSub: 'drop your verdict · team luck or team time',
+    // CTA de DEBATE: una SOLA dicotomía en voz y pantalla. Antes la voz decía "team discipline or
+    // team luck" y la pantalla "team luck or team time" -> tres etiquetas para dos bandos en los
+    // últimos 5s. El CTA existe para arreglar el enganche 0 del Buffett (1 interacción en 245
+    // vistas): si le pides a alguien que elija bando y le das tres nombres, no elige.
+    // Gana SKILL vs TIME: es la tarjeta grande (`cta`) y es la tesis del video.
+    ctaSub: 'drop your verdict · team skill or team time',
     pmt: 170, years: 60, rate: 0.10, compound: 'monthly',
+    // La serie da $8,007,457, pero esa precisión es del MODELO, no de la realidad: su cartera real
+    // es desconocida y lo documentado es "~$8 millones". Se remata en la cifra redonda, que además
+    // es la que dice la voz y la que ya está en `guion.cifras` -> subtítulo y contador coinciden.
+    valorFinal: '$8,000,000',
     // SIN ghostCurve: el tablero NO se cuela bajo el gancho (evita el doble-número en la transición).
     // El movimiento del gancho lo da la línea de tiempo del ritmo (0->60 YEARS), no el tablero.
     ctaDim: 0.82,                       // el tablero es denso: el CTA necesita oscurecer más que el 0.52 del S3
@@ -539,7 +548,7 @@ const SHORTS = {
         {id:'payoff',  texto:"He put in a little at a time. Everything above that line is dividends buying more dividends. The snowball, not the paycheck."},
         {id:'honesty', texto:"Now the part nobody says. He held ninety-five stocks so one collapse couldn't sink him, and some did cut their dividends. And he never had to sell. Sixty years, no emergency big enough to touch it. That is the rare part, not the picking."},
         {id:'lesson',  texto:"You don't need his eight million. The engine is the same at any size. Own things that pay you, reinvest, and don't interrupt it."},
-        {id:'cta',     texto:"So, skill, or just time? Could you do it on a gas station paycheck? Team discipline, or team luck?"},
+        {id:'cta',     texto:"So, skill, or just time? Could you do it on a gas station paycheck? Team skill, or team time?"},
       ],
       cifras: [
         ["eight million dollars", "$8,000,000"],
@@ -2021,10 +2030,17 @@ function drawPortfolio(t, W, H, s, alpha, ghost=false){
   const idx = Math.max(0, Math.floor(p * (D.n - 1)));
   const val = D.total[idx];
 
-  const cols = 7, rows = 4, N = cols*rows;
+  // 19x5 = 95 casillas, UNA POR EMPRESA. Antes eran 7x4=28 mientras el rótulo decía
+  // "95 COMPANIES": el canal se distingue por tener las cifras verificadas una a una, y enseñar
+  // 28 afirmando 95 es una herida autoinfligida en lo único que lo diferencia. Además el muro
+  // denso comunica MEJOR la tesis del guion ("held ninety-five stocks so one collapse couldn't
+  // sink him") que una rejilla aireada.
+  const cols = 19, rows = 5, N = cols*rows;              // 95 = las 95 blue-chips de Ronald Read
   const gx0 = 175*s, gx1 = W - SAFE.right - 45*s;
   const gy0 = 800*s, gy1 = 1250*s;
-  const cx = W/2, cyC = SAFE.top + 165*s, tile = 30*s, rr = 8*s;
+  // Con 19 columnas el paso horizontal cae a ~40px: la casilla baja de 30 a 22 para que no se
+  // toquen, y el tick interior se dibuja proporcional a ella (antes iba a medidas fijas).
+  const cx = W/2, cyC = SAFE.top + 165*s, tile = 22*s, rr = 5*s;
 
   ctx.save(); ctx.globalAlpha = alpha;
   const litDots = [];
@@ -2043,8 +2059,10 @@ function drawPortfolio(t, W, H, s, alpha, ghost=false){
       ctx.beginPath(); ctx.roundRect(dx-tile/2, dy-tile/2, tile, tile, rr); ctx.fill();
       ctx.shadowBlur = 0; ctx.strokeStyle = P.brass; ctx.lineWidth = 2*s;
       ctx.beginPath(); ctx.roundRect(dx-tile/2, dy-tile/2, tile, tile, rr); ctx.stroke();
-      ctx.strokeStyle = P.growth; ctx.lineWidth = 2.4*s; ctx.lineCap = 'round';  // tick: la acción sube
-      ctx.beginPath(); ctx.moveTo(dx-7*s, dy+5*s); ctx.lineTo(dx-1*s, dy-2*s); ctx.lineTo(dx+7*s, dy-6*s); ctx.stroke();
+      // tick: la acción sube. Proporcional a `tile` para que siga cabiendo si la rejilla cambia.
+      const k = tile/30;
+      ctx.strokeStyle = P.growth; ctx.lineWidth = 2.4*s*k; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(dx-7*s*k, dy+5*s*k); ctx.lineTo(dx-1*s*k, dy-2*s*k); ctx.lineTo(dx+7*s*k, dy-6*s*k); ctx.stroke();
       ctx.restore();
     }
   }
@@ -2070,7 +2088,15 @@ function drawPortfolio(t, W, H, s, alpha, ghost=false){
   let esc = 1; const dP = t - fin; if (dP > 0 && dP < 0.55) esc = 1 + 0.12*Math.sin(Math.PI*(dP/0.55));
   ctx.save(); ctx.globalAlpha = cA; ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
   ctx.shadowColor = 'rgba(216,178,90,0.5)'; ctx.shadowBlur = 24*s;
-  text(money(val), 0, 0, {size:100*s, weight:800, color:P.paper}); ctx.restore();
+  // AL ATERRIZAR se muestra `CFG.valorFinal` si existe, no la salida exacta de la serie.
+  // Por qué: en este Short la curva es ILUSTRATIVA (su cartera real es desconocida; lo documentado
+  // es "~$8 millones"). Rematar en `$8,007,457` afirma al dólar algo que nadie sabe — y encima
+  // `guion.cifras` mapea la frase hablada a "$8,000,000", así que el subtítulo y el contador
+  // mostraban DOS números distintos para lo mismo.
+  // Es opt-in a propósito: el Buffett SÍ debe rematar exacto ($5,502,384 sale de la carta anual
+  // de Berkshire, es un hecho comprobable) y además está PUBLICADO: no se toca.
+  const remate = (p >= 1 && CFG.valorFinal) ? CFG.valorFinal : money(val);
+  text(remate, 0, 0, {size:100*s, weight:800, color:P.paper}); ctx.restore();
   const yr = Math.min(CFG.years, Math.floor(idx/12)+1);
   text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${yr}`, W/2, head + 188*s,
        {size:22*s, weight:600, color:P.brass, alpha:cA*0.85, spacing:4*s});

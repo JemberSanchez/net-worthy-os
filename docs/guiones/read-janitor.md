@@ -9,8 +9,12 @@
 - **Personaje más relatable.** Buffett es intocable (genio, billonario) → su CTA "drop your number" no
   generó comentarios (enganche = 0, el problema #1). Read es un **don nadie** → *"¿podría YO?"* = debate.
 - **Contraste más visceral:** `A JANITOR.` → `$8 MILLION.` (trabajo vs fortuna).
-- **CTA de DEBATE** (mecanismo del tribunal, para comentarios): *"Skill, or just time? Team discipline,
-  or team luck?"* — ataca directamente el enganche 0 de Buffett.
+- **CTA de DEBATE** (mecanismo del tribunal, para comentarios): *"Skill, or just time? Team skill,
+  or team time?"* — ataca directamente el enganche 0 de Buffett (1 interacción en 245 vistas).
+  ⚠ **Una SOLA dicotomía en voz y pantalla.** Hasta el 25-jul la voz decía *"team discipline or team
+  luck"* y la pantalla *"team luck or team time"*: tres etiquetas para dos bandos en los últimos 5s.
+  Si le pides a alguien que elija bando y le das tres nombres, no elige — y este CTA existe
+  precisamente para generar comentarios.
 - **Motor de ritmo (Motion Budget v1) desde el frame 1** (`docs/EXPERIMENTO-RITMO.md`): el hueco del
   gancho lleva la línea de tiempo `0→60 YEARS` entre `A JANITOR.` y `$8 MILLION.`.
 
@@ -49,11 +53,20 @@ NO es su cartera real (desconocida): es la **mecánica** (reinvertir + tiempo). 
 - **No humilla:** el sujeto es el TIEMPO + el hábito, no el sueldo del espectador.
 
 ## Producción
-- **Escena PROPIA `snowball`** (NO la curva de Buffett — [[cada-short-necesita-diferenciador]]): una bola
-  rueda cuesta abajo y su MASA ∝ el valor (radio ∝ √valor) → plana mucho tiempo, luego explota =
-  compounding, la misma verdad con otra piel. Cada ~1.5s un dividendo (moneda dorada) se ABSORBE con
-  un pulso = reinvertir. El valor sigue la serie D → aterriza en $8M. Gancho de contraste 2 líneas
-  (compartido). Montado en `SHORTS['read-janitor']` + `SCENES.snowball` + `drawSnowball()`.
+- **Escena PROPIA `portfolio`** (NO la curva de Buffett — [[cada-short-necesita-diferenciador]]): un
+  tablero de **95 casillas, una por empresa**, que se van encendiendo con un tick verde a lo largo de
+  los 60 años. Cada ~1.15s un dividendo (punto verde) sale de una posición y se ABSORBE en el
+  contador = reinvertir. El contador es el HÉROE (el número subiendo es lo que engancha a una
+  audiencia de finanzas) y sigue la serie D → aterriza en $8M. Gancho de contraste 2 líneas
+  (compartido). Montado en `SHORTS['read-janitor']` + `SCENES.portfolio` + `drawPortfolio()`.
+  > Este doc describía una escena `snowball` (bola rodando) hasta el 25-jul: se reemplazó por el
+  > tablero en el commit `61cb745` (22-jul) y el doc no se actualizó. Quien lo leyera se imaginaba
+  > otro video.
+  > **Dos correcciones del 25-jul:** la rejilla era de 7×4=**28** casillas mientras el rótulo decía
+  > "95 COMPANIES" (ahora son 19×5=95 reales), y el contador remataba en **$8,007,457** —precisión
+  > del modelo, no de la realidad: su cartera real es desconocida y lo documentado es "~$8 millones".
+  > Ahora remata en `$8,000,000` vía `CFG.valorFinal`, que además es lo que dice la voz y lo que ya
+  > había en `guion.cifras` (antes subtítulo y contador mostraban dos números distintos).
 - **Le falta SOLO la VOZ:** `docs/guiones/TTS-read.txt` → CapCut Firme Pilot → `data/voz-short-read.mp3`.
   Al cargarla, el motor calibra todo y la línea de tiempo del ritmo se adapta al timing real.
 - Verificado a ojo (gancho + curva + timeline, frames por POST-server). 23 tests del motor verdes.
