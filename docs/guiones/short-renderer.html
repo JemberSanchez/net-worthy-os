@@ -16,6 +16,10 @@
   #stage{border:1px solid #1d2f27; border-radius:10px; overflow:hidden; line-height:0}
   canvas{display:block; max-height:60vh; width:auto; height:auto}
   .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center}
+  #lote-keys{
+    background:#0C1A15; color:var(--paper); border:1px solid #1d2f27; border-radius:7px;
+    padding:8px 10px; font:inherit; font-size:13px;
+  }
   button{
     background:var(--growth); color:#04120C; border:0; border-radius:7px;
     padding:10px 16px; font-weight:650; font-size:14px; cursor:pointer; font-family:inherit;
@@ -149,7 +153,22 @@
 <div class="row">
   <button id="rec">⏺ Grabar y descargar el Short</button>
   <button id="png" class="brass">⬇ Frame final (miniatura)</button>
+  <button id="adn" class="ghost">⬇ ADN de producción (JSON)</button>
 </div>
+
+<div class="row" style="margin-top:10px">
+  <label for="lote-keys" style="white-space:nowrap">Cola de lote:</label>
+  <input id="lote-keys" type="text" style="flex:1;min-width:260px"
+         value="s1-story s2-contrarian s3-stat fed-catchup buffett-time"
+         title="Claves de SHORTS separadas por espacios o comas">
+  <button id="lote" class="brass">⏭ Renderizar el lote (MP4 + ADN)</button>
+</div>
+<p class="note">
+  Encadena, por cada Short: cargar su voz de <code>data/</code> → calibrar → exportar MP4 → exportar
+  su ADN. Un Short que falle no detiene el lote; al final se listan los fallos.
+  <br><strong>Chrome pedirá permiso para "descargar varios archivos": acéptalo</strong>, o solo
+  bajará el primero. Cada Short necesita su <code>data/voz-*.mp3</code> ya generada.
+</p>
 
 <div id="status"></div>
 
@@ -186,6 +205,12 @@ let SAFE_BOT = FORMATS.short.h - SAFE.bottom;   // por debajo, no se ve en el m�
 const SHORTS = {
   's3-stat': {
     ref: 'build-wealth-short-03-stat',
+    // `adn` = la taxonomía del ADN de producción. Es JUICIO HUMANO, no derivable de la escena:
+    // se declara UNA vez aquí, junto al contenido, y el botón "⬇ ADN" la exporta mecánicamente.
+    // Valores permitidos (omega/cli.py cmd_record_dna):
+    //   hook_type: story|question|contrarian|stat|shock · story_type: personal|character|case_study|none
+    //   cta_type:  session|subscribe|comment|none
+    adn: {hook_type: 'stat', story_type: 'none', cta_type: 'comment'},
     escena: 'chart',                   // el visual central es la curva compuesta
     voz: 'voz-short-03.mp3',           // data/<voz>: lo que carga "Usar la voz del proyecto"
     spec: ['$500 A MONTH', 'S&P 500', '30 YEARS'],
@@ -219,6 +244,7 @@ const SHORTS = {
 
   's1-story': {
     ref: 'build-wealth-short-01-story',
+    adn: {hook_type: 'story', story_type: 'character', cta_type: 'comment'},
     escena: 'columns',                 // mismo sueldo, misma disciplina, distinta DIRECCIÓN del dinero
     voz: 'voz-short-01.mp3',
     sfx: true,                        // diseño de sonido procedural en el export           // data/<voz>: exporta la voz de CapCut con ESTE nombre
@@ -268,6 +294,7 @@ const SHORTS = {
 
   's2-contrarian': {
     ref: 'build-wealth-short-02-contrarian',
+    adn: {hook_type: 'contrarian', story_type: 'none', cta_type: 'comment'},
     escena: 'checklist',               // el esfuerzo se marca ✓... y aun así STILL BROKE
     voz: 'voz-short-02.mp3',
     sfx: true,                        // diseño de sonido procedural en el export           // exporta la voz de CapCut (Firme Pilot) con ESTE nombre
@@ -308,6 +335,7 @@ const SHORTS = {
 
   'fed-catchup': {
     ref: 'fed-savings-catchup-2026-07',
+    adn: {hook_type: 'shock', story_type: 'none', cta_type: 'comment'},
     escena: 'vacio',                   // se compone por overlays: gancho -> bullets -> stat -> CTA
     voz: 'voz-short-fed.mp3',
     sfx: true,                         // diseño de sonido procedural mezclado en el export
@@ -411,6 +439,7 @@ const SHORTS = {
 
   'buffett-time': {
     ref: 'buffett-time-not-talent-2026-07',
+    adn: {hook_type: 'story', story_type: 'character', cta_type: 'comment'},
     escena: 'chart',                   // la DEMO VISUAL es la curva: plana 40 años -> vertical
     voz: 'voz-short-buffett.mp3',
     sfx: true,
@@ -520,6 +549,7 @@ const SHORTS = {
 
 let SHORT = SHORTS['s3-stat'];
 let CFG = SHORT;   // alias reasignable: el motor lee CFG.spec, CFG.cta, CFG.pmt... (cambia con cargarShort)
+let ULTIMA_CAL = null;   // última calibración aplicada -> fuente de los tiempos por bloque del ADN
 
 /** CALIBRADO CONTRA data/voz-short-03.mp3 (CapCut TTS "Firme Pilot", 24.03s).
  *  Medido, no estimado: se decodificó el MP3, se sacó la envolvente RMS en ventanas de 10 ms y
@@ -809,6 +839,12 @@ function calibrarAuto(buffer, guion){
   return {
     cuts: Object.fromEntries(Object.entries(cuts).map(([k,v]) => [k, +v.toFixed(2)])),
     spec,
+    // Fronteras MEDIDAS de cada bloque narrativo contra la voz real. Alimentan el ADN de
+    // producción: hasta ahora los `length_s` por bloque se escribían a mano (o se dejaban en 0,
+    // como en el Buffett) porque este dato existía aquí dentro y no salía. Repartirlos
+    // proporcionalmente NO es alternativa: el habla no es un metrónomo (ver docs/ESTADO.md §10).
+    grupos: porGrupo.map(g => ({id: g.id, inicio: +g.inicio.toFixed(2), fin: +g.fin.toFixed(2),
+                                dur: +(g.fin - g.inicio).toFixed(2)})),
     // cuándo EMPIEZA a decirse la cifra grande. `cuts.draw` ya guardaba el FINAL (t1); esto es el
     // arranque, y es el ancla para que el número del stat aterrice JUSTO sobre la palabra.
     cifra_t0: tok ? +tok.t0.toFixed(2) : null,
@@ -2294,6 +2330,8 @@ function cargarShort(key){
   const selModo = document.getElementById('modo');
   if (selModo){ selModo.value = 'short'; document.getElementById('lbl-proyecto').style.display = 'none'; }
   SHORT = SHORTS[key]; CFG = SHORT;
+  ULTIMA_CAL = null;   // la calibración del Short ANTERIOR no vale para este: el ADN saldría con
+                       // tiempos de otro video y nadie lo notaría. Se repuebla al cargar la voz.
   D = (CFG.pmt || CFG.lump) ? series() : null;   // `lump` también es proyección (ver series())
   MAXY = D ? D.finalTotal * 1.18 : 0;
   // El S3 arranca con su calibración MANUAL puesta (incluye subtítulos). El story no tiene voz
@@ -2315,6 +2353,65 @@ function cargarShort(key){
     : `Short ${key}: calibración a mano cargada. Carga data/${CFG.voz} y pulsa Grabar.`;
 }
 document.getElementById('short').onchange = e => cargarShort(e.target.value);
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ADN DE PRODUCCIÓN — captura-en-origen (docs/POLITICA.md, excepción a la Regla 1)
+//
+// Escribir a mano un JSON por video no escala a 7 shorts/semana, y encima se equivoca: el ADN del
+// Buffett se escribió a mano el 2026-07-24 con TODOS los `length_s` de bloque en 0, porque los
+// tiempos medidos vivían dentro del calibrador y no salían. Ahora salen (`cal.grupos`).
+//
+// Lo que NO se deriva: hook_type/story_type/cta_type son juicio humano. Se declaran una vez en
+// `SHORTS[key].adn` y esto solo los transcribe. Si faltan, se RECHAZA en vez de inventarlos: un
+// ADN con la taxonomía adivinada envenena la calibración, que es el único activo del proyecto.
+// ═════════════════════════════════════════════════════════════════════════════
+function construirADN(){
+  if (!CFG.adn)
+    throw new Error(`El Short '${document.getElementById('short').value}' no declara \`adn\` en ` +
+      `SHORTS. Añádelo junto a su \`ref\` (hook_type / story_type / cta_type). No lo adivino: ` +
+      `una taxonomía inventada envenena la calibración.`);
+  if (!ULTIMA_CAL || !ULTIMA_CAL.grupos)
+    throw new Error(`Sin calibración contra la voz real. Pulsa "🎙 Usar la voz del proyecto ` +
+      `(${CFG.voz})" primero — sin eso no hay tiempos MEDIDOS por bloque, y repartirlos ` +
+      `proporcionalmente es exactamente la trampa que desincronizó el S3.`);
+
+  // Bloques de TÉCNICA (transversales, sin duración propia) + bloques NARRATIVOS (medidos).
+  const tecnica = [
+    {block: 'voice',   technique: 'capcut_tts_firme_pilot',              length_s: 0},
+    {block: 'visuals', technique: `canvas_escena_${CFG.escena || 'n/a'}`, length_s: 0},
+  ];
+  if (CFG.sfx)   tecnica.push({block: 'sfx',    technique: 'sonido_sincronizado_a_eventos', length_s: 0});
+  if (CFG.ritmo) tecnica.push({block: 'motion', technique: 'motion_budget_v1_exp001',       length_s: 0});
+  if (CFG.ghostCurve) tecnica.push({block: 'ghost', technique: 'curva_fantasma_desde_frame_1', length_s: 0});
+
+  const narrativos = ULTIMA_CAL.grupos.map(g => ({
+    block: g.id, technique: `guion_${g.id}`, length_s: Math.round(g.dur),
+  }));
+
+  return {
+    production_ref: CFG.ref,
+    hook_type:  CFG.adn.hook_type,
+    story_type: CFG.adn.story_type,
+    cta_type:   CFG.adn.cta_type,
+    length_s: Math.round(T.total),
+    blocks: tecnica.concat(narrativos),
+  };
+}
+
+document.getElementById('adn').onclick = () => {
+  let dna;
+  try { dna = construirADN(); }
+  catch (e){ statusEl.textContent = `⚠ ${e.message}`; return; }
+  const nombre = `production_dna-${dna.production_ref}.json`;
+  const blob = new Blob([JSON.stringify(dna, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre; a.click();
+  URL.revokeObjectURL(a.href);
+  const medidos = dna.blocks.filter(b => b.length_s > 0).length;
+  statusEl.textContent = `✅ ADN exportado (${nombre}): ${dna.blocks.length} bloques, ` +
+    `${medidos} con duración MEDIDA, total ${dna.length_s}s. ` +
+    `Muévelo a data/ y corre: python -m omega.cli record-dna data/${nombre}`;
+};
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MODO VIDEO (16:9, long-form) — un VIDEO es una TIMELINE de segmentos. Cada segmento:
@@ -2517,6 +2614,7 @@ async function usarAudio(f){
 
 /** Aplica un resultado de calibración (manual, automático o .srt) al estado del motor. */
 function aplicarCalibracion(cal, dur){
+  ULTIMA_CAL = cal;   // el ADN de producción lee de aquí los tiempos MEDIDOS por bloque
   Object.assign(T, {hook:cal.cuts.hook, draw:cal.cuts.draw, curve:cal.cuts.curve,
                     cta:cal.cuts.cta, total:dur});
   T.spec = cal.spec.slice();
@@ -3242,6 +3340,92 @@ function descargar(blob, nombre){
   a.href = URL.createObjectURL(blob); a.download = nombre; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// COLA DE LOTE — el día de producción semanal (7 shorts) sin hacer de niñera
+//
+// Hoy cada video cuesta ~10 min de interacción manual: seleccionar, cargar voz, previsualizar,
+// exportar, y escribir su JSON de ADN. Por siete eso es la mayor parte del día de lote.
+// Esto encadena: cargarShort -> fetch de su voz -> calibrar -> exportar MP4 -> exportar ADN.
+//
+// DECISIONES:
+//  · Un Short que falla NO mata el lote. Se anota y se sigue: con 7 en cola, abortar al primer
+//    fallo desperdicia el resto del render.
+//  · `exportando` se baja ANTES de cada cargarShort (ese guard rechaza cambiar de Short durante
+//    un render) y se sube solo alrededor del export.
+//  · Sin H.264 se aborta el lote entero: saldría WebM, que Facebook no acepta. Mejor no gastar
+//    media hora de render para descubrirlo al final.
+// ═════════════════════════════════════════════════════════════════════════════
+async function renderLote(keys, {conADN = true} = {}){
+  const btns = document.querySelectorAll('button, select');
+  btns.forEach(b => b.disabled = true);
+  const relojAntes = window.verReloj, zonasAntes = window.verZonas;
+  window.verReloj = false; window.verZonas = false;   // los diagnósticos no se queman en el archivo
+  const ok = [], fallos = [];
+  const t0 = Date.now();
+
+  try {
+    if (!await h264Disponible())
+      throw new Error('sin WebCodecs H.264 el lote saldría en WebM y Facebook no lo acepta.');
+
+    for (let i = 0; i < keys.length; i++){
+      const key = keys[i], n = `[${i+1}/${keys.length}] ${key}`;
+      try {
+        if (!SHORTS[key]) throw new Error('no existe en SHORTS');
+        exportando = false;                       // cargarShort se niega si cree que hay render
+        cargarShort(key);
+
+        statusEl.textContent = `${n}: cargando data/${CFG.voz}…`;
+        const r = await fetch(`../../data/${CFG.voz}`);
+        if (!r.ok) throw new Error(`falta data/${CFG.voz} (HTTP ${r.status})`);
+        await usarAudio(new File([await r.blob()], CFG.voz, {type: 'audio/mpeg'}));
+        if (!pcm)            throw new Error('la voz no decodificó');
+        if (!cortesMedidos)  throw new Error('no se pudo calibrar contra la voz');
+
+        exportando = true;
+        const blob = await exportarMP4(p => {
+          statusEl.textContent = `${n}: renderizando ${Math.round(p * 100)}%`;
+        });
+        descargar(blob, `net-worthy-${CFG.ref}-${canvas.width}x${canvas.height}.${blob.ext}`);
+        exportando = false;
+
+        if (conADN){
+          try {
+            const dna = construirADN();
+            descargar(new Blob([JSON.stringify(dna, null, 2)], {type: 'application/json'}),
+                      `production_dna-${dna.production_ref}.json`);
+          } catch (e){
+            fallos.push(`${key}: MP4 ok pero sin ADN (${e.message})`);
+          }
+        }
+        ok.push(key);
+      } catch (e){
+        exportando = false;
+        fallos.push(`${key}: ${e.message}`);      // un Short roto no puede tumbar el lote
+      }
+    }
+  } catch (e){
+    fallos.push(e.message);
+  } finally {
+    exportando = false;
+    window.verReloj = relojAntes; window.verZonas = zonasAntes;
+    btns.forEach(b => b.disabled = false);
+    document.getElementById('auto').disabled = !pcm;
+    pintarChecklist();
+  }
+
+  const min = ((Date.now() - t0) / 60000).toFixed(1);
+  statusEl.textContent = `Lote: ${ok.length}/${keys.length} exportados en ${min} min` +
+    (fallos.length ? ` · ⚠ ${fallos.join(' · ')}` : ' · sin errores.');
+  return {ok, fallos};
+}
+
+document.getElementById('lote').onclick = () => {
+  const keys = document.getElementById('lote-keys').value
+    .split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+  if (!keys.length){ statusEl.textContent = '⚠ La cola está vacía.'; return; }
+  renderLote(keys);
+};
 
 document.getElementById('rec').onclick = async () => {
   // Guards COMUNES a los dos caminos (antes solo los tenía el respaldo WebM: el MP4 —el camino
