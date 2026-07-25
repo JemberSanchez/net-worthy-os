@@ -238,6 +238,86 @@ document.getElementById('motor').onload = async () => {
     return a !== b ? true : 'el drift del glow no se mueve';
   });
 
+  // ── MOTION BUDGET v1 — enforcement de docs/EXPERIMENTO-RITMO.md §5 ─────
+  // "La regla vive en un test verde, no en la buena intención." Barre el timeline y asevera que
+  // ningún intervalo de QUIETUD supera el presupuesto de su ventana. Sin esto, si el Experimento
+  // #001 sale mal no se puede distinguir "la hipótesis era falsa" de "el render no aplicó ritmo"
+  // — que es justo el agujero que hoy dejó 4 predicciones inverificables.
+  //
+  // Firma barata: el frame reducido a 64x114. Leer 1080x1920x4 por frame serían ~8MB x200.
+  const _firma = (() => {
+    const small = document.createElement('canvas');
+    small.width = 64; small.height = 114;
+    const sctx = small.getContext('2d', {willReadFrequently: true});
+    return (cnv) => { sctx.drawImage(cnv, 0, 0, small.width, small.height);
+                      return sctx.getImageData(0, 0, small.width, small.height).data; };
+  })();
+  const _difMedia = (a, b) => {           // diferencia media por canal, escala 0-255
+    let s = 0;
+    for (let i = 0; i < a.length; i += 4)
+      s += Math.abs(a[i]-b[i]) + Math.abs(a[i+1]-b[i+1]) + Math.abs(a[i+2]-b[i+2]);
+    return s / (a.length / 4 * 3);
+  };
+  const DT = 0.25, FIN = 52;              // Buffett dura ~55s; 52 evita el borde del timeline
+  // Un barrido son ~209 drawFrame sobre un canvas 1080x1920: se cachea por Short o el test
+  // tardaría un minuto (y un test lento se deja de correr).
+  const _cacheSigs = {};
+  const _sigsDe = (short) => {
+    if (_cacheSigs[short]) return _cacheSigs[short];
+    W.cargarShort(short);                                  // síncrono: fija SHORT/CFG/D
+    const c = W.document.querySelector('canvas');
+    const sigs = [];
+    for (let i = 0; i * DT <= FIN; i++){ W.drawFrame(i * DT); sigs.push(_firma(c)); }
+    return (_cacheSigs[short] = sigs);
+  };
+  // Devuelve, para una ventana, el intervalo MÁS QUIETO: la menor diferencia entre dos frames
+  // separados por el presupuesto de congelado. Si eso es ~0, el cuadro estuvo congelado.
+  const _masQuieto = (short, desde, hasta, frozen) => {
+    const sigs = _sigsDe(short);
+    const salto = Math.round(frozen / DT);
+    let peor = Infinity, peorT = -1;
+    for (let t = desde; t + frozen <= hasta; t += DT){
+      const i = Math.round(t / DT);
+      if (!sigs[i] || !sigs[i + salto]) continue;
+      const d = _difMedia(sigs[i], sigs[i + salto]);
+      if (d < peor){ peor = d; peorT = t; }
+    }
+    return {peor, peorT};
+  };
+
+  // Presupuesto por ventana (EXPERIMENTO-RITMO.md §4). HOOK dice "nunca frozen": se exige
+  // movimiento en medio segundo, que es el micro-movimiento continuo que el diseño promete.
+  const VENTANAS = [
+    {nombre: 'HOOK 0-2s',        desde: 0,  hasta: 2,   frozen: 0.5},
+    {nombre: 'ACANTILADO 2-10s', desde: 2,  hasta: 10,  frozen: 1.5},
+    {nombre: 'BODY 10s-fin',     desde: 10, hasta: FIN, frozen: 2.5},
+  ];
+  const EPS = 0.5;   // por debajo de esto el ojo no registra cambio (0-255 por canal)
+
+  check('MOTION BUDGET: el Buffett con ritmo no se congela más de lo permitido en ninguna ventana', () => {
+    const malos = [], medidas = [];
+    for (const v of VENTANAS){
+      const {peor, peorT} = _masQuieto('buffett-time', v.desde, v.hasta, v.frozen);
+      if (peor === Infinity) continue;
+      medidas.push(`${v.nombre} min=${peor.toFixed(2)}`);
+      if (peor < EPS)
+        malos.push(`${v.nombre}: congelado ${v.frozen}s desde t=${peorT.toFixed(2)} (diff ${peor.toFixed(2)})`);
+    }
+    console.log('[MOTION BUDGET] buffett-time →', medidas.join(' | '));
+    return malos.length === 0 ? true : malos.join(' · ') + ` || ${medidas.join(' | ')}`;
+  });
+
+  // CONTROL NEGATIVO: un test que no puede fallar no es un test. Si el barrido no distingue un
+  // Short SIN ritmo de uno CON ritmo, el de arriba pasa siempre y no prueba nada.
+  check('MOTION BUDGET: el barrido DISCRIMINA (el S3 sin ritmo se queda más quieto que el Buffett)', () => {
+    const conRitmo = _masQuieto('buffett-time', 2, 10, 1.5).peor;
+    const sinRitmo = _masQuieto('s3-stat',      2, 10, 1.5).peor;
+    console.log(`[MOTION BUDGET] discriminación → s3-stat=${sinRitmo.toFixed(2)} vs buffett=${conRitmo.toFixed(2)}`);
+    return sinRitmo < conRitmo ? true
+      : `el barrido NO discrimina: s3-stat (sin ritmo) mide ${sinRitmo.toFixed(2)} y buffett ` +
+        `(con ritmo) ${conRitmo.toFixed(2)}. Con este instrumento el test de arriba no prueba nada.`;
+  });
+
   // ── SERIE COMPUESTA: capital inicial + compuesto anual (Buffett) sin romper el S3 ──
   // series() cierra sobre CFG. cargarShort la reasigna -> W.series() da la del Short activo.
   check('series(): el S3 (publicado) NO se movió ni un céntimo tras añadir lump/annual', () => {

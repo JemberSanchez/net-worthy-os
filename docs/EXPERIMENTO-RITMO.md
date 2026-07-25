@@ -83,11 +83,29 @@ desde el frame 1 — commit `aa8a411`, el motor YA tiene el concepto, hay que ex
 
 ## 5. Enforcement en código (falsable, no a ojo)
 
-Un test nuevo en `docs/guiones/tests-motor.html` (junto al barrido de zonas seguras): muestrea
-`drawFrame(t)` a lo largo del timeline y asevera que **ningún intervalo de "quietud" supera el
-umbral de su ventana** — el diff de píxeles entre frames separados por el umbral debe superar un
-piso. Igual que las zonas seguras: la regla vive en un test verde, no en la buena intención.
-`drawFrame` es pura → el test es determinista.
+> **ESCRITO el 2026-07-24 — ⚠ PENDIENTE DE SU PRIMERA EJECUCIÓN EN NAVEGADOR.**
+> Estuvo 6 días como diseño sin implementar: el Motion Budget era *buena intención*, justo lo que
+> esta sección decía evitar. Ya son 2 tests en `tests-motor.html` (26 en total), sintaxis
+> verificada con `node --check`, pero **nadie los ha corrido todavía** — hay que abrir
+> `http://localhost:8765/docs/guiones/tests-motor.html`. Hasta entonces no afirmar que pasan.
+
+Dos tests en `docs/guiones/tests-motor.html` (junto al barrido de zonas seguras):
+
+1. **El presupuesto se cumple.** Muestrea `drawFrame(t)` cada 0.25s hasta t=52 y, por ventana,
+   busca el intervalo MÁS QUIETO: la menor diferencia de píxeles entre dos frames separados por el
+   presupuesto de congelado (HOOK 0.5s · ACANTILADO 1.5s · BODY 2.5s). Si esa diferencia cae por
+   debajo de `EPS = 0.5` (escala 0-255), el cuadro estuvo congelado → falla. Firma barata: el frame
+   reducido a 64×114, porque leer 1080×1920×4 por frame serían ~8 MB × 209.
+2. **El barrido DISCRIMINA** (control negativo). Compara la ventana 2-10s del Buffett (con ritmo)
+   contra la del S3 (sin ritmo) y exige que el S3 mida más quieto. **Un test que no puede fallar no
+   es un test**: sin este control, el primero pasaría siempre y no probaría nada.
+
+`drawFrame` es pura → ambos son deterministas. Las firmas se cachean por Short (un barrido son
+~209 renders de 1080×1920; sin caché el test tardaría un minuto y se dejaría de correr).
+
+**Por qué importa para ESTE experimento:** sin enforcement, si la retención no sube no se puede
+distinguir *"la hipótesis era falsa"* de *"el render no aplicó el ritmo"* — el mismo agujero que el
+2026-07-24 dejó 4 predicciones inverificables (el instrumento cambió sin que nadie lo notara).
 
 ## 6. Métrica pre-registrada
 
