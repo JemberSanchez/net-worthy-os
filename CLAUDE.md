@@ -30,11 +30,18 @@ publicado revele una limitación concreta. Excepción: instrumentación de captu
 Hito actual: **10 videos instrumentados**. Progreso = filas del dataset, no commits ni módulos.
 No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
-## Estado actual (2026-07-10) — LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
-**Short #1 PUBLICADO** el 2026-07-10 (YouTube Shorts + Facebook Reels), ref
-`build-wealth-short-03-stat`. Pero **`production_outcome` = 0 filas**: el moat no se llena al
-publicar, se llena al MEDIR. **Lo único que importa: el sábado 2026-07-12 correr `record-analytics`
-+ `record-cost` + `record-outcome` + `dna`.** 104 tests verdes. 2 de 10 videos instrumentados, 0 medidos.
+## Estado actual (2026-07-24, verificado contra la DB) — LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
+**5 de 10 instrumentados, 4 medidos.** 104 tests verdes. `production_cost` = **0 filas**.
+Score: `success = vistas_totales(FB+YT) / 750`.
+- **#6 Buffett publicado (~17-jul) pero a medias en el moat:** tiene analytics+context, le falta
+  `record-dna` y `record-outcome`. Sus analytics son un **baseline de 17h**, NO comparable con los
+  28d de S1/S2 → **re-medir a 28d antes de registrar**, o se envenena el dataset.
+- **#7 Ronald Read:** montado en el motor (18-jul), **cero filas en la DB**.
+- **⚠ La captura está PARADA:** último `ingest` 15-jul, últimas `signals` 12-jul. **Correr `/daily`
+  antes de volver a usar `decide`** — opera sobre un corpus congelado.
+- Predicciones #15-#18 resueltas `inconclusive` el 24-jul: falló el instrumento (hueco de datos +
+  el extractor cambió de v0.2.0 a v0.2.1 dentro del horizonte), no la hipótesis. Ver `ESTADO.md`
+  para el gap metodológico que destapó (predicciones sin `extractor_version` sellada).
 
 - **Motor de video:** `docs/guiones/short-renderer.html` genera el Short entero (visuales + voz +
   subtítulos quemados) y exporta **MP4 H.264+AAC** listo para subir. Sin CapCut. Datos por Short en
@@ -44,8 +51,8 @@ publicar, se llena al MEDIR. **Lo único que importa: el sábado 2026-07-12 corr
   voces Default caducan el 31-dic-2026.
 - **Confounder anotado:** el S3 se publicó a las 02:00 hora local con audiencia EN/US. Si retiene
   poco, puede ser la HORA, no el gancho. No atribuirlo a `hook_type`.
-- **Siguiente:** producir S1 (escena de columnas LISTA en el motor multi-Short; solo falta la voz —
-  runbook: `docs/guiones/PRODUCCION-S1.md`) → medir S3 el sábado 12 → S2, S4, S5.
+- **Siguiente:** cerrar #6 Buffett en el moat (re-medir 28d → `record-dna` + `record-outcome`) = 6/10,
+  luego #7 Ronald Read = 7/10. Progreso = filas del dataset, no commits.
 - **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen (alcance
   orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
 

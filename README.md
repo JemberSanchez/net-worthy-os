@@ -79,7 +79,7 @@ La ruta de crecimiento está aislada: fuentes como plugins (`sources/base.py`), 
   `dna` ya calibra por tipo de gancho/historia/CTA (marcado PROVISIONAL mientras n es bajo —
   correcto). Hallazgo real: las plataformas se contradicen (~10× más alcance en FB que en YT), la
   variable dominante hoy es la plataforma, no el gancho.
-- **98 tests verdes** (`python -m unittest discover -s tests -q`).
+- **104 tests verdes** (`python -m unittest discover -s tests -q`).
 - **Hito activo**: 10 videos instrumentados con ADN + resultado + coste antes de tratar cualquier
   patrón como hipótesis.
 

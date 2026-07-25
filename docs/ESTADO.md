@@ -1,6 +1,57 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
-> ## ▶ PLAN DE MAÑANA 2026-07-17 (acordado con el usuario) — empieza por aquí
+> ## ▶ ESTADO REAL 2026-07-24 (verificado contra la DB, no contra los docs) — empieza por aquí
+>
+> Los bloques de abajo quedaron desfasados: afirmaban **2/10 instrumentados y 0 medidos**. Medido
+> hoy con `dna` + consultas directas a `omega.sqlite`:
+>
+> | | Real |
+> |---|---|
+> | Instrumentados (`production_dna`) | **5 de 10** del hito |
+> | Medidos (`production_outcome`) | **4** |
+> | `production_cost` | **0 filas** — el rendimiento/hora nunca llegó a existir |
+> | Tests | **104 verdes** (corridos, no citados) |
+>
+> **Convención de score confirmada en código:** `success = vistas_totales(FB+YT) / 750`.
+>
+> ### 🔴 Dos Shorts producidos que NO están en el moat
+> - **#6 Buffett** (`buffett-time-not-talent-2026-07`, publicado ~17-jul): tiene `production_context`
+>   y `production_analytics`, pero **le falta `record-dna` y `record-outcome`**. No cuenta para el
+>   hito ni calibra. ⚠ **Sus analytics son un baseline de ~17h** (230 espectadores, retención 0.109),
+>   NO comparables con los 28d de S1/S2. Registrar `230/750` tal cual **envenenaría el dataset**:
+>   230 vistas en 17h contra 280 en 28d es rendimiento muy SUPERIOR, no inferior. Hay que **re-medir
+>   a 28d** antes de cerrarlo.
+> - **#7 Ronald Read** (escena PORTFOLIO, commits del 18-jul): montado en el motor, **cero filas en
+>   la DB**. Sin publicar o sin registrar.
+>
+> ### 🔴 La captura de datos está PARADA
+> - Último `ingest`: **2026-07-15**. Últimas `signals`: **2026-07-12**. Van ~10 días sin observar.
+> - Consecuencia directa: `decide` opera sobre un corpus congelado. **Correr `/daily` antes de
+>   volver a decidir un tema.**
+>
+> ### ✅ Deuda epistémica saldada (hoy): predicciones #15-#18 → `inconclusive`
+> Vencieron el 23-jul. **NO se refutaron: falló el instrumento, no la hipótesis.** Dos causas
+> independientes, ambas verificadas:
+> 1. **Hueco de datos:** horizonte 09→23-jul, pero `signals` murió el 12-jul → solo **3 de 14 días**
+>    con datos.
+> 2. **El extractor cambió DENTRO del horizonte:** `theme v0.2.0` (hasta 09-jul) → `v0.2.1` (desde
+>    12-jul). La línea base y la medición final usan **reglas distintas**. Eso explica el falso
+>    misterio de `'justin verlander'` **19 → 0**: v0.2.1 simplemente ya no produce ese tema tras el
+>    arreglo del feed deportivo — no fue una caída de demanda.
+>
+> ### ⚠ GAP METODOLÓGICO DESTAPADO (decisión pendiente, NO implementado)
+> Una predicción **no registra bajo qué versión de extractor se creó**, así que el sistema puede
+> verificarse a sí mismo con una regla distinta a la que usó para la línea base — y llamarlo
+> aprendizaje. Es una limitación **revelada por uso real**, no especulativa (que es lo que
+> `POLITICA.md` exige para tocar código). El arreglo mínimo sería sellar `extractor_version` en la
+> predicción y que `resolve-prediction` avise si cambió. **Consultarlo con el usuario antes de
+> construirlo.**
+>
+> ### Siguiente paso sugerido
+> Cerrar Buffett (re-medir 28d → `record-dna` + `record-outcome`) = 6/10. Luego #7 Read = 7/10.
+> Sigue vigente: progreso = **filas del dataset**, no commits.
+
+> ## PLAN DE MAÑANA 2026-07-17 (SUPERADO por el bloque de arriba — histórico)
 >
 > **1. S1 → Instagram Reels + TikTok.** La jugada de mayor valor y coste CERO: es el mejor activo
 >    del canal (221 espectadores, evergreen, `story=character`) y **nadie lo ha visto ahí**; los
