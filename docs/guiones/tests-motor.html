@@ -368,6 +368,27 @@ document.getElementById('motor').onload = async () => {
         `(con ritmo) ${conRitmo.toFixed(2)}. Con este instrumento el test de arriba no prueba nada.`;
   });
 
+  // Bug real del 2026-07-25 (Read #7): la cifra de `curvaLlegaEn` se decía DOS veces en el guion
+  // ("eight million dollars" en `intro` y en `proof`). El calibrador usa `.find()`, cogió la
+  // primera, y el contador de un video de 62s terminaba a los 7.15s y se quedaba clavado 55
+  // segundos. No lo detectaba nada: no rompe, solo cuenta mal la historia.
+  check('CALIBRADOR: si la cifra de la curva se repite, el Short DEBE acotar el grupo', () => {
+    const claves = [...W.document.getElementById('short').options].map(o => o.value);
+    const malos = [];
+    for (const k of claves){
+      W.cargarShort(k);
+      const g = W.guionActivo ? W.guionActivo() : null;
+      if (!g || !g.curvaLlegaEn) continue;
+      const hablada = (g.cifras || []).filter(c => c[1] === g.curvaLlegaEn).map(c => c[0]);
+      const txt = g.grupos.map(x => x.texto).join(' ');
+      const n = hablada.reduce((a, h) => a + (txt.split(h).length - 1), 0);
+      if (n > 1 && !g.curvaLlegaEnGrupo)
+        malos.push(`${k}: "${g.curvaLlegaEn}" se dice ${n} veces y no declara curvaLlegaEnGrupo`);
+    }
+    return malos.length === 0 ? true
+      : malos.join(' · ') + ' — el calibrador cogerá la PRIMERA y la curva llegará antes de tiempo';
+  });
+
   // ── SERIE COMPUESTA: capital inicial + compuesto anual (Buffett) sin romper el S3 ──
   // series() cierra sobre CFG. cargarShort la reasigna -> W.series() da la del Short activo.
   check('series(): el S3 (publicado) NO se movió ni un céntimo tras añadir lump/annual', () => {

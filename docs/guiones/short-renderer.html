@@ -558,6 +558,9 @@ const SHORTS = {
       ],
       subtitulos: ['thesis','payoff','honesty','lesson'],
       curvaLlegaEn: "$8,000,000",
+      // "eight million dollars" se dice DOS veces (intro y proof). Sin esto el calibrador cogía la
+      // del intro y el contador terminaba a los 7s de un video de 62s.
+      curvaLlegaEnGrupo: 'proof',
       omitirEnSubtitulos: [],
     },
   },
@@ -840,8 +843,16 @@ function calibrarAuto(buffer, guion){
     curve: porGrupo[2].inicio,
     cta:   porGrupo[porGrupo.length-1].inicio,
   };
-  // la curva llega arriba cuando la voz TERMINA de decir la cifra grande
-  const tok = porGrupo.flatMap(g => g.ws).find(x => x.cifra === guion.curvaLlegaEn);
+  // la curva llega arriba cuando la voz TERMINA de decir la cifra grande.
+  // ⚠ Si la cifra se dice MÁS DE UNA VEZ, `.find()` agarra la primera y la curva "llega" antes de
+  // tiempo. Caso real (Read #7, 2026-07-25): "eight million dollars" se dice en `intro` Y en
+  // `proof`; el contador terminaba a los 7.15s de un video de 62s y se quedaba clavado 55s.
+  // Por eso el Short puede acotar el ámbito con `curvaLlegaEnGrupo`. Sin esa clave el
+  // comportamiento es el de siempre (los otros 6 Shorts dicen su cifra una sola vez).
+  const ambito = guion.curvaLlegaEnGrupo
+    ? porGrupo.filter(g => g.id === guion.curvaLlegaEnGrupo)
+    : porGrupo;
+  const tok = ambito.flatMap(g => g.ws).find(x => x.cifra === guion.curvaLlegaEn);
   cuts.draw = tok ? tok.t1 : (cuts.hook + cuts.curve) / 2;
 
   // spec drop: cada línea entra 0.2s antes de su frase. La 1ª ya visible en el frame 1.
@@ -2393,6 +2404,12 @@ document.getElementById('stop').onclick = () => { sesion++; corriendo = false; a
  *  desde su calibración/demo y descarta TODO lo del Short anterior — incluido el audio decodificado:
  *  el exportador MP4 mete el AAC desde `pcm`, y si sobreviviera al cambio, el S1 saldría con la
  *  voz del S3 incrustada. */
+/** Guion del Short activo. Igual que `shortsConRitmo`, existe para los tests: `CFG` se declara con
+ *  `let` a nivel de script, así que NO es una propiedad de window y no se ve desde el iframe padre. */
+function guionActivo(){
+  return CFG.guion || null;
+}
+
 /** Claves de los Shorts con Motion Budget activo. Existe para los tests: `SHORTS` es `const` y no
  *  es visible desde fuera, y hardcodear la lista en tests-motor.html se desincroniza en cuanto se
  *  añade un Short con ritmo — el test seguiría verde sin cubrirlo. */
