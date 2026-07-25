@@ -2095,6 +2095,84 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
   ctx.strokeStyle = P.brass; ctx.lineWidth = Math.max(2*s, r*0.028);
   ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.stroke();
   ctx.restore();
+
+  // ── BEATS NARRATIVOS: matar los 36s de escena congelada ───────────────────────────────────
+  // La bola termina de crecer en T.draw (21.75s) y el vídeo dura 62.35s: casi 36 segundos con la
+  // imagen quieta mientras la voz sigue contando (payoff, honesty y lesson). El autor lo describió
+  // como "una parte de 25 segundos que es la misma escena aburrida". No es un fallo del motor: la
+  // escena simplemente no tenía nada que contar después de llegar.
+  // Cada beat se ata a SU grupo del guion (tiempos medidos contra la voz real, vía ULTIMA_CAL),
+  // así que la imagen cambia cuando cambia lo que se está diciendo.
+  const tramo = id => (ULTIMA_CAL && ULTIMA_CAL.grupos) ? ULTIMA_CAL.grupos.find(x => x.id === id) : null;
+  const fase = (id, entra = 0.5, sale = 0.5) => {
+    const g = tramo(id); if (!g || t < g.inicio - entra || t > g.fin + sale) return 0;
+    return clamp01((t - (g.inicio - entra)) / entra) * clamp01(((g.fin + sale) - t) / sale);
+  };
+
+  let aP = 0, aH = 0, aL = 0;   // fuera del bloque: el rótulo de abajo los necesita para apagarse
+  if (!soloBola){
+    // BEAT 1 · payoff — "He put in a little at a time. Everything past that number is dividends".
+    // El NÚCLEO de lo aportado, a escala real: área ∝ valor, así que el radio va con la raíz.
+    // $122.400 sobre $8.000.000 da un núcleo del 12% del radio: la proporción de 65x se VE, no se
+    // afirma. Es la misma idea que el PAID IN de la cabecera, pero dentro de la bola.
+    aP = fase('payoff', 0.6, 0.8);
+    if (aP > 0.01 && D.finalTotal > 0){
+      const rC = r * Math.sqrt(D.finalContrib / D.finalTotal);
+      ctx.save(); ctx.globalAlpha = alpha * aP;
+      ctx.fillStyle = 'rgba(92,110,100,0.55)';
+      ctx.beginPath(); ctx.arc(bx, by, rC, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = P.brass; ctx.lineWidth = 2*s; ctx.setLineDash([5*s, 4*s]);
+      ctx.beginPath(); ctx.arc(bx, by, rC, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      text('HIS MONEY', bx, by + rC + 26*s,
+           {size:19*s, weight:700, color:P.grey, alpha:alpha*aP*0.95, spacing:2*s});
+      ctx.restore();
+    }
+
+    // BEAT 2 · honesty — "He held ninety-five stocks so one collapse couldn't sink him, and some
+    // did cut their dividends." 95 posiciones orbitando; a mitad del tramo unas cuantas se APAGAN
+    // y la masa no se mueve. Aquí las 95 casillas SÍ se entienden: la voz las está explicando.
+    aH = fase('honesty', 0.7, 0.9);
+    if (aH > 0.01){
+      const gH = tramo('honesty');
+      const q = clamp01((t - gH.inicio) / Math.max(0.1, gH.fin - gH.inicio));
+      ctx.save();
+      for (let k = 0; k < 95; k++){
+        const ang = (k / 95) * Math.PI * 2 + rot * 0.35;
+        const rr = r * (1.32 + 0.10 * Math.sin(k * 2.399));
+        const px = bx + Math.cos(ang) * rr, py = by + Math.sin(ang) * rr;
+        const nace = clamp01((q - (k / 95) * 0.45) / 0.06);        // aparecen en abanico
+        if (nace <= 0) continue;
+        const cae = (k % 11 === 0) ? clamp01((q - 0.62) / 0.10) : 0;  // ~9 recortan el dividendo
+        ctx.globalAlpha = alpha * aH * nace * (1 - cae * 0.85);
+        ctx.fillStyle = cae > 0.5 ? '#5C6E64' : P.brass;
+        ctx.beginPath(); ctx.arc(px, py + cae * 26 * s, 4.6*s, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+      text('95 HOLDINGS · NEVER SOLD', W/2, by + r + 78*s,
+           {size:20*s, weight:700, color:P.grey, alpha:alpha*aH*0.9, spacing:2*s});
+    }
+
+    // BEAT 3 · lesson — "You don't need his eight million. The engine is the same at any size."
+    // Una bola PEQUEÑA arranca la misma pendiente con el mismo lenguaje visual. Literal.
+    aL = fase('lesson', 0.6, 0.5);
+    if (aL > 0.01){
+      const gL = tramo('lesson');
+      const q = clamp01((t - gL.inicio) / Math.max(0.1, gL.fin - gL.inicio));
+      const rS = lerp(7*s, 34*s, easeOut(q));
+      const sx2 = lerp(gx0, gx0 + (gx1 - gx0) * 0.42, easeOut(q)), sy2 = slopeY(sx2) - rS;
+      ctx.save(); ctx.globalAlpha = alpha * aL;
+      ctx.shadowColor = 'rgba(216,178,90,0.35)'; ctx.shadowBlur = 14*s;
+      const gS = ctx.createRadialGradient(sx2 - rS*0.35, sy2 - rS*0.4, rS*0.05, sx2, sy2, rS);
+      gS.addColorStop(0,'#FFFFFF'); gS.addColorStop(0.55,P.paper); gS.addColorStop(1,'#9FB3A8');
+      ctx.fillStyle = gS; ctx.beginPath(); ctx.arc(sx2, sy2, rS, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.strokeStyle = P.brass; ctx.lineWidth = 2*s;
+      ctx.beginPath(); ctx.arc(sx2, sy2, rS, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+      text('SAME ENGINE · ANY SIZE', W/2, gy1 + 78*s,
+           {size:20*s, weight:700, color:P.brass, alpha:alpha*aL*0.85, spacing:3*s});
+    }
+  }
+
   if (soloBola) return;
 
   const head = SAFE.top + 25*s;                                             // valor + YEAR (arriba)
@@ -2123,8 +2201,12 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
          {size:26*s, weight:700, color:P.grey, alpha:alpha*0.9, spacing:2*s});
   }
 
-  text('DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 46*s,
-       {size:20*s, weight:600, color:P.grey, alpha:alpha*0.8, spacing:2*s});
+  // Se APAGA cuando entran los rótulos de los beats ("95 HOLDINGS", "SAME ENGINE"): si no, los
+  // tres compiten en la misma franja y encima este queda detrás de la bola ya crecida.
+  const aRot = alpha * 0.8 * (1 - Math.max(aH, aL));
+  if (aRot > 0.01)
+    text('DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 46*s,
+         {size:20*s, weight:600, color:P.grey, alpha:aRot, spacing:2*s});
 }
 
 // ── Escena: PORTFOLIO (Read #7) — el tablero de posiciones que se ENCIENDE con los años ─────────
@@ -2366,7 +2448,10 @@ function drawFrame(t){
     // No se re-cronometra nada (eso rompería el anclaje a la voz): la tarjeta simplemente ENTRA un
     // pelo antes y NO se borra al acabar sus palabras — aguanta hasta que llega la siguiente, con
     // un tope para que no cruce silencios largos entre grupos.
-    const LEAD = 0.15, HOLD_MAX = 1.2;
+    // LEAD subido a 0.30s el 2026-07-25. El error de tiempos es SIMÉTRICO (5 tarde / 5 pronto,
+    // media +0.03s), pero se percibe asimétrico: una tarjeta tarde se nota (ya oíste la palabra),
+    // una pronto no molesta. Adelantar convierte "tarde" en "a tiempo" sin desanclar nada.
+    const LEAD = 0.30, HOLD_MAX = 1.2;
     const ks = cards();
     const c = ks.find((k, i) => {
       const sig = ks[i+1];
