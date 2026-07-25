@@ -511,6 +511,7 @@ const SHORTS = {
     // muestra el compounding: el radio crece con la raíz del valor, o sea plana muchísimo tiempo
     // y luego explota, que es exactamente la tesis del guion.
     escena: 'snowball',
+    camara: true,                       // planos sostenidos: sin esto son 62s de un solo plano fijo
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,
     // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
@@ -1992,7 +1993,60 @@ function drawGancho(t, W, H, s, a, ov){
 // compounding, la misma verdad que la curva pero con otra piel. Rueda cuesta abajo; cada ~1.5s un
 // dividendo (moneda dorada) cae y se ABSORBE con un pulso -> "reinvertir". El valor sigue la serie D
 // -> aterriza EXACTO en $8M. `soloBola`: modo fantasma (rueda tenue bajo el gancho). PURA en t.
-function drawSnowball(t, W, H, s, alpha, soloBola=false){
+// ── CÁMARA VIRTUAL (opt-in `CFG.camara`) ──────────────────────────────────────────────────────
+// El vídeo se sentía plano y el diagnóstico no era "faltan cosas": era que en 62 segundos había
+// UN SOLO plano general fijo. Todo del mismo tamaño, en el mismo sitio, todo el rato. Encima los
+// beats nuevos (el núcleo de "HIS MONEY" es el 12% del radio) no se leen en plano general.
+//
+// PLANOS SOSTENIDOS, NO ZOOM CONTINUO. Dos razones: un montaje real corta, no deriva; y un plano
+// quieto comprime perfecto mientras que el movimiento continuo dispara el bitrate — el render que
+// dejó la máquina en 0.3 GB de RAM libre fue exactamente eso.
+// Nunca se abre por debajo de k=1: por debajo asomarían los bordes de la escena dibujada.
+function aplicarCamara(t, W, H, s){
+  if (!CFG.camara) return;                                  // los Shorts publicados no se tocan
+  const G = snowballGeom(t, W, H, s);
+  const tramo = id => (ULTIMA_CAL && ULTIMA_CAL.grupos) ? ULTIMA_CAL.grupos.find(x => x.id === id) : null;
+  const ini = id => { const g = tramo(id); return g ? g.inicio : null; };
+
+  // lista de planos: [desde, escala, foco]. `null` = centro del cuadro (transformada identidad).
+  const planos = [{ d: 0, k: 1, f: null }];
+  const push = (d, k, f) => { if (d != null) planos.push({d, k, f}); };
+  push(ini('proof'),   1.16, 'bola');                       // acompaña el crecimiento
+  push(T.draw + 0.35,  1.00, null);                         // llega: se abre para revelar la escala
+  push(ini('payoff'),  1.85, 'bola');                       // PRIMER PLANO: el núcleo aportado
+  push(ini('honesty'), 1.00, null);                         // se abre: caben las 95 órbitas
+  push(ini('lesson'),  1.28, 'chica');                      // la bola pequeña de "any size"
+  push(ini('cta'),     1.00, null);
+  planos.sort((a, b) => a.d - b.d);
+
+  const TR = 0.35;                                          // transición corta = corte, no deriva
+  let i = 0; while (i + 1 < planos.length && t >= planos[i+1].d) i++;
+  const cur = planos[i], prev = planos[Math.max(0, i-1)];
+  const u = easeOut(clamp01((t - cur.d) / TR));             // 0 = veníamos del anterior, 1 = ya en éste
+
+  const foco = f => {
+    if (f === 'bola')  return [G.bx, G.by];
+    if (f === 'chica'){                                     // misma posición que el beat 3
+      const g = tramo('lesson'); if (!g) return [W/2, H/2];
+      const q = clamp01((t - g.inicio) / Math.max(0.1, g.fin - g.inicio));
+      const rS = lerp(7*s, 34*s, easeOut(q));
+      const sx = lerp(G.gx0, G.gx0 + (G.gx1 - G.gx0) * 0.42, easeOut(q));
+      return [sx, G.slopeY(sx) - rS];
+    }
+    return [W/2, H/2];
+  };
+  const [cx0, cy0] = foco(prev.f), [cx1, cy1] = foco(cur.f);
+  const k  = lerp(prev.k, cur.k, u);
+  const cx = lerp(cx0, cx1, u), cy = lerp(cy0, cy1, u);
+
+  ctx.translate(W/2, H/2); ctx.scale(k, k); ctx.translate(-cx, -cy);
+}
+
+// Geometría de la bola, EXTRAÍDA para que la cámara sepa dónde mirar sin duplicar la matemática
+// (si se duplicara, encuadre y dibujo se separarían al primer retoque). PURA en t: la cámara no
+// puede leer una global escrita por el frame anterior o `drawFrame es DETERMINISTA` fallaría —
+// ese test llama drawFrame(1.0), drawFrame(5.0), drawFrame(1.0) y compara píxeles.
+function snowballGeom(t, W, H, s){
   const arranque = CFG.ghostCurve ? 0.3 : T.hook + 0.3;
   const fin = Math.max(arranque + 1, T.draw);
   const p = clamp01((t - arranque) / (fin - arranque));
@@ -2014,6 +2068,16 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
   }
   const r = lerp(rMin, rMax, Math.sqrt(clamp01(val / D.finalTotal))) * (1 + pulse);
   const bx = lerp(gx0, gx1, p), by = slopeY(bx) - r;
+  return {arranque, fin, p, idx, val, rMin, rMax, gx0, gx1, gy0, gy1, slopeY, pulse, coins, r, bx, by};
+}
+
+// `capa`: 'todo' (compatibilidad) · 'mundo' (pendiente, bola, órbitas — lo que SÍ mueve la cámara)
+// · 'hud' (contador, PAID IN, rótulos — se quedan quietos). Separarlas es lo que permite hacer un
+// primer plano de la bola sin que el número héroe se vaya de cuadro.
+function drawSnowball(t, W, H, s, alpha, soloBola=false, capa='todo'){
+  if (capa === 'hud') return drawSnowballHUD(t, W, H, s, alpha);
+  const G = snowballGeom(t, W, H, s);
+  const {arranque, fin, p, idx, val, rMax, gx0, gx1, gy0, gy1, slopeY, pulse, coins, r, bx, by} = G;
 
   ctx.save(); ctx.globalAlpha = alpha;
 
@@ -2173,7 +2237,22 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
     }
   }
 
-  if (soloBola) return;
+  if (soloBola || capa === 'mundo') return;   // el HUD lo pinta drawSnowballHUD, ya fuera de cámara
+  return drawSnowballHUD(t, W, H, s, alpha);
+}
+
+// HUD del snowball: contador héroe, PAID IN y rótulos. Va SIEMPRE fuera de la cámara — si el
+// primer plano se llevara el número, se pierde lo único que la audiencia de finanzas mira.
+function drawSnowballHUD(t, W, H, s, alpha){
+  const G = snowballGeom(t, W, H, s);
+  const {fin, p, idx, val, gy1, r, by} = G;
+  let aP = 0, aH = 0, aL = 0;
+  const tramo = id => (ULTIMA_CAL && ULTIMA_CAL.grupos) ? ULTIMA_CAL.grupos.find(x => x.id === id) : null;
+  const fase = (id, entra = 0.5, sale = 0.5) => {
+    const g = tramo(id); if (!g || t < g.inicio - entra || t > g.fin + sale) return 0;
+    return clamp01((t - (g.inicio - entra)) / entra) * clamp01(((g.fin + sale) - t) / sale);
+  };
+  aH = fase('honesty', 0.7, 0.9); aL = fase('lesson', 0.6, 0.5);
 
   const head = SAFE.top + 25*s;                                             // valor + YEAR (arriba)
   let esc = 1; const dP = t - fin;
@@ -2339,7 +2418,12 @@ const SCENES = {
       if (gA > 0.003) drawSnowball(t, W, H, s, gA, true);
     }
     if (aHook > 0){ ctx.save(); ctx.globalAlpha = aHook; drawHook(t, W, H, s); ctx.restore(); }
-    if (aBall > 0) drawSnowball(t, W, H, s, aBall);
+    if (aBall > 0){
+      ctx.save(); aplicarCamara(t, W, H, s);              // la cámara mueve el MUNDO...
+      drawSnowball(t, W, H, s, aBall, false, 'mundo');
+      ctx.restore();
+      drawSnowball(t, W, H, s, aBall, false, 'hud');      // ...y el HUD se queda quieto
+    }
   },
   portfolio: (t, W, H, s) => {                            // intro (spec) -> tablero de holdings (Read)
     const fade = 0.45;
