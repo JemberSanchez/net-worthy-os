@@ -502,6 +502,10 @@ const SHORTS = {
   // ── SHORT #7 · RONALD READ — el conserje que murió con $8M (secuela de Buffett) ────────────────
   'read-janitor': {
     ref: 'ronald-read-janitor-2026-07',
+    // hook=story por CONSISTENCIA con S1 y Buffett: los tres usan el mismo mecanismo de contraste
+    // de 2 líneas (`A JANITOR.` / `$8 MILLION.`). La taxonomía no tiene categoría 'contraste', así
+    // que vive dentro de 'story' — ver la nota de ambigüedad en docs/ESTADO.md.
+    adn: {hook_type: 'story', story_type: 'character', cta_type: 'comment'},
     escena: 'portfolio',                // DIFERENCIADOR propio: el tablero de holdings (finance-premium)
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,

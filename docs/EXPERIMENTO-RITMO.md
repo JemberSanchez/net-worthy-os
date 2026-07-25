@@ -202,6 +202,28 @@ contaminación que tendría Facebook: novedad decaída y posible penalización p
 | **Instagram** | ❌ Ya no es virgen | El original salió ahí el 17-jul por el reel cruzado. Sirve como brazo secundario contaminado, no como aislamiento. |
 | **Facebook** | ❌ Descartado | Es donde vive el baseline. Re-publicar ahí compite con la v1. |
 
+### 🔻 2026-07-25 — LA OPCIÓN A QUEDA DESCARTADA. Se pasa a la OPCIÓN B.
+
+**Decisión del usuario:** *"no pienso subir videos diferentes; cuando suba será 1 video en todas las
+redes al mismo momento"*. La Opción A **requería** publicar el re-render SOLO donde Buffett no se
+había visto. Con publicación simultánea en todas las redes eso es imposible por construcción: no es
+un fallo de ejecución, el diseño deja de aplicar.
+
+**Se adopta la Opción B**, que ya estaba prevista abajo: el ritmo se valida con los Shorts NUEVOS.
+Desde ahora todo Short nuevo lleva `ritmo: true` y su curva de retención se compara contra los 5
+del baseline sin ritmo.
+
+⚠ **Confunde tema + ritmo, y hay que repetirlo cada vez que se lea un resultado.** La mitigación es
+la de §7: el ALCANCE lo manda el tema y el algoritmo, pero la FORMA de la curva de retención la
+manda el video. Se atribuye con cautela (`POLITICA.md` Regla 3) y se acumula n, en vez de concluir
+con uno.
+
+**El re-render `data/net-worthy-buffett-ritmo.mp4` NO se publica.** Subirlo a todas las redes lo
+pondría a competir con el original en FB e IG. Queda archivado.
+
+**Métrica primaria, sin cambios:** `retention_avg > 0.109`. Ahora se evalúa sobre el primer Short
+nuevo con ritmo (Ronald Read), no sobre un re-render.
+
 **⚠ Sospecha abierta sobre el baseline:** si el reel fue cruzado, el Buffett original acumuló
 vistas en Instagram ADEMÁS de las 245 de Facebook. El `success = 0.341` se calculó con
 `245 (FB) + 11 (YT) = 256` — **sin Instagram**. Si Business Suite reporta IG por separado, hay que
