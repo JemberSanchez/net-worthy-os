@@ -545,7 +545,10 @@ const SHORTS = {
         {id:'intro',   texto:"He pumped gas and cleaned floors his whole life. He died with eight million dollars."},
         {id:'thesis',  texto:"No big salary. No hot tips. No tech stocks. Just three boring habits, for sixty years."},
         {id:'proof',   texto:"He bought companies that paid him to hold them, and reinvested every dividend into more shares. Sixty years later, eight million dollars."},
-        {id:'payoff',  texto:"He put in a little at a time. Everything above that line is dividends buying more dividends. The snowball, not the paycheck."},
+        // "past that number" (no "above that line"): el tablero no tiene eje, la referencia es la
+        // cifra PAID IN bajo el contador. Y "the machine" en vez de "the snowball": la escena
+        // snowball existe en el código pero NO es la que se usa — la palabra apuntaba a nada.
+        {id:'payoff',  texto:"He put in a little at a time. Everything past that number is dividends buying more dividends. The machine, not the paycheck."},
         {id:'honesty', texto:"Now the part nobody says. He held ninety-five stocks so one collapse couldn't sink him, and some did cut their dividends. And he never had to sell. Sixty years, no emergency big enough to touch it. That is the rare part, not the picking."},
         {id:'lesson',  texto:"You don't need his eight million. The engine is the same at any size. Own things that pay you, reinvest, and don't interrupt it."},
         {id:'cta',     texto:"So, skill, or just time? Could you do it on a gas station paycheck? Team skill, or team time?"},
@@ -2100,6 +2103,24 @@ function drawPortfolio(t, W, H, s, alpha, ghost=false){
   const yr = Math.min(CFG.years, Math.floor(idx/12)+1);
   text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${yr}`, W/2, head + 188*s,
        {size:22*s, weight:600, color:P.brass, alpha:cA*0.85, spacing:4*s});
+
+  // ── LA PROPORCIÓN, que es la historia ────────────────────────────────────────────────────────
+  // El guion dice "He put in a little at a time" y "everything past that number", pero hasta el
+  // 2026-07-25 el punto de partida no se veía: solo el destino ($8M). Sin referencia, 65x no se
+  // percibe — la frase era una afirmación, no una imagen.
+  // NO se copia la línea horizontal del Buffett: allí hay eje Y (dinero) y una línea significa
+  // algo; en un TABLERO DE CASILLAS no hay eje, así que una línea sería decoración. La traducción
+  // correcta es la CIFRA, fija bajo el contador, que el número grande va rebasando en vivo.
+  // "PAID IN", no "HE PUT IN": los $122.400 son aritmética del modelo ($170 x 12 x 60); lo que
+  // Read aportó de verdad es desconocido. El aviso de CFG.aviso enmarca todo como ilustrativo.
+  if (D){
+    const yLin = head + 224*s;
+    ctx.save(); ctx.globalAlpha = cA*0.28; ctx.strokeStyle = P.grey; ctx.lineWidth = 1.5*s;
+    ctx.beginPath(); ctx.moveTo(W/2 - 150*s, yLin); ctx.lineTo(W/2 + 150*s, yLin); ctx.stroke();
+    ctx.restore();
+    text(`PAID IN ${money(D.finalContrib)}`, W/2, yLin + 34*s,
+         {size:26*s, weight:700, color:P.grey, alpha:cA*0.9, spacing:2*s});
+  }
   text(p >= 1 ? '95 COMPANIES · NEVER SOLD' : 'DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 60*s,
        {size:20*s, weight:600, color:P.grey, alpha:cA*0.8, spacing:2*s});
 }
