@@ -231,11 +231,21 @@ document.getElementById('motor').onload = async () => {
     return a === b ? true : 'los píxeles cambiaron entre dos llamadas al mismo t';
   });
 
+  // Antes miraba UN píxel en (60,60) —una esquina donde el resplandor casi no llega— y pasaba por
+  // un accidente de redondeo: la diferencia era de 1/255 en un canal, imperceptible. Al subir el
+  // brillo de la base con el grado de color, ese bit se perdió y el test cayó aunque el fondo
+  // seguía moviéndose. Ahora mide una REGIÓN de la zona iluminada y exige una diferencia media
+  // por encima de un piso: afirma lo que decía afirmar.
   check('el fondo VIVE (t distinto -> fondo distinto)', () => {
-    const c = W.document.querySelector('canvas'), cx = c.getContext('2d');
-    W.drawFrame(1.0); const a = cx.getImageData(60, 60, 1, 1).data.join(',');
-    W.drawFrame(5.0); const b = cx.getImageData(60, 60, 1, 1).data.join(',');
-    return a !== b ? true : 'el drift del glow no se mueve';
+    const c = W.document.querySelector('canvas'), cx = c.getContext('2d', {willReadFrequently:true});
+    const zona = (t) => { W.drawFrame(t); return cx.getImageData(c.width*0.5 - 60, c.height*0.40, 120, 80).data; };
+    const a = zona(1.0), b = zona(5.0);
+    let dif = 0;
+    for (let i = 0; i < a.length; i += 4)
+      dif += Math.abs(a[i]-b[i]) + Math.abs(a[i+1]-b[i+1]) + Math.abs(a[i+2]-b[i+2]);
+    const media = dif / (a.length/4*3);
+    return media > 0.25 ? true
+      : `el drift del glow no se mueve: diferencia media ${media.toFixed(3)} entre t=1 y t=5`;
   });
 
   // ── MOTION BUDGET v1 — enforcement de docs/EXPERIMENTO-RITMO.md §5 ─────

@@ -561,7 +561,10 @@ const SHORTS = {
       cifras: [
         ["eight million dollars", "$8,000,000"],
       ],
-      subtitulos: ['thesis','payoff','honesty','lesson'],
+      // `proof` INCLUIDO (2026-07-25): sin él, de 11.6s a 21.7s la voz habla y no aparece texto —
+      // diez segundos mudos que se perciben como "la voz va más rápida que los subtítulos".
+      // Con esto solo quedan sin subtítulo el intro (que lleva el gancho) y el CTA (su propia tarjeta).
+      subtitulos: ['thesis','proof','payoff','honesty','lesson'],
       curvaLlegaEn: "$8,000,000",
       // "eight million dollars" se dice DOS veces (intro y proof). Sin esto el calibrador cogía la
       // del intro y el contador terminaba a los 7s de un video de 62s.
@@ -692,14 +695,34 @@ function alinearPalabras(texto, segs){
     const sl = palabras.map(silabas);
     const rate = (sl.reduce((a,b)=>a+b,0) || 1) / (s1 - s0);
     let t = s0;
-    return palabras.map((w,i) => { const a = t; t += sl[i]/rate; return {w, t0:a, t1:t}; });
+    // `ancla`: esta palabra empieza EXACTAMENTE donde el micrófono midió que empieza la voz.
+    // Las tarjetas solo cortan aquí (ver tarjetasDePalabras) -> su t0 nunca es interpolado.
+    return palabras.map((w,i) => { const a = t; t += sl[i]/rate; return {w, t0:a, t1:t, ancla:i===0}; });
   };
   const frases = (texto.match(/[^.?!]+[.?!]*/g) || [texto]).map(f => f.trim()).filter(Boolean);
   if (frases.length === segs.length){                 // caso limpio: 1 frase = 1 bloque
     return frases.flatMap((fr, k) => alinearEn(fr.split(/\s+/).filter(Boolean), segs[k][0], segs[k][1]));
   }
-  // FALLBACK (frases != bloques): reparto global de siempre — comportamiento previo intacto.
   const pal = texto.split(/\s+/).filter(Boolean);
+
+  // ANCLAJE POR BLOQUE (2026-07-25) — la causa de fondo del "los subtítulos van tarde".
+  // El camino limpio de arriba exige que el TTS pause UNA vez por frase. La voz de Read respira
+  // más (medido: 10 bloques en un intro de 2 frases), así que casi todos los grupos caían al
+  // reparto global de abajo: un ritmo PROMEDIO para todo el grupo. Ahí la deriva se acumula —
+  // una frase dicha despacio empuja las siguientes y el error crece hasta medio segundo.
+  //
+  // Ahora se reparten las PALABRAS entre los bloques reales, con el mismo repartidor por
+  // programación dinámica que ya asigna bloques a grupos (papeles invertidos: las palabras hacen
+  // de "segmentos" con peso = sílabas, y las duraciones de bloque hacen de pesos objetivo).
+  // Cada bloque ancla sus palabras a su arranque MEDIDO, así que la deriva no puede pasar de un
+  // bloque (~0.7s de voz) en vez de acumularse a lo largo de 15 segundos.
+  if (segs.length > 1 && pal.length >= segs.length){
+    const rep = repartirGrupos(pal.map(w => [0, silabas(w)]), segs.map(s => s[1] - s[0]));
+    if (rep) return rep.rangos.flatMap(([i, j], k) =>
+      alinearEn(pal.slice(i, j + 1), segs[k][0], segs[k][1]));
+  }
+
+  // FALLBACK del fallback (menos palabras que bloques): reparto global de siempre.
   const sl = pal.map(silabas);
   const Ds = segs.reduce((a,s) => a + (s[1]-s[0]), 0);
   const rate = sl.reduce((a,b) => a+b, 0) / Ds;
@@ -798,14 +821,32 @@ function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
   for (const x of ws){ cur.push(x); if (/[.?!,;:]$/.test(x.w)){ clausulas.push(cur); cur = []; } }
   if (cur.length) clausulas.push(cur);
 
+  // CORTE SOLO EN LOS ANCLAJES (2026-07-25) — la causa de fondo del "los subtítulos van tarde".
+  // Antes se troceaba por CLÁUSULA (cualquier coma) y luego cada N palabras. Ninguno de esos dos
+  // cortes coincide con una pausa real de la voz, así que la tarjeta arrancaba a mitad de bloque
+  // y su t0 salía INTERPOLADO. Medido: 9 tarjetas empezaban con la voz ya sonando desde hacía más
+  // de 0.2s — el espectador ya había oído la frase cuando aparecía el texto.
+  // Ahora una tarjeta solo abre donde el micrófono midió que arranca la voz (`ancla`). La coma ya
+  // no parte por sí sola. Única excepción: que el texto no quepa a lo ancho.
   const cards = [];
-  clausulas.forEach((cl, ci) => {
-    const g = [];
-    for (let i = 0; i < cl.length; i += maxPal) g.push(cl.slice(i, i+maxPal));
-    for (let i = 0; i < g.length-1; i++)
-      while (g[i].length > 1 && FUNC.has(limpio(g[i][g[i].length-1].w))) g[i+1].unshift(g[i].pop());
-    g.forEach(p => cards.push({pal: p, cl: ci, fraseEntera: p.length === cl.length}));
-  });
+  const idxCl = new Map();
+  clausulas.forEach((cl, ci) => cl.forEach(w => idxCl.set(w, ci)));
+  {
+    const g = []; let cur = [];
+    for (const w of ws){
+      if (w.ancla && cur.length){ g.push(cur); cur = []; }
+      cur.push(w);
+      if (anchoTarjeta(cur) > maxAncho && cur.length > 1){       // no cabe: partir aquí
+        g.push(cur.slice(0, -1)); cur = [w];
+      }
+    }
+    if (cur.length) g.push(cur);
+    for (let i = 0; i < g.length-1; i++)                         // no dejar preposiciones colgando
+      while (g[i].length > 1 && !g[i+1][0].ancla && FUNC.has(limpio(g[i][g[i].length-1].w)))
+        g[i+1].unshift(g[i].pop());
+    g.forEach(p => cards.push({pal: p, cl: idxCl.get(p[0]) ?? 0,
+                               fraseEntera: p.length === (clausulas[idxCl.get(p[0]) ?? 0] || p).length}));
+  }
 
   repararDuraciones(cards, minDur, maxAncho);                       // dentro de cada frase
   for (const c of cards)                                            // frase entera y cortísima
@@ -1993,6 +2034,33 @@ function drawGancho(t, W, H, s, a, ov){
 // compounding, la misma verdad que la curva pero con otra piel. Rueda cuesta abajo; cada ~1.5s un
 // dividendo (moneda dorada) cae y se ABSORBE con un pulso -> "reinvertir". El valor sigue la serie D
 // -> aterriza EXACTO en $8M. `soloBola`: modo fantasma (rueda tenue bajo el gancho). PURA en t.
+// ── COLOR POR TRAMO (opt-in `CFG.camara`) ─────────────────────────────────────────────────────
+// La paleta era casi monocroma —verde oscuro, blanco y latón— los 62 segundos enteros. Con un
+// solo tono, todos los tramos se parecen aunque cambie el encuadre. Ahora cada sección tiene su
+// temperatura, así que el ojo nota que ALGO cambió antes incluso de leer nada:
+//   proof   verde crecimiento (el de siempre)  — está construyendo
+//   payoff  latón cálido                        — es el pago, la revelación
+//   honesty AZUL FRÍO                           — la parte incómoda, la letra pequeña
+//   lesson  verde otra vez, más vivo            — la resolución
+// Transiciones de 0.7s: se nota el cambio, no el parpadeo. Determinista y opt-in: los 6 Shorts
+// publicados conservan su color exacto.
+function gradoColor(t){
+  if (!CFG.camara) return null;
+  const g = id => (ULTIMA_CAL && ULTIMA_CAL.grupos) ? ULTIMA_CAL.grupos.find(x => x.id === id) : null;
+  const paleta = [
+    {d: 0,                        c: [31, 158, 110, 0.09]},
+    {d: g('payoff')  && g('payoff').inicio,  c: [214, 176,  92, 0.11]},
+    {d: g('honesty') && g('honesty').inicio, c: [ 96, 126, 158, 0.12]},
+    {d: g('lesson')  && g('lesson').inicio,  c: [ 31, 158, 110, 0.13]},
+    {d: g('cta')     && g('cta').inicio,     c: [ 31, 158, 110, 0.10]},
+  ].filter(x => x.d != null && x.d !== false).sort((a, b) => a.d - b.d);
+
+  let i = 0; while (i + 1 < paleta.length && t >= paleta[i+1].d) i++;
+  const cur = paleta[i], prev = paleta[Math.max(0, i-1)];
+  const u = clamp01((t - cur.d) / 0.7);
+  return cur.c.map((v, k) => lerp(prev.c[k], v, u));
+}
+
 // ── CÁMARA VIRTUAL (opt-in `CFG.camara`) ──────────────────────────────────────────────────────
 // El vídeo se sentía plano y el diagnóstico no era "faltan cosas": era que en 62 segundos había
 // UN SOLO plano general fijo. Todo del mismo tamaño, en el mismo sitio, todo el rato. Encima los
@@ -2465,10 +2533,21 @@ function drawFrame(t){
   const W = canvas.width, H = canvas.height, s = Math.min(W,H)/1080;
   _tGlobal = t;
 
-  ctx.fillStyle = P.ink; ctx.fillRect(0,0,W,H);
+  const gc = (MODO !== 'video') ? gradoColor(t) : null;          // temperatura por tramo del guion
+  // La BASE también se tiñe, no solo el resplandor: con el resplandor solo, la diferencia entre
+  // tramos medía 6-8 en distancia RGB — por debajo de ~12 el ojo no la registra, así que el grado
+  // era invisible. Mezclando un 14% sobre la tinta base la separación sube a ~25 y se nota como
+  // cambio de ambiente, sin dejar de ser oscuro y sobrio.
+  if (gc){
+    const ink = [7, 18, 14], m = 0.14;
+    ctx.fillStyle = `rgb(${Math.round(lerp(ink[0], gc[0], m))},${Math.round(lerp(ink[1], gc[1], m))},${Math.round(lerp(ink[2], gc[2], m))})`;
+  } else ctx.fillStyle = P.ink;
+  ctx.fillRect(0,0,W,H);
   const [dx, dy] = _drift(s);
   const g = ctx.createRadialGradient(W/2+dx, H*0.45+dy, 0, W/2+dx, H*0.45+dy, Math.max(W,H)*0.75);
-  g.addColorStop(0,'rgba(31,158,110,0.09)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  g.addColorStop(0, gc ? `rgba(${Math.round(gc[0])},${Math.round(gc[1])},${Math.round(gc[2])},${(gc[3]*1.6).toFixed(3)})`
+                       : 'rgba(31,158,110,0.09)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
   if (MODO === 'video'){
