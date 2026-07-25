@@ -37,6 +37,47 @@ _LANG_NAME = re.compile(
     r"gujarati|odia|sinhala|nepali|pinoy|tagalog|filipino)\b", re.IGNORECASE)
 
 
+# ── Guard de MERCADO (distinto del de idioma) ─────────────────────────────────────────────────
+# El idioma NO es el mercado. Un video indio escrito en inglés pasa `_is_english` (su
+# defaultAudioLanguage ES 'en') y aun así vale ~10x menos: RPM de audiencia IN ~$1-3 contra
+# $10-40 en US/EN, y el RPM es justo la variable que `decide` pondera. `relevanceLanguage` y
+# `regionCode` solo SESGAN el ranking de la búsqueda; no excluyen nada.
+# Caso real que disparó este guard (2026-07-24): 'build wealth' ganó `decide` con 1.812.824
+# vistas de las que el 70% venían de canales indios (Indiabulls "Stock SIP", "₹2 Lakh").
+_MARKET_SYMBOL = re.compile(r"[₹₨₦₱]")  # rupia india/pakistaní, naira, peso filipino
+
+# Términos inequívocos de otro mercado. Deliberadamente CONSERVADOR: quedan fuera las palabras
+# que también son inglés corriente ('nifty' = ingenioso, 'sip' = sorbo, 'RBI' = runs batted in
+# en béisbol — este corpus ya sufrió una fuga deportiva) salvo en su forma no ambigua.
+_MARKET_TERM = re.compile(
+    r"\b(lakh|lakhs|crore|crores|rupee|rupees|sensex|demat|"
+    r"nifty\s*50|bank\s*nifty)\b", re.IGNORECASE)
+
+# Acrónimos de institución/mercado. SENSIBLES A MAYÚSCULAS a propósito: así 'sip' (beber) no
+# colisiona con 'SIP' (Systematic Investment Plan).
+_MARKET_ACRONYM = re.compile(r"\b(NSE|BSE|SEBI|ELSS|PPF|UPI|SIP)\b")
+
+# Solo para el NOMBRE DEL CANAL: un canal que se llama a sí mismo por un país está declarando su
+# mercado. No se aplica al título, donde "India's economy" es un tema legítimo para un canal US.
+_MARKET_CHANNEL = re.compile(r"\b(india|indian|bharat|pakistan|nigeria|philippines)\b",
+                             re.IGNORECASE)
+
+
+def _is_target_market(video: dict) -> bool:
+    """True si el video apunta al mercado que paga (US/EN). Complementa `_is_english`, no lo
+    sustituye: filtra contenido EN CORRECTO INGLÉS pero dirigido a otro mercado, que infla la
+    demanda y envenena el prior de RPM. Guard de captura-en-origen: se rechaza ANTES de entrar
+    a `scanned_video`, no se limpia después."""
+    title = video.get("title", "")
+    if _MARKET_SYMBOL.search(title) or _MARKET_TERM.search(title) or _MARKET_ACRONYM.search(title):
+        return False
+    channel = video.get("channel", "")
+    if (_MARKET_SYMBOL.search(channel) or _MARKET_TERM.search(channel)
+            or _MARKET_ACRONYM.search(channel) or _MARKET_CHANNEL.search(channel)):
+        return False
+    return True
+
+
 def _is_english(video: dict) -> bool:
     """True si el video es inglés. El TÍTULO manda: si se delata (alfabeto no-latino o nombre de
     idioma auto-declarado como 'Tamil Motivation'), se descarta AUNQUE declare audio 'en' — muchos
@@ -113,11 +154,15 @@ def video_stats(ids: list[str]) -> list[dict]:
 
 
 def fetch_recent(query: str, days: int = 30, max_results: int = 25,
-                 order: str = "viewCount", english_only: bool = True) -> list[dict]:
+                 order: str = "viewCount", english_only: bool = True,
+                 target_market_only: bool = True) -> list[dict]:
     """Videos recientes de una búsqueda con sus vistas reales, ordenados por vistas desc.
 
     english_only (por defecto): descarta contenido no-inglés. El nicho paga por audiencia EN
-    (RPM alto); el contenido en otros idiomas ensucia la señal y diluye el RPM."""
+    (RPM alto); el contenido en otros idiomas ensucia la señal y diluye el RPM.
+
+    target_market_only (por defecto): descarta contenido en inglés CORRECTO pero dirigido a otro
+    mercado (India, etc.). Son dos filtros distintos a propósito: el idioma no es el mercado."""
     published_after = None
     if days:
         published_after = time.strftime("%Y-%m-%dT%H:%M:%SZ",
@@ -126,5 +171,7 @@ def fetch_recent(query: str, days: int = 30, max_results: int = 25,
     stats = video_stats(ids)
     if english_only:
         stats = [v for v in stats if _is_english(v)]
+    if target_market_only:
+        stats = [v for v in stats if _is_target_market(v)]
     stats.sort(key=lambda v: v["views"], reverse=True)
     return stats

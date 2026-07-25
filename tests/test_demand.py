@@ -135,6 +135,75 @@ class EnglishFilterTest(unittest.TestCase):
         self.assertTrue(yt._is_english({"title": "Stock Market Crash Explained", "language": ""}))
 
 
+class TargetMarketFilterTest(unittest.TestCase):
+    """Guard de MERCADO: inglés correcto pero dirigido a otro mercado (RPM ~10x menor).
+
+    Es un filtro DISTINTO al de idioma: estos videos pasan `_is_english` legítimamente.
+    Casos reales del scan del 2026-07-24 que hicieron ganar a 'build wealth' con un 70% de
+    demanda inflada.
+    """
+
+    def test_real_case_indiabulls_sip_is_dropped(self):
+        import omega.sources.youtube as yt
+        v = {"title": "Build Wealth by Investing in the Brands You Believe In with Stock SIP",
+             "channel": "Indiabulls Securities", "language": "en"}
+        self.assertTrue(yt._is_english(v))          # el idioma es correcto...
+        self.assertFalse(yt._is_target_market(v))   # ...pero el mercado no es el nuestro
+
+    def test_real_case_rupee_symbol_and_lakh_are_dropped(self):
+        import omega.sources.youtube as yt
+        v = {"title": "Warren Buffett's ₹2 Lakh Investment Strategy: Build Wealth",
+             "channel": "Finance Guru", "language": "en"}
+        self.assertTrue(yt._is_english(v))
+        self.assertFalse(yt._is_target_market(v))
+
+    def test_market_acronyms_are_case_sensitive(self):
+        import omega.sources.youtube as yt
+        # 'SIP' (Systematic Investment Plan) fuera; 'Sip' (beber) es inglés corriente y pasa.
+        self.assertFalse(yt._is_target_market({"title": "Best SIP Plans for 2026", "channel": "x"}))
+        self.assertTrue(yt._is_target_market({"title": "Sip Coffee, Save Money", "channel": "x"}))
+
+    def test_ambiguous_english_words_are_not_false_positives(self):
+        import omega.sources.youtube as yt
+        # 'nifty' solo se rechaza como índice ('Nifty 50'), no como adjetivo inglés.
+        self.assertTrue(yt._is_target_market(
+            {"title": "A Nifty Little Trick to Save $500 a Month", "channel": "x"}))
+        self.assertFalse(yt._is_target_market(
+            {"title": "Nifty 50 Outlook for Next Week", "channel": "x"}))
+
+    def test_country_in_title_is_a_topic_not_a_market(self):
+        import omega.sources.youtube as yt
+        # Un canal US hablando DE India es un tema legítimo: el país solo delata en el CANAL.
+        self.assertTrue(yt._is_target_market(
+            {"title": "Why India's Economy Matters for US Investors", "channel": "Bloomberg"}))
+        self.assertFalse(yt._is_target_market(
+            {"title": "Why the Economy Matters", "channel": "India Today Business"}))
+
+    def test_clean_us_content_passes(self):
+        import omega.sources.youtube as yt
+        self.assertTrue(yt._is_target_market(
+            {"title": "How to Build Wealth on a Low Income", "channel": "Money Guy"}))
+        self.assertTrue(yt._is_target_market(
+            {"title": "7 Powerful Money Habits", "channel": "Financial Tips"}))
+
+    def test_fetch_recent_applies_the_guard_at_capture(self):
+        import omega.sources.youtube as yt
+        captured = [
+            {"video_id": "a", "title": "Build Wealth with Stock SIP", "channel": "Indiabulls",
+             "language": "en", "views": 1_000_000},
+            {"video_id": "b", "title": "How to Build Wealth on a Low Income", "channel": "Money Guy",
+             "language": "en", "views": 90_000},
+        ]
+        orig_search, orig_stats = yt.search_video_ids, yt.video_stats
+        yt.search_video_ids = lambda *a, **k: ["a", "b"]
+        yt.video_stats = lambda ids: list(captured)
+        try:
+            out = yt.fetch_recent("build wealth", days=0)
+            self.assertEqual([v["video_id"] for v in out], ["b"])  # el indio no entra al dataset
+        finally:
+            yt.search_video_ids, yt.video_stats = orig_search, orig_stats
+
+
 class MonetizationTest(unittest.TestCase):
     """Valor por nicho (RPM): no todas las vistas valen igual en dinero."""
 
