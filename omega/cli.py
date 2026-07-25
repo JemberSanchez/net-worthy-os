@@ -5,6 +5,7 @@ Comandos:
   python -m omega.cli trends     # reporte de temas en alza/caída
   python -m omega.cli youtube <query>   # demanda REAL: qué temas mueven vistas (YouTube API)
   python -m omega.cli youtube-scan      # barre el nicho y CACHEA demanda -> alimenta 'decide'
+  python -m omega.cli youtube-evergreen # catálogo de >=90 días que SIGUE vivo (lo que sí despega)
   python -m omega.cli related <tema>    # temas ADYACENTES: qué más ve esa audiencia (#1)
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
@@ -153,6 +154,51 @@ def cmd_youtube_scan() -> None:
     for r in rows[:12]:
         print(f"  {r['total_views']:>12,}  {r['term']:<24} (en {r['videos']} videos)")
     print("\nListo. Corre 'python -m omega.cli decide' para decidir ponderando esta demanda.")
+
+
+def cmd_youtube_evergreen() -> None:
+    """Sensor EVERGREEN: el catálogo que `youtube-scan` no puede ver.
+
+    `youtube-scan` pide publishedAfter=30d, así que solo ve NOTICIA. Pero docs/VIRALIDAD.md §3.1
+    midió que los 39 despegues del nicho tienen 133-352 días y siguen acumulando: cero son noticia.
+    Es decir, el sistema era estructuralmente ciego a lo único que demostró funcionar — y la
+    noticia es justo lo que peor le fue al canal (el FED hizo 10 espectadores).
+
+    Pondera por vistas/DÍA, no por total: con catálogo antiguo el total premia la edad."""
+    from .sources import youtube
+    from .analyze import demand
+
+    db.init()
+    queries = config.YOUTUBE_NICHE_QUERIES
+    print(f"Barrido EVERGREEN del nicho ({len(queries)} búsquedas, catálogo de >=90 días)")
+    print("Filtros de VIRALIDAD.md §1: canales de 1.000-100.000 subs y likes/vista >=1%.")
+    try:
+        rows, videos = demand.scan_evergreen(queries, max_results=25)
+    except youtube.YouTubeError as exc:
+        print(f"\nError de YouTube API: {exc}")
+        print("Revisa YOUTUBE_API_KEY en .env y que la API esté habilitada.")
+        return
+
+    scanned_at = int(time.time())
+    saved = db.replace_theme_evergreen(rows, scanned_at)
+    print(f"\n{len(videos)} videos evergreen únicos | {saved} temas cacheados.")
+    if not videos:
+        print("Sin resultados: o la cuota se agotó, o el guard de mercado filtró todo.")
+        return
+
+    print("\nTop temas por VISTAS/DÍA (catálogo que sigue vivo):")
+    for r in rows[:12]:
+        print(f"  {r['views_per_day']:>10,.0f}/día  {r['term']:<24} (en {r['videos']} videos)")
+
+    print("\nLos 8 evergreen más rápidos DE TU LIGA (el formato que aguanta meses):")
+    for v in sorted(videos, key=lambda x: x.get("views_per_day", 0), reverse=True)[:8]:
+        edad = (time.time() - datetime.fromisoformat(
+            v["published_at"].replace("Z", "+00:00")).timestamp()) / 86400
+        like = v.get("likes", 0) / max(v.get("views", 1), 1)
+        print(f"  {v['views_per_day']:>8,.0f}/día {int(edad):>4}d "
+              f"{v.get('subs', 0):>7,} subs {like:>5.1%} like  {v['title'][:50]}")
+    print("\n⚠ vistas/día es un PROMEDIO de toda la vida del video: no distingue 'explotó y murió'")
+    print("  de 'acumula constante'. Repite el barrido en unos días y compara para saberlo.")
 
 
 def cmd_related() -> None:
@@ -676,6 +722,7 @@ def main(argv: list[str]) -> int:
         "trends": cmd_trends,
         "youtube": cmd_youtube,
         "youtube-scan": cmd_youtube_scan,
+        "youtube-evergreen": cmd_youtube_evergreen,
         "related": cmd_related,
         "signals": cmd_signals,
         "decide": cmd_decide,

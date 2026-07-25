@@ -56,6 +56,19 @@ CREATE TABLE IF NOT EXISTS scanned_video (
     views      INTEGER NOT NULL,
     scanned_at INTEGER NOT NULL
 );
+
+-- Demanda EVERGREEN: catálogo de >=90 días que SIGUE moviendo vistas. Tabla SEPARADA de
+-- theme_demand a propósito: son dos regímenes distintos y mezclarlos los destruye. theme_demand
+-- mide "de qué se habla ahora" (noticia, publishedAfter=30d); esto mide "qué sigue funcionando
+-- meses después", que es lo único que VIRALIDAD.md §3.1 encontró entre los 39 despegues reales.
+-- Se pondera por vistas/DÍA, no por total: con catálogo viejo el total premia la edad, no el interés.
+CREATE TABLE IF NOT EXISTS theme_evergreen (
+    term          TEXT    PRIMARY KEY,
+    views_per_day REAL    NOT NULL,
+    videos        INTEGER NOT NULL,
+    example       TEXT,
+    scanned_at    INTEGER NOT NULL
+);
 """
 
 
@@ -207,6 +220,34 @@ def clear_theme_demand() -> None:
             con.execute("DELETE FROM theme_demand")
     except sqlite3.OperationalError:
         pass  # tabla aún no creada -> nada que limpiar
+
+
+def replace_theme_evergreen(rows: list[dict], scanned_at: int) -> int:
+    """Reemplaza el snapshot de demanda evergreen. Como `theme_demand`, es una foto del presente:
+    si cambian las queries del nicho, los términos viejos no deben sobrevivir."""
+    with connect() as con:
+        con.execute("DELETE FROM theme_evergreen")
+        if rows:
+            con.executemany(
+                "INSERT OR REPLACE INTO theme_evergreen "
+                "(term, views_per_day, videos, example, scanned_at) "
+                "VALUES (:term, :views_per_day, :videos, :example, :scanned_at)",
+                [{"term": r["term"], "views_per_day": r["views_per_day"], "videos": r["videos"],
+                  "example": (r["examples"][0] if r.get("examples") else ""),
+                  "scanned_at": scanned_at} for r in rows])
+    return len(rows)
+
+
+def fetch_theme_evergreen() -> list[dict]:
+    """Filas del cache evergreen, desc por vistas/día. Tolerante: {} si aún no se escaneó."""
+    try:
+        with connect() as con:
+            rows = con.execute(
+                "SELECT term, views_per_day, videos, example, scanned_at "
+                "FROM theme_evergreen ORDER BY views_per_day DESC").fetchall()
+    except sqlite3.OperationalError:
+        return []
+    return [dict(r) for r in rows]
 
 
 def fetch_theme_demand() -> dict[str, int]:

@@ -143,6 +143,7 @@ def video_stats(ids: list[str]) -> list[dict]:
                 "video_id": it["id"],
                 "title": sn.get("title", ""),
                 "channel": sn.get("channelTitle", ""),
+                "channel_id": sn.get("channelId", ""),
                 "published_at": sn.get("publishedAt", ""),
                 "language": sn.get("defaultAudioLanguage") or sn.get("defaultLanguage") or "",
                 "views": int(st.get("viewCount", 0) or 0),
@@ -150,6 +151,26 @@ def video_stats(ids: list[str]) -> list[dict]:
                 "comments": int(st.get("commentCount", 0) or 0),
                 "url": f"https://youtu.be/{it['id']}",
             })
+    return out
+
+
+def channel_subs(channel_ids: list[str]) -> dict[str, int]:
+    """{channel_id: suscriptores}. Batches de 50, 1 unidad de cuota cada uno (barato).
+
+    Existe para replicar el método que `docs/VIRALIDAD.md` §1 validó: comparar SOLO dentro de
+    canales del tamaño real de este canal. Sin esto, un barrido por vistas devuelve lo que hacen
+    los canales de 166.000 subs — y ahí "lo que distingue a los ganadores" puede ser simplemente
+    TENER audiencia. Ese confounder invalidó el Intento 2 del estudio.
+    """
+    out: dict[str, int] = {}
+    ids = [c for c in dict.fromkeys(channel_ids) if c]
+    for i in range(0, len(ids), 50):
+        data = _get("channels", {"part": "statistics", "id": ",".join(ids[i:i + 50])})
+        for it in data.get("items", []):
+            try:
+                out[it["id"]] = int(it.get("statistics", {}).get("subscriberCount", 0) or 0)
+            except (TypeError, ValueError):
+                out[it["id"]] = 0
     return out
 
 

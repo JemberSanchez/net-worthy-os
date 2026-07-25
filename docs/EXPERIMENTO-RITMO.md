@@ -131,6 +131,44 @@ Se pueden hacer AMBAS: A aísla la variable, B hace avanzar el canal.
 > **DECISIÓN (2026-07-18): Opción A.** Re-render de Buffett con Motion Budget v1 → IG + TikTok.
 > Aislamiento más limpio de la variable ritmo, coste ~0. El confounder de plataforma queda anotado.
 
+### ⚠ 2026-07-25 — INSTAGRAM NO ES TERRITORIO VIRGEN (la Opción A parte de un supuesto falso)
+
+**El experimento NO ha empezado:** `data/net-worthy-buffett-ritmo.mp4` sigue sin publicarse. El
+brazo de tratamiento no existe todavía.
+
+Lo que sí pasó: el Buffett **original** se publicó el 17-jul **desde Business Suite como reel
+cruzado**, es decir un solo acto de publicación que lo puso en **Facebook e Instagram a la vez**.
+
+**Consecuencia para el diseño:** la Opción A decía publicar el re-render en *"Instagram + TikTok
+(donde NUNCA se ha visto)"*. **Para Instagram eso es falso** — la audiencia de IG ya vio el Buffett
+original hace 8 días. Publicar allí el re-render lo convierte en un brazo con la misma
+contaminación que tendría Facebook: novedad decaída y posible penalización por contenido repetido.
+
+| Brazo | Estado | Veredicto |
+|---|---|---|
+| **TikTok** | ✅ Limpio, **SIN PUBLICAR** | Buffett nunca estuvo ahí y no pasa por Business Suite. **Es el único brazo válido de la Opción A.** |
+| **Instagram** | ❌ Ya no es virgen | El original salió ahí el 17-jul por el reel cruzado. Sirve como brazo secundario contaminado, no como aislamiento. |
+| **Facebook** | ❌ Descartado | Es donde vive el baseline. Re-publicar ahí compite con la v1. |
+
+**⚠ Sospecha abierta sobre el baseline:** si el reel fue cruzado, el Buffett original acumuló
+vistas en Instagram ADEMÁS de las 245 de Facebook. El `success = 0.341` se calculó con
+`245 (FB) + 11 (YT) = 256` — **sin Instagram**. Si Business Suite reporta IG por separado, hay que
+sumarlas y recalcular; el alcance real (y el score) serían mayores. Verificar en Business Suite →
+Biblioteca de contenido → el reel → desglose por plataforma **antes** de comparar nada contra este
+baseline.
+
+**Cambio de calendario (dato nuevo del 2026-07-24):** medir a las **~24h**, no a los 3-5 días. El
+Buffett original hizo el 99,6% de su alcance en las primeras 17h y luego sumó +1 vista en 7 días.
+Esperar no aporta señal, solo retrasa la decisión.
+
+**Sobre la métrica secundaria** (§6): *"fracción que sigue viendo a los 10s"* **no es obtenible** —
+Facebook reporta 3s y 20s, no 10s, y IG/TikTok reportan otras cosas. Hay que fijar la métrica
+secundaria a lo que el instrumento realmente produce ANTES de medir, o el experimento vuelve
+inverificable (el mismo fallo que el 2026-07-24 dejó 4 predicciones sin poder resolver).
+
+**Línea base actualizada a 7 días:** `retention_avg = 0.11` · 256 vistas (FB 245 + YT 11) ·
+curva **24,1% a 3s → 10,0% a 20s**. La métrica primaria pre-registrada (`> 0.109`) NO se toca.
+
 ## 8. Lo que este experimento NO es (para no repetir el error)
 
 No es pulir la ejecución de un concepto flojo (el error que el usuario ya corrigió: audio/sync sobre

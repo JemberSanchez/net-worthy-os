@@ -135,6 +135,117 @@ class EnglishFilterTest(unittest.TestCase):
         self.assertTrue(yt._is_english({"title": "Stock Market Crash Explained", "language": ""}))
 
 
+class EvergreenTest(unittest.TestCase):
+    """Visión evergreen: el punto ciego que solo dejaba a `decide` proponer noticia.
+
+    VIRALIDAD.md §3.1: los 39 despegues tienen 133-352 días y siguen acumulando, pero
+    `youtube-scan` pide publishedAfter=30d. El catálogo que SÍ funciona era invisible.
+    """
+    AHORA = 1784950000.0        # referencia fija: los tests no pueden depender de la fecha real
+
+    def _v(self, vid, title, views, dias_atras, channel="c"):
+        import datetime as dt
+        pub = dt.datetime.fromtimestamp(self.AHORA - dias_atras*86400, dt.UTC)
+        return {"video_id": vid, "title": title, "views": views, "channel": channel,
+                "published_at": pub.strftime("%Y-%m-%dT%H:%M:%SZ"), "likes": 0, "comments": 0,
+                "url": f"https://youtu.be/{vid}"}
+
+    def test_views_per_day_separa_catalogo_vivo_de_solo_viejo(self):
+        vivo  = self._v("a", "x", 300_000, 300)    # 1.000/día
+        viejo = self._v("b", "x", 300_000, 1095)   # las mismas vistas en 3 años: ~274/día
+        self.assertAlmostEqual(demand.views_per_day(vivo,  now=self.AHORA), 1000, delta=5)
+        self.assertGreater(demand.views_per_day(vivo, now=self.AHORA),
+                           demand.views_per_day(viejo, now=self.AHORA))
+
+    def test_video_de_hoy_no_infla_la_velocidad(self):
+        # sin el suelo de 1 día, un video de hace 1 hora daría 24x su cifra real
+        hoy = self._v("a", "x", 5_000, 0)
+        self.assertEqual(demand.views_per_day(hoy, now=self.AHORA), 5_000)
+
+    def test_sin_fecha_de_publicacion_no_revienta(self):
+        self.assertEqual(demand.views_per_day({"views": 100, "published_at": ""}), 0.0)
+        self.assertEqual(demand.views_per_day({"views": 100, "published_at": "no-es-fecha"}), 0.0)
+
+    def test_ranking_evergreen_pondera_velocidad_no_total(self):
+        # 'compounding' acumula MENOS vistas totales pero mucha más velocidad que 'lottery'.
+        # OJO: cada par comparte UNA sola palabra a propósito. Si dos términos empatan en vistas,
+        # el desempate depende del hash de strings (aleatorio por proceso) y el test se vuelve
+        # flaky — pasa aislado y falla en la suite.
+        videos = [
+            self._v("a", "compounding explained", 200_000, 200),   # 1.000/día
+            self._v("b", "compounding basics",    200_000, 200),   # 1.000/día
+            self._v("c", "lottery jackpot story", 900_000, 3000),  # 300/día
+            self._v("d", "lottery ticket rich",   900_000, 3000),  # 300/día
+        ]
+        por_total = [r["term"] for r in demand.theme_demand(videos)]
+        por_velocidad = [r["term"] for r in demand.theme_evergreen(videos, now=self.AHORA)]
+        self.assertEqual(por_total[0], "lottery")        # por vistas totales gana lo viejo
+        self.assertEqual(por_velocidad[0], "compounding")  # por velocidad gana lo vivo
+
+    def _scan(self, capturados, subs_por_canal, **kw):
+        """Corre scan_evergreen con la red monkeypatcheada. Devuelve (rows, videos)."""
+        import omega.sources.youtube as yt
+        orig_fetch, orig_subs = yt.fetch_recent, yt.channel_subs
+        self.llamadas = {}
+        def fake_fetch(q, days=30, max_results=25, order="viewCount", **k):
+            self.llamadas['days'] = days; self.llamadas['order'] = order
+            return list(capturados)
+        yt.fetch_recent = fake_fetch
+        yt.channel_subs = lambda ids: dict(subs_por_canal)
+        try:
+            return demand.scan_evergreen(["compound interest"], now=self.AHORA, **kw)
+        finally:
+            yt.fetch_recent, yt.channel_subs = orig_fetch, orig_subs
+
+    def _vc(self, vid, title, views, dias, canal_id, likes=None):
+        v = self._v(vid, title, views, dias)
+        v["channel_id"] = canal_id
+        v["likes"] = views // 50 if likes is None else likes   # 2% like rate por defecto
+        return v
+
+    def test_scan_evergreen_descarta_lo_reciente(self):
+        capturados = [
+            self._vc("viejo",    "compound interest explained", 500_000, 300, "ch1"),
+            self._vc("viejo2",   "compound interest basics",    400_000, 250, "ch1"),
+            self._vc("reciente", "compound interest news",      900_000, 10,  "ch1"),  # <90d
+        ]
+        rows, videos = self._scan(capturados, {"ch1": 20_000})
+        self.assertEqual(self.llamadas['days'], 0)      # sin publishedAfter: ahí está el catálogo
+        self.assertEqual(self.llamadas['order'], 'viewCount')
+        self.assertEqual(sorted(v["video_id"] for v in videos), ["viejo", "viejo2"])
+        self.assertTrue(all("views_per_day" in v for v in videos))
+        self.assertTrue(any(r["term"] == "compound interest" for r in rows))
+
+    def test_canales_gigantes_quedan_fuera(self):
+        """El confounder que invalidó el Intento 2 de VIRALIDAD.md: sin banda de suscriptores el
+        barrido devuelve lo que hacen canales de cientos de miles de subs, irreplicable aquí."""
+        capturados = [
+            self._vc("gigante", "compound interest explained", 300_000_000, 900, "mega"),
+            self._vc("mi_liga", "compound interest basics",        400_000, 250, "chico"),
+            self._vc("mi_liga2","compound interest simple",        300_000, 250, "chico"),
+        ]
+        _, videos = self._scan(capturados, {"mega": 12_000_000, "chico": 20_000})
+        self.assertEqual(sorted(v["video_id"] for v in videos), ["mi_liga", "mi_liga2"])
+
+    def test_canales_fantasma_tambien_quedan_fuera(self):
+        # con 20 subs, 230 vistas ya parecen "x10": el multiplicador miente (VIRALIDAD.md §2)
+        capturados = [
+            self._vc("fantasma", "compound interest explained", 5_000, 200, "ghost"),
+            self._vc("real",     "compound interest basics",  400_000, 250, "chico"),
+        ]
+        _, videos = self._scan(capturados, {"ghost": 20, "chico": 20_000})
+        self.assertEqual([v["video_id"] for v in videos], ["real"])
+
+    def test_engagement_de_humo_queda_fuera(self):
+        # §3.3: todos los despegues reales tienen likes/vista entre 1% y 3,7%
+        capturados = [
+            self._vc("humo",  "compound interest explained", 900_000, 300, "chico", likes=200),
+            self._vc("bueno", "compound interest basics",    400_000, 250, "chico"),
+        ]
+        _, videos = self._scan(capturados, {"chico": 20_000})
+        self.assertEqual([v["video_id"] for v in videos], ["bueno"])
+
+
 class TargetMarketFilterTest(unittest.TestCase):
     """Guard de MERCADO: inglés correcto pero dirigido a otro mercado (RPM ~10x menor).
 
