@@ -506,7 +506,11 @@ const SHORTS = {
     // de 2 líneas (`A JANITOR.` / `$8 MILLION.`). La taxonomía no tiene categoría 'contraste', así
     // que vive dentro de 'story' — ver la nota de ambigüedad en docs/ESTADO.md.
     adn: {hook_type: 'story', story_type: 'character', cta_type: 'comment'},
-    escena: 'portfolio',                // DIFERENCIADOR propio: el tablero de holdings (finance-premium)
+    // 2026-07-25: vuelve a `snowball`. El tablero de 95 casillas no se entendía a tamaño de
+    // teléfono — el propio autor lo describió como "cuadritos con una línea verde". La bola SÍ
+    // muestra el compounding: el radio crece con la raíz del valor, o sea plana muchísimo tiempo
+    // y luego explota, que es exactamente la tesis del guion.
+    escena: 'snowball',
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,
     // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
@@ -561,6 +565,9 @@ const SHORTS = {
       // "eight million dollars" se dice DOS veces (intro y proof). Sin esto el calibrador cogía la
       // del intro y el contador terminaba a los 7s de un video de 62s.
       curvaLlegaEnGrupo: 'proof',
+      // "$8 MILLION." entra cuando la voz DICE la cifra en el intro, no cuando arranca el 2º bloque
+      // de voz: el TTS respira 10 veces ahí dentro y la línea se adelantaba 2.5s (ver calibrarAuto).
+      specAncla: [null, "$8,000,000"],
       omitirEnSubtitulos: [],
     },
   },
@@ -856,9 +863,26 @@ function calibrarAuto(buffer, guion){
   cuts.draw = tok ? tok.t1 : (cuts.hook + cuts.curve) / 2;
 
   // spec drop: cada línea entra 0.2s antes de su frase. La 1ª ya visible en el frame 1.
+  //
+  // ⚠ El reparto por ÍNDICE (`segsIntro[i]`) asume UN bloque de voz por línea del gancho. Con un
+  // TTS que respira a mitad de frase eso revienta. Caso real (Read #7, 2026-07-25): el intro tenía
+  // 10 bloques de voz para 2 líneas, así que `segsIntro[1]` caía dentro de la PRIMERA oración y
+  // "$8 MILLION." aparecía a los 2.14s mientras la voz decía "cleaned floors". El remate visual
+  // se adelantaba ~2.5s a la voz y mataba el gancho de contraste, que es todo lo que tiene.
+  //
+  // `specAncla[i]` ancla la línea a las PALABRAS (la cifra ya fusionada por `fusionarCifras`),
+  // no a un índice de bloque. Sin la clave, el comportamiento es el de siempre.
   const segsIntro = porGrupo[0].segs;
-  const spec = CFG.spec.map((_, i) => i === 0 ? -0.30
-                            : +( (segsIntro[Math.min(i, segsIntro.length-1)][0] - 0.20).toFixed(2) ));
+  const wsIntro = porGrupo[0].ws;
+  const spec = CFG.spec.map((_, i) => {
+    if (i === 0) return -0.30;
+    const ancla = (guion.specAncla || [])[i];
+    if (ancla){
+      const tok = wsIntro.find(x => x.cifra === ancla);
+      if (tok) return +((tok.t0 - 0.15).toFixed(2));   // entra justo antes de que se diga
+    }
+    return +((segsIntro[Math.min(i, segsIntro.length-1)][0] - 0.20).toFixed(2));
+  });
 
   const cards = porGrupo.filter(g => guion.subtitulos.includes(g.id))
                         .flatMap(g => tarjetasDePalabras(omitirMuletillas(g.ws, guion.omitirEnSubtitulos)));
@@ -876,8 +900,17 @@ function calibrarAuto(buffer, guion){
     // arranque, y es el ancla para que el número del stat aterrice JUSTO sobre la palabra.
     cifra_t0: tok ? +tok.t0.toFixed(2) : null,
     cards: cards.map(c => ({t0:+c.t0.toFixed(2), t1:+c.t1.toFixed(2), t:c.palabras.join(' ')})),
+    // `specRiesgo` avisa EN EL MOMENTO DE CALIBRAR, que es cuando hay un humano mirando: si el
+    // intro trae más bloques de voz que líneas de gancho y el Short no declara `specAncla`, el
+    // reparto por índice es una lotería y la línea puede adelantarse segundos a la voz. Ningún
+    // test lo puede cazar (hace falta el audio real), así que se avisa donde sí se ve.
     diag: {bloques: segs.length, grupos: sils.length, silabas_por_seg: +rep.rate.toFixed(2),
-           error_reparto: +rep.error.toFixed(2)},
+           error_reparto: +rep.error.toFixed(2),
+           specRiesgo: (CFG.spec.length > 1 && segsIntro.length > CFG.spec.length
+                        && !(guion.specAncla || []).some(Boolean))
+                       ? `${segsIntro.length} bloques de voz en el intro para ${CFG.spec.length} `
+                         + `líneas de gancho y sin specAncla: la 2ª línea puede adelantarse a la voz`
+                       : null},
   };
 }
 
@@ -2000,23 +2033,67 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
     ctx.beginPath(); ctx.arc(cxx, cyy, 9*s, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = alpha;
   }
 
-  ctx.save();                                                                // la BOLA
-  ctx.shadowColor = 'rgba(216,178,90,0.45)'; ctx.shadowBlur = 30*s;
-  ctx.fillStyle = P.paper; ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.fill();
+  // ── LA BOLA ───────────────────────────────────────────────────────────────────────────────
+  // Antes era un disco blanco plano con 6 arcos. Ahora es una ESFERA con capas, y las capas
+  // cuentan la historia: cada anillo es una tanda de dividendos reinvertidos, como los anillos
+  // de un tronco. Todo rota con el avance (rueda sin deslizar) y todo es PURO en t: las motas
+  // salen de un hash determinista, no de Math.random, o el export offline no reproduciría el
+  // preview y `drawFrame es DETERMINISTA` fallaría.
+  const rot = (bx - gx0) / (rMax*0.42);
+
+  ctx.save();                                                                // sombra de contacto
+  const sy = slopeY(bx);
+  ctx.globalAlpha = alpha * 0.30; ctx.fillStyle = '#04120C';
+  ctx.beginPath(); ctx.ellipse(bx, sy + 2*s, r*0.92, Math.max(3*s, r*0.16), 0, 0, Math.PI*2); ctx.fill();
   ctx.restore();
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(216,178,90,0.45)'; ctx.shadowBlur = 30*s;
+  // esfera: luz arriba-izquierda, sombra abajo-derecha -> deja de leerse como un círculo plano
+  const gBola = ctx.createRadialGradient(bx - r*0.35, by - r*0.40, r*0.05, bx, by, r);
+  gBola.addColorStop(0,    '#FFFFFF');
+  gBola.addColorStop(0.55, P.paper);
+  gBola.addColorStop(1,    '#9FB3A8');
+  ctx.fillStyle = gBola; ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  if (r > 18*s){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(bx, by, r*0.985, 0, Math.PI*2); ctx.clip();   // nada se sale de la bola
+    ctx.translate(bx, by); ctx.rotate(rot);
+
+    // ANILLOS DE ACUMULACIÓN: capas de dividendos reinvertidos. Excéntricos a propósito — la nieve
+    // no se pega simétrica, y así se ve que la bola CRECIÓ por fuera en vez de estar dibujada.
+    ctx.lineWidth = Math.max(1.2*s, r*0.016);
+    for (let k = 1; k <= 4; k++){
+      const rr = r * (0.24 + k*0.18);
+      ctx.globalAlpha = alpha * (0.22 - k*0.03);
+      ctx.strokeStyle = '#5C6E64';
+      ctx.beginPath(); ctx.arc(-r*0.05*k, -r*0.04*k, rr, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // MOTAS de nieve compactada: dan textura y hacen VISIBLE la rotación (sin ellas, una esfera
+    // lisa girando parece quieta). Posiciones por hash determinista.
+    const nM = Math.min(26, Math.round(r/(6*s)));
+    for (let k = 0; k < nM; k++){
+      const h1 = Math.sin(k*12.9898)*43758.5453, h2 = Math.sin(k*78.233)*43758.5453;
+      const ang = (h1 - Math.floor(h1)) * Math.PI*2;
+      const rad = Math.sqrt(h2 - Math.floor(h2)) * r * 0.86;
+      ctx.globalAlpha = alpha * 0.16;
+      ctx.fillStyle = '#5C6E64';
+      ctx.beginPath();
+      ctx.arc(Math.cos(ang)*rad, Math.sin(ang)*rad, Math.max(1.5*s, r*0.035), 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   if (pulse > 0.001){                                                        // destello de reinversión
     ctx.globalAlpha = Math.min(1, alpha * pulse * 6); ctx.strokeStyle = P.brass; ctx.lineWidth = 3*s;
     ctx.beginPath(); ctx.arc(bx, by, r*1.16, 0, Math.PI*2); ctx.stroke(); ctx.globalAlpha = alpha;
   }
   ctx.strokeStyle = P.brass; ctx.lineWidth = Math.max(2*s, r*0.028);
   ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2); ctx.stroke();
-  if (r > 24*s){                                                             // arcos: rueda sin deslizar
-    const rot = (bx - gx0) / (rMax*0.42);
-    ctx.strokeStyle = 'rgba(92,110,100,0.55)'; ctx.lineWidth = 2*s;
-    for (let a0 = 0; a0 < Math.PI*2; a0 += Math.PI/3){
-      ctx.beginPath(); ctx.arc(bx, by, r*0.6, rot+a0, rot+a0+0.55); ctx.stroke();
-    }
-  }
   ctx.restore();
   if (soloBola) return;
 
@@ -2025,9 +2102,27 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false){
   if (dP > 0 && dP < 0.55) esc = 1 + 0.12*Math.sin(Math.PI*(dP/0.55));
   ctx.save(); ctx.globalAlpha = alpha; ctx.translate(W/2, head + 140*s); ctx.scale(esc, esc);
   ctx.shadowColor = 'rgba(216,178,90,0.5)'; ctx.shadowBlur = 24*s;
-  text(money(val), 0, 0, {size:96*s, weight:800, color:P.paper}); ctx.restore();
+  // remate redondo si el Short lo declara: la curva es ILUSTRATIVA y su cartera real es
+  // desconocida ("~$8 millones"), así que cerrar en $8,007,457 afirmaría al dólar algo que nadie
+  // sabe. Además `guion.cifras` ya mapea la frase hablada a "$8,000,000" -> subtítulo y contador
+  // dirían dos números distintos. Mismo criterio que en drawPortfolio.
+  text((p >= 1 && CFG.valorFinal) ? CFG.valorFinal : money(val),
+       0, 0, {size:96*s, weight:800, color:P.paper}); ctx.restore();
   text(p >= 1 ? `AFTER ${CFG.years} YEARS` : `YEAR ${Math.min(CFG.years, Math.floor(idx/12)+1)}`,
        W/2, head + 186*s, {size:22*s, weight:600, color:P.brass, alpha:alpha*0.85, spacing:4*s});
+
+  // LA PROPORCIÓN: sin el punto de partida, "he put in a little at a time" es una frase y no una
+  // imagen. El contador grande va rebasando en vivo esta cifra fija. "PAID IN", no "HE PUT IN":
+  // los $122.400 son aritmética del modelo ($170 x 12 x 60), no lo que Read aportó de verdad.
+  if (D){
+    const yLin = head + 222*s;
+    ctx.save(); ctx.globalAlpha = alpha*0.28; ctx.strokeStyle = P.grey; ctx.lineWidth = 1.5*s;
+    ctx.beginPath(); ctx.moveTo(W/2 - 150*s, yLin); ctx.lineTo(W/2 + 150*s, yLin); ctx.stroke();
+    ctx.restore();
+    text(`PAID IN ${money(D.finalContrib)}`, W/2, yLin + 34*s,
+         {size:26*s, weight:700, color:P.grey, alpha:alpha*0.9, spacing:2*s});
+  }
+
   text('DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 46*s,
        {size:20*s, weight:600, color:P.grey, alpha:alpha*0.8, spacing:2*s});
 }
@@ -2261,9 +2356,25 @@ function drawFrame(t){
   // en las columnas, a la zona libre izquierda (la barra SPENT drenada la despeja) y más
   // estrechos, para no pisar la barra verde (arranca en x≈661) ni la insignia VS.
   if (MODO !== 'video' && t >= T.hook && t < T.cta){
-    const c = cards().find(k => t >= k.t0 && t < k.t1);
+    // LEGIBILIDAD (2026-07-25). Los tiempos estaban BIEN (desfase medio +0.03s sobre la voz real),
+    // pero se leían tarde por dos razones medidas en el Read #7:
+    //  · 14 de 38 tarjetas duraban menos de 0.7s y la más corta 0.21s — un parpadeo. `minDur`
+    //    (0.55s) solo fusiona DENTRO de la misma cláusula, así que las huérfanas de final de frase
+    //    se quedaban cortas sin nada con que unirse.
+    //  · el fundido arrancaba EN la palabra, así que la tarjeta se volvía legible cuando el sonido
+    //    ya había pasado.
+    // No se re-cronometra nada (eso rompería el anclaje a la voz): la tarjeta simplemente ENTRA un
+    // pelo antes y NO se borra al acabar sus palabras — aguanta hasta que llega la siguiente, con
+    // un tope para que no cruce silencios largos entre grupos.
+    const LEAD = 0.15, HOLD_MAX = 1.2;
+    const ks = cards();
+    const c = ks.find((k, i) => {
+      const sig = ks[i+1];
+      const hasta = Math.min(sig ? sig.t0 : k.t1 + HOLD_MAX, k.t1 + HOLD_MAX);
+      return t >= k.t0 - LEAD && t < hasta;
+    });
     if (c){
-      const dentro = clamp01((t - c.t0) / 0.12);
+      const dentro = clamp01((t - (c.t0 - LEAD)) / 0.12);
       if (CFG.escena === 'columns')
         dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, 1 + 0.05*(1-dentro), 470);
       else
