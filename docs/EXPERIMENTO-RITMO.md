@@ -60,10 +60,14 @@ Convertir "que nunca se vea plano, y más al comienzo" en reglas medibles y test
 **Ventanas y umbral de quietud:**
 | Ventana | Qué es | Beat cada | Congelado máximo |
 |---|---|---|---|
-| **HOOK** `0–2s` | la tarjeta de contraste | — (micro-movimiento continuo) | **nunca frozen** |
-| **ACANTILADO** `2–10s` | donde muere la retención | **≤1.8s** | **1.5s** |
-| BODY `10s–fin` | el desarrollo | ≤2.5s | 2.5s |
+| **HOOK** `0–2s` | la tarjeta de contraste | — (micro-movimiento continuo) | **nunca frozen** ✅ |
+| **ACANTILADO** `2–10s` | donde muere la retención | **≤1.8s** | **1.5s** ✅ |
+| BODY `10s–fin` | el desarrollo | ≤2.5s ⚠ (beat: criterio de guion) | 2.5s ✅ (desde 25-jul) |
 | CTA `últimos ~3s` | el veredicto/pregunta | pulso vivo | — |
+
+> ✅ = enforced por test en `tests-motor.html`. La columna "beat cada" NO está automatizada: un
+> beat es un cambio de estado discreto (un número que aterriza, un elemento que entra), y eso lo
+> decide el guion de cada Short. Lo que el motor garantiza es el **congelado máximo**.
 
 **Qué cuenta como "beat"** (un cambio de estado que el ojo registra): un número que aterriza o
 cuenta · un corte a nuevo encuadre/escala (zoom, paneo) · un elemento que entra o sale · un cambio
@@ -109,12 +113,33 @@ desde el frame 1 — commit `aa8a411`, el motor YA tiene el concepto, hay que ex
 > lo dijo a la métrica. Hay un test dedicado a eso, porque si algún día deja de detectarlo es que
 > la métrica se rompió.
 >
-> **⚠ HUECO DESTAPADO: la ventana BODY de §4 NUNCA SE IMPLEMENTÓ.** Los **cuatro** Shorts congelan
-> ≥2.5s en el cuerpo (buffett 0.018 · s3 0.024 · s1 0.019 · fed 0.013). No es un defecto del
-> Buffett: el Motion Budget v1 solo atacó gancho y acantilado. El código y §4 no coinciden. El test
-> la mide y la reporta pero **no la exige** (`exige:false`) — un test permanentemente rojo se
-> vuelve ruido que se ignora. Decisión pendiente: implementar el budget de BODY, o bajar §4 a lo
-> que el motor hace de verdad. Con la retención cayendo entre 3s y 20s, BODY no es la prioridad.
+> **✅ VENTANA BODY IMPLEMENTADA (2026-07-25).** Al medir se descubrió que §4 pedía "congelado
+> máximo 2.5s" en BODY pero eso **nunca se había construido**: los cuatro Shorts congelaban ≥2.5s
+> en el cuerpo (buffett 0.018 · s3 0.024 · s1 0.019 · fed 0.013, nivel pixel-idéntico). El `breath`
+> del gancho vivía dentro de `drawHook` y no llegaba; el `_drift` del fondo tiene período ~11s,
+> demasiado lento para registrar en una ventana de 2.5s.
+>
+> Se añadió micro-movimiento continuo a la escena en `drawFrame` para `t >= 10`: respiración de
+> escala ±1.4% y deriva vertical ±8px, con **períodos incomensurables** (1.13 y 0.67 rad/s) para
+> que el ciclo no se repita y ningún par de frames separados 2.5s caiga igual. Se mueve solo la
+> ESCENA: la marca y los subtítulos van en zonas seguras y no deben bailar.
+>
+> | Short | BODY antes | BODY ahora |
+> |---|---|---|
+> | buffett-time | 0.018 | **0.355** |
+> | read-janitor | — | **0.139** |
+>
+> **Gated en `CFG.ritmo`, y verificado que lo publicado NO se movió:** s2 = 0.006 · fed = 0.013 ·
+> s1 = 0.019 · s3 = 0.024, todos en su nivel previo. Sin el flag, el render es idéntico y la
+> comparabilidad de los Shorts ya publicados queda intacta.
+>
+> **Anti-estroboscopio verificado** (el TECHO de §4): el salto máximo entre frames consecutivos es
+> 8.49 en el Buffett con ritmo contra 8.51 en el S3 sin ritmo — el ritmo NO introduce parpadeo. Hay
+> un test dedicado que falla si algún día lo hiciera.
+>
+> ⚠ Se implementó la mitad "**nunca congelado**" del budget (micro-movimiento continuo), que es lo
+> que el test mide. La otra mitad de §4 —"**un beat cada ≤2.5s**", un cambio de ESTADO discreto que
+> el ojo registra— sigue siendo criterio de guion por Short, no algo que el motor sintetice solo.
 
 Dos tests en `docs/guiones/tests-motor.html` (junto al barrido de zonas seguras):
 

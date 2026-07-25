@@ -288,15 +288,12 @@ document.getElementById('motor').onload = async () => {
   // Presupuesto por ventana (EXPERIMENTO-RITMO.md §4). HOOK dice "nunca frozen": se exige
   // movimiento en medio segundo, que es el micro-movimiento continuo que el diseño promete.
   //
-  // `exige:false` en BODY — NO es indulgencia, es que Motion Budget v1 nunca implementó esa
-  // ventana. Medido el 2026-07-25 en los CUATRO Shorts: buffett 0.018 · s3 0.024 · s1 0.019 ·
-  // fed 0.013. Todos congelan >=2.5s en el cuerpo. El código y §4 no coinciden, y un test
-  // permanentemente rojo se vuelve ruido que se ignora. Se mide y se reporta; si algún día se
-  // implementa el budget de BODY, poner `exige:true` y este test lo defiende.
+  // BODY pasó a `exige:true` el 2026-07-25 al implementarse su budget (antes NUNCA existió: los
+  // cuatro Shorts congelaban >=2.5s en el cuerpo, 0.013-0.024, nivel pixel-idéntico).
   const VENTANAS = [
     {nombre: 'HOOK 0-2s',        desde: 0,  hasta: 2,   frozen: 0.5, exige: true},
     {nombre: 'ACANTILADO 2-10s', desde: 2,  hasta: 10,  frozen: 1.5, exige: true},
-    {nombre: 'BODY 10s-fin',     desde: 10, hasta: FIN, frozen: 2.5, exige: false},
+    {nombre: 'BODY 10s-fin',     desde: 10, hasta: FIN, frozen: 2.5, exige: true},
   ];
 
   // EPS CALIBRADO CON DATOS (2026-07-25), no elegido a ojo. La escala se separa en tres niveles
@@ -310,17 +307,42 @@ document.getElementById('motor').onload = async () => {
   // en ~0.2 y BODY en ~0.02), así que 64x114 basta y es 200x más barato.
   const EPS = 0.10;
 
-  check('MOTION BUDGET: el Buffett con ritmo no se congela más de lo permitido en ninguna ventana', () => {
-    const malos = [], medidas = [];
-    for (const v of VENTANAS){
-      const {peor, peorT} = _masQuieto('buffett-time', v.desde, v.hasta, v.frozen);
-      if (peor === Infinity) continue;
-      medidas.push(`${v.nombre} min=${peor.toFixed(3)}${v.exige ? '' : ' (no exigida)'}`);
-      if (v.exige && peor < EPS)
-        malos.push(`${v.nombre}: congelado ${v.frozen}s desde t=${peorT.toFixed(2)} (diff ${peor.toFixed(3)})`);
+  // Cubre TODOS los Shorts con ritmo, no solo el Buffett: la lista la da el motor
+  // (`shortsConRitmo`) en vez de estar hardcodeada, que se desincronizaría al añadir uno nuevo
+  // y dejaría el test verde sin cubrirlo.
+  check('MOTION BUDGET: ningún Short con ritmo se congela más de lo permitido en ninguna ventana', () => {
+    const claves = W.shortsConRitmo ? W.shortsConRitmo() : ['buffett-time'];
+    if (!claves.length) return 'ningún Short declara `ritmo`: el Motion Budget no cubre nada';
+    const malos = [];
+    for (const key of claves){
+      const medidas = [];
+      for (const v of VENTANAS){
+        const {peor, peorT} = _masQuieto(key, v.desde, v.hasta, v.frozen);
+        if (peor === Infinity) continue;
+        medidas.push(`${v.nombre} min=${peor.toFixed(3)}`);
+        if (v.exige && peor < EPS)
+          malos.push(`${key} ${v.nombre}: congelado ${v.frozen}s desde t=${peorT.toFixed(2)} (diff ${peor.toFixed(3)})`);
+      }
+      console.log(`[MOTION BUDGET] ${key} →`, medidas.join(' | '));
     }
-    console.log('[MOTION BUDGET] buffett-time →', medidas.join(' | '));
-    return malos.length === 0 ? true : malos.join(' · ') + ` || ${medidas.join(' | ')}`;
+    return malos.length === 0 ? true : malos.join(' · ');
+  });
+
+  // El micro-movimiento debe ser CONTINUO, no un parpadeo: §4 pone un TECHO explícito
+  // ("no estroboscopio"). Se compara el salto máximo entre frames consecutivos de un Short CON
+  // ritmo contra uno SIN ritmo: si el ritmo introdujera parpadeo, su salto se dispararía.
+  check('MOTION BUDGET: el ritmo no introduce estroboscopio (techo de §4)', () => {
+    const salto = key => {
+      const sigs = _sigsDe(key);
+      let max = 0;
+      for (let i = 40; i < sigs.length - 1; i++) max = Math.max(max, _difMedia(sigs[i], sigs[i+1]));
+      return max;
+    };
+    const conRitmo = salto('buffett-time'), sinRitmo = salto('s3-stat');
+    console.log(`[MOTION BUDGET] salto max entre frames → buffett=${conRitmo.toFixed(2)} vs s3=${sinRitmo.toFixed(2)}`);
+    return conRitmo <= sinRitmo * 1.5 ? true
+      : `el Short con ritmo salta ${conRitmo.toFixed(2)} entre frames contra ${sinRitmo.toFixed(2)} ` +
+        `del que no lo lleva: eso ya no es micro-movimiento continuo, es parpadeo.`;
   });
 
   // El FED es el peor Short del canal (10 espectadores) y docs/ESTADO.md ya anotaba "tenía además

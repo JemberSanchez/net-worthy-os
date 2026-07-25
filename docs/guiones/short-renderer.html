@@ -2161,12 +2161,33 @@ function drawFrame(t){
       }
     }
   } else {
+    // ── RITMO v1 · ventana BODY (opt-in CFG.ritmo, docs/EXPERIMENTO-RITMO.md §4) ──────────────
+    // §4 pide "congelado máximo 2.5s" en BODY, pero eso NUNCA se implementó: medido el 2026-07-25,
+    // los cuatro Shorts congelaban >=2.5s en el cuerpo (0.013-0.024, nivel pixel-idéntico). El
+    // `breath` del gancho vive dentro de drawHook y no llegaba aquí; el `_drift` del fondo tiene
+    // período ~11s, demasiado lento para registrar en una ventana de 2.5s.
+    //
+    // Se mueve SOLO la escena: la marca y los subtítulos van colocados en zonas seguras a
+    // propósito y no deben bailar. Dos períodos incomensurables (no múltiplos) para que el ciclo
+    // no se repita y ningún par de frames separados 2.5s caiga igual.
+    // Amplitud sub-perceptual y CONTINUA — el techo anti-estroboscopio de §4 solo limita los beats
+    // MAYORES; el micro-movimiento continuo está explícitamente exento.
+    // GATED EN CFG.ritmo: sin el flag, S3/S1/S2/FED renderizan idénticos y no se rompe la
+    // comparabilidad de lo ya publicado.
+    const body = CFG.ritmo && t >= 10;
+    if (body){
+      const k  = 1 + 0.014 * Math.sin(t * 1.13);          // respiración de escala (±1.4%)
+      const ty = 8 * s * Math.sin(t * 0.67 + 0.7);        // deriva vertical lentísima (±8px)
+      ctx.save();
+      ctx.translate(W/2, H*0.5 + ty); ctx.scale(k, k); ctx.translate(-W/2, -H*0.5);
+    }
     // ESCENA BASE (del registro) + OVERLAYS de composición (portada, cierre). El resto es común.
     (SCENES[CFG.escena] || SCENES.chart)(t, W, H, s);
     if (CFG.overlays) for (const ov of CFG.overlays){
       const a = alphaVentana(t, ov);
       if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
     }
+    if (body) ctx.restore();
   }
 
   // La marca va DESPUÉS de las escenas: los overlays opacos (portada, insight) la tapaban
@@ -2321,6 +2342,13 @@ document.getElementById('stop').onclick = () => { sesion++; corriendo = false; a
  *  desde su calibración/demo y descarta TODO lo del Short anterior — incluido el audio decodificado:
  *  el exportador MP4 mete el AAC desde `pcm`, y si sobreviviera al cambio, el S1 saldría con la
  *  voz del S3 incrustada. */
+/** Claves de los Shorts con Motion Budget activo. Existe para los tests: `SHORTS` es `const` y no
+ *  es visible desde fuera, y hardcodear la lista en tests-motor.html se desincroniza en cuanto se
+ *  añade un Short con ritmo — el test seguiría verde sin cubrirlo. */
+function shortsConRitmo(){
+  return Object.keys(SHORTS).filter(k => SHORTS[k].ritmo);
+}
+
 function cargarShort(key){
   if (!SHORTS[key]) return;
   if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera a que termine para cambiar de Short.'; return; }
