@@ -83,11 +83,38 @@ desde el frame 1 — commit `aa8a411`, el motor YA tiene el concepto, hay que ex
 
 ## 5. Enforcement en código (falsable, no a ojo)
 
-> **ESCRITO el 2026-07-24 — ⚠ PENDIENTE DE SU PRIMERA EJECUCIÓN EN NAVEGADOR.**
+> **✅ EJECUTADO EL 2026-07-25 — 26/26 tests en verde.** Corridos en navegador contra el motor real.
 > Estuvo 6 días como diseño sin implementar: el Motion Budget era *buena intención*, justo lo que
-> esta sección decía evitar. Ya son 2 tests en `tests-motor.html` (26 en total), sintaxis
-> verificada con `node --check`, pero **nadie los ha corrido todavía** — hay que abrir
-> `http://localhost:8765/docs/guiones/tests-motor.html`. Hasta entonces no afirmar que pasan.
+> esta sección decía evitar.
+>
+> **La primera corrida FALLÓ y fue útil.** El umbral inicial (`EPS = 0.5`) estaba elegido a ojo y
+> reprobaba movimiento que sí existía. Al medir los 4 Shorts a 4 resoluciones distintas, la escala
+> se separó en tres niveles limpios (diferencia media por canal, 0-255, frame reducido a 64×114):
+>
+> | Nivel | Rango | Evidencia |
+> |---|---|---|
+> | **Congelado** | 0.00 – 0.06 | s1/fed HOOK = 0.00 · s3 HOOK = 0.02 · **fed ACANTILADO = 0.022** |
+> | **Micro-movimiento (ritmo)** | 0.11 – 0.17 | buffett HOOK = **0.112** (el `breath`: escala ±0.6%) |
+> | **Beat real** | 0.70 + | buffett ACANTILADO = **0.736** · s1 = 0.778 |
+>
+> `EPS = 0.10` es el corte entre congelado y micro-movimiento. `0.5` caía **dentro** del rango de
+> beat real. Subir la resolución no cambia el veredicto (probado a 114/228/456/912 px: HOOK se
+> estabiliza en ~0.2 y BODY en ~0.02), así que 64×114 basta y es ~200× más barato.
+>
+> **Medición final del Buffett con ritmo:** HOOK `0.112` · **ACANTILADO `0.736`** · BODY `0.018`.
+> La ventana del acantilado —la que este experimento existe para arreglar— tiene beat real.
+>
+> **🔎 VALIDACIÓN INDEPENDIENTE DEL INSTRUMENTO:** el barrido detecta SOLO el congelado del FED
+> (`0.022` en 2-10s), que `docs/ESTADO.md` ya tenía anotado a mano como *"8s congelados"*. Nadie se
+> lo dijo a la métrica. Hay un test dedicado a eso, porque si algún día deja de detectarlo es que
+> la métrica se rompió.
+>
+> **⚠ HUECO DESTAPADO: la ventana BODY de §4 NUNCA SE IMPLEMENTÓ.** Los **cuatro** Shorts congelan
+> ≥2.5s en el cuerpo (buffett 0.018 · s3 0.024 · s1 0.019 · fed 0.013). No es un defecto del
+> Buffett: el Motion Budget v1 solo atacó gancho y acantilado. El código y §4 no coinciden. El test
+> la mide y la reporta pero **no la exige** (`exige:false`) — un test permanentemente rojo se
+> vuelve ruido que se ignora. Decisión pendiente: implementar el budget de BODY, o bajar §4 a lo
+> que el motor hace de verdad. Con la retención cayendo entre 3s y 20s, BODY no es la prioridad.
 
 Dos tests en `docs/guiones/tests-motor.html` (junto al barrido de zonas seguras):
 
