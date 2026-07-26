@@ -904,9 +904,12 @@ const durTarjeta = p => p[p.length-1].t1 - p[0].t0;
 /** Rellena tarjetas cortas robando palabras de la siguiente, SIN cruzar la frase (salvo que se
  *  permita). Luego pega las huérfanas hacia atrás. Mira el ANCHO real, no el nº de palabras. */
 function repararDuraciones(cards, minDur, maxAncho, {cruzarClausula = false} = {}){
+  // El punto es frontera DURA aunque se permita cruzar cláusulas: juntar el final de una frase con
+  // el principio de la siguiente ("more shares. Sixty") se lee fatal. La coma sí se puede cruzar.
+  const cierraFrase = c => /[.?!]$/.test(c.pal[c.pal.length-1].w);
   for (let i = 0; i < cards.length - 1; ){
     const c = cards[i], n = cards[i+1];
-    const permitido = cruzarClausula || c.cl === n.cl;
+    const permitido = (cruzarClausula || c.cl === n.cl) && !cierraFrase(c);
     while (permitido && durTarjeta(c.pal) < minDur && n.pal.length){
       const cand = c.pal.concat(n.pal[0]);
       if (anchoTarjeta(cand) > maxAncho) break;      // no cabe: mejor corta que ilegible
@@ -916,7 +919,7 @@ function repararDuraciones(cards, minDur, maxAncho, {cruzarClausula = false} = {
   }
   for (let i = cards.length - 1; i > 0; i--){
     const c = cards[i], p = cards[i-1];
-    if (c.cl === p.cl && durTarjeta(c.pal) < minDur &&
+    if (c.cl === p.cl && durTarjeta(c.pal) < minDur && !cierraFrase(p) &&
         anchoTarjeta(p.pal.concat(c.pal)) <= maxAncho){
       p.pal = p.pal.concat(c.pal); cards.splice(i, 1);
     }
@@ -967,8 +970,12 @@ function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
   }
 
   repararDuraciones(cards, minDur, maxAncho);                       // dentro de cada frase
+  // Este bloque alarga una frase entera que quedó cortísima robando palabras a la siguiente —
+  // pero si la frase YA cierra con punto, robarlas produce "No big salary. No". Tercer sitio
+  // donde hacía falta el mismo guard: el punto es frontera dura en TODOS los caminos.
+  const cierraConPunto = c => /[.?!]$/.test(c.pal[c.pal.length-1].w);
   for (const c of cards)                                            // frase entera y cortísima
-    if (c.fraseEntera && durTarjeta(c.pal) < minDur){
+    if (c.fraseEntera && !cierraConPunto(c) && durTarjeta(c.pal) < minDur){
       const i = cards.indexOf(c), n = cards[i+1];
       if (!n) continue;
       while (durTarjeta(c.pal) < minDur && n.pal.length){
@@ -978,7 +985,10 @@ function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
       }
       if (!n.pal.length) cards.splice(i+1, 1);
     }
-  repararDuraciones(cards, minDur, maxAncho);                       // recolocar lo que quedó corto
+  // Pasada final CRUZANDO cláusulas: una coma no debe dejar una tarjeta de dos palabras colgando.
+  // No cruza FRASES — el punto sigue siendo frontera dura, para no pegar el final de una con el
+  // principio de otra.
+  repararDuraciones(cards, minDur, maxAncho, {cruzarClausula: true});
 
   return cards.map(c => ({t0: c.pal[0].t0, t1: c.pal[c.pal.length-1].t1,
                           palabras: c.pal.map(x => x.w)}));
@@ -1087,7 +1097,13 @@ function calibrarAuto(buffer, guion){
   });
 
   const cards = porGrupo.filter(g => guion.subtitulos.includes(g.id))
-                        .flatMap(g => tarjetasDePalabras(omitirMuletillas(g.ws, guion.omitirEnSubtitulos)));
+    // minDur 1.05s (antes 0.55): con tarjetas de ~2.5 palabras el texto PARPADEA —
+    // "and reinvested every" · "dividend into" · "more shares" — y aunque cada una entre en su
+    // milisegundo exacto, la sensación es de ir persiguiendo la voz. Frases de 5-7 palabras
+    // sostenidas se leen de un golpe y se perciben sincronizadas. Es la causa que quedaba del
+    // "la voz va más rápida que los subtítulos" cuando los tiempos ya eran correctos.
+                        .flatMap(g => tarjetasDePalabras(omitirMuletillas(g.ws, guion.omitirEnSubtitulos),
+                                                         5, 1.05));
 
   return {
     cuts: Object.fromEntries(Object.entries(cuts).map(([k,v]) => [k, +v.toFixed(2)])),
