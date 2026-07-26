@@ -531,38 +531,58 @@ const SHORTS = {
     // la biblioteca (chart, columns, stat, bullets, cita, principle) espera datos que Read no
     // declara. Los comentarios dejan escrito QUÉ debería mostrar cada frase para cuando esas
     // escenas tomen su contenido de config — que es la siguiente construcción, no otro video.
+    // Las 22 están DECIDIDAS. `null` no es un hueco por rellenar: es "CONTINÚA el plano anterior",
+    // y cada una lleva escrito por qué el plano no debe cortar ahí. Un corte por frase sería un
+    // parpadeo — y peor: `desde` se toma de la frase que DECLARA el plano, así que repetir el mismo
+    // valor en la frase siguiente le reiniciaría la animación (el contador volvería a $0).
+    // 16 cambios de plano en 62s ≈ uno cada 3,9s.
     visualPorFrase: [
       // ⚠ LAS FRASES 0 y 1 NO SE TOCAN: caen dentro del gancho (0-5.08s), y ahí manda el contraste
       // `A JANITOR.` / `$8 MILLION.` — el mecanismo que docs/VIRALIDAD.md y el ADN propio señalan
       // como el mejor del canal (récord de vistas de 3s). Se probó meter un `stat` en la frase 1 y
       // se cargaba la revelación: no se cambia lo que ya está medido como lo mejor que hay.
-      /* 0  "He pumped gas and cleaned floors..."   */ null,
-      /* 1  "He died with $8,000,000."              */ null,
+      /* 0  "He pumped gas and cleaned floors..."   */ null,          // EL GANCHO, intacto
+      /* 1  "He died with $8,000,000."              */ null,          // ídem: la revelación del gancho
       /* 2  "No big salary."                        */ 'checklist',   // los tres ✗ cayendo
-      /* 3  "No hot tips."                          */ null,
-      /* 4  "No tech stocks."                       */ null,
+      /* 3  "No hot tips."                          */ null,          // sigue el checklist: cae el 2º ✗
+      /* 4  "No tech stocks."                       */ null,          // sigue el checklist: cae el 3º ✗
       /* 5  "Just three boring habits..."           */ 'snowball',    // arranca la bola
-      /* 6  "He bought companies that paid him..."  */ null,          // dividendos entrando
+      /* 6  "He bought companies that paid him..."  */             // los dos hábitos, escritos
+      {escena: 'bullets', cadencia_s: 2.8,
+       items: ['COMPANIES THAT PAY YOU', 'EVERY DIVIDEND REINVESTED'], iconos: ['coin:brass', 'up:growth']},
       /* 7  "Sixty years later, $8,000,000."        */
       {escena: 'stat', valor: 8000000, conteo_s: 2.6, kicker: 'SIXTY YEARS LATER', sub: 'from a gas station paycheck'},
       /* 8  "He put in a little at a time."         */ 'snowball',    // el núcleo aportado, dentro
-      /* 9  "Everything past that number..."        */ null,
+      /* 9  "Everything past that number..."        */ null,          // la MISMA bola creciendo ES la frase
       /* 10 "The machine, not the paycheck."        */
       {escena: 'titulo', lineas: ['THE MACHINE.', 'NOT THE PAYCHECK.'], sub: 'dividends buying dividends'},
       /* 11 "Now the part nobody says."             */
       {escena: 'titulo', lineas: ['NOW THE PART', 'NOBODY SAYS.'], sub: 'the honest footnote'},
       /* 12 "He held ninety-five stocks..."         */ 'snowball',    // las 95 orbitando
-      /* 13 "And he never had to sell."             */ null,
-      /* 14 "Sixty years, no emergency..."          */ null,
+      /* 13 "And he never had to sell."             */
+      {escena: 'titulo', lineas: ['AND HE NEVER', 'HAD TO SELL.'], sub: 'sixty years, zero exits'},
+      /* 14 "Sixty years, no emergency..."          */             // el TIEMPO es la variable: contarlo
+      // conteo CORTO (1.2s de los 3.5 que dura la frase): el sufijo ' YEARS' solo se pinta cuando
+      // el contador aterriza, así que con un conteo largo se pasa el plano entero enseñando un
+      // número desnudo ("37") que no significa nada. Cuenta rápido y se queda en "60 YEARS".
+      {escena: 'stat', valor: 60, prefijo: '', sufijo: ' YEARS', conteo_s: 1.2,
+       kicker: 'NEVER INTERRUPTED', sub: 'no emergency big enough to touch it'},
       /* 15 "That is the rare part, not the picking."*/
       {escena: 'titulo', lineas: ['THAT is the rare part.', 'NOT the picking.'], sub: 'survivorship, said out loud'},
       /* 16 "You don't need his eight million."     */
       {escena: 'titulo', lineas: ["YOU DON'T NEED", 'HIS $8 MILLION.'], sub: 'the engine scales down'},
       /* 17 "The engine is the same at any size."   */ 'snowball',    // la bola pequeña rodando
-      /* 18 "Own things that pay you, reinvest..."  */ null,
-      /* 19 "So, skill, or just time?"              */ null,          // el CTA lleva su tarjeta
-      /* 20 "Could you do it on a gas station..."   */ null,
-      /* 21 "Team skill, or team time?"             */ null,
+      /* 18 "Own things that pay you, reinvest..."  */             // el take-away accionable, en 3
+      // cadencia FIJA 0.95s. La derivada mete el último ítem al 75% de la ventana, que aquí cae en
+      // t≈55.8 — con el fundido, legible a las 56.2, cuando la voz ya calló (56.07) y el CTA está
+      // entrando encima. Y el tercero es el remate ("don't interrupt it"), la tesis del video.
+      // Medido en el frame t=55.6: solo se veían DOS de los tres.
+      {escena: 'bullets', cadencia_s: 0.95,
+       items: ['OWN WHAT PAYS YOU', 'REINVEST WHAT IT PAYS', "DON'T INTERRUPT IT"],
+       iconos: ['coin:brass', 'up:growth', 'check:growth']},
+      /* 19 "So, skill, or just time?"              */ 'snowball',    // fondo LIMPIO bajo la tarjeta del CTA
+      /* 20 "Could you do it on a gas station..."   */ null,          // el CTA manda: el fondo no compite
+      /* 21 "Team skill, or team time?"             */ null,          // ídem, hasta el final
     ],
     escenaPorGrupo: {thesis: 'checklist'},
     items: ['NO BIG SALARY', 'NO HOT TIPS', 'NO TECH STOCKS'],
@@ -1292,15 +1312,32 @@ function text(str, x, y, {size=40, weight=400, color=P.paper, align='center', al
   if (!sinAjuste){
     const k = Math.min(canvas.width, canvas.height) / 1080;   // SAFE va en unidades de diseño
     const izq = SAFE.left * k, der = canvas.width - SAFE.right * k;
-    const disp = align === 'center' ? 2 * Math.min(x - izq, der - x)
-               : align === 'left'   ? der - x
-                                    : x - izq;
+    // ⚠ MEDIR EN COORDENADAS DE PANTALLA, no locales (2026-07-26). Las escenas que dan un golpe de
+    // escala pintan dentro de un `translate(W/2,·) + scale(esc)` y le pasan a text() la x LOCAL —
+    // que es 0. Con x=0 el hueco disponible salía NEGATIVO y el ajuste se saltaba entero: el
+    // `$8,000,000` del stat medía de 72 a 1010 px e invadía 60 px de la franja de botones de
+    // Shorts. Con la matriz aplicada, identidad da exactamente los mismos píxeles de antes
+    // (m.a=1, m.e=0 -> xP=x, esc=1), así que los Shorts publicados no se mueven.
+    const m = ctx.getTransform();
+    const esc = Math.hypot(m.a, m.b) || 1;                    // escala horizontal efectiva
+    const xP = m.a * x + m.c * y + m.e;                        // la x REAL sobre el lienzo
+    const disp = align === 'center' ? 2 * Math.min(xP - izq, der - xP)
+               : align === 'left'   ? der - xP
+                                    : xP - izq;
     // 0.97: deja un pelo de margen. Sin él el texto queda BESANDO la línea de la zona segura y el
     // antialiasing del borde sangra dentro (medido: 17 px del "?" del S3 justo en x=950).
     const util = disp * 0.97;
     if (util > 0){
-      const w = ctx.measureText(str).width;        // letterSpacing ya aplicado arriba
-      if (w > util) ctx.font = font(size * (util / w), weight);
+      const w = ctx.measureText(str).width * esc;   // ancho en PANTALLA (letterSpacing ya aplicado)
+      if (w > util){
+        const f = util / w;
+        ctx.font = font(size * f, weight);
+        // …y el ESPACIADO con el mismo factor. Encoger solo la fuente dejaba fijos los N·spacing
+        // píxeles de separación, así que el ancho no bajaba lo pedido: el sub del CTA de Read
+        // (43 caracteres a 6px de spacing = 258px que no encogían) acababa en x=959, nueve píxeles
+        // dentro de la franja de botones, DESPUÉS de haber pasado por el ajuste.
+        if (spacing) try { ctx.letterSpacing = (spacing * f) + 'px'; } catch(e){}
+      }
     }
   }
   if (stroke){
@@ -1308,6 +1345,18 @@ function text(str, x, y, {size=40, weight=400, color=P.paper, align='center', al
     ctx.strokeText(str, x, y);
   }
   ctx.fillStyle = color;
+  // Gancho de AUDITORÍA (apagado salvo que un test lo instale). Publica la caja REAL —con la
+  // fuente ya encogida y la matriz aplicada—, que es lo único que se puede comparar contra las
+  // zonas seguras. Medirla desde fuera es imposible: cuando text() retorna, el `restore()` ya
+  // deshizo la fuente ajustada y measureText devuelve un ancho que no se pintó nunca.
+  if (typeof window.__auditText === 'function'){
+    const mA = ctx.getTransform(), escA = Math.hypot(mA.a, mA.b) || 1;
+    const wA = ctx.measureText(str).width * escA;
+    const xA = mA.a * x + mA.c * y + mA.e;
+    window.__auditText({str: String(str), alpha,
+      x0: align === 'center' ? xA - wA/2 : align === 'left' ? xA : xA - wA,
+      w: wA, y: mA.b * x + mA.d * y + mA.f});
+  }
   ctx.fillText(str, x, y);
   ctx.restore();
 }
@@ -1954,6 +2003,11 @@ function drawColumns(t, W, H, s){
 
 // ── Escena PORTADA: un cold-open que cubre la base y se disuelve para revelarla ──
 function drawTitulo(t, W, H, s, a, ov){
+  // Reloj LOCAL a su ventana. Como overlay de portada `desde` es 0 y no cambia nada (S1/S2 idénticos),
+  // pero declarada por FRASE arranca en mitad del video: sin esto `t/0.6` ya valía 50 y la tarjeta
+  // aparecía de golpe, ya montada y CONGELADA hasta el corte siguiente — justo el frame muerto que
+  // docs/EXPERIMENTO-RITMO.md señala como la palanca de retención.
+  t = localT(t, ov);
   const lineas = (ov && ov.lineas) || ['TWO MEN.', 'SAME SALARY.'];
   ctx.save(); ctx.globalAlpha = a;                       // fondo de marca: tapa la base mientras a≈1
   ctx.fillStyle = P.ink; ctx.fillRect(0, 0, W, H);
@@ -2066,9 +2120,17 @@ function tramoActivo(t){
   return ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25) || null;
 }
 
-function drawChecklist(t, W, H, s){
+function drawChecklist(t, W, H, s, a, ov){
   const items = CFG.items || [];
   const total = items.length || 1;
+  // VENTANA DEL PLANO (la más específica): si la escena viene de `visualPorFrase`, los ítems se
+  // reparten sobre lo que dura SU PLANO, que es lo único que el espectador ve. Sin esto se
+  // repartían sobre el tramo entero del guion y el último ítem caía después del corte.
+  if (ov && ov.desde != null && ov.hasta != null && ov.hasta > ov.desde){
+    var fin = Math.max(1.2, ov.hasta - ov.desde);
+    t = t - ov.desde;
+    return pintarChecklistEscena(t, W, H, s, items, total, fin);
+  }
   // Si la escena se está usando dentro de un tramo (escenaPorGrupo), los ítems se reparten sobre
   // ESE tramo. Si no, el comportamiento de siempre (el S2 la usa desde el frame 0 hasta T.hook).
   const tr = tramoActivo(t);
@@ -2078,6 +2140,15 @@ function drawChecklist(t, W, H, s){
     var fin = dur;
   } else
   var fin = Math.max(1.2, T.hook);                // los ítems se reparten el tramo hasta el sello
+  return pintarChecklistEscena(t, W, H, s, items, total, fin);
+}
+
+/** El pintado en sí, con el reloj YA local y la duración de su ventana resuelta por el caller.
+ *  ⚠ El sufijo `Escena` NO es decorativo: `pintarChecklist()` (sin sufijo) ya existe y es el
+ *  CHECKLIST DE PRODUCCIÓN del panel HTML. Dos `function` con el mismo nombre no dan error — la
+ *  segunda gana en silencio, y el checklist del canvas dejó de pintarse entero (frame en blanco).
+ *  Lo cazó el frame, no la consola: no hubo ni un error de JavaScript. */
+function pintarChecklistEscena(t, W, H, s, items, total, fin){
   const loss = '#C0968C';
   const x0 = 200*s, cy0 = 440*s, salto = 128*s;
   const tCheck = i => (i + 0.35) * (fin / (total + 0.7)) + 0.28;   // instante en que cae cada ✓
@@ -2127,7 +2198,12 @@ function drawChecklist(t, W, H, s){
   }
 
   // ── el veredicto: STILL BROKE con golpe + un destello de pérdida (pattern interrupt) ──
-  const aS = clamp01((t - T.hook) / 0.45);
+  // GATEADO a `CFG.sello` DECLARADO (2026-07-26). El default 'STILL BROKE.' era del S2 y solo el S2
+  // usa el checklist como escena base; desde que Read lo reutiliza por tramo/frase, un default
+  // heredado le estamparía "STILL BROKE." a un hombre que murió con $8M — el mensaje contrario.
+  // Hoy no llega a verse (su plano dura menos que T.hook), pero es una bomba con la mecha puesta:
+  // basta alargar el plano para que salga. El S2 declara la clave, así que renderiza idéntico.
+  const aS = CFG.sello ? clamp01((t - T.hook) / 0.45) : 0;
   if (aS > 0){
     const d = t - T.hook;
     if (d >= 0 && d < 0.4){                          // destello: engancha el ojo en el giro
@@ -2279,6 +2355,7 @@ function drawBullets(t, W, H, s, a, ov){
 // ── CITA: una frase con peso + autor. Pausa emocional entre capítulos. ──
 function drawCita(t, W, H, s, a, ov){
   fondoEscena(W, H, a, 0.07);
+  t = localT(t, ov);                                   // ídem drawTitulo: anima desde SU arranque
   const e = easeOut(clamp01(t / 0.7));
   text('“', W/2 - 300*s, H*0.32, {size:120*s, weight:800, color:P.brass, alpha:a*e*0.6});
   const lineas = ov.lineas || [];
@@ -2456,8 +2533,14 @@ function snowballGeom(t, W, H, s){
 // `capa`: 'todo' (compatibilidad) · 'mundo' (pendiente, bola, órbitas — lo que SÍ mueve la cámara)
 // · 'hud' (contador, PAID IN, rótulos — se quedan quietos). Separarlas es lo que permite hacer un
 // primer plano de la bola sin que el número héroe se vaya de cuadro.
+/** Rótulos que NACEN en la capa mundo (su y sale de la geometría de la bola) pero se PINTAN en el
+ *  HUD, fuera de la cámara. Se rellena y se vacía dentro del mismo drawFrame, así que `drawFrame`
+ *  sigue siendo pura: mismo t -> mismos píxeles. */
+let _rotulosSnow = [];
+
 function drawSnowball(t, W, H, s, alpha, soloBola=false, capa='todo'){
   if (capa === 'hud') return drawSnowballHUD(t, W, H, s, alpha);
+  _rotulosSnow = [];                        // el mundo siempre se pinta antes que su HUD
   const G = snowballGeom(t, W, H, s);
   const {arranque, fin, p, idx, val, rMax, gx0, gx1, gy0, gy1, slopeY, pulse, coins, r, bx, by} = G;
 
@@ -2624,8 +2707,11 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false, capa='todo'){
         ctx.beginPath(); ctx.arc(px, py + cae * 26 * s, 4.6*s, 0, Math.PI*2); ctx.fill();
       }
       ctx.restore();
-      text('95 HOLDINGS · NEVER SOLD', W/2, by + r + 78*s,
-           {size:20*s, weight:700, color:P.grey, alpha:alpha*aH*0.9, spacing:2*s});
+      // El rótulo NO se pinta aquí: esta capa va dentro de la cámara y el pan se lo llevaba a la
+      // franja derecha (medido a t=50.4 — "SAME ENGINE · ANY SIZE" acababa bajo los botones).
+      // Se encola para el HUD, que es donde el propio motor dice que viven los textos.
+      _rotulosSnow.push({txt:'95 HOLDINGS · NEVER SOLD', y: by + r + 78*s,
+                         color:P.grey, alpha: alpha*aH*0.9, spacing:2*s});
     }
 
     // BEAT 3 · lesson — "You don't need his eight million. The engine is the same at any size."
@@ -2644,8 +2730,8 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false, capa='todo'){
       ctx.shadowBlur = 0; ctx.strokeStyle = P.brass; ctx.lineWidth = 2*s;
       ctx.beginPath(); ctx.arc(sx2, sy2, rS, 0, Math.PI*2); ctx.stroke();
       ctx.restore();
-      text('SAME ENGINE · ANY SIZE', W/2, gy1 + 78*s,
-           {size:20*s, weight:700, color:P.brass, alpha:alpha*aL*0.85, spacing:3*s});
+      _rotulosSnow.push({txt:'SAME ENGINE · ANY SIZE', y: gy1 + 78*s,
+                         color:P.brass, alpha: alpha*aL*0.85, spacing:3*s});
     }
   }
 
@@ -2665,6 +2751,14 @@ function drawSnowballHUD(t, W, H, s, alpha){
     return clamp01((t - (g.inicio - entra)) / entra) * clamp01(((g.fin + sale) - t) / sale);
   };
   aH = fase('honesty', 0.7, 0.9); aL = fase('lesson', 0.6, 0.5);
+
+  // Los rótulos de los beats, ya fuera de la cámara y centrados en el lienzo REAL.
+  for (const rt of _rotulosSnow){
+    if (rt.alpha <= 0.01) continue;
+    const y = Math.min(Math.max(rt.y, (SAFE.top + 90)*s), H - (SAFE.bottom + 40)*s);
+    text(rt.txt, W/2, y, {size:20*s, weight:700, color:rt.color, alpha:rt.alpha, spacing:rt.spacing});
+  }
+  _rotulosSnow = [];
 
   const head = SAFE.top + 25*s;                                             // valor + YEAR (arriba)
   let esc = 1; const dP = t - fin;
@@ -2845,7 +2939,7 @@ const SCENES = {
     if (aB > 0) drawPortfolio(t, W, H, s, aB);
   },
   columns:   (t, W, H, s) => drawColumns(t, W, H, s),    // dos columnas del S1
-  checklist: (t, W, H, s) => drawChecklist(t, W, H, s),  // checklist del esfuerzo del S2
+  checklist: (t, W, H, s, a, ov) => drawChecklist(t, W, H, s, a, ov),  // checklist del esfuerzo del S2
   titulo:    (t, W, H, s, a, ov) => drawTitulo(t, W, H, s, a, ov),
   principle: (t, W, H, s, a, ov) => drawPrinciple(t, W, H, s, a, ov),
   outro:     (t, W, H, s, a, ov) => drawOutro(t, W, H, s, a, ov),
@@ -2855,6 +2949,18 @@ const SCENES = {
   bullets:   (t, W, H, s, a, ov) => drawBullets(t, W, H, s, a, ov),
   cita:      (t, W, H, s, a, ov) => drawCita(t, W, H, s, a, ov),
 };
+
+/** Ventana de LECTURA para los tests. `tests-motor.html` carga el motor en un iframe y desde fuera
+ *  solo se ven las `function` declarations: `const SCENES` / `let CFG` / `let ULTIMA_CAL` viven en
+ *  el scope de script y son invisibles. Sin esto, los tests no pueden comprobar NADA del guion
+ *  técnico por frase (que es justo lo que hay que proteger). No muta nada. */
+function estadoMotor(){
+  return {CFG, SHORT, T, ULTIMA_CAL, MODO, escenas: Object.keys(SCENES)};
+}
+
+/** Escenas cuyo contenido YA es la frase escrita en pantalla: cuando una de estas es el plano
+ *  activo, subtitular encima es escribir dos veces lo mismo, una sobre otra. */
+const ESCENAS_TEXTO = new Set(['titulo', 'cita', 'stat', 'bullets', 'principle', 'capitulo']);
 
 /** Alpha de un overlay según su ventana [desde,hasta] (segundos o función de T) y sus fundidos. */
 function alphaVentana(t, ov){
@@ -2951,10 +3057,23 @@ function drawFrame(t){
             // bullets, cita, titulo, principio) ya toman su contenido de un objeto de datos —
             // solo hacía falta poder pasárselo por frase. `desde` se inyecta con el arranque
             // MEDIDO de su frase, así que la animación empieza cuando la voz la empieza.
+            // VENTANA DEL PLANO, no de la frase: `desde` es el arranque de la frase que declaró el
+            // plano y `hasta` el de la siguiente que lo cambia. Las escenas que reparten elementos
+            // en el tiempo (checklist, bullets) necesitan saber CUÁNTO dura su plano, no cuánto
+            // dura el tramo del guion.
+            // ⚠ BUG QUE ESTO ARREGLA (medido 2026-07-26 en el frame t=9.05): el checklist se
+            // cronometraba sobre el TRAMO `thesis` (6.81s), pero su plano solo dura 3.51s porque la
+            // frase 5 corta a `snowball`. El 3er ✗ ("NO TECH STOCKS") estaba programado para t=9.99
+            // y el plano moría en 9.18 → la voz decía "No tech stocks" y en pantalla NO estaba.
+            let hasta = ULTIMA_CAL.frases[ULTIMA_CAL.frases.length - 1].fin;
+            for (let j = k + 1; j < ULTIMA_CAL.frases.length; j++)
+              if (CFG.visualPorFrase[j]){ hasta = ULTIMA_CAL.frases[j].inicio; break; }
+            const desde = ULTIMA_CAL.frases[k].inicio;
             if (typeof v === 'object'){
-              datosEscena = {...v, desde: ULTIMA_CAL.frases[k].inicio};
+              datosEscena = {...v, desde, hasta};
               return v.escena;
             }
+            datosEscena = {escena: v, desde, hasta, heredado: true};
             return v;
           }
         }
@@ -3017,7 +3136,15 @@ function drawFrame(t){
     // nada. Medir los tiempos de las tarjetas no lo detectaba: los tiempos eran correctos, lo que
     // fallaba era CUÁL se elegía para pintar.
     // Ahora la anterior se corta justo cuando entra la siguiente, así que la nueva gana su lead.
-    const c = tarjetaEn(t, cards(), LEAD, HOLD_MAX);
+    // ⚠ NO SUBTITULAR SOBRE UNA ESCENA QUE YA ES TEXTO (2026-07-26, visto en los frames).
+    // `titulo`/`stat`/`bullets`/`cita` pintan la frase EN GRANDE y bien compuesta; encima caía el
+    // subtítulo con el MISMO texto, a 700*s, solapado con el título y con el kicker:
+    // "The machine, not" sobre "THE MACHINE.", y "Sixty years later," tapando "SIXTY YEARS LATER".
+    // La tarjeta ES el subtítulo. Solo aplica cuando la escena viene del guion técnico por frase
+    // (`datosEscena`): los Shorts que usan estas escenas como OVERLAY no cambian ni un píxel,
+    // porque ahí `escenaAhora` sigue siendo la escena base.
+    const escenaEsTexto = datosEscena && ESCENAS_TEXTO.has(escenaAhora);
+    const c = escenaEsTexto ? null : tarjetaEn(t, cards(), LEAD, HOLD_MAX);
     if (c){
       const dentro = clamp01((t - (c.t0 - LEAD)) / 0.12);
       // La posición depende de la escena REALMENTE pintada, no de `CFG.escena`: con escenaPorGrupo

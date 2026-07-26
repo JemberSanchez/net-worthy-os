@@ -1,6 +1,41 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
-> ## ▶ ESTADO REAL 2026-07-24 (verificado contra la DB, no contra los docs) — empieza por aquí
+> ## ▶ 2026-07-26 · #7 RONALD READ: guion técnico CERRADO y MP4 RENDERIZADO
+>
+> El Short #7 tiene las **22 frases decididas** (16 cambios de plano en 62,7s ≈ uno cada 3,9s) y
+> sale del motor en MP4 H.264+AAC. **32 tests del motor** (eran 29) + **125 de Python**, verdes.
+>
+> ### Seis defectos que solo se vieron MIRANDO frames — ninguno daba error en consola
+> | Dónde | Qué pasaba | Cómo se cazó |
+> |---|---|---|
+> | `pintarChecklist` | **Choque de nombres**: el motor ya tenía una función así (el checklist del PANEL). Dos `function` con el mismo nombre no dan error: la segunda gana en silencio y **el checklist del canvas salía en blanco**. | frame vacío |
+> | `drawChecklist` | Los 3 ✗ se repartían sobre el TRAMO (6,8s) pero su plano dura 3,5s: **"NO TECH STOCKS" no llegaba a aparecer** — la voz lo decía y en pantalla no estaba. | frame t=9,05 |
+> | subtítulos | Sobre las escenas-tarjeta se pintaba **el mismo texto dos veces**, superpuesto: "The machine, not" encima de "THE MACHINE.". | frames t=30,4 / 46,2 |
+> | `text()` | El auto-ajuste a zonas seguras **se saltaba entero dentro de un `translate`** (medía la x LOCAL, que es 0 → hueco negativo). El **`$8,000,000` invadía 60 px** de la franja de botones. | test nuevo |
+> | `text()` | Al encoger, el **`letterSpacing` no encogía**: 43 caracteres × 6 px = 258 px que no bajaban. El sub del CTA acababa en x=959 (el límite es 950) **después** de pasar por el ajuste. | test nuevo |
+> | `drawSnowball` | Dos rótulos vivían en la capa MUNDO y **la cámara los arrastraba** bajo los botones. Ahora se encolan y los pinta el HUD. | test nuevo |
+>
+> `titulo` y `cita` tampoco usaban `localT`: declaradas por frase entraban **ya montadas y
+> congeladas** (sin animación) hasta el corte siguiente.
+>
+> ### Tres tests nuevos que cubren el agujero que permitió todo esto
+> El barrido de zonas seguras corría **sin calibrar** (sin `ULTIMA_CAL` el guion técnico ni se
+> evalúa) y **paraba en t=32** de un Short de 62,7s: la mitad del video no se testeaba nunca.
+> Ahora hay tres que cargan la voz real y barren el video entero — planos resueltos, ninguna LETRA
+> en la franja de botones (medida con la matriz del contexto, vía el gancho `__auditText`), y
+> **ningún plano en blanco** (el que habría cazado el choque de nombres).
+> Para poder mirar dentro del motor desde el iframe hay `estadoMotor()`: `const SCENES` / `let CFG`
+> viven en el scope de script y desde fuera **solo se ven las `function`**.
+>
+> ### ⚠ Trampa que costó una verificación falsa
+> **`python -m http.server` cachea**: tras editar el HTML, el navegador seguía sirviendo el viejo y
+> el guion "no se aplicaba". Recargar SIEMPRE con `?v=N` distinto antes de dar nada por verificado.
+>
+> ### Pendiente (lo de siempre: el progreso son filas, no commits)
+> Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
+> Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.
+
+> ## ▶ ESTADO REAL 2026-07-24 (verificado contra la DB, no contra los docs)
 >
 > Los bloques de abajo quedaron desfasados: afirmaban **2/10 instrumentados y 0 medidos**. Medido
 > hoy con `dna` + consultas directas a `omega.sqlite`:

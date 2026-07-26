@@ -490,6 +490,78 @@ document.getElementById('motor').onload = async () => {
     return mx <= 0.95 ? true : `pico ${mx.toFixed(3)}`;
   });
 
+  // ── GUION TÉCNICO (visualPorFrase) del Short #7 · con la VOZ REAL cargada ───────────────────
+  // Los tests de arriba corren SIN calibrar, y sin `ULTIMA_CAL` el guion técnico ni se evalúa:
+  // el barrido de zonas seguras recorría el Read como si fuera de una sola escena, y además
+  // paraba en t=32 (el Short dura 62,7s), o sea que la MITAD del video no se testeaba nunca.
+  // Estos tres cargan data/voz-short-read.mp3, calibran y barren el video entero.
+  const conRead = (async () => {
+    W.cargarShort('read-janitor');
+    W.document.getElementById('voz-proyecto').click();
+    for (let i = 0; i < 80 && !W.estadoMotor().ULTIMA_CAL; i++) await new Promise(r => setTimeout(r, 250));
+    const e = W.estadoMotor();
+    return !!(e.ULTIMA_CAL && e.ULTIMA_CAL.frases && e.CFG.ref === 'ronald-read-janitor-2026-07');
+  })();
+
+  check('GUION TÉCNICO: hay un plano resuelto para las 22 frases (ninguna cae al fallback)', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const {CFG, ULTIMA_CAL: cal, escenas: registradas} = W.estadoMotor();
+    const plan = CFG.visualPorFrase;
+    if (!plan) return 'el Short no declara visualPorFrase';
+    if (plan.length !== cal.frases.length) return `${plan.length} planos para ${cal.frases.length} frases`;
+    const escenas = new Set();
+    for (let i = 0; i < plan.length; i++){
+      let e = CFG.escena;
+      for (let k = i; k >= 0; k--){ const v = plan[k]; if (v){ e = (typeof v === 'object') ? v.escena : v; break; } }
+      if (!registradas.includes(e)) return `frase ${i}: escena '${e}' no está en SCENES`;
+      escenas.add(e);
+    }
+    // un solo plano en 62s sería el "video plano" que este trabajo vino a arreglar
+    return escenas.size >= 4 ? true : `solo ${escenas.size} escenas distintas en todo el Short`;
+  });
+
+  // Mide el TEXTO, no los píxeles claros. El barrido por color no distingue una letra de un
+  // gráfico blanco: la bola de nieve entra en la franja derecha a propósito (crece hasta salirse
+  // de cuadro) y daba un falso positivo. Aquí se intercepta `text()` y se transforma su caja con
+  // la MATRIZ del contexto — que es justo donde estaba el bug del `$8,000,000`.
+  check('GUION TÉCNICO: ninguna LETRA cae en la franja de los botones (los 62s, calibrado)', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const c = W.document.querySelector('canvas'), cx = c.getContext('2d');
+    const S = {top:190, bottom:360, left:70, right:130};
+    const malos = [];
+    let ahora = 0;
+    W.__auditText = ({str, x0, w, alpha}) => {
+      if (alpha <= 0.3 || !str.trim()) return;
+      if (x0 < S.left - 3 || x0 + w > c.width - S.right + 3)
+        malos.push(`t=${ahora.toFixed(1)} "${str.slice(0,18)}" [${Math.round(x0)}..${Math.round(x0+w)}]`);
+    };
+    try {
+      for (ahora = 0.4; ahora < W.estadoMotor().T.total; ahora += 0.4){
+        W.drawFrame(ahora);
+        if (malos.length > 3) break;
+      }
+    } finally { delete W.__auditText; }
+    return malos.length === 0 ? true : malos.slice(0,3).join(' · ');
+  });
+
+  check('GUION TÉCNICO: ninguna frase se queda en un frame vacío (todo plano pinta algo)', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const c = W.document.querySelector('canvas'), cx = c.getContext('2d');
+    // ⚠ ESTE ES EL TEST QUE HABRÍA CAZADO EL CHOQUE DE NOMBRES `pintarChecklist` (2026-07-26):
+    // la escena existía, la llamada ocurría y NO había ningún error de JavaScript — simplemente
+    // otra función del panel se llamaba igual y ganaba, así que el checklist salía en blanco.
+    const flojas = [], TOP = 190;
+    for (const [i, f] of W.estadoMotor().ULTIMA_CAL.frases.entries()){
+      const t = f.inicio + Math.min(0.9, (f.fin - f.inicio) * 0.6);
+      W.drawFrame(t);
+      const d = cx.getImageData(0, TOP, c.width, c.height - TOP - 360).data;
+      let claros = 0;
+      for (let p = 0; p < d.length; p += 4*17) if (d[p] > 150 && d[p+1] > 150 && d[p+2] > 150) claros++;
+      if (claros < 25) flojas.push(`frase ${i} (t=${t.toFixed(1)}): ${claros} píxeles de tinta`);
+    }
+    return flojas.length === 0 ? true : flojas.slice(0, 3).join(' · ');
+  });
+
   await Promise.all(pendientes);              // espera los tests async (p.ej. el muxer lee el Blob)
   const res = document.getElementById('res');
   res.textContent = fail === 0 ? `✅ ${pass} tests PASAN` : `❌ ${fail} FALLAN de ${pass+fail}`;
