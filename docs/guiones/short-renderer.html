@@ -533,7 +533,8 @@ const SHORTS = {
     // escenas tomen su contenido de config — que es la siguiente construcción, no otro video.
     visualPorFrase: [
       /* 0  "He pumped gas and cleaned floors..."   */ null,          // → imagen: gasolinera / fregona
-      /* 1  "He died with $8,000,000."              */ null,          // → el número aterrizando
+      /* 1  "He died with $8,000,000."              */
+      {escena: 'stat', valor: 8000000, conteo_s: 2.2, kicker: 'HE DIED WITH', sub: 'a janitor'},
       /* 2  "No big salary."                        */ 'checklist',
       /* 3  "No hot tips."                          */ null,
       /* 4  "No tech stocks."                       */ null,
@@ -2886,6 +2887,7 @@ function drawFrame(t){
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
   let escenaAhora = CFG.escena;      // la escena REALMENTE pintada (cambia con escenaPorGrupo)
+  let datosEscena = null;            // contenido de esa escena cuando viene declarado por frase
   if (MODO === 'video'){
     // TIMELINE: segmento activo en tiempo LOCAL + crossfade de 0.45s con el siguiente
     const k = SEGS.findIndex(sg => t < sg.t1);
@@ -2935,7 +2937,17 @@ function drawFrame(t){
         if (i >= 0){
           for (let k = i; k >= 0; k--){                 // hereda hacia atrás hasta el último cambio
             const v = CFG.visualPorFrase[k];
-            if (v) return v;
+            if (!v) continue;
+            // Una entrada puede ser el NOMBRE de una escena, o un objeto {escena, ...datos}. Lo
+            // segundo es lo que libera la biblioteca entera: las escenas de overlay (stat,
+            // bullets, cita, titulo, principio) ya toman su contenido de un objeto de datos —
+            // solo hacía falta poder pasárselo por frase. `desde` se inyecta con el arranque
+            // MEDIDO de su frase, así que la animación empieza cuando la voz la empieza.
+            if (typeof v === 'object'){
+              datosEscena = {...v, desde: ULTIMA_CAL.frases[k].inicio};
+              return v.escena;
+            }
+            return v;
           }
         }
       }
@@ -2945,7 +2957,10 @@ function drawFrame(t){
       const g = ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25);
       return (g && mapa[g.id]) || CFG.escena;
     })();
-    (SCENES[escenaAhora] || SCENES.chart)(t, W, H, s);
+    // Con datos por frase la escena se llama como un overlay (alpha 1 + su objeto de datos);
+    // sin ellos, la firma de siempre.
+    if (datosEscena) (SCENES[escenaAhora] || SCENES.chart)(t, W, H, s, 1, datosEscena);
+    else             (SCENES[escenaAhora] || SCENES.chart)(t, W, H, s);
     if (CFG.overlays) for (const ov of CFG.overlays){
       const a = alphaVentana(t, ov);
       if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
