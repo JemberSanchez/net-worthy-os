@@ -512,6 +512,10 @@ const SHORTS = {
     // y luego explota, que es exactamente la tesis del guion.
     escena: 'snowball',
     camara: true,                       // planos sostenidos: sin esto son 62s de un solo plano fijo
+    // La escena cambia con lo que se está contando. `honesty` es el tramo más largo (15s) y habla
+    // literalmente de las 95 posiciones: ahí el TABLERO no es decoración, es lo que la voz explica
+    // — que es justo lo que le faltaba cuando se usó sin narración y no se entendía.
+    escenaPorGrupo: {honesty: 'portfolio'},
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,
     // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
@@ -2813,8 +2817,16 @@ function drawFrame(t){
       ctx.save();
       ctx.translate(W/2, H*0.5 + ty); ctx.scale(k, k); ctx.translate(-W/2, -H*0.5);
     }
-    // ESCENA BASE (del registro) + OVERLAYS de composición (portada, cierre). El resto es común.
-    (SCENES[CFG.escena] || SCENES.chart)(t, W, H, s);
+    // ESCENA BASE. Si el Short declara `escenaPorGrupo`, la escena CAMBIA con el tramo del guion:
+    // los cortes dejan de ser encuadres del mismo objeto y pasan a ser planos de cosas distintas,
+    // que es lo que separa un montaje de un zoom. Sin la clave, una sola escena como siempre.
+    const escenaAhora = (() => {
+      const mapa = CFG.escenaPorGrupo;
+      if (!mapa || !ULTIMA_CAL || !ULTIMA_CAL.grupos) return CFG.escena;
+      const g = ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25);
+      return (g && mapa[g.id]) || CFG.escena;
+    })();
+    (SCENES[escenaAhora] || SCENES.chart)(t, W, H, s);
     if (CFG.overlays) for (const ov of CFG.overlays){
       const a = alphaVentana(t, ov);
       if (a > 0.001 && SCENES[ov.escena]) SCENES[ov.escena](t, W, H, s, a, ov);
