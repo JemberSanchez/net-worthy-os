@@ -2107,21 +2107,54 @@ function aplicarCamara(t, W, H, s){
   const tramo = id => (ULTIMA_CAL && ULTIMA_CAL.grupos) ? ULTIMA_CAL.grupos.find(x => x.id === id) : null;
   const ini = id => { const g = tramo(id); return g ? g.inicio : null; };
 
-  // lista de planos: [desde, escala, foco]. `null` = centro del cuadro (transformada identidad).
-  const planos = [{ d: 0, k: 1, f: null }];
-  const push = (d, k, f) => { if (d != null) planos.push({d, k, f}); };
-  push(ini('proof'),   1.16, 'bola');                       // acompaña el crecimiento
-  push(T.draw + 0.35,  1.00, null);                         // llega: se abre para revelar la escala
-  push(ini('payoff'),  1.85, 'bola');                       // PRIMER PLANO: el núcleo aportado
-  push(ini('honesty'), 1.00, null);                         // se abre: caben las 95 órbitas
-  push(ini('lesson'),  1.28, 'chica');                      // la bola pequeña de "any size"
-  push(ini('cta'),     1.00, null);
-  planos.sort((a, b) => a.d - b.d);
+  // ── MONTAJE POR CORTES (referencia: el ritmo de edición de MrBeast) ────────────────────────
+  // Antes: 6 planos en 62s (uno cada 10s) con transiciones suaves de 0.35s. Eso SUAVIZA, que es
+  // justo lo contrario de estimular — y por eso el vídeo se seguía sintiendo plano por muchas
+  // capas que se le añadieran dentro del mismo encuadre.
+  // Ahora: un corte cada ~3s, DURO, sin transición. Y no en cualquier sitio: cada corte cae en un
+  // límite de frase (los `t0` de los subtítulos), que es donde el oído YA espera un cambio — por
+  // eso se siente musical y no aleatorio.
+  // Bonus técnico: cortes duros + planos quietos comprimen mucho mejor que el movimiento continuo.
+  // MAX_PLANO por debajo del presupuesto de congelado de BODY (2.5s): así el budget se cumple POR
+  // CONSTRUCCIÓN —siempre hay un corte dentro de cualquier ventana de 2.5s— y no depende de la
+  // amplitud del micro-movimiento, que es lo que disparaba el peso del archivo.
+  const MIN_PLANO = 1.8, MAX_PLANO = 2.4;
+  const ks = cards();
+  const cortes = [0];
+  for (const k of ks) if (k.t0 - cortes[cortes.length-1] >= MIN_PLANO) cortes.push(+k.t0.toFixed(2));
+  // Ningún plano puede pasar de MAX_PLANO. Sin esto quedaban huecos de 9s —el intro y los tramos
+  // con frases largas— que son exactamente los que se sienten muertos. Si no hay límite de frase
+  // donde cortar, se corta igual: más vale un corte a mitad de frase que un plano eterno.
+  for (let i = 0; i < cortes.length; i++){
+    const fin = cortes[i+1] ?? T.total;
+    // solo si el trozo que queda da para un plano de verdad; si no, dejaría uno de 0.4s
+    if (fin - cortes[i] > MAX_PLANO && fin - (cortes[i] + MAX_PLANO) >= MIN_PLANO){
+      cortes.splice(i+1, 0, +(cortes[i] + MAX_PLANO).toFixed(2));
+    }
+  }
 
-  const TR = 0.35;                                          // transición corta = corte, no deriva
-  let i = 0; while (i + 1 < planos.length && t >= planos[i+1].d) i++;
-  const cur = planos[i], prev = planos[Math.max(0, i-1)];
-  const u = easeOut(clamp01((t - cur.d) / TR));             // 0 = veníamos del anterior, 1 = ya en éste
+  // Repertorio de encuadres. Se elige por índice con paso áureo: varía sin repetir el anterior y
+  // es DETERMINISTA (nada de aleatorio: el export offline debe reproducir el preview).
+  const ENCUADRES = [
+    {k: 1.00, f: null}, {k: 1.55, f: 'bola'}, {k: 1.15, f: null},
+    {k: 2.05, f: 'bola'}, {k: 1.32, f: 'bola'}, {k: 1.70, f: 'bola'},
+  ];
+  let i = 0; while (i + 1 < cortes.length && t >= cortes[i+1]) i++;
+
+  let cur = ENCUADRES[(i * 5) % ENCUADRES.length];
+  // El contenido manda sobre el repertorio en los tramos que lo necesitan:
+  // Las reglas de contenido ALTERNAN, no fijan: si clavan un solo encuadre, el tramo más largo
+  // (honesty, 15s) se queda sin cortes efectivos y vuelve a sentirse muerto aunque el montaje
+  // esté cortando. Cada opción respeta lo que ese tramo necesita enseñar.
+  const gH = tramo('honesty'), gL = tramo('lesson'), gP = tramo('payoff');
+  const par = i % 2 === 0;
+  if (gH && t >= gH.inicio && t <= gH.fin)                                   // la órbita cabe entera
+    cur = par ? {k: 1.00, f: null} : {k: 1.18, f: 'bola'};
+  if (gL && t >= gL.inicio && t <= gL.fin)                                   // la bola pequeña
+    cur = par ? {k: 1.30, f: 'chica'} : {k: 1.05, f: null};
+  if (gP && t >= gP.inicio && t <= gP.fin && cur.k < 1.5)                    // el núcleo se lee
+    cur = par ? {k: 1.85, f: 'bola'} : {k: 2.10, f: 'bola'};
+  const prev = cur, u = 1;                                  // CORTE DURO: sin interpolación
 
   const foco = f => {
     if (f === 'bola')  return [G.bx, G.by];
@@ -2639,8 +2672,12 @@ function drawFrame(t){
     // comparabilidad de lo ya publicado.
     const body = CFG.ritmo && t >= 10;
     if (body){
-      const k  = 1 + 0.014 * Math.sin(t * 1.13);          // respiración de escala (±1.4%)
-      const ty = 8 * s * Math.sin(t * 0.67 + 0.7);        // deriva vertical lentísima (±8px)
+      // Amplitud BAJADA (2026-07-25) al entrar el montaje por cortes: con un corte cada ~3s el
+      // cuadro ya no se congela nunca, así que el micro-movimiento solo tiene que cubrir el hueco
+      // dentro de un plano. Y era el principal culpable del peso del archivo — al mover TODO cada
+      // frame, la compresión entre frames se venía abajo (140 MB en un Short de 62s).
+      const k  = 1 + 0.006 * Math.sin(t * 1.13);          // respiración de escala (±0.6%)
+      const ty = 4 * s * Math.sin(t * 0.67 + 0.7);        // deriva vertical lentísima (±4px)
       ctx.save();
       ctx.translate(W/2, H*0.5 + ty); ctx.scale(k, k); ctx.translate(-W/2, -H*0.5);
     }
@@ -2834,6 +2871,13 @@ document.getElementById('stop').onclick = () => { sesion++; corriendo = false; a
  *  `let` a nivel de script, así que NO es una propiedad de window y no se ve desde el iframe padre. */
 function guionActivo(){
   return CFG.guion || null;
+}
+
+/** Duración del Short activo. Para los tests: `T` no es visible desde el iframe padre, y un
+ *  barrido con una duración hardcodeada mide más allá del final del vídeo — donde, lógicamente,
+ *  no pasa nada y cualquier presupuesto de movimiento falla por un motivo falso. */
+function duracionActiva(){
+  return T.total || 0;
 }
 
 /** Claves de los Shorts con Motion Budget activo. Existe para los tests: `SHORTS` es `const` y no

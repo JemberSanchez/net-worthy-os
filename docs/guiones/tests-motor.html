@@ -268,7 +268,11 @@ document.getElementById('motor').onload = async () => {
       s += Math.abs(a[i]-b[i]) + Math.abs(a[i+1]-b[i+1]) + Math.abs(a[i+2]-b[i+2]);
     return s / (a.length / 4 * 3);
   };
-  const DT = 0.25, FIN = 52;              // Buffett dura ~55s; 52 evita el borde del timeline
+  // FIN se toma del Short activo, no de una constante. Con 52 hardcodeado el barrido medía hasta
+  // 20s MÁS ALLÁ del final del vídeo (en los tests no hay voz cargada, así que el reloj es el
+  // prestado de ~24s) y ahí, lógicamente, no pasa nada: el presupuesto fallaba por un motivo falso.
+  const DT = 0.25;
+  const finDe = () => Math.max(4, (W.duracionActiva ? W.duracionActiva() : 52) - 0.5);
   // Un barrido son ~209 drawFrame sobre un canvas 1080x1920: se cachea por Short o el test
   // tardaría un minuto (y un test lento se deja de correr).
   const _cacheSigs = {};
@@ -277,7 +281,8 @@ document.getElementById('motor').onload = async () => {
     W.cargarShort(short);                                  // síncrono: fija SHORT/CFG/D
     const c = W.document.querySelector('canvas');
     const sigs = [];
-    for (let i = 0; i * DT <= FIN; i++){ W.drawFrame(i * DT); sigs.push(_firma(c)); }
+    const fin = finDe();
+    for (let i = 0; i * DT <= fin; i++){ W.drawFrame(i * DT); sigs.push(_firma(c)); }
     return (_cacheSigs[short] = sigs);
   };
   // Devuelve, para una ventana, el intervalo MÁS QUIETO: la menor diferencia entre dos frames
@@ -303,7 +308,7 @@ document.getElementById('motor').onload = async () => {
   const VENTANAS = [
     {nombre: 'HOOK 0-2s',        desde: 0,  hasta: 2,   frozen: 0.5, exige: true},
     {nombre: 'ACANTILADO 2-10s', desde: 2,  hasta: 10,  frozen: 1.5, exige: true},
-    {nombre: 'BODY 10s-fin',     desde: 10, hasta: FIN, frozen: 2.5, exige: true},
+    {nombre: 'BODY 10s-fin',     desde: 10, hasta: finDe(), frozen: 2.5, exige: true},
   ];
 
   // EPS CALIBRADO CON DATOS (2026-07-25), no elegido a ojo. La escala se separa en tres niveles
