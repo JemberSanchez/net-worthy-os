@@ -515,7 +515,11 @@ const SHORTS = {
     // La escena cambia con lo que se está contando. `honesty` es el tramo más largo (15s) y habla
     // literalmente de las 95 posiciones: ahí el TABLERO no es decoración, es lo que la voz explica
     // — que es justo lo que le faltaba cuando se usó sin narración y no se entendía.
-    escenaPorGrupo: {honesty: 'portfolio'},
+    // `thesis` son tres negaciones seguidas ("No big salary. No hot tips. No tech stocks.") —
+    // exactamente la forma de un checklist. Cada una cae con su ✓ mientras la voz la dice.
+    escenaPorGrupo: {thesis: 'checklist', honesty: 'portfolio'},
+    items: ['NO BIG SALARY', 'NO HOT TIPS', 'NO TECH STOCKS'],
+    barrasEsfuerzo: false,              // las barras EFFORT/GROWTH son la tesis del S2, no la de Read
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
     sfx: true,
     // TEMA por DATOS: demanda evergreen real (racimo de Shorts de canales PEQUEÑOS: 2.1k/1.7k/1.1k…
@@ -1965,10 +1969,26 @@ function drawPrinciple(t, W, H, s, a, ov){
 // Los ítems del sacrificio entran y se marcan uno a uno (la voz los va diciendo); cuando la
 // historia revienta ("and you're still broke"), cae el sello y una línea PLANA: el esfuerzo
 // sin motor no dibuja pendiente. Datos por Short: CFG.items / CFG.sello.
+/** Ventana [inicio, fin) del tramo del guion que se está diciendo AHORA, o null. La usan las
+ *  escenas para cronometrarse contra SU tramo cuando el Short reparte escenas con
+ *  `escenaPorGrupo`: sin esto, una escena reusada anima sus elementos en el tramo de otra. */
+function tramoActivo(t){
+  if (!CFG.escenaPorGrupo || !ULTIMA_CAL || !ULTIMA_CAL.grupos) return null;
+  return ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25) || null;
+}
+
 function drawChecklist(t, W, H, s){
   const items = CFG.items || [];
   const total = items.length || 1;
-  const fin = Math.max(1.2, T.hook);              // los ítems se reparten el tramo hasta el sello
+  // Si la escena se está usando dentro de un tramo (escenaPorGrupo), los ítems se reparten sobre
+  // ESE tramo. Si no, el comportamiento de siempre (el S2 la usa desde el frame 0 hasta T.hook).
+  const tr = tramoActivo(t);
+  if (tr){
+    const dur = Math.max(1.2, tr.fin - tr.inicio);
+    t = t - tr.inicio;                            // reloj local del tramo
+    var fin = dur;
+  } else
+  var fin = Math.max(1.2, T.hook);                // los ítems se reparten el tramo hasta el sello
   const loss = '#C0968C';
   const x0 = 200*s, cy0 = 440*s, salto = 128*s;
   const tCheck = i => (i + 0.35) * (fin / (total + 0.7)) + 0.28;   // instante en que cae cada ✓
@@ -2009,8 +2029,13 @@ function drawChecklist(t, W, H, s){
     }
     ctx.restore();
   };
-  gauge(940*s, 'EFFORT', effort, P.brass, Math.round(effort*100) + '%', P.paper);
-  gauge(1045*s, 'GROWTH', 0, loss, '$0', loss);
+  // Las barras EFFORT/GROWTH cuentan la tesis del S2 (esfuerzo máximo -> cero crecimiento). En
+  // otro Short serían una afirmación falsa, así que se pueden apagar. Por defecto ON: el S2 está
+  // publicado y no declara la clave, así que renderiza idéntico.
+  if (CFG.barrasEsfuerzo !== false){
+    gauge(940*s, 'EFFORT', effort, P.brass, Math.round(effort*100) + '%', P.paper);
+    gauge(1045*s, 'GROWTH', 0, loss, '$0', loss);
+  }
 
   // ── el veredicto: STILL BROKE con golpe + un destello de pérdida (pattern interrupt) ──
   const aS = clamp01((t - T.hook) / 0.45);
@@ -2780,6 +2805,7 @@ function drawFrame(t){
   g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
+  let escenaAhora = CFG.escena;      // la escena REALMENTE pintada (cambia con escenaPorGrupo)
   if (MODO === 'video'){
     // TIMELINE: segmento activo en tiempo LOCAL + crossfade de 0.45s con el siguiente
     const k = SEGS.findIndex(sg => t < sg.t1);
@@ -2820,7 +2846,7 @@ function drawFrame(t){
     // ESCENA BASE. Si el Short declara `escenaPorGrupo`, la escena CAMBIA con el tramo del guion:
     // los cortes dejan de ser encuadres del mismo objeto y pasan a ser planos de cosas distintas,
     // que es lo que separa un montaje de un zoom. Sin la clave, una sola escena como siempre.
-    const escenaAhora = (() => {
+    escenaAhora = (() => {
       const mapa = CFG.escenaPorGrupo;
       if (!mapa || !ULTIMA_CAL || !ULTIMA_CAL.grupos) return CFG.escena;
       const g = ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25);
@@ -2875,8 +2901,13 @@ function drawFrame(t){
     const c = tarjetaEn(t, cards(), LEAD, HOLD_MAX);
     if (c){
       const dentro = clamp01((t - (c.t0 - LEAD)) / 0.12);
-      if (CFG.escena === 'columns')
+      // La posición depende de la escena REALMENTE pintada, no de `CFG.escena`: con escenaPorGrupo
+      // ya no son la misma. Medido: el checklist pone su 3er ítem en 696*s y el subtítulo caía en
+      // 700*s — encima, ilegibles los dos.
+      if (escenaAhora === 'columns')
         dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, 1 + 0.05*(1-dentro), 470);
+      else if (escenaAhora === 'checklist')
+        dibujarSubtitulo(c.palabras, W/2, 1010*s, s, dentro, 1 + 0.05*(1-dentro));
       else
         dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, 1 + 0.05*(1-dentro));
     }
