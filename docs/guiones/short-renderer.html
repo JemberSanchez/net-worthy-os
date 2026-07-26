@@ -1102,6 +1102,10 @@ function calibrarAuto(buffer, guion){
     // reparto por índice es una lotería y la línea puede adelantarse segundos a la voz. Ningún
     // test lo puede cazar (hace falta el audio real), así que se avisa donde sí se ve.
     faltante,                                   // frases que el audio NO contiene (ver arriba)
+    // Fin real del habla. CapCut suele exportar cola muda (medido: 5.42s en la 2ª toma de Read),
+    // y sin recortarla el Short acaba en varios segundos de nada — lo peor posible para la
+    // retención, justo donde el algoritmo mide si el vídeo se terminó.
+    finVoz: +porGrupo[porGrupo.length - 1].fin.toFixed(2),
     diag: {bloques: segs.length, grupos: sils.length, silabas_por_seg: +rep.rate.toFixed(2),
            error_reparto: +rep.error.toFixed(2),
            specRiesgo: (CFG.spec.length > 1 && segsIntro.length > CFG.spec.length
@@ -3345,7 +3349,12 @@ async function usarAudio(f){
   // Cualquier otro audio: lo calibra el motor contra el guion de SHORT.guion.
   try {
     const cal = calibrarAuto(pcm, SHORT.guion);
-    aplicarCalibracion(cal, dur);
+    // Se recorta la cola muda: el vídeo dura hasta que acaba de hablar + 0.7s de respiro para que
+    // el CTA se lea. Sin esto sobraban 5.4s en negro al final.
+    const COLA = 0.7;
+    const durUtil = (cal.finVoz && dur - cal.finVoz > 1.2)
+      ? Math.min(dur, +(cal.finVoz + COLA).toFixed(2)) : dur;
+    aplicarCalibracion(cal, durUtil);
     // El aviso de audio faltante va PRIMERO y solo: si el audio no contiene el guion, el resto de
     // las cifras da igual y renderizar es tirar 3 minutos y 140 MB.
     if (cal.faltante && cal.faltante.length){
@@ -3355,7 +3364,9 @@ async function usarAudio(f){
           `(imposible: lo normal son 3-7) → falta en el audio: "${f.texto}"`).join(' · ') +
         ` · Regraba ese bloque en CapCut y vuelve a cargar la voz.`;
     } else {
-      statusEl.textContent = `✅ Calibrado solo (${dur}s): ${cal.diag.bloques} bloques de voz, ` +
+      statusEl.textContent = `✅ Calibrado solo (${durUtil}s` +
+        (durUtil < dur ? `, recortados ${(dur-durUtil).toFixed(1)}s de cola muda` : '') +
+        `): ${cal.diag.bloques} bloques de voz, ` +
         `${cal.diag.silabas_por_seg} síl/s · intro ${T.hook}s · curva ${T.draw}s · ` +
         `nº ${T.curve}s · CTA ${T.cta}s · ${cal.cards.length} subtítulos. Previsualiza y verifica.`;
     }
