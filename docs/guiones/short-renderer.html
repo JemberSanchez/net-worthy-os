@@ -834,7 +834,11 @@ function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
   {
     const g = []; let cur = [];
     for (const w of ws){
-      if (w.ancla && cur.length){ g.push(cur); cur = []; }
+      // Corta en un arranque de voz medido O en fin de FRASE. La coma NO parte (era el
+      // sobre-troceo original), pero juntar el final de una frase con el principio de la
+      // siguiente —"No tech stocks. Just"— se lee fatal, así que el punto sí manda.
+      const finFrase = cur.length && /[.?!]$/.test(cur[cur.length-1].w);
+      if ((w.ancla || finFrase) && cur.length){ g.push(cur); cur = []; }
       cur.push(w);
       if (anchoTarjeta(cur) > maxAncho && cur.length > 1){       // no cabe: partir aquí
         g.push(cur.slice(0, -1)); cur = [w];
@@ -880,10 +884,22 @@ function calibrarAuto(buffer, guion){
   if (!rep) throw new Error(`solo ${segs.length} bloques de voz para ${sils.length} grupos, ni ` +
     `bajando el umbral de pausa. Sube el volumen de la voz o usa el .srt / los sliders.`);
 
+  // DOS SEGMENTACIONES, a propósito (2026-07-25). El umbral de 250 ms es el correcto para separar
+  // los GRUPOS del guion —las pausas entre secciones son largas—, pero es demasiado grueso para
+  // alinear PALABRAS: se traga las pausas de ~140 ms que hay dentro de una frase, y sin ellas no
+  // hay anclaje donde agarrarse.
+  // Caso real que lo destapó: "Just three boring habits, for sixty years." La voz decía "Just"
+  // en un bloque de 0.19s, callaba 0.14s y seguía. Con 250 ms esa pausa no existía, así que la
+  // tarjeta mostraba "Just three boring" mientras la voz solo había dicho una palabra — y desde
+  // ahí el texto iba por delante y ya no se recuperaba.
+  const segsFinos = segmentarVoz(buffer, {minSilMs: 90});
   const porGrupo = rep.rangos.map(([i,j], k) => {
     const misSegs = segs.slice(i, j+1);
-    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, misSegs), guion.cifras);
-    return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: misSegs[0][0], fin: misSegs[misSegs.length-1][1]};
+    const ini = misSegs[0][0], fin = misSegs[misSegs.length-1][1];
+    const finos = segsFinos.filter(s => s[0] >= ini - 0.01 && s[1] <= fin + 0.01);
+    const paraAlinear = finos.length > misSegs.length ? finos : misSegs;
+    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear), guion.cifras);
+    return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
   });
 
   const idx = id => porGrupo.findIndex(g => g.id === id);
