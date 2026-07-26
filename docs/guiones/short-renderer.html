@@ -684,14 +684,96 @@ function repartirGrupos(segs, silsPorGrupo){
   return {rangos, rate, error: dp[G][N]};
 }
 
+/** NÚCLEOS SILÁBICOS: los picos de la envolvente de energía. Cada sílaba hablada produce uno.
+ *
+ *  Por qué existe: no hace falta reconocimiento de voz para saber CUÁNDO se dice cada palabra,
+ *  porque las palabras YA las sabemos (están en el guion). Eso no es transcribir, es ALINEAMIENTO
+ *  FORZADO, un problema mucho más fácil. Los bloques por silencio solo dan anclajes donde el
+ *  hablante respira; los núcleos dan uno por SÍLABA, que es ~5 veces más resolución, y sin
+ *  dependencias (el .srt de CapCut está limitado a 2 exportaciones gratis al mes).
+ *
+ *  Método clásico (de Jong & Wempe): envolvente RMS -> suavizado -> máximos locales que superen un
+ *  umbral y estén separados por un VALLE suficiente. El valle es lo que evita contar dos veces el
+ *  mismo núcleo por la ondulación interna de una vocal larga. Puro y determinista. */
+function nucleosSilabicos(buffer, {ventanaMs = 10, suavMs = 30, minSepMs = 90, valle = 0.72} = {}){
+  const d = buffer.getChannelData(0), sr = buffer.sampleRate;
+  const win = Math.max(1, Math.round(sr * ventanaMs / 1000));
+  const env = [];
+  for (let i = 0; i + win < d.length; i += win){
+    let s = 0; for (let j = 0; j < win; j++) s += d[i+j]*d[i+j];
+    env.push(Math.sqrt(s / win));
+  }
+  const k = Math.max(1, Math.round(suavMs / ventanaMs));       // suavizado: quita el rizado fino
+  const suave = env.map((_, i) => {
+    let s = 0, n = 0;
+    for (let j = Math.max(0, i-k); j <= Math.min(env.length-1, i+k); j++){ s += env[j]; n++; }
+    return s / n;
+  });
+  const pico = Math.max(...suave), piso = pico * 0.10;
+  const sep = Math.max(1, Math.round(minSepMs / ventanaMs));
+  const out = [];
+  for (let i = 1; i < suave.length - 1; i++){
+    if (suave[i] < piso || suave[i] <= suave[i-1] || suave[i] < suave[i+1]) continue;
+    const ult = out[out.length-1];
+    if (ult && (i - ult.i) < sep){                              // demasiado juntos: gana el más alto
+      if (suave[i] > ult.v){ out[out.length-1] = {i, v: suave[i]}; }
+      continue;
+    }
+    if (ult){                                                   // exige un VALLE entre picos
+      let min = Infinity;
+      for (let j = ult.i; j <= i; j++) min = Math.min(min, suave[j]);
+      if (min > Math.min(ult.v, suave[i]) * valle) {             // no hay valle: es el mismo núcleo
+        if (suave[i] > ult.v) out[out.length-1] = {i, v: suave[i]};
+        continue;
+      }
+    }
+    out.push({i, v: suave[i]});
+  }
+  return out.map(p => +(p.i * ventanaMs / 1000).toFixed(3));
+}
+
 /** Reparte las palabras de un grupo sobre SU tiempo de voz, saltándose las pausas. */
-function alinearPalabras(texto, segs){
+/** Alineamiento por NÚCLEOS: a cada palabra se le dan tantos núcleos como sílabas tiene, en orden.
+ *  El t0 de la palabra es su primer núcleo (retrocedido un pelo, porque el pico cae en mitad de la
+ *  vocal y la palabra empieza antes, en la consonante). Devuelve null si los núcleos detectados no
+ *  cuadran razonablemente con las sílabas esperadas — mejor caer al método anterior que inventar. */
+function alinearPorNucleos(palabras, nucleos, s0, s1){
+  const sil = palabras.map(silabas);
+  const total = sil.reduce((a,b) => a+b, 0);
+  const N = nucleos.filter(t => t >= s0 - 0.02 && t <= s1 + 0.02);
+  if (!total || N.length < Math.ceil(total * 0.6) || N.length > total * 1.8) return null;
+
+  // reparto proporcional de los núcleos disponibles entre las palabras (si no salen las cuentas
+  // exactas, cada palabra recibe su cuota redondeada y el resto se ajusta al final)
+  const paso = N.length / total;
+  const out = []; let idx = 0;
+  for (let w = 0; w < palabras.length; w++){
+    const cuantos = Math.max(1, Math.round(sil[w] * paso));
+    const desde = Math.min(idx, N.length - 1);
+    const hasta = Math.min(idx + cuantos - 1, N.length - 1);
+    const t0 = w === 0 ? s0 : Math.max(s0, N[desde] - 0.06);   // el pico cae dentro de la vocal
+    const t1 = (w === palabras.length - 1) ? s1
+             : Math.max(t0 + 0.05, (N[hasta + 1] != null ? N[hasta + 1] - 0.06 : s1));
+    out.push({w: palabras[w], t0: +t0.toFixed(3), t1: +t1.toFixed(3), ancla: w === 0});
+    idx += cuantos;
+  }
+  for (let i = 0; i < out.length - 1; i++) out[i].t1 = Math.min(out[i].t1, out[i+1].t0);
+  return out;
+}
+
+function alinearPalabras(texto, segs, nucleos){
   // Divide en FRASES (el TTS pausa en la puntuación -> cada frase suele ser un bloque de voz).
   // Si el nº de frases == nº de bloques, se ancla CADA frase a SU bloque real: la primera palabra
   // de cada frase cae en el inicio real de su bloque, sin deriva entre frases. Antes se repartía
   // TODO el grupo a un ritmo global y una frase hablada despacio empujaba la siguiente palabra al
   // hueco de silencio anterior (medido: "Everyone" salía a 7.36 y la voz lo decía a 7.86).
+  // Primero se intenta anclar cada palabra a sus NÚCLEOS silábicos reales; el reparto por tasa de
+  // sílabas queda como respaldo para cuando la detección no cuadra (voz muy comprimida, música).
   const alinearEn = (palabras, s0, s1) => {
+    if (nucleos && nucleos.length){
+      const porNucleo = alinearPorNucleos(palabras, nucleos, s0, s1);
+      if (porNucleo) return porNucleo;
+    }
     const sl = palabras.map(silabas);
     const rate = (sl.reduce((a,b)=>a+b,0) || 1) / (s1 - s0);
     let t = s0;
@@ -893,12 +975,13 @@ function calibrarAuto(buffer, guion){
   // tarjeta mostraba "Just three boring" mientras la voz solo había dicho una palabra — y desde
   // ahí el texto iba por delante y ya no se recuperaba.
   const segsFinos = segmentarVoz(buffer, {minSilMs: 90});
+  const nucleos = nucleosSilabicos(buffer);      // un anclaje por SÍLABA, no solo por respiración
   const porGrupo = rep.rangos.map(([i,j], k) => {
     const misSegs = segs.slice(i, j+1);
     const ini = misSegs[0][0], fin = misSegs[misSegs.length-1][1];
     const finos = segsFinos.filter(s => s[0] >= ini - 0.01 && s[1] <= fin + 0.01);
     const paraAlinear = finos.length > misSegs.length ? finos : misSegs;
-    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear), guion.cifras);
+    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos), guion.cifras);
     return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
   });
 
