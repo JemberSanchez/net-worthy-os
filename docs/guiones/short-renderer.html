@@ -532,27 +532,35 @@ const SHORTS = {
     // declara. Los comentarios dejan escrito QUÉ debería mostrar cada frase para cuando esas
     // escenas tomen su contenido de config — que es la siguiente construcción, no otro video.
     visualPorFrase: [
-      /* 0  "He pumped gas and cleaned floors..."   */ null,          // → imagen: gasolinera / fregona
-      /* 1  "He died with $8,000,000."              */
-      {escena: 'stat', valor: 8000000, conteo_s: 2.2, kicker: 'HE DIED WITH', sub: 'a janitor'},
-      /* 2  "No big salary."                        */ 'checklist',
+      // ⚠ LAS FRASES 0 y 1 NO SE TOCAN: caen dentro del gancho (0-5.08s), y ahí manda el contraste
+      // `A JANITOR.` / `$8 MILLION.` — el mecanismo que docs/VIRALIDAD.md y el ADN propio señalan
+      // como el mejor del canal (récord de vistas de 3s). Se probó meter un `stat` en la frase 1 y
+      // se cargaba la revelación: no se cambia lo que ya está medido como lo mejor que hay.
+      /* 0  "He pumped gas and cleaned floors..."   */ null,
+      /* 1  "He died with $8,000,000."              */ null,
+      /* 2  "No big salary."                        */ 'checklist',   // los tres ✗ cayendo
       /* 3  "No hot tips."                          */ null,
       /* 4  "No tech stocks."                       */ null,
-      /* 5  "Just three boring habits..."           */ 'snowball',
-      /* 6  "He bought companies that paid him..."  */ null,          // → dividendos entrando
-      /* 7  "Sixty years later, $8,000,000."        */ null,
-      /* 8  "He put in a little at a time."         */ null,          // → el núcleo aportado
+      /* 5  "Just three boring habits..."           */ 'snowball',    // arranca la bola
+      /* 6  "He bought companies that paid him..."  */ null,          // dividendos entrando
+      /* 7  "Sixty years later, $8,000,000."        */
+      {escena: 'stat', valor: 8000000, conteo_s: 2.6, kicker: 'SIXTY YEARS LATER', sub: 'from a gas station paycheck'},
+      /* 8  "He put in a little at a time."         */ 'snowball',    // el núcleo aportado, dentro
       /* 9  "Everything past that number..."        */ null,
-      /* 10 "The machine, not the paycheck."        */ null,          // → contraste máquina/sueldo
-      /* 11 "Now the part nobody says."             */ null,          // → giro: cambio de tono
-      /* 12 "He held ninety-five stocks..."         */ null,          // → las 95 orbitando
+      /* 10 "The machine, not the paycheck."        */
+      {escena: 'titulo', lineas: ['THE MACHINE.', 'NOT THE PAYCHECK.'], sub: 'dividends buying dividends'},
+      /* 11 "Now the part nobody says."             */
+      {escena: 'titulo', lineas: ['NOW THE PART', 'NOBODY SAYS.'], sub: 'the honest footnote'},
+      /* 12 "He held ninety-five stocks..."         */ 'snowball',    // las 95 orbitando
       /* 13 "And he never had to sell."             */ null,
-      /* 14 "Sixty years, no emergency..."          */ null,          // → 60 años sin tocar
-      /* 15 "That is the rare part, not the picking."*/ null,
-      /* 16 "You don't need his eight million."     */ null,
-      /* 17 "The engine is the same at any size."   */ null,          // → la bola pequeña
+      /* 14 "Sixty years, no emergency..."          */ null,
+      /* 15 "That is the rare part, not the picking."*/
+      {escena: 'titulo', lineas: ['THAT is the rare part.', 'NOT the picking.'], sub: 'survivorship, said out loud'},
+      /* 16 "You don't need his eight million."     */
+      {escena: 'titulo', lineas: ["YOU DON'T NEED", 'HIS $8 MILLION.'], sub: 'the engine scales down'},
+      /* 17 "The engine is the same at any size."   */ 'snowball',    // la bola pequeña rodando
       /* 18 "Own things that pay you, reinvest..."  */ null,
-      /* 19 "So, skill, or just time?"              */ null,
+      /* 19 "So, skill, or just time?"              */ null,          // el CTA lleva su tarjeta
       /* 20 "Could you do it on a gas station..."   */ null,
       /* 21 "Team skill, or team time?"             */ null,
     ],
