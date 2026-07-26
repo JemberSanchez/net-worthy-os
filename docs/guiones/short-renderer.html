@@ -1012,6 +1012,27 @@ function calibrarAuto(buffer, guion){
     return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
   });
 
+  // ── DETECTOR DE AUDIO FALTANTE ────────────────────────────────────────────────────────────
+  // El caso que lo motivó (Read #7, 2026-07-25): el TTS de CapCut se saltó una frase entera
+  // ("Could you do it on a gas station paycheck?") y dejó un silencio de 0.7s en su lugar. El
+  // calibrador, obligado a encajar TODO el guion en el audio, comprimió esas 11 sílabas en 0.73s
+  // = 15.1 sílabas/s, algo físicamente imposible. Nada avisó: el vídeo se renderizó y hubo que
+  // oírlo para descubrirlo.
+  // El habla va a 3-7 sílabas/s. Por encima de 8.5 no es que hable rápido: es que ESE TEXTO NO
+  // ESTÁ EN EL AUDIO. Barato de comprobar y salta al calibrar, con el humano delante.
+  const faltante = [];
+  for (const g of porGrupo){
+    for (const s of g.segs){
+      const dentro = g.ws.filter(w => w.t0 >= s[0] - 0.02 && w.t0 < s[1] + 0.02);
+      if (!dentro.length) continue;
+      const sil = dentro.reduce((a, w) => a + silabas(w.w), 0);
+      const dur = s[1] - s[0];
+      if (dur > 0.15 && sil / dur > 8.5)
+        faltante.push({grupo: g.id, t: +s[0].toFixed(2), ritmo: +(sil/dur).toFixed(1),
+                       texto: dentro.map(w => w.w).join(' ')});
+    }
+  }
+
   const idx = id => porGrupo.findIndex(g => g.id === id);
   const cuts = {
     hook:  porGrupo[1].inicio,
@@ -1072,6 +1093,7 @@ function calibrarAuto(buffer, guion){
     // intro trae más bloques de voz que líneas de gancho y el Short no declara `specAncla`, el
     // reparto por índice es una lotería y la línea puede adelantarse segundos a la voz. Ningún
     // test lo puede cazar (hace falta el audio real), así que se avisa donde sí se ve.
+    faltante,                                   // frases que el audio NO contiene (ver arriba)
     diag: {bloques: segs.length, grupos: sils.length, silabas_por_seg: +rep.rate.toFixed(2),
            error_reparto: +rep.error.toFixed(2),
            specRiesgo: (CFG.spec.length > 1 && segsIntro.length > CFG.spec.length
@@ -3281,9 +3303,19 @@ async function usarAudio(f){
   try {
     const cal = calibrarAuto(pcm, SHORT.guion);
     aplicarCalibracion(cal, dur);
-    statusEl.textContent = `✅ Calibrado solo (${dur}s): ${cal.diag.bloques} bloques de voz, ` +
-      `${cal.diag.silabas_por_seg} síl/s · intro ${T.hook}s · curva ${T.draw}s · ` +
-      `nº ${T.curve}s · CTA ${T.cta}s · ${cal.cards.length} subtítulos. Previsualiza y verifica.`;
+    // El aviso de audio faltante va PRIMERO y solo: si el audio no contiene el guion, el resto de
+    // las cifras da igual y renderizar es tirar 3 minutos y 140 MB.
+    if (cal.faltante && cal.faltante.length){
+      statusEl.textContent =
+        `⛔ EL AUDIO NO CONTIENE TODO EL GUION — no renderices todavía. ` +
+        cal.faltante.map(f => `en ${f.t}s (${f.grupo}) haría falta hablar a ${f.ritmo} síl/s ` +
+          `(imposible: lo normal son 3-7) → falta en el audio: "${f.texto}"`).join(' · ') +
+        ` · Regraba ese bloque en CapCut y vuelve a cargar la voz.`;
+    } else {
+      statusEl.textContent = `✅ Calibrado solo (${dur}s): ${cal.diag.bloques} bloques de voz, ` +
+        `${cal.diag.silabas_por_seg} síl/s · intro ${T.hook}s · curva ${T.draw}s · ` +
+        `nº ${T.curve}s · CTA ${T.cta}s · ${cal.cards.length} subtítulos. Previsualiza y verifica.`;
+    }
   } catch (e) {
     srtCards = null; cortesMedidos = false;
     pintarSliders(); drawFrame(T.total);
