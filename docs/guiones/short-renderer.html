@@ -522,6 +522,39 @@ const SHORTS = {
     // se entendieron: el autor las describió dos veces como "cuadros con una línea", la segunda ya
     // con la narración puesta. Un visual que hay que explicar dos veces no comunica, y en su lugar
     // la bola muestra los 95 puntos ORBITANDO, que se leen como posiciones alrededor del capital.
+    // ── GUION TÉCNICO: un visual por frase ────────────────────────────────────────────────────
+    // Array PARALELO a las 22 frases del guion. Un hueco vacío hereda el plano anterior, igual que
+    // en un guion técnico de verdad: solo se anota donde CAMBIA. Los tiempos salen de la
+    // calibración, así que el corte cae exactamente donde la voz empieza esa frase.
+    //
+    // Hoy solo `snowball` y `checklist` están verificadas con la config de este Short; el resto de
+    // la biblioteca (chart, columns, stat, bullets, cita, principle) espera datos que Read no
+    // declara. Los comentarios dejan escrito QUÉ debería mostrar cada frase para cuando esas
+    // escenas tomen su contenido de config — que es la siguiente construcción, no otro video.
+    visualPorFrase: [
+      /* 0  "He pumped gas and cleaned floors..."   */ null,          // → imagen: gasolinera / fregona
+      /* 1  "He died with $8,000,000."              */ null,          // → el número aterrizando
+      /* 2  "No big salary."                        */ 'checklist',
+      /* 3  "No hot tips."                          */ null,
+      /* 4  "No tech stocks."                       */ null,
+      /* 5  "Just three boring habits..."           */ 'snowball',
+      /* 6  "He bought companies that paid him..."  */ null,          // → dividendos entrando
+      /* 7  "Sixty years later, $8,000,000."        */ null,
+      /* 8  "He put in a little at a time."         */ null,          // → el núcleo aportado
+      /* 9  "Everything past that number..."        */ null,
+      /* 10 "The machine, not the paycheck."        */ null,          // → contraste máquina/sueldo
+      /* 11 "Now the part nobody says."             */ null,          // → giro: cambio de tono
+      /* 12 "He held ninety-five stocks..."         */ null,          // → las 95 orbitando
+      /* 13 "And he never had to sell."             */ null,
+      /* 14 "Sixty years, no emergency..."          */ null,          // → 60 años sin tocar
+      /* 15 "That is the rare part, not the picking."*/ null,
+      /* 16 "You don't need his eight million."     */ null,
+      /* 17 "The engine is the same at any size."   */ null,          // → la bola pequeña
+      /* 18 "Own things that pay you, reinvest..."  */ null,
+      /* 19 "So, skill, or just time?"              */ null,
+      /* 20 "Could you do it on a gas station..."   */ null,
+      /* 21 "Team skill, or team time?"             */ null,
+    ],
     escenaPorGrupo: {thesis: 'checklist'},
     items: ['NO BIG SALARY', 'NO HOT TIPS', 'NO TECH STOCKS'],
     barrasEsfuerzo: false,              // las barras EFFORT/GROWTH son la tesis del S2, no la de Read
@@ -1127,6 +1160,28 @@ function calibrarAuto(buffer, guion){
     // y sin recortarla el Short acaba en varios segundos de nada — lo peor posible para la
     // retención, justo donde el algoritmo mide si el vídeo se terminó.
     finVoz: +porGrupo[porGrupo.length - 1].fin.toFixed(2),
+
+    // FRASES con sus tiempos MEDIDOS. Es la unidad de montaje real: un video profesional no
+    // sostiene un plano durante un tramo de 15s, muestra algo nuevo en cada frase. Con esto un
+    // Short puede declarar `visualPorFrase` y que la imagen cambie con lo que se está diciendo,
+    // sin programar nada nuevo por video — solo elegir de la biblioteca de escenas que ya existe.
+    frases: (() => {
+      const out = [];
+      for (const g of porGrupo){
+        let cur = [];
+        for (const w of g.ws){
+          cur.push(w);
+          if (/[.?!]$/.test(w.w)){
+            out.push({grupo: g.id, texto: cur.map(x => x.w).join(' '),
+                      inicio: +cur[0].t0.toFixed(2), fin: +cur[cur.length-1].t1.toFixed(2)});
+            cur = [];
+          }
+        }
+        if (cur.length) out.push({grupo: g.id, texto: cur.map(x => x.w).join(' '),
+                                  inicio: +cur[0].t0.toFixed(2), fin: +cur[cur.length-1].t1.toFixed(2)});
+      }
+      return out;
+    })(),
     diag: {bloques: segs.length, grupos: sils.length, silabas_por_seg: +rep.rate.toFixed(2),
            error_reparto: +rep.error.toFixed(2),
            specRiesgo: (CFG.spec.length > 1 && segsIntro.length > CFG.spec.length
@@ -2872,6 +2927,19 @@ function drawFrame(t){
     // los cortes dejan de ser encuadres del mismo objeto y pasan a ser planos de cosas distintas,
     // que es lo que separa un montaje de un zoom. Sin la clave, una sola escena como siempre.
     escenaAhora = (() => {
+      // 1º POR FRASE (la unidad de montaje): `visualPorFrase` es un array paralelo a las frases
+      // del guion; un hueco vacío hereda la escena de antes, que es como se escribe un guion
+      // técnico de verdad — solo se anota donde CAMBIA el plano.
+      if (CFG.visualPorFrase && ULTIMA_CAL && ULTIMA_CAL.frases){
+        const i = ULTIMA_CAL.frases.findIndex(f => t >= f.inicio - 0.2 && t <= f.fin + 0.2);
+        if (i >= 0){
+          for (let k = i; k >= 0; k--){                 // hereda hacia atrás hasta el último cambio
+            const v = CFG.visualPorFrase[k];
+            if (v) return v;
+          }
+        }
+      }
+      // 2º por tramo, 3º la escena única del Short
       const mapa = CFG.escenaPorGrupo;
       if (!mapa || !ULTIMA_CAL || !ULTIMA_CAL.grupos) return CFG.escena;
       const g = ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25);
