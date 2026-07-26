@@ -2149,12 +2149,42 @@ function drawSnowball(t, W, H, s, alpha, soloBola=false, capa='todo'){
 
   ctx.save(); ctx.globalAlpha = alpha;
 
-  ctx.strokeStyle = '#2B4238'; ctx.lineWidth = 3*s; ctx.lineCap = 'round';   // la pendiente
-  ctx.beginPath(); ctx.moveTo(gx0, gy0); ctx.lineTo(gx1, gy1); ctx.stroke();
+  // ── LA PENDIENTE ──────────────────────────────────────────────────────────────────────────
+  // Era UNA línea de 3px: la bola parecía flotar sobre una raya. Ahora es una ladera con cuerpo:
+  // masa sólida debajo, borde de nieve iluminado arriba, y el surco compactado que la bola deja
+  // al pasar (más hondo y más ancho cuanto mayor es ella, porque ha arrastrado más).
+  const dirX = gx1 - gx0, dirY = gy1 - gy0, largo = Math.hypot(dirX, dirY);
+  const nx = -dirY/largo, ny = dirX/largo;                                   // normal a la ladera
+  ctx.save();
+  const cuerpo = ctx.createLinearGradient(0, gy0, 0, H);                     // la ladera tiene masa
+  cuerpo.addColorStop(0, 'rgba(28,52,42,0.85)');
+  cuerpo.addColorStop(1, 'rgba(10,22,18,0.0)');
+  ctx.fillStyle = cuerpo;
+  ctx.beginPath();
+  ctx.moveTo(gx0 - 60*s, slopeY(gx0 - 60*s)); ctx.lineTo(gx1 + 120*s, slopeY(gx1 + 120*s));
+  ctx.lineTo(gx1 + 120*s, H); ctx.lineTo(gx0 - 60*s, H); ctx.closePath(); ctx.fill();
 
-  if (!soloBola){                                                            // camino compactado (trail)
-    ctx.strokeStyle = 'rgba(244,246,243,0.10)'; ctx.lineWidth = Math.max(2*s, r*0.5); ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(gx0, slopeY(gx0)); ctx.lineTo(bx, slopeY(bx)); ctx.stroke();
+  ctx.strokeStyle = 'rgba(159,179,168,0.55)'; ctx.lineWidth = 2.4*s; ctx.lineCap = 'round';
+  ctx.beginPath();                                                           // filo de nieve iluminado
+  ctx.moveTo(gx0 - 60*s, slopeY(gx0 - 60*s) - 1.5*s);
+  ctx.lineTo(gx1 + 120*s, slopeY(gx1 + 120*s) - 1.5*s); ctx.stroke();
+  ctx.restore();
+
+  if (!soloBola){                                                            // SURCO compactado
+    const w0 = Math.max(3*s, r*0.30), w1 = Math.max(4*s, r*0.62);
+    ctx.save();
+    ctx.beginPath();                                                         // se ensancha al avanzar
+    ctx.moveTo(gx0 + nx*w0*0.5, slopeY(gx0) + ny*w0*0.5);
+    ctx.lineTo(bx  + nx*w1*0.5, slopeY(bx)  + ny*w1*0.5);
+    ctx.lineTo(bx  - nx*w1*0.5, slopeY(bx)  - ny*w1*0.5);
+    ctx.lineTo(gx0 - nx*w0*0.5, slopeY(gx0) - ny*w0*0.5);
+    ctx.closePath();
+    const surco = ctx.createLinearGradient(gx0, slopeY(gx0), bx, slopeY(bx));
+    surco.addColorStop(0, 'rgba(244,246,243,0.05)');
+    surco.addColorStop(1, 'rgba(244,246,243,0.16)');
+    ctx.fillStyle = surco; ctx.fill();
+    ctx.strokeStyle = 'rgba(244,246,243,0.13)'; ctx.lineWidth = 1.4*s; ctx.stroke();
+    ctx.restore();
   }
 
   if (!soloBola) for (const c of coins){                                     // dividendos cayendo a la bola
@@ -2614,7 +2644,11 @@ function drawFrame(t){
     // LEAD subido a 0.30s el 2026-07-25. El error de tiempos es SIMÉTRICO (5 tarde / 5 pronto,
     // media +0.03s), pero se percibe asimétrico: una tarjeta tarde se nota (ya oíste la palabra),
     // una pronto no molesta. Adelantar convierte "tarde" en "a tiempo" sin desanclar nada.
-    const LEAD = 0.30, HOLD_MAX = 1.2;
+    // LEAD 0.45s (2026-07-25). Verificado por cuarta vez que los tiempos son EXACTOS: cada grupo
+    // arranca y termina con desvío 0.00 y el texto coincide con lo hablado. Lo que queda es
+    // perceptivo — oír es instantáneo, leer no —, y en subtitulado profesional el texto entra
+    // ANTES de la palabra, no encima. 0.45s es el extremo alto de lo habitual.
+    const LEAD = 0.45, HOLD_MAX = 1.2;
     const ks = cards();
     const c = ks.find((k, i) => {
       const sig = ks[i+1];
