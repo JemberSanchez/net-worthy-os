@@ -399,6 +399,27 @@ document.getElementById('motor').onload = async () => {
       : malos.join(' · ') + ' — el calibrador cogerá la PRIMERA y la curva llegará antes de tiempo';
   });
 
+  // El bug que costó CUATRO rondas de "los subtítulos van tarde". Los tiempos de las tarjetas
+  // siempre estuvieron bien (medido: desvío 0.00s por grupo contra la voz real); lo que fallaba
+  // era CUÁL se elegía para pintar. La anterior aguantaba hasta `sig.t0` mientras la siguiente ya
+  // cumplía desde `sig.t0 - lead`, y `find` devolvía la primera del array: la vieja. La
+  // anticipación no se aplicaba nunca y subirla de 0.15 a 0.45 no cambiaba nada.
+  check('SUBTITULOS: la tarjeta entra ANTES de su palabra (la anticipación se aplica de verdad)', () => {
+    if (!W.tarjetaEn) return 'falta tarjetaEn() en el motor';
+    const ks = [{t0:1.0, t1:1.6, t:'uno'}, {t0:2.0, t1:2.6, t:'dos'}, {t0:3.0, t1:3.6, t:'tres'}];
+    const LEAD = 0.45;
+    const malos = [];
+    for (let i = 1; i < ks.length; i++){
+      const enLead = W.tarjetaEn(ks[i].t0 - 0.2, ks, LEAD);   // 0.2s ANTES de la palabra
+      if (!enLead || enLead.t !== ks[i].t)
+        malos.push(`en t=${(ks[i].t0-0.2).toFixed(2)} debía verse "${ks[i].t}" y se ve "${enLead ? enLead.t : '(nada)'}"`);
+    }
+    // y la anterior no puede seguir en pantalla una vez entró la nueva
+    const justoDespues = W.tarjetaEn(ks[1].t0 - 0.1, ks, LEAD);
+    if (justoDespues && justoDespues.t === 'uno') malos.push('la tarjeta vieja sigue ganando dentro del lead');
+    return malos.length === 0 ? true : malos.join(' · ');
+  });
+
   // ── SERIE COMPUESTA: capital inicial + compuesto anual (Buffett) sin romper el S3 ──
   // series() cierra sobre CFG. cargarShort la reasigna -> W.series() da la del Short activo.
   check('series(): el S3 (publicado) NO se movió ni un céntimo tras añadir lump/annual', () => {

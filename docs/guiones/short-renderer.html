@@ -1116,6 +1116,21 @@ let cortesMedidos = false; // ¿los cortes salen del audio, o siguen siendo mi e
  *  reparten a ojo: eso fue el desfase del S3. Sin medir -> sin subtítulos, y grabar está vetado. */
 function cards(){ return srtCards || []; }
 
+/** Qué tarjeta se pinta en el instante `t`. EXTRAÍDA para poder testearla: vivía inline en
+ *  drawFrame y escondía el bug que costó cuatro rondas de "los subtítulos van tarde" —
+ *  la tarjeta anterior aguantaba hasta `sig.t0` mientras la siguiente ya cumplía desde
+ *  `sig.t0 - lead`, y `find` devolvía la primera del array, o sea la VIEJA. Resultado: la
+ *  anticipación no se aplicaba NUNCA y subir su valor no cambiaba nada.
+ *  Los TIEMPOS de las tarjetas siempre estuvieron bien; lo que fallaba era cuál se elegía. */
+function tarjetaEn(t, ks, lead = 0.45, hold = 1.2){
+  for (let i = 0; i < ks.length; i++){
+    const k = ks[i], sig = ks[i+1];
+    const hasta = sig ? Math.min(sig.t0 - lead, k.t1 + hold) : k.t1 + hold;
+    if (t >= k.t0 - lead && t < Math.max(hasta, k.t0 - lead + 0.05)) return k;
+  }
+  return null;
+}
+
 // ── Importar .srt (CapCut: Subtítulos automáticos → Exportar) ────────────────
 // Repartir tarjetas proporcionalmente sobre un tramo de 13s asume que hablas a ritmo de
 // metrónomo. No hablas así: hay pausas y énfasis, y medio segundo de deriva se VE.
@@ -2649,12 +2664,14 @@ function drawFrame(t){
     // perceptivo — oír es instantáneo, leer no —, y en subtitulado profesional el texto entra
     // ANTES de la palabra, no encima. 0.45s es el extremo alto de lo habitual.
     const LEAD = 0.45, HOLD_MAX = 1.2;
-    const ks = cards();
-    const c = ks.find((k, i) => {
-      const sig = ks[i+1];
-      const hasta = Math.min(sig ? sig.t0 : k.t1 + HOLD_MAX, k.t1 + HOLD_MAX);
-      return t >= k.t0 - LEAD && t < hasta;
-    });
+    // ⚠ BUG QUE COSTÓ CUATRO RONDAS (arreglado 2026-07-25). La tarjeta anterior aguantaba HASTA
+    // `sig.t0` y la siguiente entraba en `sig.t0 - LEAD`: durante esos LEAD segundos las DOS
+    // cumplían la condición y `find` devolvía la primera del array — la VIEJA. O sea que la
+    // anticipación NUNCA se aplicaba, y subirla de 0.15 a 0.30 a 0.45 no cambiaba absolutamente
+    // nada. Medir los tiempos de las tarjetas no lo detectaba: los tiempos eran correctos, lo que
+    // fallaba era CUÁL se elegía para pintar.
+    // Ahora la anterior se corta justo cuando entra la siguiente, así que la nueva gana su lead.
+    const c = tarjetaEn(t, cards(), LEAD, HOLD_MAX);
     if (c){
       const dentro = clamp01((t - (c.t0 - LEAD)) / 0.12);
       if (CFG.escena === 'columns')
