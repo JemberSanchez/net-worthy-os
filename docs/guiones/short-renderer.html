@@ -517,7 +517,12 @@ const SHORTS = {
     // — que es justo lo que le faltaba cuando se usó sin narración y no se entendía.
     // `thesis` son tres negaciones seguidas ("No big salary. No hot tips. No tech stocks.") —
     // exactamente la forma de un checklist. Cada una cae con su ✓ mientras la voz la dice.
-    escenaPorGrupo: {thesis: 'checklist', honesty: 'portfolio'},
+    // `honesty` VUELVE al snowball (2026-07-26). Se probó el tablero `portfolio` ahí porque la voz
+    // explica literalmente las 95 posiciones, con la teoría de que narradas sí se entenderían. NO
+    // se entendieron: el autor las describió dos veces como "cuadros con una línea", la segunda ya
+    // con la narración puesta. Un visual que hay que explicar dos veces no comunica, y en su lugar
+    // la bola muestra los 95 puntos ORBITANDO, que se leen como posiciones alrededor del capital.
+    escenaPorGrupo: {thesis: 'checklist'},
     items: ['NO BIG SALARY', 'NO HOT TIPS', 'NO TECH STOCKS'],
     barrasEsfuerzo: false,              // las barras EFFORT/GROWTH son la tesis del S2, no la de Read
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
@@ -2894,7 +2899,10 @@ function drawFrame(t){
     // subtítulos". Se deja un pelo para que la tarjeta no aparezca DESPUÉS por el redondeo a frame
     // (a 30 fps un frame son 33 ms), pero ya no es una anticipación perceptible.
     // Las anteriores (0.30, 0.45) eran una tirita sobre el fallo real, que era de asignación.
-    const LEAD = 0.10, HOLD_MAX = 1.2;
+    // 0.25s: con 0.10 se seguían percibiendo "un poco por detrás". Oír es instantáneo y leer no,
+    // así que el texto tiene que estar YA puesto cuando llega la palabra. Sigue siendo simultáneo
+    // a efectos prácticos (por debajo del cuarto de segundo), no una anticipación visible.
+    const LEAD = 0.25, HOLD_MAX = 1.2;
     // ⚠ BUG QUE COSTÓ CUATRO RONDAS (arreglado 2026-07-25). La tarjeta anterior aguantaba HASTA
     // `sig.t0` y la siguiente entraba en `sig.t0 - LEAD`: durante esos LEAD segundos las DOS
     // cumplían la condición y `find` devolvía la primera del array — la VIEJA. O sea que la
