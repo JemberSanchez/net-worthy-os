@@ -799,7 +799,26 @@ function alinearPalabras(texto, segs, nucleos){
   // Cada bloque ancla sus palabras a su arranque MEDIDO, así que la deriva no puede pasar de un
   // bloque (~0.7s de voz) en vez de acumularse a lo largo de 15 segundos.
   if (segs.length > 1 && pal.length >= segs.length){
-    const rep = repartirGrupos(pal.map(w => [0, silabas(w)]), segs.map(s => s[1] - s[0]));
+    // ⚠ EL REPARTO POR DURACIÓN FALLA CON EL ÉNFASIS. Asignaba palabras a cada bloque según
+    // "duración × ritmo promedio", lo que supone que se habla siempre igual de rápido. No es así:
+    // caso real medido (Read #7, thesis), el bloque 8.39-9.32 dura 0.93s y la voz solo dice
+    // "No tech stocks." (3 sílabas, lento y enfático), pero el reparto le metía 5 sílabas y colaba
+    // ahí "Just three". Desde ese punto el texto iba palabra y media POR DELANTE de la voz.
+    //
+    // Ahora el peso de cada bloque son sus NÚCLEOS SILÁBICOS: cuántas sílabas se dijeron ahí de
+    // verdad, medido, en vez de deducirlo de la duración. Un bloque lento pesa poco aunque dure.
+    // Ni un método ni el otro por separado: la DURACIÓN falla con el énfasis (un bloque lento pide
+    // más sílabas de las que tiene) y los NÚCLEOS subcuentan (~0.84 de lo esperado: las átonas se
+    // funden). Se promedian las dos señales NORMALIZADAS, así cada una corrige el sesgo de la otra.
+    const durs = segs.map(s => s[1] - s[0]);
+    const nucs = (nucleos && nucleos.length)
+      ? segs.map(s => nucleos.filter(n => n >= s[0] - 0.02 && n <= s[1] + 0.02).length) : null;
+    const sumD = durs.reduce((a,b) => a+b, 0) || 1;
+    const sumN = nucs ? (nucs.reduce((a,b) => a+b, 0) || 1) : 1;
+    const pesos = nucs
+      ? durs.map((d, x) => Math.max(0.02, 0.5*(d/sumD) + 0.5*(nucs[x]/sumN)))
+      : durs;
+    const rep = repartirGrupos(pal.map(w => [0, silabas(w)]), pesos);
     if (rep) return rep.rangos.flatMap(([i, j], k) =>
       alinearEn(pal.slice(i, j + 1), segs[k][0], segs[k][1]));
   }
@@ -980,7 +999,15 @@ function calibrarAuto(buffer, guion){
     const misSegs = segs.slice(i, j+1);
     const ini = misSegs[0][0], fin = misSegs[misSegs.length-1][1];
     const finos = segsFinos.filter(s => s[0] >= ini - 0.01 && s[1] <= fin + 0.01);
-    const paraAlinear = finos.length > misSegs.length ? finos : misSegs;
+    // PRIMERO el camino limpio: si las FRASES del grupo coinciden con las emisiones de voz
+    // (pausas de 250 ms), cada frase se ancla a la suya y el reparto es EXACTO — no hay nada que
+    // estimar. Los bloques finos solo entran cuando esa coincidencia no existe.
+    // Fue mi error de la ronda anterior: al preferir siempre los finos "por tener más anclajes",
+    // rompí esa coincidencia perfecta y metí estimación donde había medición. Síntoma medido:
+    // "Just three" se colaba en el bloque de "No tech stocks.".
+    const nFrases = (guion.grupos[k].texto.match(/[^.?!]+[.?!]+/g) || []).length;
+    const paraAlinear = (nFrases === misSegs.length) ? misSegs
+                      : (finos.length > misSegs.length ? finos : misSegs);
     const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos), guion.cifras);
     return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
   });
@@ -2799,7 +2826,11 @@ function drawFrame(t){
     // arranca y termina con desvío 0.00 y el texto coincide con lo hablado. Lo que queda es
     // perceptivo — oír es instantáneo, leer no —, y en subtitulado profesional el texto entra
     // ANTES de la palabra, no encima. 0.45s es el extremo alto de lo habitual.
-    const LEAD = 0.45, HOLD_MAX = 1.2;
+    // LEAD 0.10s: el usuario lo pidió explícito — "el audio tiene que ser al mismo tiempo que los
+    // subtítulos". Se deja un pelo para que la tarjeta no aparezca DESPUÉS por el redondeo a frame
+    // (a 30 fps un frame son 33 ms), pero ya no es una anticipación perceptible.
+    // Las anteriores (0.30, 0.45) eran una tirita sobre el fallo real, que era de asignación.
+    const LEAD = 0.10, HOLD_MAX = 1.2;
     // ⚠ BUG QUE COSTÓ CUATRO RONDAS (arreglado 2026-07-25). La tarjeta anterior aguantaba HASTA
     // `sig.t0` y la siguiente entraba en `sig.t0 - LEAD`: durante esos LEAD segundos las DOS
     // cumplían la condición y `find` devolvía la primera del array — la VIEJA. O sea que la
