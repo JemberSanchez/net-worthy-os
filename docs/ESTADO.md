@@ -63,6 +63,24 @@
 > **33 tests** del motor (dos nuevos: barrido completo anti-frame-vacío en los cortes, y sincronía
 > de cada tarjeta contra la voz medida) + 125 de Python.
 >
+> ### 3ª RONDA: "errores en el cambio de escenas" — hacía falta mirar FRAME A FRAME (30 fps)
+> Un barrido a 0,2 s no ve un fallo de dos frames. Analizando los 1.882 frames aparecieron cinco
+> defectos más, **todos en los cortes** y todos con la misma raíz: **la tolerancia con la que un
+> plano se adelanta a su frase** (`TOL_PLANO`, 0,2 s) no estaba contemplada en nada de lo que vive
+> dentro del plano.
+> | Qué se veía | Causa |
+> |---|---|
+> | Entre dos tarjetas de título se colaba **0,2 s de la BOLA** | en los silencios del TTS ninguna frase está activa → la escena caía al fallback `CFG.escena`. Un silencio ya no cambia el plano |
+> | **Dos frames en negro** donde el gancho debía seguir | `escenaPorGrupo` (tolerancia 0,25) y el guion por frase (0,20) se pisaban en la frontera. Se quitó el mecanismo por tramo: **o guion por frase, o reparto por tramo, no los dos** |
+> | El contador del `stat` clavado en **"$0"** tras venir de $217.531 | `localT` restaba el inicio de la FRASE, no el del plano → reloj local negativo durante 0,2 s |
+> | El subtítulo de la frase anterior **encima del plano nuevo** (al cortar del `stat` a la bola, "$8,000,000." justo bajo el "$8,000,000" del HUD) | el HOLD de 1,2 s cruzaba el corte |
+> | `checklist` y `bullets` **abrían casi en blanco** viniendo de una pantalla llena | sus ítems entran uno a uno. Ahora la lista existe desde el primer frame en gris y la voz la **enciende** |
+>
+> **34 tests** (nuevo: ningún plano abre por debajo de 100 px de tinta — el corte que fallaba abría
+> con ~40). Barrido final de los 1.882 frames: **0 vacíos, 0 flojos**. Quedan 4 saltos de brillo,
+> revisados uno a uno: son los cortes duros entre una escena luminosa y una tarjeta oscura, que es
+> lo que el montaje busca a propósito.
+>
 > ### Pendiente (lo de siempre: el progreso son filas, no commits)
 > Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
 > Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.

@@ -569,6 +569,29 @@ document.getElementById('motor').onload = async () => {
     return flojas.length === 0 ? true : flojas.slice(0, 3).join(' · ');
   });
 
+  check('CORTES: ningún plano abre con la pantalla casi en blanco', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const c = W.document.querySelector('canvas'), cx = c.getContext('2d');
+    const {CFG, ULTIMA_CAL} = W.estadoMotor(), fr = ULTIMA_CAL.frases, plan = CFG.visualPorFrase;
+    const TOL = 0.2;
+    const tinta = t => { W.drawFrame(t);
+      const d = cx.getImageData(0, 320, c.width, 1000).data; let n = 0;
+      for (let i = 0; i < d.length; i += 4*53) if (d[i] > 150 && d[i+1] > 150 && d[i+2] > 150) n++;
+      return n; };
+    // El corte REAL cae en max(inicio-TOL, finAnterior+TOL): findIndex devuelve el primer match,
+    // así que la frase anterior manda mientras su tolerancia siga cubriendo t.
+    const flojos = [];
+    for (let i = 1; i < plan.length; i++){
+      if (!plan[i]) continue;
+      const t = Math.max(fr[i].inicio - TOL, fr[i-1].fin + TOL);
+      const n = tinta(t + 1/30);
+      // 100 con el margen medido: el mínimo real es 124 (checklist) y antes del arreglo de la
+      // lista-fantasma el mismo corte abría en ~40 — un rótulo suelto sobre pantalla negra.
+      if (n < 100) flojos.push(`corte ${i} (${typeof plan[i]==='object'?plan[i].escena:plan[i]}) t=${t.toFixed(2)}: ${n}`);
+    }
+    return flojos.length === 0 ? true : flojos.slice(0,3).join(' · ');
+  });
+
   check('SINCRONÍA: cada subtítulo cae sobre el inicio de voz MEDIDO en el audio', async () => {
     if (!await conRead) return 'no se pudo calibrar la voz del Read';
     const pcm = W.estadoMotor().pcm;

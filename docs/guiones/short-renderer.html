@@ -584,7 +584,12 @@ const SHORTS = {
       /* 20 "Could you do it on a gas station..."   */ null,          // el CTA manda: el fondo no compite
       /* 21 "Team skill, or team time?"             */ null,          // ídem, hasta el final
     ],
-    escenaPorGrupo: {thesis: 'checklist'},
+    // ⚠ SIN `escenaPorGrupo`. Lo declaraba ({thesis:'checklist'}) y era REDUNDANTE con el guion
+    // técnico —la frase 2 ya declara checklist—, pero además CHOCABA: el mecanismo por tramo se
+    // activa con 0,25s de tolerancia y el de frase con 0,20s. En esa franja de 50 ms mandaba el
+    // de tramo y pintaba el checklist cuando aún no tenía ningún ítem que mostrar: dos frames en
+    // negro justo donde el gancho debía seguir en pantalla (medido a 30 fps en t=5.437 y 5.47).
+    // Un Short o declara el guion por frase, o reparte por tramo — las dos cosas a la vez, no.
     items: ['NO BIG SALARY', 'NO HOT TIPS', 'NO TECH STOCKS'],
     barrasEsfuerzo: false,              // las barras EFFORT/GROWTH son la tesis del S2, no la de Read
     voz: 'voz-short-read.mp3',          // el usuario la genera en CapCut TTS "Firme Pilot"
@@ -2171,10 +2176,23 @@ function pintarChecklistEscena(t, W, H, s, items, total, fin, tItems){
 
   items.forEach((it, i) => {
     const tIn = tEntra(i);
-    const aI = clamp01((t - tIn) / 0.35);
-    if (aI <= 0) return;
+    // El primero entra en 0.12s: es el CORTE al plano. Con los 0.35 de los demás, los cuatro
+    // primeros frames tras el corte salían por debajo del umbral de visibilidad (medido a 30 fps
+    // en t=5.44-5.54: pantalla vacía). Los siguientes sí se funden, que es lo que los hace legibles
+    // uno a uno.
+    const aI = clamp01((t - tIn) / (i === 0 ? 0.12 : 0.35));
+    // LA LISTA EXISTE DESDE EL PRIMER FRAME, en gris tenue; lo que llega con la voz es el ÉNFASIS.
+    // Sin esto el plano abría con UN rótulo arriba y el resto de la pantalla en negro, justo
+    // después de venir de un plano lleno: el bajón se lee como un fallo de montaje (visto en la
+    // tira de transiciones, cortes 2 y 6). Solo con `tItems`, o sea solo cuando el plano viene del
+    // guion por frase: el S2 usa esta escena como base y renderiza igual que como se publicó.
+    const previo = tItems ? 0.18 : 0;
+    if (aI <= 0 && previo <= 0) return;
     const e = easeOut(aI), y = cy0 + i*salto + (1 - e)*30*s;
-    text(it, x0, y, {size:52*s, weight:700, color:P.paper, align:'left', alpha:e, stroke:8*s});
+    const aTexto = Math.max(previo, e);
+    text(it, x0, y, {size:52*s, weight:700, color: e > 0.02 ? P.paper : P.grey,
+                     align:'left', alpha:aTexto, stroke:8*s});
+    if (aI <= 0) return;
     const aC = clamp01((t - tCheck(i)) / 0.25);   // ✓ en BRASS: la disciplina se honra (verde = crecer)
     if (aC > 0){
       const eC = easeOut(aC), cx = 132*s, cyC = y - 17*s;
@@ -2350,17 +2368,26 @@ function drawBullets(t, W, H, s, a, ov){
   const cad = cadenciaBullets(ov);
   // `tItems`: instantes MEDIDOS sobre la voz (ver tarjetasDelPlano). Mandan sobre la cadencia,
   // que reparte a ojo y hace que un ítem se lea antes o después de oírse.
+  const fade = i => i === 0 ? 0.12 : 0.4;     // el primero es el corte: entra casi de golpe
   const entra = i => (ov.tItems && ov.tItems[i] != null)
-    ? clamp01((tAbs - ov.tItems[i]) / 0.4)
-    : clamp01((t - (0.35 + i * cad)) / 0.4);
+    ? clamp01((tAbs - ov.tItems[i]) / fade(i))
+    : clamp01((t - (0.35 + i * cad)) / fade(i));
   if (ov.titulo) text(ov.titulo.toUpperCase(), W/2, H*0.20,
                       {size:34*s, weight:700, color:P.brass, alpha:a, spacing:5*s});
   const cy0 = H*0.32, salto = Math.min(150*s, (H*0.58) / Math.max(1, items.length));
   const x0 = W/2 - 300*s;
+  // Igual que el checklist: la lista está desde el primer frame en gris tenue y la voz la ENCIENDE.
+  // Un plano que abre con una sola línea arriba y el resto negro se lee como un fallo de montaje.
+  const previo = ov.tItems ? 0.18 : 0;
   items.forEach((it, i) => {
     const aI = entra(i);
-    if (aI <= 0) return;
+    if (aI <= 0 && previo <= 0) return;
     const e = easeOut(aI), y = cy0 + i*salto + (1-e)*30*s;
+    if (aI <= 0){                                   // aún no le toca: fantasma, sin icono
+      text(it, x0, cy0 + i*salto, {size:46*s, weight:700, color:P.grey, align:'left',
+                                   alpha:a*previo, stroke:8*s});
+      return;
+    }
     ctx.save(); ctx.globalAlpha = a*e;
     // icono semántico por bullet si el Short lo define ('up:loss', 'down:growth', 'pct:grey'…),
     // si no, el check verde genérico de siempre (retrocompatible).
@@ -2987,8 +3014,11 @@ const SCENES = {
  *  del plano tiene que contar con ella o deja un hueco vacío al principio de cada corte. */
 const TOL_PLANO = 0.2;
 
+/** `desde`/`hasta` son los del PLANO (ya con TOL_PLANO descontada). Las tarjetas se buscan desde el
+ *  inicio de la FRASE — 0.2s antes solo está la cola del plano anterior. */
 function tarjetasDelPlano(desde, hasta, textos){
-  const ks = cards().filter(c => c.t0 >= desde - 0.05 && c.t0 < hasta);
+  const iniFrase = desde + TOL_PLANO;
+  const ks = cards().filter(c => c.t0 >= iniFrase - 0.05 && c.t0 < hasta + TOL_PLANO);
   if (!ks.length) return null;
   const n = textos.length;
   // Se empareja por CONTENIDO, no por índice: un plano puede tener 5 tarjetas y 2 ítems, y ahí
@@ -3012,7 +3042,10 @@ function tarjetasDelPlano(desde, hasta, textos){
   // (la tolerancia del findIndex de drawFrame) y las escenas-tarjeta pintan fondo OPACO: durante
   // esa fracción se veía un rectángulo vacío. Se cazó en la hoja de contactos, en cuatro cortes
   // (5.5s, 13.5s, 29.5s, 32.0s) — un parpadeo negro en cada cambio de plano.
-  out[0] = Math.min(out[0], desde - TOL_PLANO);
+  // −0.04 = algo más de un frame. Sin ese margen, el fundido del primer elemento vale EXACTAMENTE
+  // 0 en el primer frame del plano: 33 ms de negro en cada corte, invisibles a 0,2s de muestreo
+  // pero perfectamente visibles al reproducir (medido a 30 fps en t=31.94 y t=48.16).
+  out[0] = Math.min(out[0], desde - 0.04);
   return out;
 }
 
@@ -3117,7 +3150,15 @@ function drawFrame(t){
       // del guion; un hueco vacío hereda la escena de antes, que es como se escribe un guion
       // técnico de verdad — solo se anota donde CAMBIA el plano.
       if (CFG.visualPorFrase && ULTIMA_CAL && ULTIMA_CAL.frases){
-        const i = ULTIMA_CAL.frases.findIndex(f => t >= f.inicio - TOL_PLANO && t <= f.fin + TOL_PLANO);
+        let i = ULTIMA_CAL.frases.findIndex(f => t >= f.inicio - TOL_PLANO && t <= f.fin + TOL_PLANO);
+        // ⚠ HUECOS ENTRE FRASES. El TTS respira, así que hay instantes sin ninguna frase activa —
+        // y ahí `findIndex` daba -1 y la escena caía al fallback `CFG.escena`. Efecto medido a 30
+        // fps: entre dos tarjetas de título se colaban 0,2s de la BOLA (brillo 4,5M → 10,2M → 3,6M
+        // en frames consecutivos). Un parpadeo de otra escena en mitad de un corte. Un silencio no
+        // cambia el plano: se mantiene el de la última frase dicha.
+        if (i < 0)
+          for (let k = ULTIMA_CAL.frases.length - 1; k >= 0; k--)
+            if (ULTIMA_CAL.frases[k].fin <= t){ i = k; break; }
         if (i >= 0){
           for (let k = i; k >= 0; k--){                 // hereda hacia atrás hasta el último cambio
             const v = CFG.visualPorFrase[k];
@@ -3135,10 +3176,16 @@ function drawFrame(t){
             // cronometraba sobre el TRAMO `thesis` (6.81s), pero su plano solo dura 3.51s porque la
             // frase 5 corta a `snowball`. El 3er ✗ ("NO TECH STOCKS") estaba programado para t=9.99
             // y el plano moría en 9.18 → la voz decía "No tech stocks" y en pantalla NO estaba.
-            let hasta = ULTIMA_CAL.frases[ULTIMA_CAL.frases.length - 1].fin;
+            let hastaFrase = ULTIMA_CAL.frases[ULTIMA_CAL.frases.length - 1].fin;
             for (let j = k + 1; j < ULTIMA_CAL.frases.length; j++)
-              if (CFG.visualPorFrase[j]){ hasta = ULTIMA_CAL.frases[j].inicio; break; }
-            const desde = ULTIMA_CAL.frases[k].inicio;
+              if (CFG.visualPorFrase[j]){ hastaFrase = ULTIMA_CAL.frases[j].inicio; break; }
+            const desdeFrase = ULTIMA_CAL.frases[k].inicio;
+            // ⚠ EL RELOJ DEL PLANO EMPIEZA CUANDO EL PLANO SE VE, no cuando arranca su frase. El
+            // plano entra TOL_PLANO antes (la tolerancia con la que se elige la frase activa), y
+            // `localT` restaba el inicio de la frase: durante esos 0,2s el reloj local era NEGATIVO
+            // y el contador del `stat` se quedaba clavado en "$0" en pantalla, después de venir de
+            // $217.531 en la bola. Medido a 30 fps en t=19.8-19.9.
+            const desde = desdeFrase - TOL_PLANO, hasta = hastaFrase - TOL_PLANO;
             if (typeof v === 'object'){
               datosEscena = {...v, desde, hasta};
               // Una tarjeta de varias líneas NO puede aparecer entera de golpe: la voz tarda 1-2s
@@ -3239,7 +3286,13 @@ function drawFrame(t){
     // (6,2s) se quedaba con dos rótulos quietos y la mitad inferior vacía. Se subtitula, pero
     // ABAJO (1120*s), lejos de los ítems.
     const escenaEsTexto = datosEscena && ESCENAS_TEXTO.has(escenaAhora) && escenaAhora !== 'bullets';
-    const c = escenaEsTexto ? null : tarjetaEn(t, cards(), LEAD, HOLD_MAX);
+    let c = escenaEsTexto ? null : tarjetaEn(t, cards(), LEAD, HOLD_MAX);
+    // ⚠ EL HOLD NO CRUZA UN CORTE. Una tarjeta aguanta hasta 1,2s después de su última palabra, y
+    // si en ese margen entra un plano nuevo, el texto viejo se queda encima del plano nuevo: al
+    // cortar del `stat` a la bola, el subtítulo "$8,000,000." quedaba justo debajo del "$8,000,000"
+    // del HUD — la misma cifra dos veces (visto frame a frame en t=23.50). Si la tarjeta terminó
+    // antes de que empezara este plano, es un residuo del anterior y no se pinta.
+    if (c && datosEscena && datosEscena.desde != null && c.t1 <= datosEscena.desde) c = null;
     if (c){
       const dentro = clamp01((t - (c.t0 - LEAD)) / 0.12);
       // La posición depende de la escena REALMENTE pintada, no de `CFG.escena`: con escenaPorGrupo
