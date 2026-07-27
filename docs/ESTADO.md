@@ -152,6 +152,19 @@
 > **37 tests** (3 nuevos de sincronía, uno de ellos determinista sin audio) + 125 de Python.
 > El MP4 bajó de 74 a **43,9 MB** como efecto colateral.
 >
+> ### 🔴 EL DESFASE QUE QUEDA SOLO LO CIERRA EL .SRT DE CAPCUT — no es opinión, es el método
+> Tras arreglar el robo de anclas, el reparto de las 50 tarjetas contra los arranques de voz
+> medidos es: **33 a tiempo (±80 ms), 13 TARDE (media −0,73 s), 4 pronto.** Las 13 caen en tramos
+> donde **la voz no hace ninguna pausa detectable**, así que su tiempo se ESTIMA por fuerza. Ningún
+> ajuste de LEAD las arregla: un LEAD mueve las 50 por igual y esto es dispersión.
+>
+> **La ruta que elimina la estimación ya está construida y sin usar:** panel → *«2 · Carga el .srt
+> de CapCut»*. CapCut genera los subtítulos con **reconocimiento de voz real sobre el audio**, así
+> que trae tiempos medidos por frase en vez de repartidos. Se exporta desde el mismo proyecto donde
+> se generó el TTS (Subtítulos automáticos → Exportar). Desde hoy el .srt también alimenta el
+> resalte de palabra (`tw`).
+> **Mientras no se use, el desfase de esos tramos es irreducible.** No volver a tocar el LEAD.
+>
 > ### Pendiente (lo de siempre: el progreso son filas, no commits)
 > Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
 > Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.

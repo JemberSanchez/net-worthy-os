@@ -1301,18 +1301,29 @@ function calibrarAuto(buffer, guion){
   // Esto no re-cronometra nada ni depende de contar sílabas: coge el t0 de cada tarjeta y lo lleva
   // al arranque de voz que el micrófono midió más cerca. Si no hay ninguno en la ventana, la deja
   // como está (mejor un tiempo estimado que uno inventado). Monótono por construcción.
-  const VENTANA_SNAP = 0.35, SEP_MIN = 0.20;
+  // ASIMÉTRICO A PROPÓSITO. Medido sobre el #7: de 50 tarjetas, 32 caen a tiempo, **14 llegan
+  // TARDE (media −0,72 s)** y solo 4 se adelantan. El error no está centrado, y los dos lados no
+  // cuestan lo mismo: un subtítulo que entra tarde se ve —ya oíste la frase— y uno que entra
+  // pronto casi no, más aún con la palabra activa resaltada marcando por dónde va la voz.
+  // Así que se adelanta con ganas (hasta 0,9 s: se recupera un arranque de voz REAL que la
+  // tarjeta se había saltado) y se atrasa con cuentagotas (0,15 s).
+  const ADELANTAR = 0.90, ATRASAR = 0.15, SEP_MIN = 0.20;
   const arranques = segsFinos.map(s => s[0]);
   for (let i = 0; i < cards.length; i++){
     const c = cards[i], previo = i ? cards[i-1].t0 : -Infinity;
-    let mejor = null, dist = VENTANA_SNAP;
+    let mejor = null, dist = Infinity;
     for (const a of arranques){
-      const d = Math.abs(a - c.t0);
-      if (d < dist && a > previo + SEP_MIN && a < c.t1 - 0.1){ dist = d; mejor = a; }
+      const d = c.t0 - a;                       // d > 0: el arranque está ANTES (la tarjeta va tarde)
+      const dentroVentana = d > 0 ? d <= ADELANTAR : -d <= ATRASAR;
+      if (!dentroVentana) continue;
+      if (a <= previo + SEP_MIN || a >= c.t1 - 0.1) continue;    // no pisa a la anterior ni se pasa
+      if (Math.abs(d) < dist){ dist = Math.abs(d); mejor = a; }
     }
     if (mejor == null) continue;
     c.t0 = +mejor.toFixed(3);
     if (i) cards[i-1].t1 = Math.min(cards[i-1].t1, c.t0);       // la anterior cede el sitio
+    // Los tiempos por palabra se mueven con la tarjeta: el resalte tiene que seguir cuadrando.
+    if (c.tw && c.tw.length) c.tw = c.tw.map((tw, k) => k === 0 ? c.t0 : Math.max(c.t0, tw));
   }
 
   return {
@@ -1608,9 +1619,14 @@ function tarjetasDeSRT(cues){
     let acc = 0;
     grupos.forEach(g => {
       const a = c.t0 + (c.t1-c.t0)*(acc/totalPal);
+      const desde = acc;
       acc += g.length;
       const b = c.t0 + (c.t1-c.t0)*(acc/totalPal);
-      salida.push({t0:a, t1:b, palabras:g});
+      // `tw` también por la ruta .srt, para que la palabra activa se resalte igual. Dentro de un
+      // cue se reparte proporcionalmente — el cue ya viene medido por el reconocimiento de voz,
+      // así que el error posible es de milésimas frente a los ~0,7 s del reparto a ojo.
+      const tw = g.map((_, i) => +(c.t0 + (c.t1-c.t0)*((desde+i)/totalPal)).toFixed(3));
+      salida.push({t0:a, t1:b, palabras:g, tw});
     });
   });
   return salida;
@@ -1660,8 +1676,11 @@ function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620
   // un desvío de 150 ms deja de ser perceptible — se ve como que el resalte llega un pelo antes o
   // después, no como que el subtítulo va tarde.
   // Las palabras aún no dichas se atenúan (no desaparecen: la frase se sigue leyendo entera).
+  // El resalte lleva el MISMO adelanto que la tarjeta: si el texto entra 0,18 s antes pero la
+  // palabra se ilumina 0,18 s después, el resalte iría tarde y se vería justo lo que se quiere
+  // evitar. Los dos van por delante lo mismo, así que el conjunto se percibe sincronizado.
   const activa = (tiempos && tAhora != null)
-    ? tiempos.reduce((acc, t0, i) => (tAhora >= t0 - 0.04 ? i : acc), -1) : -1;
+    ? tiempos.reduce((acc, t0, i) => (tAhora >= t0 - 0.18 ? i : acc), -1) : -1;
   ctx.save();
   ctx.translate(cx, cy); ctx.scale(escala, escala);   // micro-pop al entrar: el ojo lo engancha
   let x = -totalW/2;
@@ -3445,7 +3464,14 @@ function _pintarEscenaYResto(t, W, H, s, escenaAhora, datosEscena, body){
     // Historial para no volver a subirlo a ciegas: 0.15 → 0.30 → 0.45 → 0.10 → 0.25 → 0.05. Las
     // tres primeras subidas no hacían NADA (el bug de `tarjetaEn`, ya arreglado), así que la
     // sensación de "van tarde" que las motivó nunca llegó a probarse con un lead que funcionara.
-    const LEAD = 0.05, HOLD_MAX = 1.2;
+    // LEAD 0.18 (2026-07-26, sexta vez que se toca — pero la primera con la distribución medida).
+    // Reparto real de las 50 tarjetas del #7 contra los arranques de voz: **33 a tiempo (±80 ms),
+    // 13 TARDE con media −0,73 s, y solo 4 pronto**. El error no está centrado y los dos lados no
+    // cuestan lo mismo: una tarjeta tarde se ve —ya oíste la frase—, una pronto casi no, y menos
+    // aún desde que la palabra activa va resaltada marcando por dónde va la voz.
+    // 0,18 s no arregla las 13 (su desvío es de 0,7 s: eso solo lo cierra el .srt de CapCut, ver
+    // el panel), pero mueve toda la distribución al lado barato del error.
+    const LEAD = 0.18, HOLD_MAX = 1.2;
     // ⚠ BUG QUE COSTÓ CUATRO RONDAS (arreglado 2026-07-25). La tarjeta anterior aguantaba HASTA
     // `sig.t0` y la siguiente entraba en `sig.t0 - LEAD`: durante esos LEAD segundos las DOS
     // cumplían la condición y `find` devolvía la primera del array — la VIEJA. O sea que la
