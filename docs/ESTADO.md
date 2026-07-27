@@ -31,6 +31,38 @@
 > **`python -m http.server` cachea**: tras editar el HTML, el navegador seguía sirviendo el viejo y
 > el guion "no se aplicaba". Recargar SIEMPRE con `?v=N` distinto antes de dar nada por verificado.
 >
+> ### 2ª RONDA (el usuario vio el video): "desfase leve de la voz con los subtítulos"
+> Se midió en vez de opinar. **Las 44 tarjetas caen a 0,000 s del inicio de bloque de voz** que
+> mide `segmentarVoz` sobre el MP3, y **el MP4 no añade retardo** (−4 ms comparando el onset del
+> audio del MP4 con el del MP3 original, así que el AAC/muxer estaba descartado). El adelanto lo
+> metían dos cosas nuestras:
+> 1. **`LEAD` de subtítulos = 0,25 s.** El texto entraba un cuarto de segundo antes que su sonido.
+>    Ahora **0,05** (dos frames, solo por el redondeo). Historial para no volver a subirlo a ciegas:
+>    0,15 → 0,30 → 0,45 → 0,10 → 0,25 → **0,05**; las tres primeras subidas no hacían nada porque
+>    el bug de `tarjetaEn` se comía la anticipación, así que la sensación de "van tarde" que las
+>    motivó nunca llegó a probarse con un lead que funcionara.
+> 2. **Las tarjetas de dos líneas aparecían enteras de golpe**, y la voz tarda 1-2 s en decirlas:
+>    el rótulo se leía antes de oírse. Ahora cada línea entra con **su tarjeta de subtítulo**
+>    (`tarjetasDelPlano`), emparejada **por CONTENIDO** — se busca la tarjeta que comparte palabra
+>    con el elemento, no por índice (un plano puede tener 5 tarjetas y 2 ítems). Lo mismo para los
+>    ítems de `bullets` y los ✗ del `checklist`: **cada ✗ cae cuando la voz dice su frase.**
+>
+> **Cuatro frames vacíos** (5,5 · 13,5 · 29,5 · 32,0) en los cortes: el plano se activa 0,2 s antes
+> que su frase (`TOL_PLANO`) y sus elementos entraban con la frase → cada corte abría en negro.
+> Y tres defectos de imagen más: el gancho se apagaba medio segundo antes de que entrara el
+> checklist; el grado de color del tramo `payoff` volvía el fondo **marrón** (mezcla 0,14 → 0,07);
+> y la bola quedaba como un disco gris detrás del CTA (`ctaDim` 0,82 → 0,90).
+>
+> ### ⚠⚠ LOS TESTS CORRÍAN CONTRA UNA VERSIÓN CACHEADA DEL MOTOR
+> `tests-motor.html` cargaba el iframe con `src="short-renderer.html"` fijo, así que el navegador
+> lo servía de su caché: **un "32 tests PASAN" podía ser sobre el código de antes de la última
+> edición.** El `src` se asigna ahora por JS con cache-bust. Junto con la misma trampa en el
+> renderer (`?v=N`), es el fallo de método más caro del día: invalida cualquier verificación hecha
+> sin recargar de verdad.
+>
+> **33 tests** del motor (dos nuevos: barrido completo anti-frame-vacío en los cortes, y sincronía
+> de cada tarjeta contra la voz medida) + 125 de Python.
+>
 > ### Pendiente (lo de siempre: el progreso son filas, no commits)
 > Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
 > Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.
