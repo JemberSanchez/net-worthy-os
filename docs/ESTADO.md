@@ -100,6 +100,30 @@
 > Barrido final de los 1.882 frames: **0 vacíos · 0 flojos · 0 solapes · 0 tirones · 0 fuera de
 > zona segura**. 34 tests del motor + 125 de Python.
 >
+> ### 5ª RONDA · PESO: el MP4 baja de 74 a 43 MB **sin perder calidad** (medido)
+> El motor pedía **24 Mbps** y el codificador solo usaba **8,8**: el contenido es gráfico sintético
+> (fondos planos, texto vectorial, degradados) y H.264 lo comprime casi gratis. Se codificaron los
+> 120 frames más exigentes —la bola con 95 partículas, con cámara y subtítulos— a siete bitrates,
+> se **decodificaron** y se compararon píxel a píxel contra el canvas:
+>
+> | techo | real | PSNR | | techo | real | PSNR |
+> |---|---|---|---|---|---|---|
+> | 24 Mbps | 8827 k | 45,79 dB | | 4 Mbps | 3921 k | 45,38 dB |
+> | 12 Mbps | 8692 k | 45,79 dB | | 2 Mbps | 1937 k | 44,90 dB |
+> | 8 Mbps | 7143 k | 45,76 dB | | 1 Mbps | 958 k | 43,91 dB |
+> | **6 Mbps** | **5475 k** | **45,68 dB** | | | | |
+>
+> **La calidad no depende del bitrate en este rango**: el techo de ~45,8 dB es del submuestreo de
+> croma 4:2:0, no de los bits. De 24 a 6 Mbps se pierden **0,11 dB** (por encima de 40 dB ya es
+> indistinguible). Verificado además MIRANDO: ampliación 2× del `$8,000,000` a 24/8/6/4/2 Mbps —
+> sin ringing, sin bloques, sin banding. Y el archivo final contra el canvas en 12 keyframes:
+> **PSNR 47,5-51,8 dB**. Se eligió 6 y no menos porque las plataformas recomprimen y conviene
+> margen. Bonus: el render baja de ~150 s a **68 s**.
+>
+> ⚠ **Lo que NO se tocó y por qué**: la página ya pesa 278 KB y carga en **59 ms** sin ninguna
+> dependencia — minificarla no se notaría y la dejaría ilegible. Y meterla en Docker no la haría
+> más liviana: ya tiene la propiedad que da un contenedor (un archivo, cero instalación).
+>
 > ### Pendiente (lo de siempre: el progreso son filas, no commits)
 > Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
 > Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.

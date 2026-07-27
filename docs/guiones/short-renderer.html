@@ -4042,9 +4042,25 @@ const cede = () => new Promise(r => {
   ch.port2.postMessage(0);
 });
 
-// 24 Mbps para Shorts 1080x1920: menos banding en el degradado y bordes de texto más limpios,
-// y aguanta mejor la recompresión de YouTube/Facebook. (Long-form pasa su propio bitrate.)
-async function h264Disponible(bitrate = 24_000_000){
+// 6 Mbps (era 24). MEDIDO, no estimado (2026-07-26): se codificaron los 120 frames MÁS exigentes
+// del Read —la bola con 95 partículas orbitando, con cámara y subtítulos— a siete bitrates, se
+// DECODIFICARON y se compararon píxel a píxel contra el canvas, que es la referencia perfecta:
+//
+//   techo   real    PSNR        techo   real    PSNR
+//   24 Mbps 8827 k  45.79 dB     4 Mbps 3921 k  45.38 dB
+//   12 Mbps 8692 k  45.79 dB     2 Mbps 1937 k  44.90 dB
+//    8 Mbps 7143 k  45.76 dB     1 Mbps  958 k  43.91 dB
+//    6 Mbps 5475 k  45.68 dB
+//
+// Dos conclusiones. (1) El motor pedía 24 Mbps y el codificador solo usaba 8,8: el contenido es
+// gráfico sintético —fondos planos, texto vectorial, degradados— y H.264 lo comprime casi gratis.
+// (2) La calidad NO depende del bitrate en este rango: el techo de ~45,8 dB es del submuestreo de
+// croma 4:2:0, no de los bits. De 24 a 6 Mbps se pierden 0,11 dB, que es indetectable (por encima
+// de 40 dB se considera indistinguible), y el archivo baja de 74 a ~46 MB.
+// Verificado además MIRANDO: ampliación 2x del "$8,000,000" (el texto de más contraste del Short)
+// a 24/8/6/4/2 Mbps — sin ringing en los bordes, sin bloques, sin banding en el degradado.
+// 6 y no menos: las plataformas RECOMPRIMEN, y partir con margen evita pérdida generacional.
+async function h264Disponible(bitrate = 6_000_000){
   if (typeof VideoEncoder === 'undefined' || typeof AudioEncoder === 'undefined') return null;
   for (const c of CODECS_H264){
     const cfg = {codec:c, width:canvas.width, height:canvas.height,
