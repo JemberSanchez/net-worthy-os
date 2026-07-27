@@ -2737,9 +2737,16 @@ function aplicarCamara(t, W, H, s){
 
   // Repertorio de encuadres. Se elige por índice con paso áureo: varía sin repetir el anterior y
   // es DETERMINISTA (nada de aleatorio: el export offline debe reproducir el preview).
+  // ⚠ RANGO BAJADO (2026-07-26). Medido sobre el #7: 29 saltos en 62 s, zoom entre 1,00 y 2,05 y
+  // un salto máximo de Δk=0,90 que desplazaba el contenido **1.431 px en un solo frame** — más de
+  // una pantalla entera. Se siente violento y a 2,05 solo se ve el 48% del cuadro: la bola llena
+  // todo, se pierde la pendiente y el HUD (que NO se escala) parece de otra escena.
+  // La cámara existía para romper "un solo plano fijo 62 s". Eso ya lo hace el guion técnico con
+  // sus 16 cambios de plano, así que aquí basta un acento: un acercamiento se lee como cambio de
+  // encuadre a partir del 12-15%, no hace falta doblar.
   const ENCUADRES = [
-    {k: 1.00, f: null}, {k: 1.55, f: 'bola'}, {k: 1.15, f: null},
-    {k: 2.05, f: 'bola'}, {k: 1.32, f: 'bola'}, {k: 1.70, f: 'bola'},
+    {k: 1.00, f: null}, {k: 1.14, f: 'bola'}, {k: 1.06, f: null},
+    {k: 1.22, f: 'bola'}, {k: 1.10, f: 'bola'}, {k: 1.17, f: 'bola'},
   ];
   let i = 0; while (i + 1 < cortes.length && t >= cortes[i+1]) i++;
 
@@ -2751,11 +2758,11 @@ function aplicarCamara(t, W, H, s){
   const gH = tramo('honesty'), gL = tramo('lesson'), gP = tramo('payoff');
   const par = i % 2 === 0;
   if (gH && t >= gH.inicio && t <= gH.fin)                                   // la órbita cabe entera
-    cur = par ? {k: 1.00, f: null} : {k: 1.18, f: 'bola'};
+    cur = par ? {k: 1.00, f: null} : {k: 1.10, f: 'bola'};
   if (gL && t >= gL.inicio && t <= gL.fin)                                   // la bola pequeña
-    cur = par ? {k: 1.30, f: 'chica'} : {k: 1.05, f: null};
-  if (gP && t >= gP.inicio && t <= gP.fin && cur.k < 1.5)                    // el núcleo se lee
-    cur = par ? {k: 1.85, f: 'bola'} : {k: 2.10, f: 'bola'};
+    cur = par ? {k: 1.18, f: 'chica'} : {k: 1.04, f: null};
+  if (gP && t >= gP.inicio && t <= gP.fin)                                   // el núcleo se lee
+    cur = par ? {k: 1.20, f: 'bola'} : {k: 1.26, f: 'bola'};
   const prev = cur, u = 1;                                  // CORTE DURO: sin interpolación
 
   const foco = f => {
@@ -2771,7 +2778,16 @@ function aplicarCamara(t, W, H, s){
   };
   const [cx0, cy0] = foco(prev.f), [cx1, cy1] = foco(cur.f);
   const k  = lerp(prev.k, cur.k, u);
-  const cx = lerp(cx0, cx1, u), cy = lerp(cy0, cy1, u);
+  let cx = lerp(cx0, cx1, u), cy = lerp(cy0, cy1, u);
+
+  // ⚠ EL FOCO NO PUEDE SALIRSE DE LO QUE EL ZOOM CUBRE. Al ampliar k, el margen que se puede
+  // desplazar sin descubrir borde vacío es W/2·(1−1/k) — con k=1,14 son 66 px, con k=1,26 son 114.
+  // Antes esto no hacía falta porque el zoom llegaba a 2,05 y tapaba cualquier desplazamiento; con
+  // el rango bajado, un foco pegado a la bola (que vive a la derecha) sacaría el fondo de cuadro.
+  // Además acota el PAN: el peor salto medido movía el contenido 1.431 px en un frame.
+  const margenX = (W/2) * (1 - 1/k), margenY = (H/2) * (1 - 1/k);
+  cx = Math.min(W/2 + margenX, Math.max(W/2 - margenX, cx));
+  cy = Math.min(H/2 + margenY, Math.max(H/2 - margenY, cy));
 
   ctx.translate(W/2, H/2); ctx.scale(k, k); ctx.translate(-cx, -cy);
 }
