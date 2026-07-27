@@ -850,7 +850,82 @@ function alinearPorNucleos(palabras, nucleos, s0, s1){
   return out;
 }
 
-function alinearPalabras(texto, segs, nucleos){
+/** Envolvente de energía acumulada: un "reloj" del habla que NO depende de detectar picos.
+ *  Devuelve {t: [...], acc: [...]} donde `acc` va de 0 a 1 monótonamente y solo avanza donde
+ *  suena voz (el piso de ruido se resta antes de acumular). */
+function relojEnergia(buffer, {ventanaMs = 10} = {}){
+  const d = buffer.getChannelData(0), sr = buffer.sampleRate;
+  const W = Math.max(1, Math.round(sr * ventanaMs / 1000));
+  const t = [], e = [];
+  for (let i = 0; i + W <= d.length; i += W){
+    let s = 0; for (let j = 0; j < W; j++) s += d[i+j]*d[i+j];
+    t.push(i / sr); e.push(Math.sqrt(s / W));
+  }
+  const orden = [...e].sort((a,b) => a-b);
+  const piso = orden[Math.floor(orden.length * 0.2)] || 0;      // percentil 20 = suelo de silencio
+  const acc = new Float64Array(e.length);
+  let suma = 0;
+  for (let i = 0; i < e.length; i++){ suma += Math.max(0, e[i] - piso); acc[i] = suma; }
+  return {t, acc, total: suma};
+}
+
+/** Alineamiento por ENERGÍA ACUMULADA. Reparte las palabras sobre el tiempo en que la voz gasta
+ *  su energía, no sobre el conteo de picos.
+ *
+ *  ⚠ POR QUÉ EXISTE (medido 2026-07-26, la causa REAL del "la voz va más rápida que los
+ *  subtítulos"): `alinearPorNucleos` reparte los núcleos detectados PROPORCIONALMENTE entre las
+ *  palabras. Pero el detector no encuentra todas las sílabas — en esta voz encuentra el 83% — y
+ *  las que pierde NO están repartidas de forma uniforme. Ese error se acumula dentro del bloque y
+ *  produce DISPERSIÓN: medido sobre las 44 tarjetas del #7, el desfase iba de −1,06s a +0,62s con
+ *  media +0,09s. Por eso ninguna de las cinco rondas de LEAD (0,15 → 0,45) arregló nada: un LEAD
+ *  global corrige un OFFSET, y esto no era un offset sino una dispersión.
+ *
+ *  La energía acumulada es monótona y no depende de acertar cada pico: si una palabra se dice
+ *  despacio, consume más ventanas y la curva avanza más lento justo ahí. */
+function alinearPorEnergia(palabras, reloj, s0, s1, nucleos){
+  if (!reloj || !reloj.t.length) return null;
+  const sil = palabras.map(silabas);
+  const total = sil.reduce((a,b) => a+b, 0);
+  if (!total) return null;
+  const idxDe = tt => {                                  // índice de ventana para un instante
+    let lo = 0, hi = reloj.t.length - 1;
+    while (lo < hi){ const m = (lo+hi) >> 1; if (reloj.t[m] < tt) lo = m+1; else hi = m; }
+    return lo;
+  };
+  const i0 = idxDe(s0), i1 = Math.max(i0 + 1, idxDe(s1));
+  const base = reloj.acc[i0], rango = reloj.acc[i1] - base;
+  if (!(rango > 0)) return null;
+  // instante en que la voz ha gastado la fracción `f` de la energía del bloque
+  const tDe = f => {
+    const objetivo = base + f * rango;
+    let lo = i0, hi = i1;
+    while (lo < hi){ const m = (lo+hi) >> 1; if (reloj.acc[m] < objetivo) lo = m+1; else hi = m; }
+    return reloj.t[lo];
+  };
+  // AFINADO con los núcleos: si hay un pico a menos de 70 ms del instante calculado, la palabra
+  // arranca ahí (el pico cae dentro de la vocal, así que se retrocede un pelo). La energía da la
+  // posición aproximada y robusta; el núcleo, la precisión de arranque cuando existe.
+  const snap = tt => {
+    if (!nucleos || !nucleos.length) return tt;
+    let mejor = null, dist = 0.07;
+    for (const n of nucleos){ const dd = Math.abs(n - 0.05 - tt); if (dd < dist){ dist = dd; mejor = n - 0.05; } }
+    return mejor != null ? mejor : tt;
+  };
+  const out = []; let acumSil = 0;
+  for (let w = 0; w < palabras.length; w++){
+    const t0 = w === 0 ? s0 : Math.min(s1 - 0.05, Math.max(s0, snap(tDe(acumSil / total))));
+    acumSil += sil[w];
+    const t1 = w === palabras.length - 1 ? s1 : Math.max(t0 + 0.05, tDe(acumSil / total));
+    out.push({w: palabras[w], t0: +t0.toFixed(3), t1: +t1.toFixed(3), ancla: w === 0});
+  }
+  for (let i = 0; i < out.length - 1; i++){
+    out[i+1].t0 = Math.max(out[i+1].t0, out[i].t0 + 0.05);      // monótono estricto
+    out[i].t1 = Math.min(out[i].t1, out[i+1].t0);
+  }
+  return out;
+}
+
+function alinearPalabras(texto, segs, nucleos, relojVoz, finos){
   // Divide en FRASES (el TTS pausa en la puntuación -> cada frase suele ser un bloque de voz).
   // Si el nº de frases == nº de bloques, se ancla CADA frase a SU bloque real: la primera palabra
   // de cada frase cae en el inicio real de su bloque, sin deriva entre frases. Antes se repartía
@@ -859,6 +934,26 @@ function alinearPalabras(texto, segs, nucleos){
   // Primero se intenta anclar cada palabra a sus NÚCLEOS silábicos reales; el reparto por tasa de
   // sílabas queda como respaldo para cuando la detección no cuadra (voz muy comprimida, música).
   const alinearEn = (palabras, s0, s1) => {
+    // 0º SUB-BLOQUES MEDIDOS. Aunque este tramo venga de un bloque GRUESO (pausas de 250 ms),
+    // dentro casi siempre hay pausas de ~100 ms que el micrófono sí midió. Repartir las palabras
+    // entre ellas convierte en MEDIDO lo que si no sería interpolado, y cada sub-bloque aporta un
+    // `ancla` más donde la tarjeta puede abrir. Sin esto, los grupos que eligen bloques gruesos
+    // (`payoff`, `lesson`) interpolaban frases enteras: medido, arranques a 1,5 s de la voz real.
+    if (finos && finos.length && palabras.length > 1){
+      const dentro = finos.filter(f => f[0] >= s0 - 0.02 && f[1] <= s1 + 0.02);
+      if (dentro.length > 1 && palabras.length >= dentro.length){
+        const rep = repartirGrupos(palabras.map(w => [0, silabas(w)]),
+                                   dentro.map(f => Math.max(0.02, f[1] - f[0])));
+        if (rep) return rep.rangos.flatMap(([i, j], k) =>
+          alinearSinSubbloques(palabras.slice(i, j + 1), dentro[k][0], dentro[k][1]));
+      }
+    }
+    return alinearSinSubbloques(palabras, s0, s1);
+  };
+  const alinearSinSubbloques = (palabras, s0, s1) => {
+    // 1º ENERGÍA (robusta: no depende de detectar cada sílaba), afinada con los núcleos.
+    const porEnergia = alinearPorEnergia(palabras, relojVoz, s0, s1, nucleos);
+    if (porEnergia) return porEnergia;
     if (nucleos && nucleos.length){
       const porNucleo = alinearPorNucleos(palabras, nucleos, s0, s1);
       if (porNucleo) return porNucleo;
@@ -986,7 +1081,17 @@ function repararDuraciones(cards, minDur, maxAncho, {cruzarClausula = false} = {
   for (let i = 0; i < cards.length - 1; ){
     const c = cards[i], n = cards[i+1];
     const permitido = (cruzarClausula || c.cl === n.cl) && !cierraFrase(c);
-    while (permitido && durTarjeta(c.pal) < minDur && n.pal.length){
+    // ⚠⚠ NO SE ROBA UNA PALABRA `ancla`. ESTE ERA EL "la voz va más rápida que los subtítulos".
+    // Una tarjeta corta crece robándole palabras a la siguiente. Si la que roba es la PRIMERA de
+    // la siguiente y esa palabra es un ancla —el instante en que el micrófono midió que arranca
+    // la voz—, la siguiente tarjeta pasa a empezar en una palabra INTERPOLADA y entra tarde. Con
+    // `minDur` a 1,05 s el robo era sistemático: medido el 2026-07-26, solo el 51% de las tarjetas
+    // conservaba su arranque medido y las peores entraban 1,5 s DESPUÉS de que la voz ya sonara.
+    // Eso no se arregla con LEAD (se intentó cinco veces: 0,15 → 0,45): un LEAD mueve TODAS por
+    // igual y esto es dispersión, no offset.
+    // Ahora una tarjeta corta solo puede crecer con palabras interpoladas, que es justo lo que no
+    // desincroniza nada. El precio es alguna tarjeta más corta de lo ideal, y es el precio bueno.
+    while (permitido && durTarjeta(c.pal) < minDur && n.pal.length && !n.pal[0].ancla){
       const cand = c.pal.concat(n.pal[0]);
       if (anchoTarjeta(cand) > maxAncho) break;      // no cabe: mejor corta que ilegible
       c.pal = cand; n.pal = n.pal.slice(1);
@@ -1066,8 +1171,11 @@ function tarjetasDePalabras(ws, maxPal = 3, minDur = 0.55, maxAncho = 620){
   // principio de otra.
   repararDuraciones(cards, minDur, maxAncho, {cruzarClausula: true});
 
+  // `tw`: el t0 MEDIDO de cada palabra. Es lo que permite resaltar la que suena (ver
+  // dibujarSubtitulo). Sin esto la tarjeta es un bloque opaco y el ojo no puede seguir la voz.
   return cards.map(c => ({t0: c.pal[0].t0, t1: c.pal[c.pal.length-1].t1,
-                          palabras: c.pal.map(x => x.w)}));
+                          palabras: c.pal.map(x => x.w),
+                          tw: c.pal.map(x => +x.t0.toFixed(3))}));
 }
 
 /** Todo junto: audio + guion -> cortes, spec drop sincronizado y subtítulos. */
@@ -1094,6 +1202,7 @@ function calibrarAuto(buffer, guion){
   // ahí el texto iba por delante y ya no se recuperaba.
   const segsFinos = segmentarVoz(buffer, {minSilMs: 90});
   const nucleos = nucleosSilabicos(buffer);      // un anclaje por SÍLABA, no solo por respiración
+  const relojVoz = relojEnergia(buffer);         // el reloj del habla: robusto a picos no detectados
   const porGrupo = rep.rangos.map(([i,j], k) => {
     const misSegs = segs.slice(i, j+1);
     const ini = misSegs[0][0], fin = misSegs[misSegs.length-1][1];
@@ -1107,7 +1216,7 @@ function calibrarAuto(buffer, guion){
     const nFrases = (guion.grupos[k].texto.match(/[^.?!]+[.?!]+/g) || []).length;
     const paraAlinear = (nFrases === misSegs.length) ? misSegs
                       : (finos.length > misSegs.length ? finos : misSegs);
-    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos), guion.cifras);
+    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos, relojVoz, finos), guion.cifras);
     return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
   });
 
@@ -1181,6 +1290,31 @@ function calibrarAuto(buffer, guion){
                         .flatMap(g => tarjetasDePalabras(omitirMuletillas(g.ws, guion.omitirEnSubtitulos),
                                                          5, 1.05));
 
+  // ── SNAP AL ARRANQUE DE VOZ MEDIDO — la garantía dura de sincronía ───────────────────────────
+  // `tarjetasDePalabras` declara que una tarjeta solo abre en un `ancla`, pero las pasadas
+  // posteriores (fusión por `minDur`, robo de palabras para no dejar una frase cortísima, corte
+  // por ancho) mueven el arranque a una palabra INTERPOLADA. Medido el 2026-07-26 sobre el #7:
+  // solo el **51%** de las tarjetas empezaba en un arranque real, y las peores llegaban a
+  // **1,58 s** de desvío. Ahí estaba el "la voz va más rápida que los subtítulos" que sobrevivió a
+  // cinco ajustes de LEAD — no era un offset global, era dispersión.
+  //
+  // Esto no re-cronometra nada ni depende de contar sílabas: coge el t0 de cada tarjeta y lo lleva
+  // al arranque de voz que el micrófono midió más cerca. Si no hay ninguno en la ventana, la deja
+  // como está (mejor un tiempo estimado que uno inventado). Monótono por construcción.
+  const VENTANA_SNAP = 0.35, SEP_MIN = 0.20;
+  const arranques = segsFinos.map(s => s[0]);
+  for (let i = 0; i < cards.length; i++){
+    const c = cards[i], previo = i ? cards[i-1].t0 : -Infinity;
+    let mejor = null, dist = VENTANA_SNAP;
+    for (const a of arranques){
+      const d = Math.abs(a - c.t0);
+      if (d < dist && a > previo + SEP_MIN && a < c.t1 - 0.1){ dist = d; mejor = a; }
+    }
+    if (mejor == null) continue;
+    c.t0 = +mejor.toFixed(3);
+    if (i) cards[i-1].t1 = Math.min(cards[i-1].t1, c.t0);       // la anterior cede el sitio
+  }
+
   return {
     cuts: Object.fromEntries(Object.entries(cuts).map(([k,v]) => [k, +v.toFixed(2)])),
     spec,
@@ -1193,7 +1327,7 @@ function calibrarAuto(buffer, guion){
     // cuándo EMPIEZA a decirse la cifra grande. `cuts.draw` ya guardaba el FINAL (t1); esto es el
     // arranque, y es el ancla para que el número del stat aterrice JUSTO sobre la palabra.
     cifra_t0: tok ? +tok.t0.toFixed(2) : null,
-    cards: cards.map(c => ({t0:+c.t0.toFixed(2), t1:+c.t1.toFixed(2), t:c.palabras.join(' ')})),
+    cards: cards.map(c => ({t0:+c.t0.toFixed(2), t1:+c.t1.toFixed(2), t:c.palabras.join(' '), tw:c.tw})),
     // `specRiesgo` avisa EN EL MOMENTO DE CALIBRAR, que es cuando hay un humano mirando: si el
     // intro trae más bloques de voz que líneas de gancho y el Short no declara `specAncla`, el
     // reparto por índice es una lotería y la línea puede adelantarse segundos a la voz. Ningún
@@ -1507,7 +1641,7 @@ function cortesDeSRT(cues){
  *  Si la tarjeta no cabe (p.ej. lleva "$430,000"), encoge la fuente en vez de salirse del lienzo. */
 /** maxW 620, no el ancho de la zona segura: la curva verde cruza la banda de subtítulos por
  *  x≈853, y una tarjeta más ancha le pone texto encima. Verde sobre verde no se lee. */
-function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620){
+function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620, tiempos = null, tAhora = null){
   const maxW = anchoMax*s, gap = 16*s;
   let size = 62*s, anchos, totalW;
   for (let intento=0; intento<6; intento++){
@@ -1517,13 +1651,27 @@ function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620
     if (totalW <= maxW) break;
     size *= 0.92;
   }
+  // ── PALABRA ACTIVA (2026-07-26) — lo que de verdad mata el "la voz va más rápida" ───────────
+  // Con la tarjeta entera del mismo color, el espectador no tiene forma de saber POR DÓNDE va la
+  // voz dentro de ella: lee las tres palabras de un vistazo y luego oye cómo la voz las alcanza,
+  // que es exactamente la sensación de ir desacompasados. Y cualquier error de alineación se paga
+  // entero, porque lo único que hay es "la tarjeta está o no está".
+  // Resaltando la palabra que suena, el ojo SIGUE a la voz: el texto avanza al ritmo del audio y
+  // un desvío de 150 ms deja de ser perceptible — se ve como que el resalte llega un pelo antes o
+  // después, no como que el subtítulo va tarde.
+  // Las palabras aún no dichas se atenúan (no desaparecen: la frase se sigue leyendo entera).
+  const activa = (tiempos && tAhora != null)
+    ? tiempos.reduce((acc, t0, i) => (tAhora >= t0 - 0.04 ? i : acc), -1) : -1;
   ctx.save();
   ctx.translate(cx, cy); ctx.scale(escala, escala);   // micro-pop al entrar: el ojo lo engancha
   let x = -totalW/2;
   palabras.forEach((p,i) => {
     const esCifra = /\$|\d/.test(p);
-    text(p, x, 0, {size, weight:700, color: esCifra ? P.growth : P.paper,
-                   align:'left', alpha, stroke: 12*s});
+    // dicha = plena · sonando = plena + realce · por decir = atenuada
+    const estado = activa < 0 ? 1 : (i < activa ? 0.82 : i === activa ? 1 : 0.45);
+    const col = esCifra ? P.growth : (i === activa && activa >= 0 ? P.brass : P.paper);
+    text(p, x, 0, {size, weight:700, color: col, align:'left',
+                   alpha: alpha * estado, stroke: 12*s});
     x += anchos[i] + gap;
   });
   ctx.restore();
@@ -3334,14 +3482,15 @@ function _pintarEscenaYResto(t, W, H, s, escenaAhora, datosEscena, body){
       // de sitio a mitad de lectura: 632 px en t=9.3 (checklist→snowball) y 856 px en t=52.9
       // (snowball→bullets). El texto se queda donde empezó hasta que lo releva el siguiente.
       const escSub = resolverEscena(c.t0).escena;
+      const pop = 1 + 0.05*(1-dentro);
       if (escSub === 'columns')
-        dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, 1 + 0.05*(1-dentro), 470);
+        dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, pop, 470, c.tw, t);
       else if (escSub === 'checklist')
-        dibujarSubtitulo(c.palabras, W/2, 1010*s, s, dentro, 1 + 0.05*(1-dentro));
+        dibujarSubtitulo(c.palabras, W/2, 1010*s, s, dentro, pop, 620, c.tw, t);
       else if (escSub === 'bullets')
-        dibujarSubtitulo(c.palabras, W/2, 1120*s, s, dentro, 1 + 0.05*(1-dentro));
+        dibujarSubtitulo(c.palabras, W/2, 1120*s, s, dentro, pop, 620, c.tw, t);
       else
-        dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, 1 + 0.05*(1-dentro));
+        dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, pop, 620, c.tw, t);
     }
   }
 
@@ -3513,7 +3662,7 @@ function cargarShort(key){
   MAXY = D ? D.finalTotal * 1.18 : 0;
   // El S3 arranca con su calibración MANUAL puesta (incluye subtítulos). El story no tiene voz
   // todavía: sin tiempos medidos no hay subtítulos, y grabar sigue vetado hasta calibrar.
-  srtCards = CFG.demo ? null : CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+  srtCards = CFG.demo ? null : CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/), tw:c.tw}));
   cortesMedidos = !CFG.demo;
   cachedCards = null;
   verificado = false; exportado = false;
@@ -3812,7 +3961,7 @@ function aplicarCalibracion(cal, dur){
   Object.assign(T, {hook:cal.cuts.hook, draw:cal.cuts.draw, curve:cal.cuts.curve,
                     cta:cal.cuts.cta, total:dur});
   T.spec = cal.spec.slice();
-  srtCards = cal.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+  srtCards = cal.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/), tw:c.tw}));
   cortesMedidos = true;
   cachedCards = null;
   autoSyncStat(cal);              // el número del stat aterriza sobre la palabra hablada
@@ -4718,7 +4867,7 @@ document.getElementById('png').onclick = () => {
 };
 
 // Arranca con la calibración de voz-short-03.mp3 ya puesta: cargar el MP3 y grabar, nada más.
-srtCards = CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/)}));
+srtCards = CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/), tw:c.tw}));
 cortesMedidos = true;
 pintarSliders();
 drawFrame(T.curve + 0.3);

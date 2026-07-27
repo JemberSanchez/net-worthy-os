@@ -124,6 +124,34 @@
 > dependencia — minificarla no se notaría y la dejaría ilegible. Y meterla en Docker no la haría
 > más liviana: ya tiene la propiedad que da un contenedor (un archivo, cero instalación).
 >
+> ### 5ª RONDA — LA CAUSA REAL DEL DESFASE (no era un offset, era DISPERSIÓN)
+> **`repararDuraciones` le robaba a la tarjeta siguiente su palabra `ancla`.** Una tarjeta corta
+> crece robando palabras a la de al lado; si la robada es la PRIMERA de la siguiente y es un ancla
+> (el instante que el micrófono midió como arranque de voz), esa tarjeta pasa a empezar en una
+> palabra **interpolada**. Con `minDur` a 1,05 s el robo era sistemático.
+> **Medido: solo el 34 % de las tarjetas conservaba su arranque medido; desvío medio 0,356 s y
+> casos de 1,58 s TARDE.** Por eso los cinco ajustes de LEAD (0,15 → 0,45) nunca arreglaron nada:
+> un LEAD mueve todas por igual y esto era dispersión.
+>
+> Tres arreglos, **en el motor** (valen para cualquier Short): no se roba un ancla · los
+> sub-bloques de ~100 ms se usan también dentro de los tramos que eligen bloques gruesos ·
+> alineamiento por **energía acumulada** (el conteo de picos subcuenta un 17 % de forma irregular).
+> → **del 34 % al 66 %** de tarjetas sobre voz medida, desvío medio 0,356 → 0,261 s. El resto son
+> tramos sin ninguna pausa detectable: ahí el tiempo es interpolado por narices.
+>
+> **Y lo que mata la sensación: PALABRA ACTIVA RESALTADA.** Con la tarjeta entera del mismo color
+> el espectador no sabe por dónde va la voz: lee las tres palabras de golpe y oye cómo la voz las
+> alcanza. Ahora la palabra que suena va en dorado, las dichas atenuadas, las pendientes al 45 %.
+> El ojo sigue a la voz y un desvío de 150 ms deja de percibirse.
+>
+> **⚠ `tools/check_motor.mjs` — CORRER SIEMPRE TRAS EDITAR EL MOTOR.** Un error de sintaxis **no
+> da error en consola**: el navegador aborta el script entero y las funciones globales quedan sin
+> definir, así que la página "carga" y no hace nada. Ha pasado **dos veces** por un nombre ya
+> declarado en otro punto del archivo (`pintarChecklist`, `reloj`). Node lo caza en 200 ms.
+>
+> **37 tests** (3 nuevos de sincronía, uno de ellos determinista sin audio) + 125 de Python.
+> El MP4 bajó de 74 a **43,9 MB** como efecto colateral.
+>
 > ### Pendiente (lo de siempre: el progreso son filas, no commits)
 > Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
 > Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.

@@ -569,6 +569,55 @@ document.getElementById('motor').onload = async () => {
     return flojas.length === 0 ? true : flojas.slice(0, 3).join(' · ');
   });
 
+  // ── INVARIANTES DE SINCRONÍA. Deterministas (sin audio) → valen para CUALQUIER Short ────────
+  check('SINCRONÍA (invariante): una tarjeta corta NUNCA roba una palabra `ancla`', () => {
+    // Reproduce el bug exacto que causó el "la voz va más rápida que los subtítulos": la tarjeta A
+    // es corta, así que crecía robándole la primera palabra a B — y esa palabra era el instante
+    // MEDIDO en que arranca la voz de B. B pasaba a empezar en una palabra interpolada y entraba
+    // tarde. Con `minDur` alto el robo era sistemático.
+    const ws = [
+      {w:'No',      t0:0.00, t1:0.10, ancla:true},
+      {w:'big',     t0:0.10, t1:0.20, ancla:false},
+      {w:'salary.', t0:0.20, t1:0.30, ancla:false},
+      {w:'No',      t0:1.00, t1:1.10, ancla:true},     // ← arranque de voz medido
+      {w:'hot',     t0:1.10, t1:1.20, ancla:false},
+      {w:'tips.',   t0:1.20, t1:1.30, ancla:false},
+    ];
+    const cards = W.tarjetasDePalabras(ws, 5, 1.05);   // minDur alto: fuerza el robo
+    const segunda = cards.find(c => c.t0 >= 0.9);
+    if (!segunda) return 'no se generó la segunda tarjeta';
+    return Math.abs(segunda.t0 - 1.00) < 0.001
+      ? true
+      : `la 2ª tarjeta empieza en ${segunda.t0} y su ancla medida es 1.00 (le robaron la palabra)`;
+  });
+
+  check('SINCRONÍA (invariante): cada tarjeta lleva un tiempo por palabra (`tw`)', () => {
+    const ws = [
+      {w:'Own',   t0:0.0, t1:0.3, ancla:true},
+      {w:'what',  t0:0.3, t1:0.6, ancla:false},
+      {w:'pays.', t0:0.6, t1:0.9, ancla:false},
+    ];
+    const cards = W.tarjetasDePalabras(ws, 5, 0.5);
+    const mal = cards.filter(c => !c.tw || c.tw.length !== c.palabras.length);
+    if (mal.length) return `${mal.length} tarjeta(s) sin tiempos por palabra`;
+    // y esos tiempos son los MEDIDOS, no interpolados
+    return Math.abs(cards[0].tw[0] - 0.0) < 1e-6 && Math.abs(cards[0].tw[1] - 0.3) < 1e-6
+      ? true : `tw=${JSON.stringify(cards[0].tw)} no coincide con los t0 de las palabras`;
+  });
+
+  check('SINCRONÍA: la mayoría de tarjetas abre sobre un arranque de voz MEDIDO', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const est = W.estadoMotor();
+    const arranques = W.segmentarVoz(est.pcm, {minSilMs: 90}).map(s => s[0]);
+    const ks = W.cards();
+    const cerca = ks.filter(k => arranques.some(a => Math.abs(a - k.t0) <= 0.12)).length;
+    const pct = 100 * cerca / ks.length;
+    // Medido tras el arreglo: 66%. El resto cae en tramos donde la voz NO hace ninguna pausa
+    // detectable, así que su tiempo es necesariamente interpolado — ahí no hay ancla que valga.
+    // El umbral protege contra volver al 34% de antes, que es lo que se veía como desfase.
+    return pct >= 60 ? true : `solo el ${pct.toFixed(0)}% abre sobre voz medida (antes del arreglo: 34%)`;
+  });
+
   check('CORTES: ningún plano abre con la pantalla casi en blanco', async () => {
     if (!await conRead) return 'no se pudo calibrar la voz del Read';
     const c = W.document.querySelector('canvas'), cx = c.getContext('2d');
