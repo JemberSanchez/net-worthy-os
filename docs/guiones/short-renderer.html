@@ -666,6 +666,12 @@ const SHORTS = {
   },
 };
 
+/** Alineamiento externo cargado desde `data/<voz>.align.json` (lo genera tools/alinear_voz.py con
+ *  reconocimiento de voz local). Cuando está, el calibrador NO estima los tiempos de palabra: usa
+ *  estos, que están medidos sobre el audio real. Es la diferencia entre "repartimos las palabras
+ *  dentro del bloque" y "sabemos cuándo se dice cada una". */
+let ALINEAMIENTO = null;
+
 let SHORT = SHORTS['s3-stat'];
 let CFG = SHORT;   // alias reasignable: el motor lee CFG.spec, CFG.cta, CFG.pmt... (cambia con cargarShort)
 let ULTIMA_CAL = null;   // última calibración aplicada -> fuente de los tiempos por bloque del ADN
@@ -923,6 +929,42 @@ function alinearPorEnergia(palabras, reloj, s0, s1, nucleos){
     out[i].t1 = Math.min(out[i].t1, out[i+1].t0);
   }
   return out;
+}
+
+/** Palabras del grupo `k` con sus tiempos MEDIDOS, si hay alineamiento externo cargado.
+ *  El JSON trae las palabras del guion en orden (todos los grupos concatenados), así que se
+ *  recorta por conteo. Devuelve null si no hay alineamiento o si no cuadra con este guion —
+ *  entonces el motor calibra como siempre y no se rompe nada. */
+function palabrasAlineadas(k, guion, segsVoz){
+  if (!ALINEAMIENTO || !ALINEAMIENTO.palabras) return null;
+  const trozos = guion.grupos.map(g => g.texto.split(/\s+/).filter(Boolean));
+  const total = trozos.reduce((a, t) => a + t.length, 0);
+  if (total !== ALINEAMIENTO.palabras.length) return null;      // otro guion: no arriesgar
+  const desde = trozos.slice(0, k).reduce((a, t) => a + t.length, 0);
+  const mias = ALINEAMIENTO.palabras.slice(desde, desde + trozos[k].length);
+  if (!mias.length) return null;
+  // AFINADO CON LA ENERGÍA. El reconocimiento acierta el orden y el reparto, pero algún timestamp
+  // suelto se le va (medido: "He put in a little" a 21,46 s cuando la voz no arranca hasta 22,00).
+  // Si el t0 de una palabra cae en SILENCIO y hay un arranque de voz cerca, manda el arranque:
+  // el ASR dice QUÉ palabra y en qué orden, el micrófono dice exactamente CUÁNDO empieza el sonido.
+  const enVoz = t => !segsVoz || segsVoz.some(([a,b]) => t >= a - 0.12 && t <= b + 0.05);
+  const arranqueCerca = t => {
+    if (!segsVoz) return null;
+    let mejor = null, dist = 0.6;
+    for (const [a] of segsVoz){ const d = Math.abs(a - t); if (d < dist){ dist = d; mejor = a; } }
+    return mejor;
+  };
+  return mias.map((p, i) => {
+    let t0 = p.t0;
+    if (!enVoz(t0)){
+      const a = arranqueCerca(t0);
+      if (a != null) t0 = a;
+    }
+    const gap = i === 0 ? Infinity : t0 - mias[i-1].t1;
+    return {w: p.w, t0, t1: Math.max(t0 + 0.05, p.t1),
+            // ancla = arranca frase o viene tras una pausa real: ahí puede abrir una tarjeta
+            ancla: i === 0 || gap >= 0.12 || /[.?!]$/.test(mias[i-1].w)};
+  });
 }
 
 function alinearPalabras(texto, segs, nucleos, relojVoz, finos){
@@ -1216,7 +1258,12 @@ function calibrarAuto(buffer, guion){
     const nFrases = (guion.grupos[k].texto.match(/[^.?!]+[.?!]+/g) || []).length;
     const paraAlinear = (nFrases === misSegs.length) ? misSegs
                       : (finos.length > misSegs.length ? finos : misSegs);
-    const ws = fusionarCifras(alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos, relojVoz, finos), guion.cifras);
+    // Con alineamiento externo NO se estima nada: cada palabra trae su t0/t1 medido. `ancla` pasa
+    // a marcar las palabras tras una pausa REAL (>=120 ms) o de inicio de frase, que es donde una
+    // tarjeta puede abrir sin cortar a mitad de locución.
+    const ws = fusionarCifras(
+      palabrasAlineadas(k, guion, segsFinos) || alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos, relojVoz, finos),
+      guion.cifras);
     return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
   });
 
@@ -1307,8 +1354,10 @@ function calibrarAuto(buffer, guion){
   // pronto casi no, más aún con la palabra activa resaltada marcando por dónde va la voz.
   // Así que se adelanta con ganas (hasta 0,9 s: se recupera un arranque de voz REAL que la
   // tarjeta se había saltado) y se atrasa con cuentagotas (0,15 s).
-  const ADELANTAR = 0.90, ATRASAR = 0.15, SEP_MIN = 0.20;
-  const arranques = segsFinos.map(s => s[0]);
+  // ⚠ SOLO SIN ALINEAMIENTO EXTERNO. Este ajuste corrige una ESTIMACIÓN; si los tiempos vienen
+  // medidos palabra a palabra (tools/alinear_voz.py), moverlos solo puede empeorarlos.
+  const ADELANTAR = ALINEAMIENTO ? 0 : 0.90, ATRASAR = ALINEAMIENTO ? 0 : 0.15, SEP_MIN = 0.20;
+  const arranques = ALINEAMIENTO ? [] : segsFinos.map(s => s[0]);
   for (let i = 0; i < cards.length; i++){
     const c = cards[i], previo = i ? cards[i-1].t0 : -Infinity;
     let mejor = null, dist = Infinity;
@@ -2979,7 +3028,12 @@ function drawSnowballHUD(t, W, H, s, alpha){
   aH = fase('honesty', 0.7, 0.9); aL = fase('lesson', 0.6, 0.5);
 
   // Los rótulos de los beats, ya fuera de la cámara y centrados en el lienzo REAL.
-  for (const rt of _rotulosSnow){
+  // Solo el DOMINANTE. "95 HOLDINGS · NEVER SOLD" y "SAME ENGINE · ANY SIZE" pertenecen a beats
+  // distintos, pero sus fundidos se solapan en la transición y acababan pintados uno encima del
+  // otro (cazado por el detector de solapes en t≈48). Narrativamente son excluyentes: manda el que
+  // esté más presente.
+  const _dom = _rotulosSnow.reduce((a, b) => (!a || b.alpha > a.alpha ? b : a), null);
+  for (const rt of (_dom ? [_dom] : [])){
     if (rt.alpha <= 0.01) continue;
     const y = Math.min(Math.max(rt.y, (SAFE.top + 90)*s), H - (SAFE.bottom + 40)*s);
     // 24px, no 20: a 20 quedaban por debajo del mínimo legible en móvil que el motor documenta
@@ -3233,7 +3287,7 @@ function tarjetasDelPlano(desde, hasta, textos){
  *  el scope de script y son invisibles. Sin esto, los tests no pueden comprobar NADA del guion
  *  técnico por frase (que es justo lo que hay que proteger). No muta nada. */
 function estadoMotor(){
-  return {CFG, SHORT, T, ULTIMA_CAL, MODO, pcm, escenas: Object.keys(SCENES)};
+  return {CFG, SHORT, T, ULTIMA_CAL, MODO, pcm, ALINEAMIENTO, escenas: Object.keys(SCENES)};
 }
 
 /** Escenas cuyo contenido YA es la frase escrita en pantalla: cuando una de estas es el plano
@@ -3471,7 +3525,10 @@ function _pintarEscenaYResto(t, W, H, s, escenaAhora, datosEscena, body){
     // aún desde que la palabra activa va resaltada marcando por dónde va la voz.
     // 0,18 s no arregla las 13 (su desvío es de 0,7 s: eso solo lo cierra el .srt de CapCut, ver
     // el panel), pero mueve toda la distribución al lado barato del error.
-    const LEAD = 0.18, HOLD_MAX = 1.2;
+    // Con tiempos MEDIDOS palabra a palabra basta un adelanto mínimo (que el texto esté puesto
+    // cuando llega el sonido, ~2 frames). El 0.18 es la compensación del error de ESTIMAR, y solo
+    // hace falta cuando se estima.
+    const LEAD = ALINEAMIENTO ? 0.08 : 0.18, HOLD_MAX = 1.2;
     // ⚠ BUG QUE COSTÓ CUATRO RONDAS (arreglado 2026-07-25). La tarjeta anterior aguantaba HASTA
     // `sig.t0` y la siguiente entraba en `sig.t0 - LEAD`: durante esos LEAD segundos las DOS
     // cumplían la condición y `find` devolvía la primera del array — la VIEJA. O sea que la
@@ -3863,6 +3920,19 @@ document.getElementById('mp3').onchange = e => { if (e.target.files[0]) usarAudi
 document.getElementById('voz-proyecto').onclick = async () => {
   statusEl.textContent = `Buscando data/${CFG.voz}…`;
   try {
+    // ALINEAMIENTO EXTERNO (tools/alinear_voz.py). Si existe junto al MP3, trae el t0/t1 REAL de
+    // cada palabra, medido por reconocimiento de voz. Sustituye a la estimación del calibrador,
+    // que es exacta en los bordes de bloque pero reparte por dentro — y ese reparto es el origen
+    // del "la voz va más rápida que los subtítulos" en los tramos sin pausas.
+    // Se carga ANTES del audio para que la calibración ya lo tenga.
+    ALINEAMIENTO = null;
+    try {
+      const ra = await fetch(`../../data/${CFG.voz.replace(/\.[^.]+$/, '')}.align.json`);
+      if (ra.ok){
+        const j = await ra.json();
+        if (j && Array.isArray(j.palabras) && j.palabras.length) ALINEAMIENTO = j;
+      }
+    } catch(e){ /* sin alineamiento: se calibra como siempre */ }
     const r = await fetch(`../../data/${CFG.voz}`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const b = await r.blob();

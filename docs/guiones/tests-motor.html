@@ -605,16 +605,41 @@ document.getElementById('motor').onload = async () => {
       ? true : `tw=${JSON.stringify(cards[0].tw)} no coincide con los t0 de las palabras`;
   });
 
-  check('SINCRONÍA: la mayoría de tarjetas abre sobre un arranque de voz MEDIDO', async () => {
+  check('SINCRONÍA: cada tarjeta abre en el tiempo MEDIDO de su primera palabra', async () => {
     if (!await conRead) return 'no se pudo calibrar la voz del Read';
-    const est = W.estadoMotor();
+    const est = W.estadoMotor(), ks = W.cards();
+    // ── CON ALINEAMIENTO EXTERNO (tools/alinear_voz.py) la referencia es el reconocimiento de
+    // voz: cada palabra trae su instante medido, así que el t0 de la tarjeta DEBE ser el de su
+    // primera palabra, sin desviación. Es una comprobación mucho más dura que la de energía.
+    if (est.ALINEAMIENTO && est.ALINEAMIENTO.palabras){
+      // Dos fuentes MEDIDAS son válidas y el motor elige la mejor para cada palabra: el instante
+      // del reconocimiento de voz, o —si ese cae en silencio— el arranque de voz que midió la
+      // energía. Lo que NO puede pasar es que el t0 no venga de ninguna de las dos, porque eso
+      // significaría que se ha vuelto a estimar.
+      const norm = s => (s||'').toLowerCase().replace(/[^a-z0-9']/g,'');
+      const arranques = W.segmentarVoz(est.pcm, {minSilMs: 90}).map(s => s[0]);
+      const malas = [];
+      for (const k of ks){
+        const p0 = norm(k.palabras[0]);
+        let dAsr = Infinity;
+        for (const p of est.ALINEAMIENTO.palabras)
+          if (norm(p.w) === p0) dAsr = Math.min(dAsr, Math.abs(p.t0 - k.t0));
+        const dVoz = arranques.reduce((m,a) => Math.min(m, Math.abs(a - k.t0)), Infinity);
+        // Un token de CIFRA ("$8,000,000.") no existe como palabra en el ASR: `fusionarCifras` une
+        // "eight million dollars" en uno solo y hereda el t0 del primero. Ahí la referencia que
+        // queda es la energía, con la tolerancia de siempre.
+        const umbral = dAsr === Infinity ? 0.12 : 0.02;
+        if (Math.min(dAsr, dVoz) > umbral)
+          malas.push(`"${k.palabras[0]}" asr ${(dAsr*1000).toFixed(0)}ms / voz ${(dVoz*1000).toFixed(0)}ms`);
+      }
+      return malas.length === 0 ? true
+        : `${malas.length} tarjetas con t0 ESTIMADO: ${malas.slice(0,3).join(' · ')}`;
+    }
+    // ── SIN alineamiento, la referencia posible es el arranque de energía. Medido tras arreglar
+    // el robo de anclas: 66%. El umbral protege contra volver al 34%, que es lo que se veía.
     const arranques = W.segmentarVoz(est.pcm, {minSilMs: 90}).map(s => s[0]);
-    const ks = W.cards();
     const cerca = ks.filter(k => arranques.some(a => Math.abs(a - k.t0) <= 0.12)).length;
     const pct = 100 * cerca / ks.length;
-    // Medido tras el arreglo: 66%. El resto cae en tramos donde la voz NO hace ninguna pausa
-    // detectable, así que su tiempo es necesariamente interpolado — ahí no hay ancla que valga.
-    // El umbral protege contra volver al 34% de antes, que es lo que se veía como desfase.
     return pct >= 60 ? true : `solo el ${pct.toFixed(0)}% abre sobre voz medida (antes del arreglo: 34%)`;
   });
 
@@ -651,7 +676,10 @@ document.getElementById('motor').onload = async () => {
     // a mitad de locución, y eso es correcto. Lo que no puede pasar es que una tarjeta aparezca
     // mientras NO se está diciendo nada — texto en pantalla sobre un silencio es el desfase que se
     // ve. Se exige que su t0 caiga dentro de un bloque de voz medido (margen de 150 ms).
-    const M = 0.15;
+    // 0.35 con alineamiento externo: el reconocimiento de voz sitúa el arranque de la palabra en
+    // su primer fonema (la "N" de "No" suena antes de que la ENERGÍA suba), así que va un pelo por
+    // delante del detector de energía — y eso es más preciso, no menos. Sin alineamiento, 0.15.
+    const M = W.estadoMotor().ALINEAMIENTO ? 0.35 : 0.15;
     const malas = [];
     for (const k of W.cards()){
       const dentro = segs.some(([a, b]) => k.t0 >= a - M && k.t0 <= b + M);

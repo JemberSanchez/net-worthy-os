@@ -23,6 +23,15 @@ Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
 
 ## Tests
 `python -m unittest discover -s tests -q`  (deben pasar TODOS antes de commitear lógica).
+**Motor de video:** `node tools/check_motor.mjs` (sintaxis — un error aquí NO da error en consola,
+el navegador aborta el script entero y la página "carga" sin hacer nada) + `tests-motor.html`.
+
+## Sincronía de subtítulos — RESUELTO, no volver a tocarlo a ojo
+Antes de renderizar un Short: **`python tools/alinear_voz.py <clave-del-short>`**. Pone el tiempo
+REAL de cada palabra (reconocimiento de voz local, gratis e ilimitado) en `data/<voz>.align.json`;
+el motor lo carga solo al pulsar "Usar la voz del proyecto". Sin él, el calibrador ESTIMA dentro de
+cada bloque y el desfase vuelve. **El LEAD no es la palanca** (se ajustó seis veces sin arreglarlo:
+el error era dispersión, no offset).
 
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
 El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento

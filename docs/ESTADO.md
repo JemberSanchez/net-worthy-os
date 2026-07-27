@@ -152,7 +152,25 @@
 > **37 tests** (3 nuevos de sincronía, uno de ellos determinista sin audio) + 125 de Python.
 > El MP4 bajó de 74 a **43,9 MB** como efecto colateral.
 >
-> ### 🔴 EL DESFASE QUE QUEDA SOLO LO CIERRA EL .SRT DE CAPCUT — no es opinión, es el método
+> ### ✅ DESFASE RESUELTO DE RAÍZ: alineador propio con reconocimiento de voz LOCAL
+> **`python tools/alinear_voz.py read-janitor`** → `data/<voz>.align.json` con el t0/t1 REAL de
+> cada palabra. El motor lo carga solo al pulsar «Usar la voz del proyecto»; si no está, calibra
+> como siempre y no se rompe nada.
+>
+> - **`faster-whisper`** (CTranslate2, **sin PyTorch**, modelo `base.en` de 74 MB) transcribe con
+>   timestamps por palabra. Local, gratis e **ILIMITADO** — a diferencia del .srt de CapCut, que
+>   su plan gratuito solo deja exportar **2 veces al mes** y por eso nunca fue una opción real.
+> - No nos fiamos de lo que Whisper *entendió*, solo de **cuándo lo oyó**: su transcripción se
+>   alinea con el guion real por Needleman-Wunsch. **160 de 162 palabras (99 %) con tiempo medido.**
+> - Si un timestamp del ASR cae en silencio, manda el arranque de voz de la energía. El ASR dice
+>   QUÉ palabra y en qué orden; el micrófono, exactamente CUÁNDO empieza el sonido.
+> - Con alineamiento: el ajuste heurístico se **desactiva** (corrige estimaciones, y ya no las hay)
+>   y el LEAD baja a 0,08 s. **Resultado: desvío 0,000 s en las 45 tarjetas comparadas.**
+>
+> ⚠ **Correr el alineador ANTES de renderizar cualquier Short.** Sin él vuelve la estimación.
+>
+> ### Histórico: por qué el .srt de CapCut no servía
+
 > Tras arreglar el robo de anclas, el reparto de las 50 tarjetas contra los arranques de voz
 > medidos es: **33 a tiempo (±80 ms), 13 TARDE (media −0,73 s), 4 pronto.** Las 13 caen en tramos
 > donde **la voz no hace ninguna pausa detectable**, así que su tiempo se ESTIMA por fuerza. Ningún
