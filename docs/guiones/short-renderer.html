@@ -626,8 +626,14 @@ const SHORTS = {
     ritmo: true,                        // Motion Budget v1 desde el frame 1 (Experimento #001)
     ritmoYears: 60,                     // los ~60 años comprando y reinvirtiendo — la variable ES el TIEMPO
     ritmoSep: 210,                      // "$8 MILLION." es corta -> no la encoge text() -> más hueco para el track
-    aviso: ['Illustrative · ~$170/mo reinvested at ~10%/yr nominal (S&P total return) · before inflation',
-            'Blue chips can cut dividends or fail · he held 95 & never sold · Not financial advice'],
+    // ACORTADO (2026-07-26). El texto anterior no cabía a 22px en la caja segura y `text()` lo
+    // encogía a 20,2 — por debajo del mínimo que el propio motor documenta como legible en un
+    // móvil ("22px, no 19: a 19px el aviso es ilegible, y un descargo ilegible no protege nada").
+    // Se recorta lo que NO es advertencia: "(S&P total return)" es la fuente de la tasa y "he held
+    // 95 & never sold" lo dice el propio vídeo. Queda intacto lo que protege: ilustrativo, la tasa,
+    // nominal/antes de inflación, que los blue chips pueden fallar, y que no es asesoramiento.
+    aviso: ['Illustrative · ~$170/mo reinvested at ~10%/yr nominal · before inflation',
+            'Blue chips can cut dividends or fail · Not financial advice'],
     guion: {
       grupos: [
         {id:'intro',   texto:"He pumped gas and cleaned floors his whole life. He died with eight million dollars."},
@@ -1361,9 +1367,13 @@ function text(str, x, y, {size=40, weight=400, color=P.paper, align='center', al
     const mA = ctx.getTransform(), escA = Math.hypot(mA.a, mA.b) || 1;
     const wA = ctx.measureText(str).width * escA;
     const xA = mA.a * x + mA.c * y + mA.e;
+    // `px` es el tamaño REAL con el que se pinta: el que quedó tras el auto-encogido y la escala
+    // del contexto. Es lo único que dice si un texto es legible en un móvil.
+    const mPx = /(\d+(?:\.\d+)?)px/.exec(ctx.font);
     window.__auditText({str: String(str), alpha,
       x0: align === 'center' ? xA - wA/2 : align === 'left' ? xA : xA - wA,
-      w: wA, y: mA.b * x + mA.d * y + mA.f});
+      w: wA, y: mA.b * x + mA.d * y + mA.f,
+      px: mPx ? +(mPx[1] * escA).toFixed(1) : null});
   }
   ctx.fillText(str, x, y);
   ctx.restore();
@@ -2805,7 +2815,9 @@ function drawSnowballHUD(t, W, H, s, alpha){
   for (const rt of _rotulosSnow){
     if (rt.alpha <= 0.01) continue;
     const y = Math.min(Math.max(rt.y, (SAFE.top + 90)*s), H - (SAFE.bottom + 40)*s);
-    text(rt.txt, W/2, y, {size:20*s, weight:700, color:rt.color, alpha:rt.alpha, spacing:rt.spacing});
+    // 24px, no 20: a 20 quedaban por debajo del mínimo legible en móvil que el motor documenta
+    // para el aviso (22px). Caben de sobra — el más largo mide ~330px sobre 820 disponibles.
+    text(rt.txt, W/2, y, {size:24*s, weight:700, color:rt.color, alpha:rt.alpha, spacing:rt.spacing});
   }
   _rotulosSnow = [];
 
@@ -2840,7 +2852,7 @@ function drawSnowballHUD(t, W, H, s, alpha){
   const aRot = alpha * 0.8 * (1 - Math.max(aH, aL));
   if (aRot > 0.01)
     text('DIVIDENDS BUYING MORE SHARES', W/2, gy1 + 46*s,
-         {size:20*s, weight:600, color:P.grey, alpha:aRot, spacing:2*s});
+         {size:24*s, weight:600, color:P.grey, alpha:aRot, spacing:2*s});
 }
 
 // ── Escena: PORTFOLIO (Read #7) — el tablero de posiciones que se ENCIENDE con los años ─────────
@@ -3105,6 +3117,7 @@ function drawFrame(t){
 
   let escenaAhora = CFG.escena;      // la escena REALMENTE pintada (cambia con escenaPorGrupo)
   let datosEscena = null;            // contenido de esa escena cuando viene declarado por frase
+  let body = false;                  // ventana RITMO: hay un ctx.save() pendiente que cerrar
   if (MODO === 'video'){
     // TIMELINE: segmento activo en tiempo LOCAL + crossfade de 0.45s con el siguiente
     const k = SEGS.findIndex(sg => t < sg.t1);
@@ -3131,7 +3144,7 @@ function drawFrame(t){
     // MAYORES; el micro-movimiento continuo está explícitamente exento.
     // GATED EN CFG.ritmo: sin el flag, S3/S1/S2/FED renderizan idénticos y no se rompe la
     // comparabilidad de lo ya publicado.
-    const body = CFG.ritmo && t >= 10;
+    body = CFG.ritmo && t >= 10;
     if (body){
       // Amplitud BAJADA (2026-07-25) al entrar el montaje por cortes: con un corte cada ~3s el
       // cuadro ya no se congela nunca, así que el micro-movimiento solo tiene que cubrir el hueco
@@ -3145,7 +3158,20 @@ function drawFrame(t){
     // ESCENA BASE. Si el Short declara `escenaPorGrupo`, la escena CAMBIA con el tramo del guion:
     // los cortes dejan de ser encuadres del mismo objeto y pasan a ser planos de cosas distintas,
     // que es lo que separa un montaje de un zoom. Sin la clave, una sola escena como siempre.
-    escenaAhora = (() => {
+    const _res = resolverEscena(t);
+    escenaAhora = _res.escena; datosEscena = _res.datos;
+  }
+  _pintarEscenaYResto(t, W, H, s, escenaAhora, datosEscena, body);
+}
+
+/** Escena (y sus datos) que corresponde al instante `t`. EXTRAÍDA de drawFrame para poder
+ *  preguntársela también por OTRO instante: la posición del subtítulo depende de la escena, y
+ *  usar la del frame actual hacía que una tarjeta que cruza un corte SALTARA de sitio a mitad de
+ *  lectura (medido: 632 px en t=9.3 y 856 px en t=52.9). Ahora se pregunta por el arranque de la
+ *  tarjeta, así que cada subtítulo se queda donde nació. Pura en `t`. */
+function resolverEscena(t){
+  let datosEscena = null;
+  const escena = (() => {
       // 1º POR FRASE (la unidad de montaje): `visualPorFrase` es un array paralelo a las frases
       // del guion; un hueco vacío hereda la escena de antes, que es como se escribe un guion
       // técnico de verdad — solo se anota donde CAMBIA el plano.
@@ -3212,7 +3238,12 @@ function drawFrame(t){
       if (!mapa || !ULTIMA_CAL || !ULTIMA_CAL.grupos) return CFG.escena;
       const g = ULTIMA_CAL.grupos.find(x => t >= x.inicio - 0.25 && t <= x.fin + 0.25);
       return (g && mapa[g.id]) || CFG.escena;
-    })();
+  })();
+  return {escena, datos: datosEscena};
+}
+
+function _pintarEscenaYResto(t, W, H, s, escenaAhora, datosEscena, body){
+  if (MODO !== 'video'){
     // Con datos por frase la escena se llama como un overlay (alpha 1 + su objeto de datos);
     // sin ellos, la firma de siempre.
     if (datosEscena) (SCENES[escenaAhora] || SCENES.chart)(t, W, H, s, 1, datosEscena);
@@ -3298,11 +3329,16 @@ function drawFrame(t){
       // La posición depende de la escena REALMENTE pintada, no de `CFG.escena`: con escenaPorGrupo
       // ya no son la misma. Medido: el checklist pone su 3er ítem en 696*s y el subtítulo caía en
       // 700*s — encima, ilegibles los dos.
-      if (escenaAhora === 'columns')
+      // ⚠ LA POSICIÓN SE FIJA CON LA ESCENA EN LA QUE NACIÓ LA TARJETA, no con la de este frame.
+      // Con la actual, una tarjeta que sigue en pantalla cuando entra el plano siguiente SALTABA
+      // de sitio a mitad de lectura: 632 px en t=9.3 (checklist→snowball) y 856 px en t=52.9
+      // (snowball→bullets). El texto se queda donde empezó hasta que lo releva el siguiente.
+      const escSub = resolverEscena(c.t0).escena;
+      if (escSub === 'columns')
         dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, 1 + 0.05*(1-dentro), 470);
-      else if (escenaAhora === 'checklist')
+      else if (escSub === 'checklist')
         dibujarSubtitulo(c.palabras, W/2, 1010*s, s, dentro, 1 + 0.05*(1-dentro));
-      else if (escenaAhora === 'bullets')
+      else if (escSub === 'bullets')
         dibujarSubtitulo(c.palabras, W/2, 1120*s, s, dentro, 1 + 0.05*(1-dentro));
       else
         dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, 1 + 0.05*(1-dentro));

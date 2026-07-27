@@ -81,6 +81,25 @@
 > revisados uno a uno: son los cortes duros entre una escena luminosa y una tarjeta oscura, que es
 > lo que el montaje busca a propósito.
 >
+> ### 4ª RONDA (revisión exigente): categorías que NADIE había mirado
+> Las tres primeras rondas miraron composición y cortes. Faltaban cinco familias enteras:
+> | Categoría | Resultado |
+> |---|---|
+> | **Subtítulos vs guion hablado** (palabra por palabra) | ✅ 128 palabras, cobertura total. La única diferencia es la conversión deliberada "eight million dollars" → "$8,000,000" |
+> | **Zonas seguras VERTICALES** (solo se probaban las laterales) | ✅ 0 violaciones |
+> | **Solapes de texto** con cajas tipográficas reales (ascendente/descendente por tamaño) | ✅ 0 en todo el vídeo |
+> | **Legibilidad**: tamaño REAL tras el auto-encogido | ⚠ el **aviso YMYL se encogía a 20,2 px**, por debajo del mínimo de 22 que el propio motor documenta. Se acortó el texto (quitando lo que no es advertencia) en vez de bajar el listón. Los rótulos de escena subieron de 20 a 24 px |
+> | **Audio del MP4** | ✅ 0 muestras clipeadas, pico 0,64, sin silencios >1,2 s, cola muda 0,32 s |
+> | **MOVIMIENTO entre frames** (un tirón no se ve en frames sueltos) | ⚠ **el subtítulo SALTABA de posición** al cruzar un corte: 632 px en t=9,3 y 856 px en t=52,9 |
+>
+> El salto del subtítulo venía de que su posición depende de la escena y se calculaba con la del
+> frame ACTUAL: si la tarjeta seguía en pantalla cuando entraba el plano nuevo, se mudaba de sitio a
+> mitad de lectura. Se extrajo `resolverEscena(t)` de `drawFrame` para poder preguntarla por el
+> **arranque de la tarjeta**: cada subtítulo se queda donde nació.
+>
+> Barrido final de los 1.882 frames: **0 vacíos · 0 flojos · 0 solapes · 0 tirones · 0 fuera de
+> zona segura**. 34 tests del motor + 125 de Python.
+>
 > ### Pendiente (lo de siempre: el progreso son filas, no commits)
 > Publicar el #7 → `record-dna` + `record-outcome` = **7/10**. `production_cost` sigue en 0 filas.
 > Y la captura sigue parada desde el 15-jul: **`/daily` antes de volver a usar `decide`**.
