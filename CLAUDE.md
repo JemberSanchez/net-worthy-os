@@ -23,8 +23,13 @@ Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
 
 ## Tests
 `python -m unittest discover -s tests -q`  (deben pasar TODOS antes de commitear lógica).
-**Motor de video:** `node tools/check_motor.mjs` (sintaxis — un error aquí NO da error en consola,
-el navegador aborta el script entero y la página "carga" sin hacer nada) + `tests-motor.html`.
+**Motor de video, ANTES de abrir el navegador** (los dos tardan <1s y cazan lo que la consola calla):
+- `node tools/check_motor.mjs` — SINTAXIS. Un error aquí no da error en consola: el navegador
+  aborta el script entero y la página "carga" sin hacer nada.
+- `node tools/lint_motor.mjs` — CORRECCIÓN (ESLint, solo reglas de bug). `no-redeclare` es el que
+  habría cazado en 100 ms los dos fallos que costaron horas el 26-jul: `pintarChecklist` (ya
+  existía para el panel → la escena salía en blanco) y `reloj` (ya declarado → script abortado).
+Luego `tests-motor.html` en el navegador.
 
 ## Sincronía de subtítulos — RESUELTO, no volver a tocarlo a ojo
 Antes de renderizar un Short: **`python tools/alinear_voz.py <clave-del-short>`**. Pone el tiempo

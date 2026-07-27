@@ -13,3 +13,7 @@ docs/guiones/PREVIEW-*.jpg
 docs/guiones/*.mp3
 # backups del moat (zip fechado de data/): van a nube/USB, no al repo
 backups/
+# ESLint se instala con `npm install --no-save eslint` solo para pasar tools/lint_motor.mjs.
+# El motor sigue sin dependencias: node_modules es herramienta de desarrollo, no del producto.
+node_modules/
+package-lock.json

@@ -2371,21 +2371,24 @@ function drawChecklist(t, W, H, s, a, ov){
   // reparten sobre lo que dura SU PLANO, que es lo único que el espectador ve. Sin esto se
   // repartían sobre el tramo entero del guion y el último ítem caía después del corte.
   if (ov && ov.desde != null && ov.hasta != null && ov.hasta > ov.desde){
-    var fin = Math.max(1.2, ov.hasta - ov.desde);
     // `tItems` (relativos al plano): cada ✗ cae cuando la voz DICE su frase. Sin ellos, el reparto
     // de siempre sobre la ventana.
     const tRel = ov.tItems ? ov.tItems.map(x => x - ov.desde) : null;
-    return pintarChecklistEscena(t - ov.desde, W, H, s, items, total, fin, tRel);
+    return pintarChecklistEscena(t - ov.desde, W, H, s, items, total,
+                                 Math.max(1.2, ov.hasta - ov.desde), tRel);
   }
   // Si la escena se está usando dentro de un tramo (escenaPorGrupo), los ítems se reparten sobre
   // ESE tramo. Si no, el comportamiento de siempre (el S2 la usa desde el frame 0 hasta T.hook).
+  // `let` con una sola declaración, no tres `var`: eran redeclaraciones que ESLint marca y que son
+  // la misma familia de fallo que tumbó el motor dos veces hoy (un nombre pisando a otro).
   const tr = tramoActivo(t);
+  let fin;
   if (tr){
-    const dur = Math.max(1.2, tr.fin - tr.inicio);
+    fin = Math.max(1.2, tr.fin - tr.inicio);
     t = t - tr.inicio;                            // reloj local del tramo
-    var fin = dur;
-  } else
-  var fin = Math.max(1.2, T.hook);                // los ítems se reparten el tramo hasta el sello
+  } else {
+    fin = Math.max(1.2, T.hook);                  // los ítems se reparten el tramo hasta el sello
+  }
   return pintarChecklistEscena(t, W, H, s, items, total, fin);
 }
 
