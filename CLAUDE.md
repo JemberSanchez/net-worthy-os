@@ -75,6 +75,26 @@ Score: `success = vistas_totales(FB+YT) / 750`.
 `docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/POLITICA.md` ·
 `docs/VISION.md` (arquitectura congelada) · `docs/guiones/` (guiones, motor, calibración) · `marca/`.
 
+## CÓMO TRABAJAR (método — sale de errores medidos, no de teoría)
+- **Si algo se resiste DOS rondas, la pregunta no es "¿qué parámetro muevo?" sino "¿esto ya está
+  resuelto?".** El desfase de subtítulos costó SEIS rondas ajustando el LEAD; la solución era
+  alineamiento forzado, estándar desde hace años (`tools/alinear_voz.py`).
+- **Antes de creer una medición, validar el instrumento.** Tres métricas propias dieron falsos
+  positivos (solapes sin aplicar la matriz del canvas; sincronía contra "el arranque de voz más
+  cercano" aunque fuera de otra tarjeta) y llevaron a "arreglar" cosas que no estaban rotas.
+- **Sustituir juicio por medición siempre que se pueda.** Lo que más ha mejorado el motor no es
+  pensar mejor: es `alinear_voz.py`, `check_motor.mjs` y `lint_motor.mjs`.
+- **Lo barato primero.** `check_motor` + `lint_motor` tardan <1s y cazan lo que el navegador calla:
+  correrlos SIEMPRE antes de abrir el preview o renderizar (3 min).
+
+## ECONOMÍA DE CONTEXTO (el usuario lo pidió explícitamente)
+- **Devolver agregados, no listados**: media, máximo y los 3 peores casos. Nada de volcar 50 filas.
+- **Agrupar cambios y verificar UNA vez por lote**, no tras cada constante.
+- **Las imágenes son lo más caro del turno.** Primero el número; la imagen solo para juicio visual
+  o confirmación final. Nunca una hoja de contactos entera si bastan 2 frames.
+- **Un render de vídeo por lote cerrado.** Cada uno son ~3 min y polling.
+- Preferir `Grep` con contexto a `Read` de bloques grandes del motor (288 KB).
+
 ## Convenciones
 - Responder en **español**; el contenido del canal va en **inglés**.
 - Commits: mensaje via archivo si tiene comillas/`&`/`$` (PowerShell rompe here-strings con eso).
