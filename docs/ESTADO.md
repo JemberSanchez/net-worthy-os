@@ -1,5 +1,40 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶ 2026-07-28 · LA MÉTRICA DE ÉXITO ESTABA MIDIENDO OTRA COSA (arreglado)
+>
+> **`success` era `vistas_totales(FB+YT)/750`. Desde el 31-mar-2025 una "vista" de Shorts incluye
+> cualquier reproducción, repetición o *scroll-by*, sin mínimo de tiempo** — lo que antes era una
+> vista pasó a llamarse *engaged view*. O sea que el moat llevaba meses calibrándose con una señal
+> que mezcla a quien vio el vídeo con quien pasó por encima, y `decide` aprendía de esa mezcla.
+>
+> **Score v2** (`omega/creative/scoring.py`, `python -m omega.cli rescore`):
+> `0.70 · min(1, retención/0.50) + 0.30 · min(1, alcance/750)`
+> - 70 % retención: es la palanca, y es lo que el guion controla. El umbral que pide el algoritmo
+>   para empujar un Short de 30-60 s es **~50 %**; el canal va por **6-16 %**.
+> - 30 % alcance: sigue contando (retener mucho sin llegar a nadie tampoco sirve) pero no manda.
+> - Los topes impiden que un pico de alcance tape una retención mala — que es justo lo que pasaba.
+>
+> **Ya NO se teclea a mano**: sale de `production_analytics` y cada outcome guarda su
+> `score_version` + `score_parts`. ⚠ **v1 y v2 no son comparables**: comprobar la versión antes de
+> comparar dos outcomes (mismo gap que destapó `extractor_version` en las predicciones).
+>
+> **Efecto del recálculo** (los 5 medidos, backup hecho antes):
+> | vídeo | v1 | v2 |
+> |---|---|---|
+> | S1 story | 0,373 | **0,333** |
+> | Buffett | 0,341 | **0,256** |
+> | S2 contrarian | 0,303 | **0,179** |
+> | S3 stat | 0,119 | 0,119 ⚠ parcial (sin retención registrada) |
+> | FED | 0,021 | 0,021 ⚠ parcial |
+>
+> El orden aguanta pero **las distancias cambian**: el contrarian (retención 6,3 %) se descuelga.
+> La calibración pasa a decir `story 30 % · contrarian 18 % · stat 12 % · shock 2 %` y
+> `character 30 % vs none 11 %`. 135 tests verdes (10 nuevos sobre la métrica).
+>
+> **Lo que esto NO arregla**: S3 y FED siguen sin retención registrada, así que su score solo mide
+> alcance y vale menos. Registrar `retention_avg` de los dos los volvería comparables.
+
+
 > ## ▶▶ 2026-07-27 · SESIÓN DEL #7: LO QUE HAY QUE SABER SI RETOMAS AQUÍ
 >
 > **El Short #7 (Ronald Read) está montado, verificado y renderizado. Falta PUBLICARLO y medirlo.**

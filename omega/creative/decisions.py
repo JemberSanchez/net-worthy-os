@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS creative_decision (
 CREATE TABLE IF NOT EXISTS production_outcome (
     production_ref TEXT    PRIMARY KEY,
     success        REAL    NOT NULL,        -- 0..1 (medido tras publicar; NO predicho)
-    measured_at    INTEGER NOT NULL
+    measured_at    INTEGER NOT NULL,
+    score_version  TEXT,                    -- con qué fórmula se calculó (ver scoring.py)
+    score_parts    TEXT                     -- json: de dónde sale el número, para poder auditarlo
 );
 CREATE TABLE IF NOT EXISTS production_context (
     production_ref TEXT    PRIMARY KEY,      -- contexto: emoción, audiencia, duración, plataforma...
@@ -36,6 +38,13 @@ CREATE INDEX IF NOT EXISTS idx_cd_prod ON creative_decision(production_ref);
 
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA)
+    # MIGRACIÓN IDEMPOTENTE. `CREATE TABLE IF NOT EXISTS` no añade columnas a una tabla que ya
+    # existe: una base viva se queda con el esquema viejo y falla al insertar, en silencio hasta
+    # que alguien mira. Ya pasó con `production_analytics.views`.
+    cols = {r[1] for r in con.execute("PRAGMA table_info(production_outcome)")}
+    for col, tipo in (("score_version", "TEXT"), ("score_parts", "TEXT")):
+        if col not in cols:
+            con.execute(f"ALTER TABLE production_outcome ADD COLUMN {col} {tipo}")
     con.commit()
 
 
@@ -60,14 +69,22 @@ def record_decision(con: sqlite3.Connection, *, production_ref: str, decision_ty
 
 
 def record_outcome(con: sqlite3.Connection, production_ref: str, success: float,
-                   now: int | None = None) -> None:
-    """Resultado MEDIDO (no predicho) de una producción publicada."""
+                   now: int | None = None, score_version: str | None = None,
+                   score_parts: dict | None = None) -> None:
+    """Resultado MEDIDO (no predicho) de una producción publicada.
+
+    `score_version` sella CON QUÉ FÓRMULA se calculó. Sin eso, cambiar la definición de éxito
+    contamina el histórico en silencio: el sistema compararía peras (v1, alcance) con manzanas
+    (v2, retención) y llamaría a eso aprendizaje. Es el mismo gap que ya destapó `extractor_version`
+    en las predicciones (ver docs/ESTADO.md)."""
     if not (0.0 <= success <= 1.0):
         raise ValueError("success debe estar en [0,1]")
     now = now or int(time.time())
     con.execute(
-        "INSERT OR REPLACE INTO production_outcome (production_ref, success, measured_at) "
-        "VALUES (?,?,?)", (production_ref, success, now),
+        "INSERT OR REPLACE INTO production_outcome (production_ref, success, measured_at, "
+        "score_version, score_parts) VALUES (?,?,?,?,?)",
+        (production_ref, success, now, score_version,
+         json.dumps(score_parts, ensure_ascii=False) if score_parts else None),
     )
     con.commit()
 

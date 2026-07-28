@@ -18,6 +18,7 @@ Comandos:
   python -m omega.cli record-cost [file]           # registra horas/coste de producir el video
   python -m omega.cli dna                          # dataset de ADN + calibracion + rendimiento/hora
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
+  python -m omega.cli rescore [--dry-run]          # recalcula el exito de todos desde analytics
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli resolve-prediction <id> <outcome> [nota]  # cierra una predicción vencida
@@ -624,6 +625,51 @@ def cmd_record_outcome() -> None:
     con.close()
 
 
+def cmd_rescore() -> None:
+    """Recalcula el éxito de TODOS los videos con la fórmula actual, leyendo sus analíticas.
+
+    El `success` se tecleaba a mano con una regla que vivía en los docs. Eso significaba que la
+    definición de éxito podía cambiar sin que el dataset se enterara. Ahora sale del código, queda
+    sellada con su versión y se puede volver a calcular entera cuando la fórmula cambie."""
+    from .reasoning import store as kstore
+    from .creative import patterns, decisions, production_dna, scoring
+
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (patterns, decisions, production_dna):
+        mod.init(con)
+
+    refs = [r["production_ref"] for r in
+            con.execute("SELECT production_ref FROM production_analytics ORDER BY production_ref")]
+    if not refs:
+        print("No hay analíticas registradas. Corre antes 'record-analytics'.")
+        con.close()
+        return
+
+    print(f"Fórmula: {scoring.SCORE_VERSION}  "
+          f"({scoring.PESO_RETENCION:.0%} retención/{scoring.UMBRAL_RETENCION:.0%} + "
+          f"{scoring.PESO_ALCANCE:.0%} alcance/{scoring.ALCANCE_REF})\n")
+    seco = "--dry-run" in sys.argv
+    for ref in refs:
+        antes = con.execute("SELECT success, score_version FROM production_outcome WHERE production_ref=?",
+                            (ref,)).fetchone()
+        try:
+            nuevo, partes = scoring.desde_analytics(con, ref)
+        except ValueError as exc:
+            print(f"  {ref}: {exc}")
+            continue
+        viejo = f"{antes['success']:.3f} ({antes['score_version'] or 'v1-alcance'})" if antes else "—"
+        marca = " ⚠ parcial" if partes.get("parcial") else ""
+        print(f"  {ref}\n      {viejo}  ->  {nuevo:.3f} ({scoring.SCORE_VERSION}){marca}")
+        if not seco:
+            decisions.record_outcome(con, ref, nuevo, score_version=scoring.SCORE_VERSION,
+                                     score_parts=partes)
+    if seco:
+        print("\n(--dry-run: no se ha escrito nada)")
+    else:
+        print(f"\n{len(refs)} outcomes recalculados y sellados. 'learnings' y 'dna' ya usan el nuevo.")
+    con.close()
+
+
 def cmd_learnings() -> None:
     """El moat visible: qué patrones de craft funcionan según resultados REALES (no opinión)."""
     from .reasoning import store as kstore
@@ -735,6 +781,7 @@ def main(argv: list[str]) -> int:
         "record-cost": cmd_record_cost,
         "dna": cmd_dna,
         "record-outcome": cmd_record_outcome,
+        "rescore": cmd_rescore,
         "learnings": cmd_learnings,
         "hypotheses": cmd_hypotheses,
         "resolve-prediction": cmd_resolve_prediction,

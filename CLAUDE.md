@@ -46,7 +46,13 @@ No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concl
 
 ## Estado actual (2026-07-24, verificado contra la DB) — LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
 **6 de 10 instrumentados, 5 medidos.** 117 tests verdes. `production_cost` = **0 filas**.
-Score: `success = vistas_totales(FB+YT) / 750`.
+**Score v2 (28-jul, `omega/creative/scoring.py`): `0.70·min(1, retención/0.50) + 0.30·min(1, alcance/750)`.**
+Se calcula desde `production_analytics` con `python -m omega.cli rescore`, NO se teclea a mano, y
+cada outcome guarda su `score_version`. Motivo: desde el 31-mar-2025 una "vista" de Shorts incluye
+scroll-by sin mínimo de tiempo (lo que antes era vista ahora es *engaged view*), así que el v1
+—alcance/750— mezclaba a quien vio el vídeo con quien pasó por encima. La retención es la palanca:
+el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va por 6-16%.
+⚠ v1 y v2 NO son comparables: mirar siempre `score_version` antes de comparar dos outcomes.
 - **#6 Buffett CERRADO** (256 vistas → 0.341, 2º de 5). **FLATLINEÓ**: entre las 17h y los 7 días
   sumó +1 vista. En Reels el veredicto llega en las primeras ~17h — una ventana corta ya es casi
   el número final. Primera curva de retención del canal: **24,1% a 3s → 10,0% a 20s**. El gancho
