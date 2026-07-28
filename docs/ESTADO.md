@@ -1,5 +1,51 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶ 2026-07-27 · SESIÓN DEL #7: LO QUE HAY QUE SABER SI RETOMAS AQUÍ
+>
+> **El Short #7 (Ronald Read) está montado, verificado y renderizado. Falta PUBLICARLO y medirlo.**
+> Sigue siendo **6/10** del hito: el vídeo no cuenta hasta que hay fila en la DB.
+>
+> ### Las tres herramientas nuevas — correrlas SIEMPRE, en este orden
+> | Comando | Qué caza | Por qué existe |
+> |---|---|---|
+> | `python tools/alinear_voz.py <short>` | pone el tiempo REAL de cada palabra | sin esto el subtítulo se ESTIMA y vuelve el desfase |
+> | `node tools/check_motor.mjs` | errores de SINTAXIS | no dan error en consola: el navegador aborta el script y la página "carga" sin hacer nada |
+> | `node tools/lint_motor.mjs` | redeclaraciones, claves duplicadas | `no-redeclare` habría cazado en 100 ms los dos fallos que costaron horas |
+>
+> ### La lección de método de esta sesión (la dijo el usuario, y tenía razón)
+> El desfase de subtítulos se persiguió **seis rondas ajustando el LEAD** (0,15 → 0,45 → 0,05 →
+> 0,18) sin arreglarlo, porque **el error era DISPERSIÓN, no offset**: un LEAD mueve las 50
+> tarjetas por igual. La solución era obvia y estándar —**alineamiento forzado**— y estuvo ahí
+> desde el principio.
+> **Regla que sale de aquí: si algo se resiste DOS rondas, la pregunta no es "¿qué parámetro
+> muevo?" sino "¿esto ya está resuelto por alguien?".** El mismo patrón destapó que el proyecto no
+> tenía NINGUNA herramienta de calidad instalada (ni linter, ni type-checker).
+>
+> ### Qué se arregló en el motor (todo verificado, 37 tests)
+> - **Sincronía**: tiempos por palabra medidos con reconocimiento de voz local (99 % de 162
+>   palabras). El usuario confirmó: *"definitivamente los subtítulos van al mismo tiempo que la voz"*.
+> - **Palabra activa resaltada** en el subtítulo: el ojo sigue a la voz y un desvío de 150 ms deja
+>   de percibirse.
+> - **Guion técnico por frase**: 16 cambios de plano en 62,7 s (uno cada 3,9 s).
+> - **Cámara**: se quitaron los ~29 cortes de zoom. Un corte sobre el MISMO objeto no se lee como
+>   montaje sino como un fallo de render — el usuario lo describió como *"artificiales, casi como
+>   si fueran errores"*. Ahora es un push-in continuo: **salto máximo 0,4 px por frame** (antes
+>   1.431 px). El montaje lo dan los cambios de escena, que sí cambian el contenido.
+> - Media docena de defectos de composición: frames en negro en los cortes, subtítulo duplicado
+>   sobre las tarjetas, texto invadiendo la franja de botones, aviso YMYL ilegible a 20,2 px.
+>
+> ### ⚠ Trampas de método que costaron tiempo (no repetirlas)
+> - **La caché del navegador**: `python -m http.server` no versiona nada. Recargar SIEMPRE con
+>   `?v=N` distinto. Y `tests-motor.html` cargaba el motor en un iframe **sin cache-bust**: un
+>   *"32 tests PASAN"* podía ser sobre el código de antes de la última edición. Ya corregido.
+> - **Extraer frames del MP4 con `<video>` no es fiable**: el seek cae en el keyframe anterior
+>   (uno cada 2 s). Para auditar un instante concreto, mirar el canvas; para validar el archivo,
+>   comparar contra el canvas EN keyframes exactos (0, 6, 14, 20…).
+> - **Medir con el instrumento equivocado**: varias métricas propias (solapes por caja sin aplicar
+>   la matriz, sincronía contra el "arranque de voz más cercano") daban falsos positivos y me
+>   llevaron a "arreglar" cosas que no estaban rotas. Verificar el instrumento antes que el dato.
+
+
 > ## ▶ 2026-07-26 · #7 RONALD READ: guion técnico CERRADO y MP4 RENDERIZADO
 >
 > El Short #7 tiene las **22 frases decididas** (16 cambios de plano en 62,7s ≈ uno cada 3,9s) y
