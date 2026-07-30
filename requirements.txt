@@ -10,3 +10,13 @@ anthropic>=0.112         # LLM para el director creativo (necesita ANTHROPIC_API
 # praw                      # Reddit API (OAuth gratuito)
 # scikit-learn              # TF-IDF + clustering cuando el term-momentum se quede corto
 # sentence-transformers     # embeddings locales (requiere torch; verificar wheels en py3.14)
+
+# --- tools/ (produccion y QA del video, NO del OS de decision — todo gratis, local, sin GPU) ---
+faster-whisper>=1.2.1       # tools/alinear_voz.py: tiempo real por palabra (reconocimiento de voz)
+piper-tts>=1.6.0            # tools/generar_voz.py: voz local MIT sin caducidad (alternativa a CapCut)
+lameenc>=1.8.4               # tools/generar_voz.py: codifica a mp3 sin depender de ffmpeg
+numpy>=2.0                   # tools/generar_voz.py, tools/medir_loudness.py
+pyloudnorm>=0.1.1            # tools/medir_loudness.py: loudness real vs el objetivo de la plataforma
+av>=18.0                     # tools/medir_loudness.py: decodifica el audio del mp4 exportado
+scenedetect>=0.7.1           # tools/analizar_video.py: cortes de plano (PySceneDetect)
+opencv-python>=5.0           # tools/analizar_video.py: optical flow

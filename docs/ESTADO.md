@@ -1,5 +1,40 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶ 2026-07-29 · VOZ AUTOMÁTICA (Piper) + DOS HERRAMIENTAS DE QA NUEVAS
+>
+> **`python tools/generar_voz.py <short> [--forzar]`** — guion → voz → alineamiento en un comando.
+> Usa **Piper** (MIT, local, sin caducidad; voz `en_US-ryan-high`), probada y aprobada A OÍDO por
+> el usuario contra el gancho real del #7 antes de automatizar nada. Reutiliza `guion_del_short` y
+> `generar_alineamiento` de `alinear_voz.py` (refactorizado para exponerlas) — el guion sigue
+> saliendo de una sola fuente, el HTML. **No sobrescribe una voz existente sin `--forzar`**: la de
+> un Short ya revisado no se toca sola. CapCut sigue siendo válido; conviven.
+>
+> Verificado end-to-end sobre `read-janitor`: 99% de palabras con tiempo MEDIDO (160/162), igual
+> que con la voz de CapCut. Piper habla más rápido (48,5s vs 67,5s del mismo guion) — ni mejor ni
+> peor, hay que tenerlo en cuenta si se reusa un guion ya calibrado para otra voz.
+>
+> **Bloqueo real, no perseguido**: Kokoro-82M (mejor puntuado en reseñas 2026) exige Python <3.13;
+> el proyecto va en 3.14.6 (actualizado esta sesión). No se fuerza con un venv paralelo sin decidir.
+>
+> ### QA sobre el ARCHIVO exportado (dos herramientas nuevas, hardware real: sin GPU/CUDA, ~10GB RAM)
+> - **`tools/medir_loudness.py`** — loudness real (pyloudnorm/ITU-R BS.1770-4) contra el objetivo
+>   de YouTube/Facebook: **-14 LUFS, pico < -1 dBTP**. Medido en el #7: **-15,19 LUFS, -3,61 dBTP**
+>   — 1,2 dB más flojo que el objetivo, cerca pero no exacto. Solo mide; el motor sigue congelado.
+> - **`tools/analizar_video.py`** — cortes de plano con **PySceneDetect** (fiable, de terceros: de
+>   los 15 cambios de plano que el guion declara, solo 4-8 registran como corte "duro" → las
+>   transiciones son suaves, no golpes) + picos de movimiento con optical flow. Este segundo
+>   **se probó y se descartó como veredicto automático**: un contador de texto que cambia de ancho
+>   ("$432,844" → "$1,517,725") dispara la alarma igual que un tirón de cámara real — el "salto sin
+>   explicar" más grande resultó ser el contador del stat, no un fallo. Enmascarar el centro tampoco
+>   lo arregla (la escena snowball tiene movimiento legítimo de esquina a esquina). Queda en el
+>   script documentado como "ayuda para elegir dónde mirar", nunca como pass/fail.
+>
+> Las tres herramientas llevan `sys.stdout.reconfigure(errors="replace")`: en consolas con codepage
+> cp1252 un emoji de status podía tumbar el proceso DESPUÉS de que el cálculo ya hubiera terminado
+> bien — el resultado se perdía por un `print()`, no por un fallo real. Cazado verificando en frío.
+>
+> 135 tests de Python siguen en verde (sin cambios: nada de esto toca `omega/`).
+
 > ## ▶▶▶ 2026-07-28 · LA MÉTRICA DE ÉXITO ESTABA MIDIENDO OTRA COSA (arreglado)
 >
 > **`success` era `vistas_totales(FB+YT)/750`. Desde el 31-mar-2025 una "vista" de Shorts incluye

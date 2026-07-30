@@ -38,6 +38,21 @@ el motor lo carga solo al pulsar "Usar la voz del proyecto". Sin él, el calibra
 cada bloque y el desfase vuelve. **El LEAD no es la palanca** (se ajustó seis veces sin arreglarlo:
 el error era dispersión, no offset).
 
+## Voz automática (Piper, opcional — CapCut sigue siendo válido)
+`python tools/generar_voz.py <clave-del-short>` sintetiza el guion con Piper (MIT, local, sin
+caducidad — voz `en_US-ryan-high`, aprobada a oído antes de automatizarla) y encadena el
+alineamiento en el mismo comando: sale con audio + `.align.json` listos. **No sobrescribe una voz
+ya existente sin `--forzar`** — la de un Short ya revisado no se toca sola. Sigue siendo elección
+del usuario: CapCut y Piper conviven, ninguno reemplaza al otro por decisión unilateral.
+
+## QA del vídeo exportado (sobre el archivo, no sobre el modelo)
+- `python tools/medir_loudness.py <mp4>` — loudness real contra el estándar de la plataforma
+  (YouTube/FB normalizan a **-14 LUFS**, pico < -1 dBTP). Solo mide; no toca la mezcla del motor
+  (congelado, `docs/POLITICA.md`) salvo que el gap sea grande y consistente entre videos.
+- `python tools/analizar_video.py <mp4>` — cortes de plano con PySceneDetect (fiable, es de
+  terceros) + picos de movimiento con optical flow (⚠ ruidoso con contadores/texto animado —
+  probado y documentado en el propio script: úsalo para elegir dónde mirar, nunca como veredicto).
+
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
 El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento
 publicado revele una limitación concreta. Excepción: instrumentación de captura-en-origen.

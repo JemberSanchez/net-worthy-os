@@ -31,6 +31,14 @@ import re
 import sys
 from pathlib import Path
 
+# Consolas Windows con codepage cp1252 (frecuente al invocar por -c o desde algunos terminales)
+# tiran un UnicodeEncodeError en el primer "✓"/emoji DESPUÉS de que el .align.json ya se escribió
+# — el cálculo está bien, solo revienta el print. errors='replace' evita que un símbolo tumbe una
+# corrida que por lo demás terminó con éxito.
+for _s in (sys.stdout, sys.stderr):
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(errors="replace")
+
 RAIZ = Path(__file__).resolve().parents[1]
 MOTOR = RAIZ / "docs" / "guiones" / "short-renderer.html"
 MODELO = "base.en"          # 74 MB. `small.en` (244 MB) afina poco más en una voz TTS limpia.
@@ -138,19 +146,28 @@ def main() -> None:
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
     clave = sys.argv[1]
+    generar_alineamiento(clave)
+
+
+def generar_alineamiento(clave: str, ruta_audio: Path | None = None) -> Path:
+    """El cuerpo real, EXTRAÍDO de main() para que `generar_voz.py` pueda encadenar
+    guion -> voz -> alineamiento en un solo comando sin duplicar esta lógica.
+    `ruta_audio` opcional: para audio recién generado que aún no tiene el nombre en el HTML resuelto
+    en disco (no debería hacer falta hoy, pero evita tener que escribir el audio antes de saber su
+    ruta final). Devuelve la ruta del .align.json escrito."""
     voz, frases = guion_del_short(clave)
-    mp3 = RAIZ / "data" / voz
-    if not mp3.exists():
-        raise SystemExit(f"No existe {mp3}")
+    audio = ruta_audio or (RAIZ / "data" / voz)
+    if not audio.exists():
+        raise SystemExit(f"No existe {audio}")
 
     from faster_whisper import WhisperModel
 
     print(f"Short   : {clave}")
-    print(f"Audio   : {mp3.name}")
+    print(f"Audio   : {audio.name}")
     print(f"Modelo  : {MODELO} (se descarga la 1ª vez, ~74 MB)\n")
 
     modelo = WhisperModel(MODELO, device="cpu", compute_type="int8")
-    segmentos, info = modelo.transcribe(str(mp3), word_timestamps=True, language="en",
+    segmentos, info = modelo.transcribe(str(audio), word_timestamps=True, language="en",
                                         vad_filter=False)
     oidas: list[dict] = []
     for seg in segmentos:
@@ -165,7 +182,7 @@ def main() -> None:
     medidas = sum(1 for p in palabras if p["medido"])
     pct = 100 * medidas / len(palabras)
 
-    destino = mp3.with_suffix(".align.json")
+    destino = audio.with_suffix(".align.json")
     destino.write_text(json.dumps(
         {"voz": voz, "short": clave, "modelo": MODELO,
          "palabras": [{"w": p["w"], "t0": p["t0"], "t1": p["t1"], "m": p["medido"]} for p in palabras]},
@@ -174,8 +191,8 @@ def main() -> None:
     print(f"✓ {destino.name}")
     print(f"  {medidas}/{len(palabras)} palabras con tiempo MEDIDO ({pct:.0f}%); el resto interpolado.")
     if pct < 80:
-        print("  ⚠ Menos del 80% emparejado: revisa que el MP3 corresponda a ESTE guion.")
-    print("\nAhora en el motor: «🎙 Usar la voz del proyecto» lo carga solo.")
+        print("  ⚠ Menos del 80% emparejado: revisa que el audio corresponda a ESTE guion.")
+    return destino
 
 
 if __name__ == "__main__":
