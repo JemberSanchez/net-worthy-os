@@ -1,5 +1,36 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶ 2026-07-30 · KOKORO (voz `am_adam`) — MOTOR DE VOZ POR DEFECTO
+>
+> El usuario preguntó "¿seguro que Kokoro no funciona en esta versión de Python?" — pregunta
+> correcta: había asumido el bloqueo por el mensaje de `pip`, sin verificar la causa. Se forzó la
+> instalación (`--ignore-requires-python`) para comprobarlo de verdad. Cadena completa, verificada
+> eslabón por eslabón (no asumida): **`kokoro -> misaki[en] -> spacy -> thinc -> blis<1.1.0`** —
+> `thinc` prohíbe usar `blis` 1.3.3 (que SÍ tiene wheel para `cp314-win_amd64`) y fuerza una versión
+> vieja de `blis` que solo existe como código fuente; ese código no compila con el Cython de esta
+> máquina. Es un pin de versión desactualizado de `thinc`, no un capricho de Kokoro.
+>
+> **Solución: Python 3.12 en paralelo**, sin tocar el 3.14 principal (`winget install
+> Python.Python.3.12`, conviven vía `py -0p`). Venv aparte en `tools/.venv-voces/` (gitignored,
+> ~2GB con torch+spacy). Documentado en `tools/requirements-kokoro.txt` para reconstruirlo.
+>
+> **Comparativa a ciego, 7 voces, medidas por tono real (Hz) para poder pedir "más grave" con
+> datos** (autocorrelación sobre el audio generado, no a ojo): `am_onyx` 88Hz (la más grave) ·
+> `am_echo` 108Hz · `am_michael` 118Hz · `am_adam` 119Hz · `bm_daniel` 128Hz · `am_fenrir` 139Hz ·
+> `bm_george` 143Hz. **El usuario eligió `am_adam`** tras escuchar las 4 más representativas.
+>
+> `tools/generar_voz.py` ahora soporta `--motor piper|kokoro` (Kokoro por defecto desde esta
+> decisión). Para Kokoro, como vive en un Python distinto, `generar_voz.py` (que sigue en 3.14)
+> invoca `tools/_sintetizar_kokoro.py` como SUBPROCESO en el venv de 3.12, pasando el texto por
+> stdin (evita límites de línea de comandos) y leyendo de vuelta el WAV — el resto del pipeline
+> (normalizar pico, codificar a mp3, alinear) es el MISMO código que ya usaba Piper, sin duplicar.
+>
+> Verificado end-to-end sobre `read-janitor`: **100% de palabras con tiempo MEDIDO** (162/162) —
+> incluso mejor que Piper (99%, 160/162). 135 tests sin regresión (nada de esto toca `omega/`).
+>
+> Piper sigue disponible (`--motor piper`) y CapCut también. Ningún motor se fija sin que el
+> usuario lo decida escuchando audio real — esta vez con una comparativa de 7 voces, no de 1.
+
 > ## ▶▶▶▶ 2026-07-29 · VOZ AUTOMÁTICA (Piper) + DOS HERRAMIENTAS DE QA NUEVAS
 >
 > **`python tools/generar_voz.py <short> [--forzar]`** — guion → voz → alineamiento en un comando.

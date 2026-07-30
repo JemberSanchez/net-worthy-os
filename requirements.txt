@@ -20,3 +20,7 @@ pyloudnorm>=0.1.1            # tools/medir_loudness.py: loudness real vs el obje
 av>=18.0                     # tools/medir_loudness.py: decodifica el audio del mp4 exportado
 scenedetect>=0.7.1           # tools/analizar_video.py: cortes de plano (PySceneDetect)
 opencv-python>=5.0           # tools/analizar_video.py: optical flow
+soundfile>=0.14              # tools/generar_voz.py: lee el WAV que devuelve el subproceso de Kokoro
+
+# Kokoro (motor de voz por defecto) NO va aqui: exige Python <3.13 y este proyecto va en 3.14.
+# Vive en un venv aparte, ver tools/requirements-kokoro.txt y CLAUDE.md ("Voz automática").

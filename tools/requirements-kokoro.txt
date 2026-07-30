@@ -1,0 +1,10 @@
+# Dependencias del venv de Kokoro (motor de voz por defecto desde 2026-07-30).
+# Vive APARTE del requirements.txt principal porque exige Python <3.13, y el proyecto va en 3.14
+# (kokoro -> misaki[en] -> spacy -> thinc -> blis<1.1.0, sin wheel para 3.14 — verificado forzando
+# la instalación: falla al compilar, no es un límite de metadata sin más).
+#
+# Para reconstruir el venv (una vez, si tools/.venv-voces/ no existe o se borró):
+#   py -3.12 -m venv tools/.venv-voces
+#   tools\.venv-voces\Scripts\python.exe -m pip install -r tools/requirements-kokoro.txt
+kokoro>=0.9.4
+soundfile>=0.14

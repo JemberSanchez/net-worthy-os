@@ -38,12 +38,21 @@ el motor lo carga solo al pulsar "Usar la voz del proyecto". Sin él, el calibra
 cada bloque y el desfase vuelve. **El LEAD no es la palanca** (se ajustó seis veces sin arreglarlo:
 el error era dispersión, no offset).
 
-## Voz automática (Piper, opcional — CapCut sigue siendo válido)
-`python tools/generar_voz.py <clave-del-short>` sintetiza el guion con Piper (MIT, local, sin
-caducidad — voz `en_US-ryan-high`, aprobada a oído antes de automatizarla) y encadena el
-alineamiento en el mismo comando: sale con audio + `.align.json` listos. **No sobrescribe una voz
-ya existente sin `--forzar`** — la de un Short ya revisado no se toca sola. Sigue siendo elección
-del usuario: CapCut y Piper conviven, ninguno reemplaza al otro por decisión unilateral.
+## Voz automática — Kokoro por defecto, Piper y CapCut siguen disponibles
+`python tools/generar_voz.py <clave-del-short> [--motor piper|kokoro] [--voz <nombre>]` sintetiza
+el guion y encadena el alineamiento en el mismo comando: sale con audio + `.align.json` listos.
+**No sobrescribe una voz ya existente sin `--forzar`** — la de un Short ya revisado no se toca sola.
+
+**Motor por defecto: Kokoro, voz `am_adam`** (elegida por el usuario 2026-07-30 en una comparativa
+a ciego de 7 voces, medidas por tono real en Hz para poder pedir "más grave" con datos). Kokoro
+corre en un venv de **Python 3.12 aparte** (`tools/.venv-voces/`, gitignored — el proyecto sigue en
+3.14): la cadena `kokoro -> misaki[en] -> spacy -> thinc -> blis<1.1.0` no tiene wheel para 3.14
+(verificado forzando la instalación: falla al COMPILAR, no es un límite de metadata sin más). Si el
+venv no existe, `generar_voz.py` avisa con el comando exacto para crearlo — no falla en silencio.
+
+`--motor piper` sigue disponible (voz `en_US-ryan-high`, MIT, corre en el 3.14 principal sin
+dependencias extra — fue el primero en automatizarse). CapCut también sigue siendo válido. Ningún
+motor se elige unilateralmente: siempre a partir de audio real escuchado por el usuario.
 
 ## QA del vídeo exportado (sobre el archivo, no sobre el modelo)
 - `python tools/medir_loudness.py <mp4>` — loudness real contra el estándar de la plataforma
