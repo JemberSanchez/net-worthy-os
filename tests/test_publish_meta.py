@@ -50,6 +50,19 @@ class UploadFacebookReelTest(unittest.TestCase):
         last_kwargs = req.call_args_list[-1].kwargs
         self.assertEqual(last_kwargs["data"]["published"], "false")
 
+    def test_uses_only_last_handle_when_upload_returns_several(self):
+        # Medido en real (33 MB -> 34 handles separados por \n): pasar el bloque entero pegado
+        # como fbuploader_video_file_chunk falla; solo el ULTIMO representa el archivo completo.
+        calls = [
+            _resp(200, {"id": "upload:SESSION1"}),
+            _resp(200, {"h": "chunk1\nchunk2\nchunk_final"}),
+            _resp(200, {"id": "999"}),
+        ]
+        with mock.patch("requests.request", side_effect=calls) as req:
+            publish_meta.upload_facebook_reel(self.video_path, "t", "d")
+        last_kwargs = req.call_args_list[-1].kwargs
+        self.assertEqual(last_kwargs["data"]["fbuploader_video_file_chunk"], "chunk_final")
+
     def test_publicar_flag_marks_published_true(self):
         calls = [_resp(200, {"id": "upload:S"}), _resp(200, {"h": "H"}), _resp(200, {"id": "1"})]
         with mock.patch("requests.request", side_effect=calls) as req:

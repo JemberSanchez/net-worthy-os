@@ -29,7 +29,7 @@ GRAPH = f"https://graph.facebook.com/{API_VERSION}"
 TOKEN_PATH = config.DATA_DIR / "meta_token.json"
 
 SCOPES = ["pages_show_list", "pages_read_engagement", "pages_manage_posts",
-          "business_management", "instagram_basic", "instagram_content_publish"]
+          "business_management", "instagram_business_basic", "instagram_business_content_publish"]
 REDIRECT_URI = "https://localhost/"
 
 # Errores transitorios: vale la pena reintentar (caída momentánea de red/servidor).
@@ -169,7 +169,10 @@ def upload_facebook_reel(video_path: Path, title: str, description: str, *,
     transfer = _request("POST", f"{GRAPH}/{session_id}", headers={
         "Authorization": f"OAuth {page_token}", "file_offset": "0",
     }, data=binary, retriable=False)
-    file_handle = transfer["h"]
+    # El endpoint trocea el archivo en varios handles internos, uno por línea (medido: 34 para
+    # 33 MB) -- pasar el bloque entero pegado falla ("problema al subir el video"). El ÚLTIMO
+    # representa el archivo COMPLETO; los anteriores son handles de trozos parciales.
+    file_handle = transfer["h"].strip().split("\n")[-1]
 
     result = _request("POST", f"{GRAPH}/{page_id}/videos", data={
         "access_token": page_token, "title": title, "description": description,
