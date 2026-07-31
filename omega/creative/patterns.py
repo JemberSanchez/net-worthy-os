@@ -22,6 +22,12 @@ SEED = [
     ("twist",             "payoff",          "Giro inesperado que recontextualiza."),
     ("reward",            "payoff",          "El final recompensa la atención invertida."),
     ("strong_hook_3s",    "structure",       "Engancha en los primeros 3 segundos."),
+    ("pacing_2_3s",       "structure",       "Cambia el visual (corte, texto, elemento nuevo) cada "
+                                              "2-3s tras el gancho, no solo en la apertura. Externo, "
+                                              "NO calibrado en el canal (2026-07-31, ver ESTADO.md): "
+                                              "converge en 2 fuentes independientes; candidato a "
+                                              "explicar la caída 3-20s medida en el Buffett (0 cortes "
+                                              "de plano en 55s, ver tools/analizar_video.py)."),
     ("rewatchable",       "structure",       "Merece verse dos veces."),
     ("series_potential",  "structure",       "Puede convertirse en serie/personaje persistente."),
     ("novel_combination", "distinctiveness", "Combina elementos que nadie junta (tiburón+piscina olímpica)."),

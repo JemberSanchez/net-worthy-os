@@ -1,5 +1,36 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶▶▶ 2026-07-31 · RONALD READ PUBLICADO (7/10) + HIPÓTESIS NUEVA PARA EL PRÓXIMO SHORT
+>
+> **Ronald Read (#7) publicado en las tres plataformas**: YouTube (`sbQDcmFadME`), Facebook
+> (`/reel/1534940594321901/`) e Instagram (`/reel/DbdyTKJkoe2/`). En el camino:
+> - Se armó `omega/publish_meta.py` (Facebook/Instagram por API, `meta-auth`/`publish-fb`/
+>   `publish-ig`, borrador por defecto) y se cazaron 2 bugs reales de la API de Meta usando el
+>   endpoint EQUIVOCADO para Facebook (`/videos` en vez de `/video_reels` — el genérico acepta
+>   contenido vertical pero nunca lo procesa) y armando el permalink de Instagram a mano (usa un
+>   shortcode, no el media_id).
+> - La app de Meta se quedó en **Development Mode**: lo publicado solo lo veía el propio admin.
+>   Se pasó a **Live** (pedía URL de política de privacidad — ahora en
+>   `docs/privacy.html` vía GitHub Pages). Si un video de Meta "se publica bien" pero nadie más
+>   lo ve, revisar esto primero.
+> - El scope de YouTube (`publish.py`) pasó de `youtube.upload` a `youtube` (el primero no
+>   alcanzaba para `videos.update`, hacía falta para corregir hashtags faltantes post-publicación).
+>
+> **Hipótesis nueva, con evidencia cruzada, PENDIENTE DE PROBAR** (no calibrada en el canal
+> todavía — ver `omega/creative/patterns.py`, tag `pacing_2_3s`): el Buffett (55s, publicado)
+> tiene **0 cortes de plano detectados** (`tools/analizar_video.py`, bug de esa herramienta
+> corregido el mismo día — devolvía "-1" en vez de "0"). Dos fuentes externas independientes
+> (investigación general + el repo `AgriciDaniel/claude-youtube`, revisado a fondo, no solo el
+> README) coinciden en que un Short necesita cambio visual cada 2-3s para sostener retención. El
+> Buffett está muy por debajo de eso, y coincide con la caída de retención YA medida entre 3s y
+> 20s (24,1%→10,0%). **Siguiente Short: forzar al menos un cambio visual cada 2-3s en el tramo
+> 3-20s y medir si la retención se mueve** — es la primera hipótesis con dos patas de apoyo
+> externas, no una intuición más.
+>
+> Encontrado en el mismo repo pero SIN verificar (flag explícito, no tratar como hecho): afirma
+> que "narración con IA da 70% menos retención que voz humana" — sin fuente citada en ese punto
+> específico del documento, a diferencia del resto. No cambiar nada del canal por esto solo.
+
 > ## ▶▶▶▶▶▶▶ 2026-07-30 (noche) · LA CAUSA REAL DEL DESFASE — CORRIGE LA ENTRADA DE ABAJO
 >
 > La entrada de abajo ("LÍMITE CRÍTICO... el navegador de Claude no compone el canvas") está
