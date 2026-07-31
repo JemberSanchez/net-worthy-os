@@ -46,8 +46,11 @@ def analizar(ruta: str, *, muestra_cada: int = 1, umbral_z: float = 3.0) -> None
     # ── 1. CORTES DE PLANO (PySceneDetect) ──────────────────────────────────────────────────
     from scenedetect import detect, ContentDetector
     escenas = detect(ruta, ContentDetector(threshold=27.0))
-    print(f"=== Cortes de plano detectados: {len(escenas) - 1} ===")
-    for i in range(len(escenas) - 1):
+    # PySceneDetect 0.7.1 devuelve [] (no 1 escena cubriendo todo el vídeo) cuando NO hay ningún
+    # corte -- versiones viejas sí devolvían esa "escena única". max(0, ...) evita el -1 en ese caso.
+    n_cortes = max(0, len(escenas) - 1)
+    print(f"=== Cortes de plano detectados: {n_cortes} ===")
+    for i in range(n_cortes):
         print(f"  corte en {escenas[i][1].seconds:6.2f}s")
     print()
 
