@@ -7,7 +7,9 @@ Credenciales (gitignored, en DATA_DIR):
   youtube_client_secret.json  — descargado una vez de Google Cloud Console (OAuth client, Desktop app)
   youtube_token.json          — generado por _get_credentials() en el primer run, se refresca solo
 
-Scope mínimo: solo youtube.upload (no gestión completa del canal).
+Scope: youtube (gestión completa del canal) -- youtube.upload solo alcanzaba para subir, no para
+editar título/descripción después (videos.update pedía más permiso). Sigue siendo tu propio canal,
+no accede a nada de terceros.
 Cuota: videos.insert cuesta 1600 unidades de las 10.000/día gratis -> 6 subidas/día de margen.
 No usar este comando como sandbox de pruebas repetidas sin necesidad.
 """
@@ -17,7 +19,7 @@ from pathlib import Path
 
 from . import config
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+SCOPES = ["https://www.googleapis.com/auth/youtube"]
 CLIENT_SECRET_PATH = config.DATA_DIR / "youtube_client_secret.json"
 TOKEN_PATH = config.DATA_DIR / "youtube_token.json"
 
