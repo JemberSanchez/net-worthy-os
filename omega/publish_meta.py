@@ -145,41 +145,41 @@ def _get_page_token() -> dict:
 
 def upload_facebook_reel(video_path: Path, title: str, description: str, *,
                           published: bool = False) -> dict:
-    """Sube video_path como video de la Página. Devuelve {"video_id": ..., "url": ...}.
+    """Sube video_path como Reel de la Página (endpoint /video_reels). Devuelve
+    {"video_id": ..., "url": ...}.
 
-    published=False por defecto: nunca público sin que alguien lo pida explícitamente.
+    published=False por defecto (video_state=DRAFT): nunca público sin que alguien lo pida
+    explícitamente.
+
+    ⚠ NO usar el endpoint genérico /{page-id}/videos para contenido vertical (probado en real,
+    2026-07-31): la subida y el "published:true" se aceptan (HTTP 200, devuelve un id), pero el
+    video queda con video_status:"error" y publishing_phase:"not_started" -- sube "bien" y nunca
+    se ve, sin que la API avise. El endpoint dedicado de Reels es el que de verdad procesa
+    contenido 9:16.
     """
-    import requests
-
     if not video_path.exists():
         raise PublishError(f"No existe el video: {video_path}")
     creds = _get_page_token()
-    app_id, _ = _app_credentials()
     page_id, page_token = creds["page_id"], creds["page_access_token"]
     size = video_path.stat().st_size
 
-    start = _request("POST", f"{GRAPH}/{app_id}/uploads", params={
-        "file_name": video_path.name, "file_length": size,
-        "file_type": "video/mp4", "access_token": page_token,
+    start = _request("POST", f"{GRAPH}/{page_id}/video_reels", data={
+        "upload_phase": "start", "access_token": page_token,
     })
-    session_id = start["id"]  # viene como "upload:<ID>"
+    video_id, upload_url = start["video_id"], start["upload_url"]
 
     with video_path.open("rb") as f:
         binary = f.read()
-    transfer = _request("POST", f"{GRAPH}/{session_id}", headers={
-        "Authorization": f"OAuth {page_token}", "file_offset": "0",
+    _request("POST", upload_url, headers={
+        "Authorization": f"OAuth {page_token}", "offset": "0", "file_size": str(size),
     }, data=binary, retriable=False)
-    # El endpoint trocea el archivo en varios handles internos, uno por línea (medido: 34 para
-    # 33 MB) -- pasar el bloque entero pegado falla ("problema al subir el video"). El ÚLTIMO
-    # representa el archivo COMPLETO; los anteriores son handles de trozos parciales.
-    file_handle = transfer["h"].strip().split("\n")[-1]
 
-    result = _request("POST", f"{GRAPH}/{page_id}/videos", data={
-        "access_token": page_token, "title": title, "description": description,
-        "fbuploader_video_file_chunk": file_handle, "published": "true" if published else "false",
+    _request("POST", f"{GRAPH}/{page_id}/video_reels", data={
+        "video_id": video_id, "upload_phase": "finish",
+        "video_state": "PUBLISHED" if published else "DRAFT",
+        "title": title, "description": description, "access_token": page_token,
     }, retriable=False)
-    video_id = result["id"]
-    return {"video_id": video_id, "url": f"https://www.facebook.com/{video_id}"}
+    return {"video_id": video_id, "url": f"https://www.facebook.com/reel/{video_id}/"}
 
 
 def upload_instagram_reel(video_path: Path, caption: str, *, publish: bool = False) -> dict:
@@ -235,4 +235,9 @@ def upload_instagram_reel(video_path: Path, caption: str, *, publish: bool = Fal
         "creation_id": container_id, "access_token": page_token,
     }, retriable=False)
     media_id = published["id"]
-    return {"media_id": media_id, "url": f"https://www.instagram.com/reel/{media_id}"}
+    # El permalink real usa un shortcode (ej. /reel/DbdyTKJkoe2/), NO el media_id numérico --
+    # armarlo a mano con el id da una URL rota (probado en real, 2026-07-31). Se pide a la API.
+    media = _request("GET", f"{GRAPH}/{media_id}", params={
+        "fields": "permalink", "access_token": page_token,
+    })
+    return {"media_id": media_id, "url": media["permalink"]}

@@ -27,47 +27,45 @@ FAKE_CREDS = {"page_id": "page1", "page_name": "Net Worthy",
 
 
 class UploadFacebookReelTest(unittest.TestCase):
+    """Endpoint /video_reels (3 fases: start/transferir/finish). NO el genérico /videos --
+    probado en real (2026-07-31): ese acepta la subida (HTTP 200, published:true) pero el video
+    queda con video_status:"error" y publishing_phase:"not_started" con contenido vertical, sin
+    avisar. /video_reels es el que de verdad procesa Reels."""
+
     def setUp(self):
         self.video_path = Path(__file__)
         mock.patch.object(publish_meta, "_get_page_token", return_value=FAKE_CREDS).start()
-        mock.patch.object(publish_meta, "_app_credentials", return_value=("APP_ID", "SECRET")).start()
         self.addCleanup(mock.patch.stopall)
+
+    def _calls(self):
+        return [
+            _resp(200, {"video_id": "999", "upload_url": "https://rupload.facebook.com/video-upload/999"}),
+            _resp(200, {"success": True}),
+            _resp(200, {"success": True}),
+        ]
 
     def test_rejects_missing_video(self):
         with self.assertRaises(publish_meta.PublishError):
             publish_meta.upload_facebook_reel(Path("no-existe.mp4"), "t", "d")
 
     def test_uploads_as_draft_by_default(self):
-        calls = [
-            _resp(200, {"id": "upload:SESSION1"}),          # start upload session
-            _resp(200, {"h": "FILE_HANDLE"}),                # transfer chunk
-            _resp(200, {"id": "999"}),                       # POST /{page}/videos
-        ]
-        with mock.patch("requests.request", side_effect=calls) as req:
+        with mock.patch("requests.request", side_effect=self._calls()) as req:
             result = publish_meta.upload_facebook_reel(self.video_path, "Título", "Descripción")
-        self.assertEqual(result, {"video_id": "999", "url": "https://www.facebook.com/999"})
-        # la última llamada (publicar el video) NO pidió published=true por defecto
+        self.assertEqual(result, {"video_id": "999", "url": "https://www.facebook.com/reel/999/"})
+        # la fase "finish" (última llamada) NO pidió video_state=PUBLISHED por defecto
         last_kwargs = req.call_args_list[-1].kwargs
-        self.assertEqual(last_kwargs["data"]["published"], "false")
-
-    def test_uses_only_last_handle_when_upload_returns_several(self):
-        # Medido en real (33 MB -> 34 handles separados por \n): pasar el bloque entero pegado
-        # como fbuploader_video_file_chunk falla; solo el ULTIMO representa el archivo completo.
-        calls = [
-            _resp(200, {"id": "upload:SESSION1"}),
-            _resp(200, {"h": "chunk1\nchunk2\nchunk_final"}),
-            _resp(200, {"id": "999"}),
-        ]
-        with mock.patch("requests.request", side_effect=calls) as req:
-            publish_meta.upload_facebook_reel(self.video_path, "t", "d")
-        last_kwargs = req.call_args_list[-1].kwargs
-        self.assertEqual(last_kwargs["data"]["fbuploader_video_file_chunk"], "chunk_final")
+        self.assertEqual(last_kwargs["data"]["video_state"], "DRAFT")
 
     def test_publicar_flag_marks_published_true(self):
-        calls = [_resp(200, {"id": "upload:S"}), _resp(200, {"h": "H"}), _resp(200, {"id": "1"})]
-        with mock.patch("requests.request", side_effect=calls) as req:
+        with mock.patch("requests.request", side_effect=self._calls()) as req:
             publish_meta.upload_facebook_reel(self.video_path, "t", "d", published=True)
-        self.assertEqual(req.call_args_list[-1].kwargs["data"]["published"], "true")
+        self.assertEqual(req.call_args_list[-1].kwargs["data"]["video_state"], "PUBLISHED")
+
+    def test_uploads_binary_to_the_upload_url_returned_by_start_phase(self):
+        with mock.patch("requests.request", side_effect=self._calls()) as req:
+            publish_meta.upload_facebook_reel(self.video_path, "t", "d")
+        transfer_call = req.call_args_list[1]
+        self.assertEqual(transfer_call.args[1], "https://rupload.facebook.com/video-upload/999")
 
 
 class UploadInstagramReelTest(unittest.TestCase):
@@ -106,12 +104,15 @@ class UploadInstagramReelTest(unittest.TestCase):
             _resp(200, {"success": True}),
             _resp(200, {"status_code": "FINISHED"}),
             _resp(200, {"id": "media1"}),
+            # el permalink real usa un shortcode, NO el media_id -- se pide a la API, no se arma
+            # a mano (probado en real, 2026-07-31: armarlo a mano dio una URL rota).
+            _resp(200, {"permalink": "https://www.instagram.com/reel/DbdyTKJkoe2/"}),
         ]
         with mock.patch("requests.request", side_effect=calls) as req:
             result = publish_meta.upload_instagram_reel(self.video_path, "caption", publish=True)
         self.assertEqual(result, {"media_id": "media1",
-                                   "url": "https://www.instagram.com/reel/media1"})
-        self.assertIn("media_publish", req.call_args_list[-1].args[1])
+                                   "url": "https://www.instagram.com/reel/DbdyTKJkoe2/"})
+        self.assertIn("media_publish", req.call_args_list[-2].args[1])
 
     def test_polling_retries_until_finished(self):
         calls = [
