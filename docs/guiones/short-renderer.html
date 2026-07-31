@@ -4864,6 +4864,23 @@ async function renderLote(keys, {conADN = true} = {}){
         exportando = false;                       // cargarShort se niega si cree que hay render
         cargarShort(key);
 
+        // ALINEAMIENTO EXTERNO (tools/alinear_voz.py), ANTES del audio: sin esto el calibrador
+        // cae en la ESTIMACIÓN por sílabas, que reparte bien los bordes de bloque pero deriva por
+        // dentro y ACUMULA error frase a frase — medido el 30-jul comparando el MP4 exportado por
+        // el LOTE contra la transcripción real: a los 5s el subtítulo ya iba ~1s adelantado y a
+        // los 20s casi 3s ("Everything past that" aparecía en 21.38 en vez de 17.86, su arranque
+        // real). El botón "Usar la voz del proyecto" SÍ cargaba este archivo; `renderLote` — el
+        // flujo estándar del proyecto — nunca lo hacía, así que TODOS los renders por Lote (los
+        // de esta sesión incluidos) llevaban tiempos estimados, nunca los medidos por Whisper.
+        ALINEAMIENTO = null;
+        try {
+          const ra = await fetch(`../../data/${CFG.voz.replace(/\.[^.]+$/, '')}.align.json`);
+          if (ra.ok){
+            const j = await ra.json();
+            if (j && Array.isArray(j.palabras) && j.palabras.length) ALINEAMIENTO = j;
+          }
+        } catch(e){ /* sin alineamiento: se calibra como siempre */ }
+
         statusEl.textContent = `${n}: cargando data/${CFG.voz}…`;
         const r = await fetch(`../../data/${CFG.voz}`);
         if (!r.ok) throw new Error(`falta data/${CFG.voz} (HTTP ${r.status})`);

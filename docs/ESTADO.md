@@ -1,6 +1,47 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶▶ 2026-07-30 (noche) · LA CAUSA REAL DEL DESFASE — CORRIGE LA ENTRADA DE ABAJO
+>
+> La entrada de abajo ("LÍMITE CRÍTICO... el navegador de Claude no compone el canvas") está
+> **DESCARTADA**. El usuario renderizó él mismo en su Chrome real y el MISMO desfase apareció ahí
+> también — eso descarta un límite del entorno de Claude de raíz: si fuera eso, el navegador del
+> usuario (que compone sin problema) habría dado un archivo limpio.
+>
+> **Causa real, encontrada midiendo el MP4 exportado por el usuario contra la transcripción real**:
+> el audio embebido coincidía EXACTO con la voz original (offset 0.000s en 10 puntos del video,
+> cross-correlación con `av`) — el audio nunca fue el problema. El VIDEO (los subtítulos) sí estaba
+> mal: a t=5s el subtítulo mostraba "No hot tips." (real: t0=5.84) en vez de "No big salary." (real:
+> t0=4.92) — casi 1s adelantado, y a t=20s casi 3s ("Everything past that" en 21.38 en vez de su
+> arranque real, 17.86). El desfase CRECÍA con el video: la firma clásica de una estimación por
+> sílabas que reparte bien los bordes pero deriva por dentro.
+>
+> `renderLote()` (`short-renderer.html`, la cola de "Lote" — **el flujo estándar del proyecto**)
+> **nunca cargaba `data/<voz>.align.json`** (el alineamiento real de `tools/alinear_voz.py`). Solo
+> el botón manual "🎙 Usar la voz del proyecto" lo hacía. Sin ese archivo, `ALINEAMIENTO` queda
+> `null` y `calibrarAuto()` cae a la ESTIMACIÓN por sílabas — exactamente el camino que los 6 fixes
+> de la entrada de abajo (interpolación, `hay_voz`, `T.hook` desde `ws`, etc.) mejoraron, pero que
+> el LOTE nunca usaba. **Los 6 fixes eran correctos y siguen vigentes, pero ninguno tuvo efecto en
+> ningún render por Lote de esta sesión** (incluido el del usuario) porque el camino que arreglaban
+> no se estaba ejecutando.
+>
+> **Fix** (`short-renderer.html`, dentro del bucle de `renderLote`, ~línea 4867): antes de
+> `usarAudio()`, hace el mismo `fetch` de `.align.json` que ya hacía el botón manual y setea
+> `ALINEAMIENTO`. Verificado con medición, no a ojo: tras el fix, `srtCards` cerca de t=15-22s pasó
+> de `{"a little at a time." t0:19.39}` / `{"Everything past that" t0:21.38}` (estimado, mal) a
+> `{"He put in a little at a" t0:16.52}` / `{"Everything past that" t0:17.86}` (idéntico a
+> `ALINEAMIENTO.palabras`). Re-renderizado `read-janitor` por el Lote real con el fix activo y
+> verificado frame a frame contra la transcripción: t=5s → "big" resaltado (real: 5.04), t=20s →
+> "more" resaltado (real: 20.00), t=40s → "you," resaltado (real: el siguiente, "reinvest,", no
+> empieza hasta 40.10) — los tres exactos. Pendiente: que el usuario confirme en su propio render.
+>
+> **Lección**: cuando una medición en consola dice que la lógica está bien pero el ARCHIVO exportado
+> sigue mal, sospechar primero de una diferencia entre el camino que se está probando a mano y el
+> camino que de verdad genera el archivo (aquí: `usarAudio()` a secas vs. el botón que además carga
+> `ALINEAMIENTO`) antes de concluir que es un límite del entorno — eso último NO se puede descartar
+> sin que alguien con un navegador distinto reproduzca (o no) el mismo síntoma.
+>
 > ## ▶▶▶▶▶▶ 2026-07-30 (tarde) · 6 FIXES DE SINCRONÍA EN READ-JANITOR + LÍMITE CRÍTICO DEL RENDER
+> ⚠ La sección "LÍMITE CRÍTICO" de esta entrada está descartada — ver la entrada de arriba.
 >
 > Tras cambiar a voz Kokoro, el usuario reportó desfase voz/video en Ronald Read (#7). Se
 > encontraron y arreglaron 6 bugs REALES, cada uno medido contra la transcripción real
