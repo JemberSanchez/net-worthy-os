@@ -767,7 +767,12 @@ const SHORTS = {
         {id:'thesis',  texto:"No second job. No inheritance. No stock tip nobody else had. Just one holding, bought for a hundred and eighty dollars, and seventy-five years of not touching it."},
         {id:'proof',   texto:"She worked as a secretary for forty-three years. Bought her clothes at rummage sales. Every dividend the company paid her, she put back into more shares. Nobody at that company knew what she was sitting on."},
         {id:'payoff',  texto:"Three shares became thousands. Seventy-five years of doing nothing but reinvest, and this is where it ends up."},
-        {id:'honesty', texto:"Here's the uncomfortable part. She could have sold and lived better, any year she wanted. She chose not to, for seventy-five years straight. That's not a strategy. That's a trade almost nobody can actually make."},
+        // "not a strategy — that's a trade" con GUION LARGO, no punto (mismo patrón que Read):
+        // con punto, el separador de frases (`[^.?!]+[.?!]+`) las parte en DOS y todo
+        // `visualPorFrase` de ahí en adelante queda corrido una posición -- medido 2026-07-31: la
+        // tarjeta "YOU DON'T NEED" aparecía en t=40.0 mientras la voz real decía "actually make."
+        // hasta t=40.58 y no empezaba esa frase hasta t=41.14 (1.14s de adelanto real).
+        {id:'honesty', texto:"Here's the uncomfortable part. She could have sold and lived better, any year she wanted. She chose not to, for seventy-five years straight. That's not a strategy — that's a trade almost nobody can actually make."},
         {id:'lesson',  texto:"You don't need her seventy-five years or her one stock. The engine is the same at any size. Own it, reinvest it, and leave it alone."},
         {id:'cta',     texto:"Could you sit on a hundred and eighty dollars for seventy-five years and never touch it? Or would you have sold at ten thousand?"},
       ],
