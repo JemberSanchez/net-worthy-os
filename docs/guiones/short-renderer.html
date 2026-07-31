@@ -3740,6 +3740,16 @@ function shortsConRitmo(){
   return Object.keys(SHORTS).filter(k => SHORTS[k].ritmo);
 }
 
+// `pacing: true` — opt-in SOLO para Shorts nuevos (2026-07-31, ver docs/ESTADO.md y
+// omega/creative/patterns.py `pacing_2_3s`): exige un CAMBIO VISUAL real (nivel "beat", no el
+// micro-movimiento continuo que ya exige `ritmo`) al menos cada 3s en el tramo 3-20s. Hipótesis
+// externa sin calibrar en el canal, candidata a explicar la caída de retención 3-20s medida en
+// el Buffett (0 cortes de plano en 55s). Ningún Short existente lo lleva: no cambia nada de lo
+// ya publicado, solo se aplica a lo que se construya de aquí en adelante.
+function shortsConPacing(){
+  return Object.keys(SHORTS).filter(k => SHORTS[k].pacing);
+}
+
 function cargarShort(key){
   if (!SHORTS[key]) return;
   if (exportando){ statusEl.textContent = '⚠ Hay un render en marcha: espera a que termine para cambiar de Short.'; return; }

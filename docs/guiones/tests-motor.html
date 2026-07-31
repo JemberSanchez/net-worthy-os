@@ -398,6 +398,43 @@ document.getElementById('motor').onload = async () => {
         `(con ritmo) ${conRitmo.toFixed(2)}. Con este instrumento el test de arriba no prueba nada.`;
   });
 
+  // ── PACING v1 — hipótesis externa (2026-07-31, docs/ESTADO.md · omega/creative/patterns.py
+  //    `pacing_2_3s`): dos fuentes independientes (fuera del canal) convergen en que un Short
+  //    necesita un CAMBIO VISUAL real -- no el micro-movimiento continuo que `ritmo` ya exige,
+  //    sino un "beat" (corte, tarjeta nueva, elemento que entra) -- al menos cada 2-3s para
+  //    sostener retención. El Buffett (0 cortes de plano en 55s, tools/analizar_video.py) es el
+  //    caso que motivó esto: coincide con su caída de retención medida entre 3s y 20s.
+  //    Opt-in (`pacing: true`, ver `shortsConPacing()`): NINGÚN Short existente lo declara todavía
+  //    -- no retoca nada ya publicado, activa la regla solo para lo que se construya de aquí en
+  //    adelante. Reusa la MISMA firma/diff de Motion Budget, pero con el umbral de "beat real"
+  //    (0.70+, ya calibrado más arriba en este archivo) en vez del de "no congelado" (0.10).
+  check('PACING: los Shorts que lo declaran tienen un cambio visual real cada <=3s en 3-20s', () => {
+    const claves = W.shortsConPacing ? W.shortsConPacing() : [];
+    if (!claves.length){
+      console.log('[PACING] ningún Short declara `pacing` todavía (hipótesis sin aplicar aún)');
+      return true;                     // nada que cubrir todavía: no es una regresión
+    }
+    const BEAT_EPS = 0.70, MAX_GAP_S = 3.0, DESDE = 3, HASTA = 20;
+    const malos = [];
+    for (const key of claves){
+      const sigs = _sigsDe(key);
+      const beats = [];
+      for (let i = 1; i < sigs.length; i++){
+        const t = i * DT;
+        if (t < DESDE || t > HASTA) continue;
+        if (!sigs[i] || !sigs[i-1]) continue;
+        if (_difMedia(sigs[i], sigs[i-1]) >= BEAT_EPS) beats.push(t);
+      }
+      let peorHueco = beats.length ? beats[0] - DESDE : HASTA - DESDE;
+      for (let i = 1; i < beats.length; i++) peorHueco = Math.max(peorHueco, beats[i] - beats[i-1]);
+      if (beats.length) peorHueco = Math.max(peorHueco, HASTA - beats[beats.length - 1]);
+      console.log(`[PACING] ${key} → ${beats.length} beats en ${DESDE}-${HASTA}s, hueco máx=${peorHueco.toFixed(2)}s`);
+      if (peorHueco > MAX_GAP_S)
+        malos.push(`${key}: ${peorHueco.toFixed(2)}s sin cambio visual real (máximo ${MAX_GAP_S}s)`);
+    }
+    return malos.length === 0 ? true : malos.join(' · ');
+  });
+
   // Bug real del 2026-07-25 (Read #7): la cifra de `curvaLlegaEn` se decía DOS veces en el guion
   // ("eight million dollars" en `intro` y en `proof`). El calibrador usa `.find()`, cogió la
   // primera, y el contador de un video de 62s terminaba a los 7.15s y se quedaba clavado 55
