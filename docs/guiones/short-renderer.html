@@ -667,6 +667,117 @@ const SHORTS = {
       omitirEnSubtitulos: [],
     },
   },
+
+  'grace-groner': {
+    ref: 'grace-groner-secretary-2026-07',
+    // hook=story, mismo mecanismo de contraste de 2 líneas que S1/Buffett/Read: trabajo humilde +
+    // cifra enorme. Primera protagonista MUJER del canal (diferenciador real, no cosmético).
+    adn: {hook_type: 'story', story_type: 'character', cta_type: 'comment'},
+    escena: 'snowball',                 // compounding real (dividendos reinvertidos), mismo motor que Read
+    camara: true,
+    // ── EXPERIMENTO pacing_2_3s (2026-07-31, docs/ESTADO.md · omega/creative/patterns.py) ──────
+    // Mismo formato narrativo YA VALIDADO que Read (personaje oculto + revelación) para no mezclar
+    // variables -- lo que cambia aquí es la DENSIDAD de cambios visuales en el tramo 3-20s
+    // (checklist/stat/titulo por CADA frase corta, no solo por grupo) para intentar cumplir el
+    // test PACING nuevo (tests-motor.html). `ritmo` se mantiene (ya validado, línea base común);
+    // `pacing` es la variable bajo prueba.
+    ritmo: true,
+    ritmoYears: 75,                     // los 75 años sin vender — la variable ES el tiempo, otra vez
+    ritmoSep: 210,
+    pacing: true,
+    // ── GUION TÉCNICO: un visual por frase (mismo patrón que Read) ──────────────────────────────
+    // 21 frases. Denso en 3-20s a propósito (thesis+proof caen ahí): un corte por frase corta, no
+    // solo por grupo, para intentar cumplir pacing_2_3s. Los tiempos reales salen de la calibración
+    // contra la voz — esto es el PRIMER intento, se corrige con lo que mida el test PACING real.
+    visualPorFrase: [
+      /* 0  "She was a secretary."                    */ null,          // EL GANCHO, intacto
+      /* 1  "Nobody who knew her had any idea."        */ null,          // sigue el gancho
+      /* 2  "...seven million, two hundred thousand."  */ null,          // la revelación del gancho (spec[1])
+      /* 3  "No second job."                           */ 'checklist',   // entra en el tramo 3-20s: primer ✗
+      /* 4  "No inheritance."                          */ null,          // 2º ✗
+      /* 5  "No stock tip nobody else had."             */ null,          // 3er ✗
+      /* 6  "Just one holding, bought for $180..."      */
+      {escena: 'stat', valor: 180, prefijo: '$', conteo_s: 1.0, vozAncla: 'eighty dollars',
+       kicker: 'HER TOTAL INVESTMENT', sub: '1935 · three shares'},
+      /* 7  "She worked as a secretary for 43 years."   */
+      {escena: 'titulo', lineas: ['43 YEARS.', 'SAME DESK.'], sub: 'Abbott Laboratories'},
+      /* 8  "Bought her clothes at rummage sales."      */
+      {escena: 'titulo', lineas: ['CLOTHES FROM', 'RUMMAGE SALES.'], sub: 'while the shares kept compounding'},
+      /* 9  "Every dividend...back into more shares."   */ 'snowball',   // arranca la bola: el mecanismo
+      /* 10 "Nobody at that company knew."              */
+      {escena: 'titulo', lineas: ['NOT EVEN HER', 'COWORKERS KNEW.'], sub: 'forty-three years, zero clues'},
+      /* 11 "Three shares became thousands."            */ 'snowball',   // sigue la bola, creciendo
+      /* 12 "...this is where it ends up."              */
+      // vozAncla: el conteo TERMINA cuando la voz dice la cifra final (mismo mecanismo que Read).
+      {escena: 'stat', valor: 7200000, conteo_s: 2.4, vozAncla: 'ends up',
+       kicker: 'SEVENTY-FIVE YEARS LATER', sub: 'from a $180 bet'},
+      /* 13 "Here's the uncomfortable part."            */
+      {escena: 'titulo', lineas: ['THE PART THAT', 'FEELS WRONG.'], sub: 'the honest footnote'},
+      /* 14 "She could have sold and lived better..."   */ 'snowball',
+      /* 15 "She chose not to, 75 years straight."      */ null,         // la MISMA bola es la frase
+      /* 16 "That's a trade almost nobody can make."    */
+      {escena: 'titulo', lineas: ['A TRADE ALMOST', 'NOBODY CAN MAKE.'], sub: 'discipline, not a strategy'},
+      /* 17 "You don't need her 75 years or one stock." */
+      {escena: 'titulo', lineas: ["YOU DON'T NEED", 'HER 75 YEARS.'], sub: 'the engine scales down'},
+      /* 18 "The engine is the same at any size..."     */ 'snowball',   // la bola pequeña rodando
+      /* 19 "Could you sit on $180...never touch it?"   */ 'snowball',   // fondo limpio bajo el CTA
+      /* 20 "Or would you have sold at $10,000?"        */ null,         // el CTA manda, hasta el final
+    ],
+    items: ['NO SECOND JOB', 'NO INHERITANCE', 'NO SECRET TIP'],
+    barrasEsfuerzo: false,
+    voz: 'voz-short-grace.mp3',
+    sfx: true,
+    // CIFRAS VERIFICADAS (2026-07-31, Wikipedia + Yahoo Finance + CS Monitor + Groner Foundation):
+    // Grace Groner, secretaria en Abbott Laboratories 43 años, compró 3 acciones a $60 c/u ($180
+    // total) en 1935, vivió con extrema frugalidad (cabaña pequeña, ropa de segunda mano), nunca
+    // vendió, reinvirtió cada dividendo 75 años, murió en 2010 a los 100 años dejando $7.2M
+    // descubiertos recién al morir -> donados a Lake Forest College (su universidad) vía una
+    // fundación. Nadie en su vida sabía el tamaño real de su patrimonio.
+    //
+    // La curva es ILUSTRATIVA (mismo criterio que Read/Buffett): la mecánica (reinvertir+tiempo),
+    // NO su cartera real letra por letra (el split/dividendo exacto de Abbott en 75 años no es
+    // reconstruible con precisión). $180 a un CAGR fijo durante 75 años -> $7.2M exacto. La tasa
+    // (15.18%) NO se eligió a ojo: se despejó de (7,200,000/180)^(1/75)-1 -- es alta pero no
+    // absurda para UNA acción concreta en 75 años (Abbott, healthcare, muchos splits); el aviso
+    // lo dice así de claro para no sugerir que es un retorno típico/replicable.
+    // nLin=2, NO 3: `ritmo`+la línea de tiempo de años solo se activa con nLin===2 (drawHook), y
+    // specAncla (2 entradas) tiene que coincidir en longitud con spec. La 2ª línea es la
+    // REVELACIÓN numérica, mismo mecanismo que Read/Buffett/S1.
+    // Línea 1 CORTA a propósito -- medido (2026-07-31): "SHE WAS A SECRETARY." (20 car.) dispara
+    // el auto-encogido de `text()` (ver comentario de `ritmoSep` arriba, línea ~1883) y el bloque
+    // encogido apenas se mueve con la respiración de `ritmo` -> MOTION BUDGET medía 0.031, bajo el
+    // umbral 0.10 (congelado). "A SECRETARY." (12 car., sin encogerse) mide 0.103 -- limpio, y de
+    // paso calza con el MISMO molde que ya funciona en Read ("A JANITOR."), no uno nuevo.
+    spec: ['A SECRETARY.', '$7,200,000.'],
+    cta: ['HOLD IT, OR', 'SELL AT $10K?'],
+    // CTA de debate, mismo mecanismo que Read (una sola dicotomía en voz y pantalla): sentarse
+    // encima del $180 75 años vs. vender apenas subiera. Pide veredicto, no "qué opinas".
+    ctaSub: 'drop your verdict · hold forever or take the win',
+    pmt: 0, lump: 180, years: 75, rate: 0.15175683942745377, compound: 'annual',
+    valorFinal: '$7,200,000',
+    ctaDim: 0.90,
+    aviso: ['Illustrative · one real stock, ~15.2%/yr nominal for 75 years (not typical)',
+            'Single-stock risk is real · Not financial advice'],
+    guion: {
+      grupos: [
+        {id:'intro',   texto:"She was a secretary. Nobody who knew her had any idea. When she died at a hundred, they found seven million, two hundred thousand dollars."},
+        {id:'thesis',  texto:"No second job. No inheritance. No stock tip nobody else had. Just one holding, bought for a hundred and eighty dollars, and seventy-five years of not touching it."},
+        {id:'proof',   texto:"She worked as a secretary for forty-three years. Bought her clothes at rummage sales. Every dividend the company paid her, she put back into more shares. Nobody at that company knew what she was sitting on."},
+        {id:'payoff',  texto:"Three shares became thousands. Seventy-five years of doing nothing but reinvest, and this is where it ends up."},
+        {id:'honesty', texto:"Here's the uncomfortable part. She could have sold and lived better, any year she wanted. She chose not to, for seventy-five years straight. That's not a strategy. That's a trade almost nobody can actually make."},
+        {id:'lesson',  texto:"You don't need her seventy-five years or her one stock. The engine is the same at any size. Own it, reinvest it, and leave it alone."},
+        {id:'cta',     texto:"Could you sit on a hundred and eighty dollars for seventy-five years and never touch it? Or would you have sold at ten thousand?"},
+      ],
+      cifras: [
+        ["seven million, two hundred thousand dollars", "$7,200,000"],
+      ],
+      subtitulos: ['thesis','proof','payoff','honesty','lesson'],
+      curvaLlegaEn: "$7,200,000",
+      curvaLlegaEnGrupo: 'intro',        // la cifra final se dice UNA sola vez, en el intro
+      specAncla: [null, "seven million, two hundred thousand dollars"],
+      omitirEnSubtitulos: [],
+    },
+  },
 };
 
 /** Alineamiento externo cargado desde `data/<voz>.align.json` (lo genera tools/alinear_voz.py con
