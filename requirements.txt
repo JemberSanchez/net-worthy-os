@@ -13,6 +13,10 @@ google-api-python-client>=2.150.0   # omega/publish.py: videos.insert
 google-auth-oauthlib>=1.2.1         # omega/publish.py: flujo OAuth2 InstalledAppFlow (Desktop app)
 google-auth-httplib2>=0.2.0         # requerido por googleapiclient para llamadas HTTP autenticadas
 
+# Subida a Facebook/Instagram (omega/publish_meta.py): Meta no ofrece un SDK oficial de Python
+# mantenido, así que se habla el protocolo REST (resumable upload) directo con requests.
+requests>=2.31
+
 # --- Fases siguientes (descomentar cuando se validen / haya presupuesto) ---
 # praw                      # Reddit API (OAuth gratuito)
 # scikit-learn              # TF-IDF + clustering cuando el term-momentum se quede corto

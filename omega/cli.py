@@ -17,6 +17,9 @@ Comandos:
   python -m omega.cli record-analytics [file]      # registra CTR/AVD/retencion tras publicar
   python -m omega.cli record-cost [file]           # registra horas/coste de producir el video
   python -m omega.cli publish <ref> [file]         # sube el MP4 a YouTube (privado por defecto)
+  python -m omega.cli meta-auth                    # setup de una vez: autoriza Facebook/Instagram
+  python -m omega.cli publish-fb <ref> [--publicar] # sube a la Pagina de Facebook (borrador por defecto)
+  python -m omega.cli publish-ig <ref> [--publicar] # sube como Reel de Instagram (sin publicar por defecto)
   python -m omega.cli dna                          # dataset de ADN + calibracion + rendimiento/hora
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
   python -m omega.cli rescore [--dry-run]          # recalcula el exito de todos desde analytics
@@ -616,6 +619,106 @@ def cmd_publish() -> None:
     print(f"Siguiente paso: python -m omega.cli record-dna")
 
 
+def _load_publish_json(ref: str) -> dict:
+    """Lee data/publish_<ref>.json (el mismo archivo que ya rellena el flujo de YouTube) y
+    valida los campos comunes. Usado por publish-fb y publish-ig para no duplicar el título/
+    descripción/ruta del video."""
+    import json
+    from pathlib import Path
+
+    path = config.DATA_DIR / f"publish_{ref}.json"
+    if not path.exists():
+        print(f"No existe {path}. Corré primero 'python -m omega.cli publish {ref}' "
+              "(aunque sea para generar la plantilla) y rellenala.")
+        return {}
+    d = json.loads(path.read_text(encoding="utf-8"))
+    title = str(d.get("title", ""))
+    description = str(d.get("description", ""))
+    video_path = Path(d.get("video_path", ""))
+    if not title or title.startswith("<"):
+        print(f"Rechazado: falta 'title' en {path} (o quedó el placeholder).")
+        return {}
+    if not description or description.startswith("<"):
+        print(f"Rechazado: falta 'description' en {path} (o quedó el placeholder).")
+        return {}
+    if not video_path.exists():
+        print(f"Rechazado: 'video_path' no existe: {video_path}")
+        return {}
+    return d
+
+
+def _log_publish(platform: str, ref: str, result: dict, live: bool) -> None:
+    import json
+
+    log_path = config.DATA_DIR / "publish_log.jsonl"
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"production_ref": ref, "platform": platform, "timestamp": int(time.time()),
+                             "live": live, **result}, ensure_ascii=False) + "\n")
+
+
+def cmd_meta_auth() -> None:
+    """Setup de una sola vez: autoriza la app de Meta contra tu Página/Instagram y guarda el token."""
+    from . import publish_meta
+    try:
+        publish_meta._authorize()
+    except publish_meta.PublishError as exc:
+        print(f"Rechazado: {exc}")
+
+
+def cmd_publish_fb() -> None:
+    """Sube un Short a la Página de Facebook (borrador por defecto; --publicar lo deja público)."""
+    from pathlib import Path
+    from . import publish_meta
+
+    if len(sys.argv) < 3:
+        print("Uso: python -m omega.cli publish-fb <ref> [--publicar]")
+        return
+    ref = sys.argv[2]
+    d = _load_publish_json(ref)
+    if not d:
+        return
+    live = "--publicar" in sys.argv
+
+    try:
+        result = publish_meta.upload_facebook_reel(
+            Path(d["video_path"]), d["title"], d["description"], published=live)
+    except publish_meta.PublishError as exc:
+        print(f"Rechazado: {exc}")
+        return
+
+    print(f"Subido a Facebook: {result['url']}  ({'PÚBLICO' if live else 'borrador, sin publicar'})")
+    _log_publish("facebook", d.get("production_ref", ref), result, live)
+
+
+def cmd_publish_ig() -> None:
+    """Sube un Short como Reel de Instagram (solo contenedor por defecto; --publicar lo publica)."""
+    from pathlib import Path
+    from . import publish_meta
+
+    if len(sys.argv) < 3:
+        print("Uso: python -m omega.cli publish-ig <ref> [--publicar]")
+        return
+    ref = sys.argv[2]
+    d = _load_publish_json(ref)
+    if not d:
+        return
+    caption = str(d.get("ig_caption") or d["description"])
+    live = "--publicar" in sys.argv
+
+    try:
+        result = publish_meta.upload_instagram_reel(Path(d["video_path"]), caption, publish=live)
+    except publish_meta.PublishError as exc:
+        print(f"Rechazado: {exc}")
+        return
+
+    if live:
+        print(f"Publicado en Instagram: {result['url']}")
+    else:
+        print(f"Subido a Instagram, {result['status']} (contenedor {result['container_id']}). "
+              "Corré con --publicar para hacerlo público.")
+    _log_publish("instagram", d.get("production_ref", ref), result, live)
+
+
 def cmd_dna() -> None:
     """Muestra el dataset de ADN de producción + calibración por dimensión (con guard de rigor)."""
     from .reasoning import store as kstore
@@ -840,6 +943,9 @@ def main(argv: list[str]) -> int:
         "record-analytics": cmd_record_analytics,
         "record-cost": cmd_record_cost,
         "publish": cmd_publish,
+        "meta-auth": cmd_meta_auth,
+        "publish-fb": cmd_publish_fb,
+        "publish-ig": cmd_publish_ig,
         "dna": cmd_dna,
         "record-outcome": cmd_record_outcome,
         "rescore": cmd_rescore,

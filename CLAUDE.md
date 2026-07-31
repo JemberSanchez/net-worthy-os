@@ -18,6 +18,10 @@ es una SEÑAL DE DEMANDA, no un video. SIEMPRE convertirlo en un catch-up explai
 Diario:   `ingest` (RSS) · `youtube-scan` (demanda YouTube) · `signals` · `decide` (tema por $)
 Idea:     `think "<tema>"` → pegar pack en Claude → rellenar data/think_result.json → `record-think`
 Explorar: `trends` · `youtube <q>` · `related <tema>` · `patterns` · `combine <s>`
+Publicar: `publish <ref>` (YouTube) · `meta-auth` (setup una vez) · `publish-fb <ref> [--publicar]` ·
+  `publish-ig <ref> [--publicar]` — los tres privados/borrador por defecto; `--publicar` los hace
+  públicos. Meta (FB/IG) SIEMPRE requiere confirmación explícita en el chat antes de correr
+  `--publicar` — no se automatiza publicar en vivo sin que el usuario lo vea primero.
 Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` · `dna` · `learnings`
 Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
 
