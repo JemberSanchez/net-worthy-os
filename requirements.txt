@@ -3,8 +3,15 @@
 feedparser>=6.0.11        # parseo RSS/Atom (puro Python, sin coste, sin API key)
 anthropic>=0.112         # LLM para el director creativo (necesita ANTHROPIC_API_KEY; opcional, hay modo $0)
 
-# YouTube Data API v3 ya está integrado (omega/sources/youtube.py) SIN dependencias:
-# usa urllib de la stdlib. Solo necesita YOUTUBE_API_KEY en .env (cuota gratuita).
+# YouTube Data API v3 (lectura/demanda) ya está integrado (omega/sources/youtube.py) SIN
+# dependencias: usa urllib de la stdlib. Solo necesita YOUTUBE_API_KEY en .env (cuota gratuita).
+
+# Subida a YouTube (omega/publish.py, videos.insert): excepción deliberada a "sin dependencias".
+# OAuth2 + resumable upload a mano con urllib es alto riesgo de error/baneo; usamos las librerías
+# oficiales de Google, igual de gratuitas, mucho más confiables.
+google-api-python-client>=2.150.0   # omega/publish.py: videos.insert
+google-auth-oauthlib>=1.2.1         # omega/publish.py: flujo OAuth2 InstalledAppFlow (Desktop app)
+google-auth-httplib2>=0.2.0         # requerido por googleapiclient para llamadas HTTP autenticadas
 
 # --- Fases siguientes (descomentar cuando se validen / haya presupuesto) ---
 # praw                      # Reddit API (OAuth gratuito)

@@ -1,5 +1,62 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶ 2026-07-30 (tarde) · 6 FIXES DE SINCRONÍA EN READ-JANITOR + LÍMITE CRÍTICO DEL RENDER
+>
+> Tras cambiar a voz Kokoro, el usuario reportó desfase voz/video en Ronald Read (#7). Se
+> encontraron y arreglaron 6 bugs REALES, cada uno medido contra la transcripción real
+> (`ALINEAMIENTO.palabras`) o la energía real del audio (RMS), nunca "a ojo":
+>
+> 1. **`cortesMedidos` falso positivo** (`short-renderer.html:3707`): al seleccionar un Short
+>    quedaba "medido" antes de cargar SU voz real — si se exportaba en esa ventana, salían quemadas
+>    las escenas de S3. Fix: `cortesMedidos = false` al seleccionar, sin importar `CFG.demo`.
+> 2. **`stat` de `visualPorFrase` con duración fija** (contador de $8M y "60 years"): no sabían
+>    CUÁNDO la voz decía la cifra. Fix: `vozAncla` + `tiempoAnclaVoz()` (nuevas), atan el conteo al
+>    tiempo MEDIDO real, igual que ya hacía `tarjetasDelPlano` con las viñetas.
+> 3. **`T.hook`/`T.draw`/`T.curve`/`T.cta` mal calculados** (`calibrarAuto`): usaban el partidor de
+>    segmentos por silencio (`repartirGrupos`, no mira el TEXTO) en vez de las palabras realmente
+>    medidas (`palabrasAlineadas`, lo que ya usa `ULTIMA_CAL.frases` correctamente). El gancho de
+>    Read tiene 2 frases con una pausa real entre ellas; el partidor la confundió con el límite
+>    gancho→cuerpo. Fix: derivar `inicio`/`fin` de `ws[0].t0`/`ws[last].t1`, no de los segmentos.
+> 4. **Palabras de Whisper medidas SOBRE SILENCIO REAL** (`tools/alinear_voz.py`): Whisper midió
+>    "He" en t=24.62 con el audio en silencio ahí. Fix: `envolvente_rms()` + `hay_voz_en()` — si una
+>    medición no aguanta contra la energía real, se descarta y cae a interpolación.
+> 5. **Interpolación ciega de las palabras descartadas**: repartía en línea recta por TODO el hueco
+>    entre dos palabras medidas, sin saber que la mayor parte era silencio real. Fix:
+>    `segmentos_voz()` (mismo algoritmo que `segmentarVoz` del motor, en Python) + reparto SOLO
+>    dentro de tramos con voz real — filtro `a > a0` clave: un tramo que ya empezaba en/antes de la
+>    palabra anterior es SU cola apagándose, no contenido nuevo.
+> 6. **`LEAD` fijo (0.18) en el resalte de palabra** (`dibujarSubtitulo`): la entrada de tarjeta SÍ
+>    usaba 0.08 con alineamiento real, pero el resalte de la palabra activa dentro de la tarjeta se
+>    quedó con el 0.18 viejo — desincronizado en CADA palabra resaltada de TODO el video. Fix:
+>    `palabraActiva(tiempos, tAhora, lead)` extraída, recibe `LEAD` como parámetro.
+>
+> Los 6 están cubiertos por tests (39→40 tests en `tests-motor.html`, 145 en Python). Todo
+> verificado contra datos reales, nunca supuesto.
+>
+> **⚠ LÍMITE CRÍTICO DESCUBIERTO, NO ES BUG DE CÓDIGO — LEE ESTO ANTES DE RENDERIZAR DESDE CLAUDE**:
+> con los 6 fixes ya aplicados, el video SEGUÍA saliendo desincronizado — pero solo en el ARCHIVO
+> exportado, nunca en `drawFrame()` llamado en vivo desde la consola (que siempre dio el contenido
+> correcto). Se probaron y descartaron con evidencia: reordenamiento del codificador
+> (`latencyMode`), pestaña en segundo plano (`document.hidden`, con guardia nueva añadida de todos
+> modos — ver abajo). La causa que queda en pie: el navegador que controla Claude vía herramientas
+> automatizadas (Browser pane) **no garantiza componer/pintar el canvas de forma continua** durante
+> una exportación larga salvo que el panel esté siendo mostrado activamente — confirmado porque los
+> screenshots fallaban con "el panel no está mostrado, no compone frames" en el mismo tramo de la
+> sesión. Se probaron DOS mecanismos de captura (`exportarMP4`/VideoEncoder y
+> `grabar()`/MediaRecorder) y cada uno falló DE FORMA DISTINTA — descarta un bug puntual de uno de
+> los dos y apunta a un límite del entorno, no del código.
+>
+> **Consecuencia práctica**: los MP4 que Claude renderiza y descarga DESDE SU PROPIO navegador de
+> herramienta no son de fiar para verificar sincronía — pueden salir con contenido desfasado aunque
+> el código y la calibración estén perfectos (verificado en consola). El usuario debe renderizar
+> él mismo, en SU navegador real (que sí compone continuamente), para obtener un archivo válido.
+> Si esto se reproduce ahí también, SÍ sería señal de un bug de código real — investigar de nuevo.
+>
+> Se añadió de todos modos una guardia (`document.hidden`) en `exportarMP4`/`exportarMP4Video`
+> (líneas ~4502, ~4612) que antes solo tenía `grabar()`: si la pestaña pasa a segundo plano a media
+> exportación, ahora falla con un error explícito en vez de producir un archivo corrupto en
+> silencio — no soluciona el límite de fondo, pero cierra un caso real que sí podía detectarse.
+
 > ## ▶▶▶▶▶ 2026-07-30 · KOKORO (voz `am_adam`) — MOTOR DE VOZ POR DEFECTO
 >
 > El usuario preguntó "¿seguro que Kokoro no funciona en esta versión de Python?" — pregunta

@@ -16,6 +16,7 @@ Comandos:
   python -m omega.cli record-dna [file]            # registra el ADN de produccion de un video
   python -m omega.cli record-analytics [file]      # registra CTR/AVD/retencion tras publicar
   python -m omega.cli record-cost [file]           # registra horas/coste de producir el video
+  python -m omega.cli publish <ref> [file]         # sube el MP4 a YouTube (privado por defecto)
   python -m omega.cli dna                          # dataset de ADN + calibracion + rendimiento/hora
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
   python -m omega.cli rescore [--dry-run]          # recalcula el exito de todos desde analytics
@@ -556,6 +557,65 @@ def cmd_record_cost() -> None:
     con.close()
 
 
+def cmd_publish() -> None:
+    """Sube un Short ya renderizado a YouTube (privado por defecto). Lee data/publish_<ref>.json."""
+    import json
+    import time
+    from pathlib import Path
+    from . import publish
+
+    if len(sys.argv) < 3:
+        print("Uso: python -m omega.cli publish <ref> [file]")
+        return
+    ref = sys.argv[2]
+    path = Path(sys.argv[3]) if len(sys.argv) > 3 else (config.DATA_DIR / f"publish_{ref}.json")
+    if not path.exists():
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        tpl = {"production_ref": ref, "video_path": "<ruta-al-mp4-exportado>",
+               "title": "<titulo, <=100 chars>", "description": "<descripcion, <=5000 chars>",
+               "tags": [], "category_id": "27", "privacy_status": "private",
+               "made_for_kids": False}
+        tpl_path = config.DATA_DIR / f"publish_{ref}.template.json"
+        tpl_path.write_text(json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"No existe {path}. Plantilla escrita en {tpl_path.name} — "
+              f"rellénala, renómbrala a publish_{ref}.json y reintenta.")
+        return
+
+    d = json.loads(path.read_text(encoding="utf-8"))
+    title = str(d.get("title", ""))
+    description = str(d.get("description", ""))
+    video_path = Path(d.get("video_path", ""))
+    if not title or title.startswith("<"):
+        print(f"Rechazado: falta 'title' en {path} (o quedó el placeholder).")
+        return
+    if not description or description.startswith("<"):
+        print(f"Rechazado: falta 'description' en {path} (o quedó el placeholder).")
+        return
+    if not video_path.exists():
+        print(f"Rechazado: 'video_path' no existe: {video_path}")
+        return
+
+    try:
+        result = publish.upload_video(
+            video_path, title, description, tags=d.get("tags"),
+            category_id=d.get("category_id", "27"),
+            privacy_status=d.get("privacy_status", "private"),
+            made_for_kids=d.get("made_for_kids", False))
+    except publish.PublishError as exc:
+        print(f"Rechazado: {exc}")
+        return
+
+    print(f"Subido: {result['url']}  (video_id={result['video_id']}, "
+          f"privacy={d.get('privacy_status', 'private')})")
+    log_path = config.DATA_DIR / "publish_log.jsonl"
+    with log_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"production_ref": d.get("production_ref", ref),
+                             "video_id": result["video_id"], "timestamp": int(time.time()),
+                             "privacy_status": d.get("privacy_status", "private")},
+                            ensure_ascii=False) + "\n")
+    print(f"Siguiente paso: python -m omega.cli record-dna")
+
+
 def cmd_dna() -> None:
     """Muestra el dataset de ADN de producción + calibración por dimensión (con guard de rigor)."""
     from .reasoning import store as kstore
@@ -779,6 +839,7 @@ def main(argv: list[str]) -> int:
         "record-dna": cmd_record_dna,
         "record-analytics": cmd_record_analytics,
         "record-cost": cmd_record_cost,
+        "publish": cmd_publish,
         "dna": cmd_dna,
         "record-outcome": cmd_record_outcome,
         "rescore": cmd_rescore,

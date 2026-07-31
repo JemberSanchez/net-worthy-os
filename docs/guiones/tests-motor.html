@@ -164,6 +164,18 @@ document.getElementById('motor').onload = async () => {
     return (neg === 1.6 && uno === 1.6) ? true : `neg=${neg} uno=${uno}`;
   });
 
+  // Bug real detectado con la voz Kokoro (30-jul): el resalte de palabra en dibujarSubtitulo tenía
+  // un LEAD fijo (0.18) que no distinguía si había alineamiento real — mientras que la entrada de
+  // tarjeta SÍ usa 0.08 con alineamiento. Medido en pantalla: a t=40.0s la voz real seguía diciendo
+  // "you," pero ya se resaltaba "reinvest," (180ms de adelanto de más). palabraActiva ahora recibe
+  // el lead como parámetro en vez de tenerlo hardcodeado.
+  check('palabraActiva: usa el lead que se le pasa (bug real: 0.18 fijo pisaba el 0.08 con alineamiento)', () => {
+    const tiempos = [10.0, 10.5, 11.0];
+    if (W.palabraActiva(tiempos, 10.5 - 0.08 - 0.01, 0.08) !== 0) return 'se activó antes de tiempo con lead=0.08';
+    if (W.palabraActiva(tiempos, 10.5 - 0.08 + 0.01, 0.08) !== 1) return 'no se activó a tiempo con lead=0.08';
+    return true;
+  });
+
   // ── AUTO-SYNC del stat ─────────────────────────────────────────────────
   check('autoSyncStat: el conteo termina cuando la voz EMPIEZA la cifra', () => {
     const st = {escena:'stat', desde:()=>10, conteo_s:1.3};
@@ -523,6 +535,41 @@ document.getElementById('motor').onload = async () => {
     return escenas.size >= 4 ? true : `solo ${escenas.size} escenas distintas en todo el Short`;
   });
 
+  // Detectado con la voz Kokoro (30-jul): el gancho de Read tiene 2 frases con una pausa real
+  // entre ellas ("...whole life." | pausa | "He died..."), y el partidor de segmentos por silencio
+  // (`repartirGrupos`, no mira el TEXTO) confundió esa pausa INTERNA con el límite gancho->cuerpo.
+  // T.hook salía en 3.19s mientras la voz seguía diciendo "eight million dollars" hasta 4.58s.
+  // Comparar contra la PRIMERA frase real de 'thesis' (no un número fijo) para que el test siga
+  // siendo válido si el guion o la voz cambian.
+  check('CORTES: T.hook cae donde de verdad empieza el cuerpo (no en una pausa interna del gancho)', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const {T: Tm, ULTIMA_CAL: cal} = W.estadoMotor();
+    const primeraThesis = cal.frases.find(f => f.grupo === 'thesis');
+    if (!primeraThesis) return 'no encuentro ninguna frase del grupo thesis';
+    const d = Math.abs(Tm.hook - primeraThesis.inicio);
+    return d <= 0.15 ? true
+      : `T.hook=${Tm.hook.toFixed(2)} vs thesis real en ${primeraThesis.inicio.toFixed(2)} (Δ${d.toFixed(2)}s)`;
+  });
+
+  // Detectado con la voz Kokoro (30-jul): los `stat` de visualPorFrase tenían un conteo_s FIJO,
+  // tecleado contra la voz vieja — con voz más rápida el número aterrizaba ~1s después de que la
+  // voz empezara a decir la cifra. vozAncla + tiempoAnclaVoz lo atan al tiempo MEDIDO.
+  check('STAT (visualPorFrase): el conteo aterriza cerca de cuando la voz dice la cifra ancla', async () => {
+    if (!await conRead) return 'no se pudo calibrar la voz del Read';
+    const {CFG, ULTIMA_CAL: cal} = W.estadoMotor();
+    const malos = [];
+    CFG.visualPorFrase.forEach((v, i) => {
+      if (!v || typeof v !== 'object' || v.escena !== 'stat' || !v.vozAncla) return;
+      const t = cal.frases[i].inicio + 0.05;
+      const { datos } = W.resolverEscena(t);
+      const aterriza = datos.desde + datos.conteo_s;
+      const tAncla = W.tiempoAnclaVoz(datos.desde, datos.hasta, v.vozAncla);
+      if (tAncla == null) { malos.push(`frase ${i}: sin match para "${v.vozAncla}"`); return; }
+      if (Math.abs(aterriza - tAncla) > 0.65) malos.push(`frase ${i}: aterriza ${aterriza.toFixed(2)} vs voz ${tAncla.toFixed(2)}`);
+    });
+    return malos.length === 0 ? true : malos.join(' · ');
+  });
+
   // Mide el TEXTO, no los píxeles claros. El barrido por color no distingue una letra de un
   // gráfico blanco: la bola de nieve entra en la franja derecha a propósito (crece hasta salirse
   // de cuadro) y daba un falso positivo. Aquí se intercepta `text()` y se transforma su caja con
@@ -617,19 +664,26 @@ document.getElementById('motor').onload = async () => {
       // energía. Lo que NO puede pasar es que el t0 no venga de ninguna de las dos, porque eso
       // significaría que se ha vuelto a estimar.
       const norm = s => (s||'').toLowerCase().replace(/[^a-z0-9']/g,'');
-      const arranques = W.segmentarVoz(est.pcm, {minSilMs: 90}).map(s => s[0]);
+      const segs = W.segmentarVoz(est.pcm, {minSilMs: 90});
       const malas = [];
       for (const k of ks){
         const p0 = norm(k.palabras[0]);
         let dAsr = Infinity;
         for (const p of est.ALINEAMIENTO.palabras)
           if (norm(p.w) === p0) dAsr = Math.min(dAsr, Math.abs(p.t0 - k.t0));
-        const dVoz = arranques.reduce((m,a) => Math.min(m, Math.abs(a - k.t0)), Infinity);
-        // Un token de CIFRA ("$8,000,000.") no existe como palabra en el ASR: `fusionarCifras` une
-        // "eight million dollars" en uno solo y hereda el t0 del primero. Ahí la referencia que
-        // queda es la energía, con la tolerancia de siempre.
-        const umbral = dAsr === Infinity ? 0.12 : 0.02;
-        if (Math.min(dAsr, dVoz) > umbral)
+        if (dAsr === Infinity){
+          // Un token de CIFRA ("$8,000,000.") no existe como palabra en el ASR: `fusionarCifras`
+          // une "eight million dollars" en uno solo y hereda el t0 del primero. No tiene por qué
+          // ABRIR un segmento de voz nuevo — puede continuar uno ya empezado (Kokoro no siempre
+          // pausa antes del número) — así que la referencia es estar DENTRO de cualquier segmento,
+          // no cerca del inicio de uno. Detectado 30-jul: "$8,000,000." con voz real medida en su
+          // propia ventana pero lejos de cualquier inicio de segmento -> falso positivo.
+          const dentro = segs.some(([a,b]) => k.t0 >= a - 0.12 && k.t0 <= b + 0.12);
+          if (!dentro) malas.push(`"${k.palabras[0]}" (cifra) t0=${k.t0.toFixed(2)} fuera de cualquier tramo de voz`);
+          continue;
+        }
+        const dVoz = segs.reduce((m,[a]) => Math.min(m, Math.abs(a - k.t0)), Infinity);
+        if (Math.min(dAsr, dVoz) > 0.02)
           malas.push(`"${k.palabras[0]}" asr ${(dAsr*1000).toFixed(0)}ms / voz ${(dVoz*1000).toFixed(0)}ms`);
       }
       return malas.length === 0 ? true

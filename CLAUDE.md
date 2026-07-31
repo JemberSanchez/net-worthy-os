@@ -92,6 +92,14 @@ el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va 
   subtítulos quemados) y exporta **MP4 H.264+AAC** listo para subir. Sin CapCut. Datos por Short en
   `SHORTS[...]`; el resto es motor. Tiene **calibrador automático** que deduce cortes y subtítulos
   del audio (verificado: reproduce exacto la calibración manual del S3).
+- **Renderizar SIEMPRE por la cola de "Lote"** (campo + botón "Lote"), incluso para 1 solo Short —
+  no el flujo manual de seleccionar+cargar voz+grabar. El lote ya encadena cargarShort → traer
+  `data/<voz>` (la que deja `generar_voz.py`) → calibrar → exportar sin tocar nada a mano, y evita
+  una condición de carrera real (30-jul): seleccionar un Short dejaba `cortesMedidos=true` desde el
+  instante de elegirlo (antes de calibrar su voz), así que exportar demasiado rápido en el flujo
+  manual podía quemar los subtítulos/tiempos de **S3** (el primer Short) encima de la voz nueva —
+  visto en Ronald Read. Fix de una línea en `cargarShort` (línea ~3707); el lote nunca lo sufrió
+  porque ya esperaba a que la calibración real terminara antes de exportar.
 - **Voz actual:** CapCut TTS. ElevenLabs aplazado: su plan gratis no da derechos comerciales y sus
   voces Default caducan el 31-dic-2026.
 - **Confounder anotado:** el S3 se publicó a las 02:00 hora local con audiencia EN/US. Si retiene

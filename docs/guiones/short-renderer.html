@@ -551,7 +551,10 @@ const SHORTS = {
       {escena: 'bullets', cadencia_s: 2.8,
        items: ['COMPANIES THAT PAY YOU', 'EVERY DIVIDEND REINVESTED'], iconos: ['coin:brass', 'up:growth']},
       /* 7  "Sixty years later, $8,000,000."        */
-      {escena: 'stat', valor: 8000000, conteo_s: 2.6, kicker: 'SIXTY YEARS LATER', sub: 'from a gas station paycheck'},
+      // vozAncla: el conteo TERMINA cuando la voz EMPIEZA a decir la cifra (tiempoAnclaVoz busca
+      // "$8,000,000" MEDIDO en cards() dentro del plano) — conteo_s queda como fallback si no matchea.
+      {escena: 'stat', valor: 8000000, conteo_s: 2.6, vozAncla: '$8,000,000',
+       kicker: 'SIXTY YEARS LATER', sub: 'from a gas station paycheck'},
       /* 8  "He put in a little at a time."         */ 'snowball',    // el núcleo aportado, dentro
       /* 9  "Everything past that number..."        */ null,          // la MISMA bola creciendo ES la frase
       /* 10 "The machine, not the paycheck."        */
@@ -565,7 +568,7 @@ const SHORTS = {
       // conteo CORTO (1.2s de los 3.5 que dura la frase): el sufijo ' YEARS' solo se pinta cuando
       // el contador aterriza, así que con un conteo largo se pasa el plano entero enseñando un
       // número desnudo ("37") que no significa nada. Cuenta rápido y se queda en "60 YEARS".
-      {escena: 'stat', valor: 60, prefijo: '', sufijo: ' YEARS', conteo_s: 1.2,
+      {escena: 'stat', valor: 60, prefijo: '', sufijo: ' YEARS', conteo_s: 1.2, vozAncla: 'Sixty',
        kicker: 'NEVER INTERRUPTED', sub: 'no emergency big enough to touch it'},
       /* 15 "That is the rare part, not the picking."*/
       {escena: 'titulo', lineas: ['THAT is the rare part.', 'NOT the picking.'], sub: 'survivorship, said out loud'},
@@ -1264,7 +1267,15 @@ function calibrarAuto(buffer, guion){
     const ws = fusionarCifras(
       palabrasAlineadas(k, guion, segsFinos) || alinearPalabras(guion.grupos[k].texto, paraAlinear, nucleos, relojVoz, finos),
       guion.cifras);
-    return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: ini, fin};
+    // El límite real del grupo es el de SUS PALABRAS medidas (mismo dato que ULTIMA_CAL.frases usa
+    // más abajo), no el del partidor de segmentos por silencio (`ini`/`fin`) — ese partidor no mira
+    // el TEXTO y puede confundir una pausa DENTRO de un grupo con el límite entre grupos. Visto en
+    // Read #7: el gancho tiene 2 frases con una pausa real entre ellas, y el partidor cortó ahí en
+    // vez de en el límite gancho->cuerpo -> T.hook salía 1.7s antes de que la voz terminara el
+    // gancho. `ini`/`fin` se conservan tal cual para lo que ya hacían arriba (acotar `finos`).
+    const inicioReal = ws.length ? ws[0].t0 : ini;
+    const finReal = ws.length ? ws[ws.length - 1].t1 : fin;
+    return {id: guion.grupos[k].id, segs: misSegs, ws, inicio: inicioReal, fin: finReal};
   });
 
   // ── DETECTOR DE AUDIO FALTANTE ────────────────────────────────────────────────────────────
@@ -1706,7 +1717,13 @@ function cortesDeSRT(cues){
  *  Si la tarjeta no cabe (p.ej. lleva "$430,000"), encoge la fuente en vez de salirse del lienzo. */
 /** maxW 620, no el ancho de la zona segura: la curva verde cruza la banda de subtítulos por
  *  x≈853, y una tarjeta más ancha le pone texto encima. Verde sobre verde no se lee. */
-function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620, tiempos = null, tAhora = null){
+/** Índice de la palabra activa en `tiempos` (t0 por palabra) al instante `tAhora`, con adelanto
+ *  `lead`. Pura y extraída para poder testearla sin pasar por el canvas. */
+function palabraActiva(tiempos, tAhora, lead){
+  return tiempos.reduce((acc, t0, i) => (tAhora >= t0 - lead ? i : acc), -1);
+}
+
+function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620, tiempos = null, tAhora = null, lead = 0.18){
   const maxW = anchoMax*s, gap = 16*s;
   let size = 62*s, anchos, totalW;
   for (let intento=0; intento<6; intento++){
@@ -1728,8 +1745,7 @@ function dibujarSubtitulo(palabras, cx, cy, s, alpha, escala = 1, anchoMax = 620
   // El resalte lleva el MISMO adelanto que la tarjeta: si el texto entra 0,18 s antes pero la
   // palabra se ilumina 0,18 s después, el resalte iría tarde y se vería justo lo que se quiere
   // evitar. Los dos van por delante lo mismo, así que el conjunto se percibe sincronizado.
-  const activa = (tiempos && tAhora != null)
-    ? tiempos.reduce((acc, t0, i) => (tAhora >= t0 - 0.18 ? i : acc), -1) : -1;
+  const activa = (tiempos && tAhora != null) ? palabraActiva(tiempos, tAhora, lead) : -1;
   ctx.save();
   ctx.translate(cx, cy); ctx.scale(escala, escala);   // micro-pop al entrar: el ojo lo engancha
   let x = -totalW/2;
@@ -3205,11 +3221,17 @@ const SCENES = {
  *  del plano tiene que contar con ella o deja un hueco vacío al principio de cada corte. */
 const TOL_PLANO = 0.2;
 
-/** `desde`/`hasta` son los del PLANO (ya con TOL_PLANO descontada). Las tarjetas se buscan desde el
- *  inicio de la FRASE — 0.2s antes solo está la cola del plano anterior. */
-function tarjetasDelPlano(desde, hasta, textos){
+/** Tarjetas de subtítulo cuyo t0 cae dentro de la ventana del PLANO (desde/hasta ya con TOL_PLANO
+ *  descontada). Se buscan desde el inicio de la FRASE — 0.2s antes solo está la cola del plano
+ *  anterior. Compartida por tarjetasDelPlano y tiempoAnclaVoz para no duplicar el recorte. */
+function cardsDelPlano(desde, hasta){
   const iniFrase = desde + TOL_PLANO;
-  const ks = cards().filter(c => c.t0 >= iniFrase - 0.05 && c.t0 < hasta + TOL_PLANO);
+  return cards().filter(c => c.t0 >= iniFrase - 0.05 && c.t0 < hasta + TOL_PLANO);
+}
+
+/** `desde`/`hasta` son los del PLANO (ya con TOL_PLANO descontada). */
+function tarjetasDelPlano(desde, hasta, textos){
+  const ks = cardsDelPlano(desde, hasta);
   if (!ks.length) return null;
   const n = textos.length;
   // Se empareja por CONTENIDO, no por índice: un plano puede tener 5 tarjetas y 2 ítems, y ahí
@@ -3238,6 +3260,27 @@ function tarjetasDelPlano(desde, hasta, textos){
   // pero perfectamente visibles al reproducir (medido a 30 fps en t=31.94 y t=48.16).
   out[0] = Math.min(out[0], desde - 0.04);
   return out;
+}
+
+/** t0 MEDIDO en que la voz dice `texto` (una cifra ya convertida como "$8,000,000", o una palabra
+ *  suelta como "Sixty"), dentro de la ventana del plano. NO reusa pal() de tarjetasDelPlano (solo
+ *  letras: "$8,000,000" no deja ninguna clave) — normaliza a alfanumérico, conservando dígitos, y
+ *  compara contra cada palabra de cada tarjeta. Usa el tiempo MEDIDO por palabra (tw) si está, más
+ *  preciso que el t0 de toda la tarjeta. null si no hay match: quien llama cae a su conteo_s fijo,
+ *  igual que tarjetasDelPlano cae a su cadencia fija. */
+function tiempoAnclaVoz(desde, hasta, texto){
+  const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const clave = norm(texto);
+  if (!clave) return null;
+  for (const k of cardsDelPlano(desde, hasta)){
+    const pals = k.palabras || [];
+    for (let i = 0; i < pals.length; i++){
+      const w = norm(pals[i]);
+      if (w && (w === clave || w.includes(clave) || clave.includes(w)))
+        return (k.tw && k.tw[i] != null) ? k.tw[i] : k.t0;
+    }
+  }
+  return null;
 }
 
 /** Ventana de LECTURA para los tests. `tests-motor.html` carga el motor en un iframe y desde fuera
@@ -3400,6 +3443,15 @@ function resolverEscena(t){
               // sobre la voz (repartirlas proporcionalmente es la trampa de siempre).
               if (v.lineas && v.lineas.length > 1) datosEscena.tLineas = tarjetasDelPlano(desde, hasta, v.lineas);
               if (v.items  && v.items.length  > 1) datosEscena.tItems  = tarjetasDelPlano(desde, hasta, v.items);
+              // STAT: el conteo debe TERMINAR cuando la voz EMPIEZA a decir la cifra/palabra ancla
+              // — lo que autoSyncStat hace para CFG.overlays, pero visualPorFrase no pasa por ahí.
+              if (v.escena === 'stat' && v.vozAncla){
+                const tAncla = tiempoAnclaVoz(desde, hasta, v.vozAncla);
+                if (tAncla != null){
+                  const dur = tAncla - desde;
+                  if (dur > 0) datosEscena.conteo_s = +Math.max(0.8, Math.min(6, dur)).toFixed(2);
+                }
+              }
               return v.escena;
             }
             datosEscena = {escena: v, desde, hasta, heredado: true};
@@ -3525,13 +3577,13 @@ function _pintarEscenaYResto(t, W, H, s, escenaAhora, datosEscena, body){
       const escSub = resolverEscena(c.t0).escena;
       const pop = 1 + 0.05*(1-dentro);
       if (escSub === 'columns')
-        dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, pop, 470, c.tw, t);
+        dibujarSubtitulo(c.palabras, W*0.31, 810*s, s, dentro, pop, 470, c.tw, t, LEAD);
       else if (escSub === 'checklist')
-        dibujarSubtitulo(c.palabras, W/2, 1010*s, s, dentro, pop, 620, c.tw, t);
+        dibujarSubtitulo(c.palabras, W/2, 1010*s, s, dentro, pop, 620, c.tw, t, LEAD);
       else if (escSub === 'bullets')
-        dibujarSubtitulo(c.palabras, W/2, 1120*s, s, dentro, pop, 620, c.tw, t);
+        dibujarSubtitulo(c.palabras, W/2, 1120*s, s, dentro, pop, 620, c.tw, t, LEAD);
       else
-        dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, pop, 620, c.tw, t);
+        dibujarSubtitulo(c.palabras, W/2, 700*s, s, dentro, pop, 620, c.tw, t, LEAD);
     }
   }
 
@@ -3701,10 +3753,14 @@ function cargarShort(key){
                        // tiempos de otro video y nadie lo notaría. Se repuebla al cargar la voz.
   D = (CFG.pmt || CFG.lump) ? series() : null;   // `lump` también es proyección (ver series())
   MAXY = D ? D.finalTotal * 1.18 : 0;
-  // El S3 arranca con su calibración MANUAL puesta (incluye subtítulos). El story no tiene voz
-  // todavía: sin tiempos medidos no hay subtítulos, y grabar sigue vetado hasta calibrar.
+  // El S3 arranca con su calibración MANUAL puesta (incluye subtítulos) como PREVIEW visual — no
+  // como medición válida para el Short activo. Solo aplicarCalibracion() (tras cargar SU voz real)
+  // deja cortesMedidos=true; hasta entonces "Grabar" queda vetado, S3 incluido (ver línea 3974).
+  // Antes esto era `!CFG.demo` -> para cualquier Short real quedaba "medido" desde el instante de
+  // seleccionarlo, sin haber calibrado nada: si se exportaba en esa ventana salían quemados los
+  // subtítulos/tiempos de S3 encima de la voz nueva (bug real, detectado en el Short de Read).
   srtCards = CFG.demo ? null : CALIBRADO.cards.map(c => ({t0:c.t0, t1:c.t1, palabras:c.t.split(/\s+/), tw:c.tw}));
-  cortesMedidos = !CFG.demo;
+  cortesMedidos = false;
   cachedCards = null;
   verificado = false; exportado = false;
   document.getElementById('auto').disabled = true;
@@ -4445,6 +4501,16 @@ async function exportarMP4(progreso){
 
   for (let i = 0; i < nF; i++){
     if (fallo) throw fallo;
+    // `grabar()` (exportación manual, un Short) ya rechaza grabar con la pestaña en segundo plano
+    // (línea ~4774, `document.hidden`) porque el navegador no compone el canvas si no está visible
+    // — `new VideoFrame(canvas)` puede devolver un bitmap VIEJO/congelado en ese caso. Este bucle
+    // (usado por `renderLote`, el flujo estándar) no tenía la misma guarda: un lote corriendo con
+    // la pestaña no visible salía SIN ERROR pero con contenido desfasado en el archivo — detectado
+    // 30-jul comparando frames reales del MP4 exportado contra `drawFrame()` en vivo (coincidían
+    // en consola, no en el archivo). Falla YA, no en silencio.
+    if (document.hidden) throw new Error(
+      'la pestaña está en segundo plano: el navegador no compone el canvas y el MP4 sale con ' +
+      'contenido desfasado, sin avisar. Ponla al frente y reintenta.');
     drawFrame(Math.min(i / FPS_MP4, T.total));
     const vf = new VideoFrame(canvas, {timestamp: Math.round(i * 1e6 / FPS_MP4),
                                        duration: Math.round(1e6 / FPS_MP4)});
@@ -4555,6 +4621,16 @@ async function exportarMP4Video(progreso){
   venc.configure(cfg);
   for (let i = 0; i < nF; i++){
     if (fallo) throw fallo;
+    // `grabar()` (exportación manual, un Short) ya rechaza grabar con la pestaña en segundo plano
+    // (línea ~4774, `document.hidden`) porque el navegador no compone el canvas si no está visible
+    // — `new VideoFrame(canvas)` puede devolver un bitmap VIEJO/congelado en ese caso. Este bucle
+    // (usado por `renderLote`, el flujo estándar) no tenía la misma guarda: un lote corriendo con
+    // la pestaña no visible salía SIN ERROR pero con contenido desfasado en el archivo — detectado
+    // 30-jul comparando frames reales del MP4 exportado contra `drawFrame()` en vivo (coincidían
+    // en consola, no en el archivo). Falla YA, no en silencio.
+    if (document.hidden) throw new Error(
+      'la pestaña está en segundo plano: el navegador no compone el canvas y el MP4 sale con ' +
+      'contenido desfasado, sin avisar. Ponla al frente y reintenta.');
     drawFrame(Math.min(i / FPS_MP4, T.total));
     const vf = new VideoFrame(canvas, {timestamp: Math.round(i * 1e6 / FPS_MP4),
                                        duration: Math.round(1e6 / FPS_MP4)});
