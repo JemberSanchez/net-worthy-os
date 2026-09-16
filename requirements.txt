@@ -24,7 +24,7 @@ requests>=2.31
 
 # --- tools/ (produccion y QA del video, NO del OS de decision — todo gratis, local, sin GPU) ---
 faster-whisper>=1.2.1       # tools/alinear_voz.py: tiempo real por palabra (reconocimiento de voz)
-piper-tts>=1.6.0            # tools/generar_voz.py: voz local MIT sin caducidad (alternativa a CapCut)
+piper-tts>=1.8.0            # tools/generar_voz.py: voz local MIT sin caducidad (alternativa a CapCut)
 lameenc>=1.8.4               # tools/generar_voz.py: codifica a mp3 sin depender de ffmpeg
 numpy>=2.0                   # tools/generar_voz.py, tools/medir_loudness.py
 pyloudnorm>=0.1.1            # tools/medir_loudness.py: loudness real vs el objetivo de la plataforma
