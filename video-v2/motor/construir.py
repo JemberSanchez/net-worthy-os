@@ -200,9 +200,10 @@ def m_tarjetas(s, id_):
     out += "".join(f'<div class="cert" id="{id_}-c{k}"><img src="assets/t/{c["img"]}.jpg" alt="" /></div>' for k, c in enumerate(s["imgs"]))
     if s.get("flujo"):
         f = s["flujo"]
-        out += (f'<div id="{id_}-coins"></div><div id="{id_}-flujo" class="tag green" style="top:880px;left:0;right:0;text-align:center">{txt(f["texto"])}</div>'
-                f'<div class="cnt" id="{id_}-cnt"><div class="n"><span id="{id_}-cntn">{f["contador"]["desde"]}</span></div>'
-                f'<div class="sub" style="margin-top:0">{txt(f["contador"].get("etiqueta", ""))}</div></div>')
+        out += f'<div id="{id_}-coins"></div><div id="{id_}-flujo" class="tag green" style="top:880px;left:0;right:0;text-align:center">{txt(f["texto"])}</div>'
+        if f.get("contador"):     # opcional: sin un número real verificable, no se inventa uno
+            out += (f'<div class="cnt" id="{id_}-cnt"><div class="n"><span id="{id_}-cntn">{f["contador"]["desde"]}</span></div>'
+                    f'<div class="sub" style="margin-top:0">{txt(f["contador"].get("etiqueta", ""))}</div></div>')
     return out
 
 
@@ -214,10 +215,12 @@ def m_contador3d(s, id_):
 
 
 def serie(sr: dict) -> list[tuple[float, float]]:
-    """Curva ILUSTRATIVA de interés compuesto mensual, rematada en la cifra redonda `final`."""
-    r, v, out = sr["tasa"] / 12, 0.0, [(0.0, 0.0)]
+    """Curva ILUSTRATIVA de interés compuesto mensual, rematada en la cifra redonda `final`.
+    `inicial` = pago único al principio (Grace Groner: $180 en 1935); `mensual` = aporte periódico."""
+    r, v = sr["tasa"] / 12, float(sr.get("inicial", 0))
+    out = [(0.0, v)]
     for m in range(1, int(sr["anios"] * 12) + 1):
-        v = v * (1 + r) + sr["mensual"]
+        v = v * (1 + r) + sr.get("mensual", 0)
         if m % 6 == 0:
             out.append((m / 12, v))
     k = sr.get("final", out[-1][1]) / out[-1][1]
@@ -231,7 +234,7 @@ def m_curva(s, id_):
     xy = [(a / s["serie"]["anios"] * W, H - v / top * H) for a, v in pts]
     linea = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in xy)
     area = linea + f" L{W},{H} L0,{H} Z"
-    aport = s["serie"]["mensual"] * 12 * s["serie"]["anios"]
+    aport = s["serie"].get("mensual", 0) * 12 * s["serie"]["anios"] + s["serie"].get("inicial", 0)
     py = H - aport / top * H
     out = (f'<svg class="chart" id="{id_}-svg" viewBox="0 0 {W} {H}"><defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">'
            f'<stop offset="0" stop-color="#d8b25a" stop-opacity="0.75" /><stop offset="1" stop-color="#d8b25a" stop-opacity="0.05" /></linearGradient></defs>'

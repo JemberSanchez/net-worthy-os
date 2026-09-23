@@ -119,7 +119,7 @@
       if (s.flujo) {
         const f = s.flujo;
         inn(`#${id}-flujo`, f.en, { y: 30, opacity: 0 }, 0.25);
-        inn(`#${id}-cnt`, f.en, { y: 40, opacity: 0 }, 0.25);
+        if (f.contador) inn(`#${id}-cnt`, f.en, { y: 40, opacity: 0 }, 0.25);
         const host = $(`${id}-coins`), N = 12, c0 = f.en + 0.1, c1 = f.hasta;
         for (let i = 0; i < N; i++) {
           const c = document.createElement("div"); c.className = "coin"; c.id = `${id}-dc${i}`; c.textContent = "$"; host.appendChild(c);
@@ -127,8 +127,10 @@
           tl.fromTo(c, { x: (rnd() - 0.5) * 520, y: (rnd() - 0.5) * 300, opacity: 0, scale: 0.5 }, { x: 0, y: 420, opacity: 1, scale: 1, duration: 0.42, ease: "power2.in" }, t);
           tl.to(c, { opacity: 0, scale: 0.3, duration: 0.08 }, t + 0.42);
         }
-        counter($(`${id}-cntn`), f.contador.desde, f.contador.valor, c0 + 0.4, c1 - c0 + 0.45, (v) => Math.round(v), "power1.in");
-        tl.to(`#${id}-cnt .n`, { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1 }, c1 - 0.2);
+        if (f.contador) {
+          counter($(`${id}-cntn`), f.contador.desde, f.contador.valor, c0 + 0.4, c1 - c0 + 0.45, (v) => Math.round(v), "power1.in");
+          tl.to(`#${id}-cnt .n`, { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1 }, c1 - 0.2);
+        }
       }
       tl.to(`#${id} .cert`, { y: -1400, rotation: 8, duration: 0.3, ease: "power3.in" }, s.t1 - 0.3);
     },
@@ -237,13 +239,17 @@
     const vis = enPantalla(g[0].start);
     if (g.every((x) => vis.has(nrm(x.text)))) return;     // duplicado: la escena ya lo dice
     const el = document.createElement("div"); el.className = "cg"; el.id = "cg" + gi; caps.appendChild(el);
-    const gS = g[0].start - 0.05, gE = groups[gi + 1] ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35) : g[g.length - 1].end + 0.4;
+    const gS = g[0].start - 0.05;
+    // Nunca ocultar antes de mostrar: con palabras de duración 0 (alineación interpolada) el
+    // "siguiente grupo" podía empezar antes que este, el fade-out caía ANTES del fade-in y el
+    // subtítulo se quedaba pegado el resto del vídeo (Grace Groner, 23-sep).
+    const gE = Math.max(gS + 0.3, groups[gi + 1] ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35) : g[g.length - 1].end + 0.4);
     tl.fromTo(el, { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "power2.out" }, gS);
     tl.to(el, { opacity: 0, duration: 0.05 }, gE - 0.05);
     g.forEach((x, k) => {
       const s = document.createElement("span"); s.className = "w"; s.id = `w${gi}_${k}`; s.textContent = x.text.replace(/[.,?!]$/, ""); el.appendChild(s);
       const hot = HOT.has(nrm(x.text));
-      tl.fromTo(s, { color: "#f4f6f3", scale: 1 }, { color: hot ? "#d8b25a" : "#9fe3c4", scale: hot ? 1.1 : 1.04, duration: 0.08, ease: "power2.out", immediateRender: false }, x.start - 0.04);
+      tl.fromTo(s, { color: "#f4f6f3", scale: 1 }, { color: hot ? "#d8b25a" : "#9fe3c4", scale: hot ? 1.06 : 1.03, duration: 0.08, ease: "power2.out", immediateRender: false }, x.start - 0.04);
       tl.to(s, { color: "#f4f6f3", scale: 1, duration: 0.1 }, x.end);
     });
   });

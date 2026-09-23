@@ -146,7 +146,8 @@ def miniatura(titulo: str, ancho: int | None, alto: int | None) -> str | None:
 def buscar_commons(q: str, n: int = 12) -> list[dict]:
     res = _info_commons({"generator": "search", "gsrsearch": q, "gsrnamespace": "6",
                          "gsrlimit": str(n)})
-    return [r for r in res if r["mime"].startswith("image/") and r["clase"]]
+    # Solo fotos: DjVu/PDF/SVG de Commons son libros escaneados o dibujos, no planos de vídeo.
+    return [r for r in res if r["mime"] in ("image/jpeg", "image/png", "image/tiff") and r["clase"]]
 
 
 def bajar_commons(pares: list[tuple[str, Path]]) -> list[dict]:

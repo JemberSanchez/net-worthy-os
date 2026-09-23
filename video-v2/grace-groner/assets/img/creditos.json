@@ -1,0 +1,65 @@
+[
+ {
+  "archivo": "cert1.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Baltimore and Ohio Railroad stock certificate.jpg",
+  "autor": "Baltimore and Ohio Railroad",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Baltimore_and_Ohio_Railroad_stock_certificate.jpg",
+  "verificado": "API Commons 23-sep-2026"
+ },
+ {
+  "archivo": "cert2.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Boston and Providence Railroad stock certificate.jpg",
+  "autor": "Boston and Providence Railroad",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Boston_and_Providence_Railroad_stock_certificate.jpg",
+  "verificado": "API Commons 23-sep-2026"
+ },
+ {
+  "archivo": "cert3.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Chicago, Burlington & Quincy Railroad Stock Certificate 1887.jpg",
+  "autor": "Chicago, Burlington & Quincy Railroad",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Chicago,_Burlington_%26_Quincy_Railroad_Stock_Certificate_1887.jpg",
+  "verificado": "API Commons 23-sep-2026"
+ },
+ {
+  "archivo": "tw.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Vintage typewriter (Unsplash).jpg",
+  "autor": "Florian Klauer florianklauer",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Vintage_typewriter_(Unsplash).jpg"
+ },
+ {
+  "archivo": "hands.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Hands typing on a vintage typewriter in a cozy workspace.jpg",
+  "autor": "Shixart1985",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hands_typing_on_a_vintage_typewriter_in_a_cozy_workspace.jpg"
+ },
+ {
+  "archivo": "rummage.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Sale - Rummage -- Mrs. Hiram Borge (woman suffrage) LCCN2014704559.jpg",
+  "autor": "Bain News Service, publisher",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sale_-_Rummage_--_Mrs._Hiram_Borge_(woman_suffrage)_LCCN2014704559.jpg"
+ }
+]
