@@ -65,6 +65,9 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
 - `python tools/analizar_video.py <mp4>` — cortes de plano con PySceneDetect (fiable, es de
   terceros) + picos de movimiento con optical flow (⚠ ruidoso con contadores/texto animado —
   probado y documentado en el propio script: úsalo para elegir dónde mirar, nunca como veredicto).
+- `python tools/medir_ritmo.py <mp4> [--max 2.5]` — tramo más largo SIN cambio visual (hipótesis
+  `pacing_2_3s`). Sale con código 1 si se pasa del máximo. PySceneDetect no sirve para esto: los
+  barridos, contadores y columnas que crecen son cambio visual real sin ser cortes de plano.
 
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
 El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento

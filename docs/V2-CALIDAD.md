@@ -36,10 +36,20 @@ Se instaló y se renderizó en el contenedor. PoC en `video-v2/poc-read-janitor/
   como convención, no como dependencia.
 - **Seguir con el canvas**: descartado; su techo es el problema.
 
+## v3 (misma sesión): 3D, música con ducking y ritmo MEDIDO
+- **3D real** (Three.js dentro de HyperFrames, determinista vía `hf-seek`): columnas de monedas
+  sincronizadas por construcción con el contador. Funciona en render sin GPU (SwiftShader).
+- **Música + voiceover carve**: el ducking lo escribe `carve.mjs` en el HTML, no se ajusta a mano.
+- **Ritmo, con instrumento nuevo validado**: `tools/medir_ritmo.py` (tramo más largo sin cambio
+  visual). PySceneDetect NO sirve para esto (1 corte detectado en un vídeo que cambia todo el
+  rato). Motor viejo: **6,0 s** quieto y 90 % del tiempo quieto. v3: **0,8 s** y 4 %.
+  La hipótesis `pacing_2_3s` pide ≤2-3 s: el motor viejo la incumplía por el doble.
+
 ## Lo que la PoC NO resuelve todavía (el siguiente salto de calidad)
 1. **Imagen real a sangre**: fotos de archivo de dominio público, b-roll (Pexels API) e
    ilustraciones IA con un estilo fijo. Es lo que separa "motion graphics limpio" de "canal top".
-2. **Música**: librería fija con licencia, que baje sola bajo la voz.
+2. **Música de verdad**: la base sintetizada demuestra el ducking, pero una librería con
+   licencia suena mejor.
 3. **Tiempos por palabra reales** (`alinear_voz.py` → formato de palabras de HyperFrames).
 
 ## Pipeline objetivo (automatizado, con puertas humanas solo donde la política lo exige)
