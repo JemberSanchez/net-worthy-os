@@ -52,6 +52,22 @@ Se instaló y se renderizó en el contenedor. PoC en `video-v2/poc-read-janitor/
    licencia suena mejor.
 3. **Tiempos por palabra reales** (`alinear_voz.py` → formato de palabras de HyperFrames).
 
+## 23-sep (2ª sesión): el #7 COMPLETO en v2 — `video-v2/read-janitor/`
+Resuelto de la lista de arriba: **1 (imagen real)** y **3 (tiempos reales)**. La 2 sigue abierta.
+- **Mismo guion y misma voz que el #7 publicado** (Kokoro am_adam por `generar_voz.py`, pipeline
+  idéntico): la única variable es el renderer. Whisper alineó 159/162 palabras (el #7: 160/162).
+- **Imagen**: 9 archivos verificados por la API de Commons (8 PD + 1 CC BY 2.0), con
+  `creditos.json`. La mejor pieza: Jack Delano fotografió **Brattleboro en 1941** (FSA/OWI, PD),
+  el pueblo de Read con 20 años. Duotono de marca horneado con `tools/duotono.py`.
+- **Trampa de red medida**: la API de Commons limita por IP y en la nube la IP es compartida —
+  tras unos pocos 429 pasó a `Retry-After: 600`. `imagenes_libres.py lote` hace UNA consulta para
+  N títulos y aborta con mensaje si le piden esperar > 90 s. Solo sirve miniaturas de tamaño
+  estándar (960/1920/3840 → 200; 1024/2560 → 400) y los originales caen antes en 429.
+- Pexels: la red llega, falta `PEXELS_API_KEY` (secreto del entorno). No hizo falta para el #7.
+- **Render**: 49,8 s en ~6 min (1 worker por WebGL, GPU por software, 4 núcleos).
+- `renderer_version` ya está en el ADN (`v1-canvas` | `v2-hyperframes`): v1 y v2 no se comparan
+  sin mirarlo, igual que `score_version`.
+
 ## Pipeline objetivo (automatizado, con puertas humanas solo donde la política lo exige)
 decide → guion (Claude API) → storyboard → assets → voz + alineamiento → composición HyperFrames
 → lint/check/snapshot → render → loudnorm + `medir_loudness` + `analizar_video` (cambio visual
