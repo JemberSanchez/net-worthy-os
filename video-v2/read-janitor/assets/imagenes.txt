@@ -1,0 +1,10 @@
+# destino|File:titulo  ->  python tools/imagenes_libres.py lote video-v2/read-janitor/assets/imagenes.txt
+img/sweep.jpg|File:Men sweeping up the floor of the stock exchange LCCN2013646362.jpg
+img/bratt1.jpg|File:Main street in Brattleboro, Vermont, by Jack Delano, United States Office of War Information, July 1941, from the Library of Congress - master-pnp-fsa-8c06000-8c06400-8c06450a.tif
+img/bratt2.jpg|File:North end of main street at Brattleboro, Vermont, by Jack Delano, United States Office of War Information, July 1941, from the Library of Congress - master-pnp-fsa-8c06000-8c06400-8c06431a.tif
+img/cert1.jpg|File:Baltimore and Ohio Railroad stock certificate.jpg
+img/cert2.jpg|File:Boston and Providence Railroad stock certificate.jpg
+img/cert3.jpg|File:Chicago, Burlington & Quincy Railroad Stock Certificate 1887.jpg
+img/nyse.jpg|File:Trading floor, New York Stock Exchange, New York, New York LCCN2011630168.tif
+img/crash.jpg|File:Santa Ana Register front page, Oct 28, 1929 - Flickr - Orange County Archives.jpg
+img/gas3.jpg|File:Filling station and garage at Pie Town, New Mexico LCCN2017877695.tif

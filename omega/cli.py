@@ -485,6 +485,7 @@ def cmd_record_dna() -> None:
                "story_type": "personal|character|case_study|none",
                "cta_type": "session|subscribe|comment|none",
                "length_s": 450,
+               "renderer_version": "v1-canvas|v2-hyperframes",
                "blocks": [{"block": "hook", "technique": "two_men_story", "length_s": 35},
                           {"block": "proof", "technique": "compound_curve", "length_s": 135}]}
         (config.DATA_DIR / "production_dna.template.json").write_text(
@@ -498,9 +499,14 @@ def cmd_record_dna() -> None:
     production_dna.record_dna(
         con, production_ref=data["production_ref"], blocks=data.get("blocks", []),
         hook_type=data.get("hook_type"), story_type=data.get("story_type"),
-        cta_type=data.get("cta_type"), length_s=data.get("length_s"))
+        cta_type=data.get("cta_type"), length_s=data.get("length_s"),
+        renderer_version=data.get("renderer_version"))
     print(f"ADN registrado: {data['production_ref']} — {len(data.get('blocks', []))} bloques "
-          f"(hook={data.get('hook_type')}, story={data.get('story_type')}, cta={data.get('cta_type')}).")
+          f"(hook={data.get('hook_type')}, story={data.get('story_type')}, cta={data.get('cta_type')}, "
+          f"renderer={data.get('renderer_version')}).")
+    if not data.get("renderer_version"):
+        print("  ⚠ Sin renderer_version: este video no se podrá separar por motor (v1 vs v2 no son "
+              "comparables). Añádelo al JSON y vuelve a registrar.")
     print("Tras publicar y medir: record-analytics + record-outcome, y luego 'dna'.")
     con.close()
 
@@ -732,11 +738,11 @@ def cmd_dna() -> None:
     for r in rows:
         print(f"  {r['production_ref']}")
         print(f"    hook={r['hook_type']} | story={r['story_type']} | cta={r['cta_type']} | "
-              f"{r['block_count']} bloques | {r['length_s']}s")
+              f"{r['block_count']} bloques | {r['length_s']}s | renderer={r['renderer_version'] or '¿?'}")
 
     print("\n--- Calibración por dimensión (solo con resultado medido) ---")
     any_data = False
-    for dim in ("hook_type", "story_type", "cta_type"):
+    for dim in ("hook_type", "story_type", "cta_type", "renderer_version"):
         cal = production_dna.dna_calibration(con, dim)
         if not cal:
             continue
@@ -744,6 +750,8 @@ def cmd_dna() -> None:
         print(f"\n  [{dim}]")
         for c in cal:
             flag = "  ⚠ PROVISIONAL (n bajo, posible ruido)" if c["provisional"] else ""
+            if c["mixed_renderer"]:
+                flag += "  ⚠ MEZCLA v1+v2 (no comparable)"
             print(f"    {c['value']:<16} {c['success_rate']:.0%}  (n={c['n']}){flag}")
     if not any_data:
         print("  (aún sin resultados medidos: registra outcomes y vuelve)")
@@ -925,6 +933,24 @@ def cmd_backup() -> None:
     print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
+def cmd_estado_bajar() -> None:
+    """Repo PRIVADO de estado -> data/omega.sqlite (no pisa una base local sin --forzar)."""
+    from . import estado
+    try:
+        print(estado.bajar(forzar="--forzar" in sys.argv))
+    except estado.EstadoError as e:
+        raise SystemExit(f"✗ {e}")
+
+
+def cmd_estado_subir() -> None:
+    """data/omega.sqlite -> repo PRIVADO de estado (commit + push; no sube una base recortada)."""
+    from . import estado
+    try:
+        print(estado.subir(forzar="--forzar" in sys.argv))
+    except estado.EstadoError as e:
+        raise SystemExit(f"✗ {e}")
+
+
 def main(argv: list[str]) -> int:
     cmds = {
         "ingest": cmd_ingest,
@@ -953,6 +979,8 @@ def main(argv: list[str]) -> int:
         "hypotheses": cmd_hypotheses,
         "resolve-prediction": cmd_resolve_prediction,
         "backup": cmd_backup,
+        "estado-bajar": cmd_estado_bajar,
+        "estado-subir": cmd_estado_subir,
         "status": cmd_status,
     }
     if len(argv) < 1 or argv[0] not in cmds:

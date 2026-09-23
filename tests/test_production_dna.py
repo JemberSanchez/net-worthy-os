@@ -116,6 +116,41 @@ class ProductionDnaTest(unittest.TestCase):
         self.assertGreater(eff["cheap"]["success_per_hour"],
                            eff["expensive"]["success_per_hour"])  # mismo éxito, menos horas -> gana
 
+    # ── renderer_version: v1 (canvas) y v2 (HyperFrames) no son comparables ─────────────────────
+    def test_renderer_version_round_trip_and_whitelist(self):
+        production_dna.record_dna(self.con, production_ref="r2", blocks=[],
+                                  renderer_version="v2-hyperframes")
+        self.assertEqual(production_dna.fetch_dna(self.con, "r2")["renderer_version"], "v2-hyperframes")
+        with self.assertRaises(ValueError):          # un typo no puede crear un grupo nuevo
+            production_dna.record_dna(self.con, production_ref="r3", blocks=[],
+                                      renderer_version="v2-hyperframe")
+
+    def test_migration_backfills_existing_rows_as_v1_only_once(self):
+        con = store.connect(":memory:")
+        # BD con el esquema VIEJO (sin la columna) y una fila ya registrada
+        con.executescript("""CREATE TABLE production_dna (production_ref TEXT PRIMARY KEY,
+            hook_type TEXT, story_type TEXT, cta_type TEXT, length_s INTEGER,
+            block_count INTEGER NOT NULL, blocks TEXT NOT NULL, recorded_at INTEGER NOT NULL);
+            INSERT INTO production_dna VALUES ('viejo','story',NULL,NULL,50,0,'[]',1);""")
+        production_dna.init(con)
+        self.assertEqual(production_dna.fetch_dna(con, "viejo")["renderer_version"], "v1-canvas")
+        # después de la migración, un NULL es "no declarado" y NO se rellena en el siguiente init
+        production_dna.record_dna(con, production_ref="nuevo", blocks=[])
+        production_dna.init(con)
+        self.assertIsNone(production_dna.fetch_dna(con, "nuevo")["renderer_version"])
+        con.close()
+
+    def test_calibration_flags_groups_that_mix_renderers(self):
+        for ref, rv in (("a", "v1-canvas"), ("b", "v2-hyperframes"), ("c", "v1-canvas")):
+            production_dna.record_dna(self.con, production_ref=ref, blocks=[], hook_type="story" if ref != "c" else "stat",
+                                      renderer_version=rv)
+            decisions.record_outcome(self.con, production_ref=ref, success=0.5)
+        cal = {c["value"]: c for c in production_dna.dna_calibration(self.con, "hook_type")}
+        self.assertTrue(cal["story"]["mixed_renderer"])     # a (v1) + b (v2)
+        self.assertFalse(cal["stat"]["mixed_renderer"])
+        por_motor = {c["value"]: c["n"] for c in production_dna.dna_calibration(self.con, "renderer_version")}
+        self.assertEqual(por_motor, {"v1-canvas": 2, "v2-hyperframes": 1})
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

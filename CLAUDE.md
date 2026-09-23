@@ -65,6 +65,21 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
 - `python tools/analizar_video.py <mp4>` — cortes de plano con PySceneDetect (fiable, es de
   terceros) + picos de movimiento con optical flow (⚠ ruidoso con contadores/texto animado —
   probado y documentado en el propio script: úsalo para elegir dónde mirar, nunca como veredicto).
+- `python tools/medir_ritmo.py <mp4> [--max 2.5]` — tramo más largo SIN cambio visual (hipótesis
+  `pacing_2_3s`). Sale con código 1 si se pasa del máximo. PySceneDetect no sirve para esto: los
+  barridos, contadores y columnas que crecen son cambio visual real sin ser cortes de plano.
+
+## Motor v2 (HyperFrames) — imagen real con licencia registrada
+- `python tools/imagenes_libres.py buscar|lote|creditos` — Wikimedia Commons filtrado por
+  licencia (lista cerrada: PD, CC0, CC BY; fuera SA/NC/ND) + `creditos.json` por imagen. ⚠ La API
+  de Commons limita por IP y en la nube la IP es compartida (429, `Retry-After` hasta 600 s): usar
+  `lote` (UNA consulta para N títulos), nunca bucles de `bajar`. Solo tamaños de miniatura estándar.
+- `python tools/duotono.py <in> <out> [--recorte 0.04]` — duotono de marca horneado (no filtro CSS).
+- **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
+  10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
+  → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie
+  escribe HTML. Referencia verificada: `video-v2/read-janitor/storyboard.json` (el #7).
+  Registrar el ADN con `"renderer_version": "v2-hyperframes"`.
 
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
 El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento
@@ -114,7 +129,7 @@ el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va 
   orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
 
 ## Docs (leer al retomar)
-`docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/POLITICA.md` ·
+`docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/V2-CALIDAD.md` (motor v2 en HyperFrames: decisión verificada + PoC en `video-v2/`) · `docs/POLITICA.md` ·
 `docs/VISION.md` (arquitectura congelada) · `docs/guiones/` (guiones, motor, calibración) · `marca/`.
 
 ## CÓMO TRABAJAR (método — sale de errores medidos, no de teoría)
