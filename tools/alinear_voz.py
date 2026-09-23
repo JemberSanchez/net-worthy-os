@@ -258,10 +258,24 @@ def generar_alineamiento(clave: str, ruta_audio: Path | None = None) -> Path:
     audio = ruta_audio or (RAIZ / "data" / voz)
     if not audio.exists():
         raise SystemExit(f"No existe {audio}")
+    print(f"Short   : {clave}")
+    palabras = alinear_audio(audio, frases)
 
+    destino = audio.with_suffix(".align.json")
+    destino.write_text(json.dumps(
+        {"voz": voz, "short": clave, "modelo": MODELO,
+         "palabras": [{"w": p["w"], "t0": p["t0"], "t1": p["t1"], "m": p["medido"]} for p in palabras]},
+        ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"✓ {destino.name}")
+    return destino
+
+
+def alinear_audio(audio: Path, frases: list[str]) -> list[dict]:
+    """Audio + frases del guion -> palabras del GUION con t0/t1 medidos (Whisper + DP + validación
+    por energía). Independiente de dónde viva el guion: lo usan el motor v1 (HTML) y el v2
+    (storyboard.json, video-v2/motor/voz.py)."""
     from faster_whisper import WhisperModel
 
-    print(f"Short   : {clave}")
     print(f"Audio   : {audio.name}")
     print(f"Modelo  : {MODELO} (se descarga la 1ª vez, ~74 MB)\n")
 
@@ -307,17 +321,10 @@ def generar_alineamiento(clave: str, ruta_audio: Path | None = None) -> Path:
             print("  ⚠ Más del 10% descartado: revisa el audio, puede haber un problema mayor "
                   "que palabras sueltas.")
 
-    destino = audio.with_suffix(".align.json")
-    destino.write_text(json.dumps(
-        {"voz": voz, "short": clave, "modelo": MODELO,
-         "palabras": [{"w": p["w"], "t0": p["t0"], "t1": p["t1"], "m": p["medido"]} for p in palabras]},
-        ensure_ascii=False, indent=1), encoding="utf-8")
-
-    print(f"✓ {destino.name}")
     print(f"  {medidas}/{len(palabras)} palabras con tiempo MEDIDO ({pct:.0f}%); el resto interpolado.")
     if pct < 80:
         print("  ⚠ Menos del 80% emparejado: revisa que el audio corresponda a ESTE guion.")
-    return destino
+    return palabras
 
 
 if __name__ == "__main__":

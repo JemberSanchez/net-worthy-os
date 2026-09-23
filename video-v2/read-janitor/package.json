@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "python gen_musica.py && python build.py",
+    "build": "python ../motor/construir.py .",
     "dev": "npx --yes hyperframes@0.8.62 preview",
     "lint": "npx --yes hyperframes@0.8.62 lint",
     "check": "npx --yes hyperframes@0.8.62 check",

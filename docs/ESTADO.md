@@ -1,5 +1,18 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-23 (tarde) · AUTOMATIZACIÓN FASE 1: MOTOR v2 POR STORYBOARD
+>
+> `video-v2/motor/` (léase su README): un Short = `storyboard.json` → `voz.py` → `construir.py`.
+> Catálogo de 10 tipos de escena extraído del #7 v2; anclas `frase:palabra` (un LLM puede escribir
+> el storyboard sin saber segundos); `--validar` rompe con motivo si un ancla, una imagen o una
+> cifra sin fuente fallan. **Prueba de oro superada**: el #7 reconstruido desde storyboard pasa
+> lint y QA (-14,54 LUFS, 2,0 s quieto máx.) y ya es su única fuente. Subtítulos que la escena ya
+> muestra escritos se omiten solos. 196 tests.
+> - Fase 2 (siguiente): `produce` = tema → guion + storyboard por LLM → validar → voz → build →
+>   render → QA → borrador. Fase 3: cron + aprobación de 1 toque (decisión de infra pendiente).
+> - ⚠ Kokoro no es determinista bit a bit entre síntesis (±0,2 s en 15/162 palabras): alinear
+>   SIEMPRE sobre el audio final (`voz.py` ya lo hace).
+
 > ## ▶▶▶▶▶▶▶▶▶ 2026-09-23 · #7 RONALD READ COMPLETO EN v2 (HyperFrames) — LISTO, SIN PUBLICAR
 >
 > `video-v2/read-janitor/` (léase su README). Mismo guion y misma voz Kokoro que el #7 publicado:

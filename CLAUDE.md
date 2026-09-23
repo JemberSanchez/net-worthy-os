@@ -75,8 +75,11 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   de Commons limita por IP y en la nube la IP es compartida (429, `Retry-After` hasta 600 s): usar
   `lote` (UNA consulta para N títulos), nunca bucles de `bajar`. Solo tamaños de miniatura estándar.
 - `python tools/duotono.py <in> <out> [--recorte 0.04]` — duotono de marca horneado (no filtro CSS).
-- Proyecto de referencia: `video-v2/read-janitor/` (su README: build desde `words.json`, ducking
-  con carve, deuda técnica). Registrar el ADN con `"renderer_version": "v2-hyperframes"`.
+- **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
+  10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
+  → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie
+  escribe HTML. Referencia verificada: `video-v2/read-janitor/storyboard.json` (el #7).
+  Registrar el ADN con `"renderer_version": "v2-hyperframes"`.
 
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
 El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento

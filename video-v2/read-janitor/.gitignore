@@ -2,7 +2,7 @@ renders/
 snapshots/
 .hyperframes/
 node_modules/
-# originales descargados: se regeneran con `tools/imagenes_libres.py lote assets/imagenes.txt`
+assets/_motor/
+assets/music-bed.wav
 assets/img/*.jpg
 __pycache__/
-assets/music-bed.wav

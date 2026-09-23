@@ -14,42 +14,18 @@ render de ~6 min. La 1ª pasada falló el ritmo (2,8 s en la tarjeta final) y se
 movimiento real, no subiendo el umbral.
 
 ## Reproducir
-Requisitos: Node 22+, Python 3.11+, FFmpeg **con ffprobe**, Chrome (en Linux:
-`HYPERFRAMES_BROWSER_PATH=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell`).
+Todo sale de **`storyboard.json`** con el motor común (`video-v2/motor/`, ver su README):
 ```
-python tools/generar_voz.py read-janitor --motor kokoro --forzar   # voz + data/voz-short-read.align.json
-cp data/voz-short-read.mp3 video-v2/read-janitor/assets/voice.mp3  # y words.json (ver abajo)
-python tools/imagenes_libres.py lote video-v2/read-janitor/assets/imagenes.txt   # originales + créditos
-HF_CORE=<carpeta con @hyperframes/core@0.8.62> npm run build   # música + index.html + ducking (carve)
-npm run lint && npm run render
-ffmpeg -i renders/read-janitor-v2.mp4 -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:v copy -c:a aac -b:a 192k renders/final.mp4
+python video-v2/motor/voz.py video-v2/read-janitor --forzar        # voz + words.json (medidos)
+HF_CORE=<dir con @hyperframes/core@0.8.62> python video-v2/motor/construir.py video-v2/read-janitor
+cd video-v2/read-janitor && npm run lint && npm run render
+ffmpeg -i renders/read-janitor.mp4 -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:v copy -c:a aac -b:a 192k renders/final.mp4
 python ../../tools/medir_loudness.py renders/final.mp4 && python ../../tools/medir_ritmo.py renders/final.mp4 --max 2.5
 ```
-`assets/words.json` sale del `.align.json` (campos `w/t0/t1` -> `text/start/end`).
-
-## Cómo está hecho
-- **`build.py` genera `index.html`** desde `plantilla.tpl` + `assets/words.json`. Cada escena se
-  ancla por ÍNDICE de palabra (`w(47)` = "Sixty" de "Sixty years later"): voz nueva del mismo
-  guion = re-alinear + `build.py`, sin recalcular ~40 tiempos a mano. **Edita la plantilla, no
-  `index.html`.** La plantilla es `.tpl` a propósito: un segundo `.html` con
-  `data-composition-id` hace que el linter lo trate como otra composición raíz (audio duplicado).
-- **Ducking**: `build.py` corre `carve.mjs` (skill `hyperframes-audio`) DESPUÉS de generar el
-  HTML; si falta `HF_CORE` lo avisa en vez de dejar la música pisando la voz en silencio.
-- **Imagen real** (todas verificadas por la API de Commons, `assets/img/creditos.json`): 8 de
-  dominio público (FSA/OWI 1940-41 — Jack Delano en **Brattleboro**, el pueblo de Read; Russell
-  Lee; Biblioteca del Congreso; certificados del XIX; Carol M. Highsmith) + 1 CC BY 2.0 (portada
-  del Santa Ana Register, 28-oct-1929, Orange County Archives — **exige atribución**). Ninguna
-  foto de Ronald Read: las que existen son de prensa y tienen copyright.
-  Créditos para la descripción: `python tools/imagenes_libres.py creditos video-v2/read-janitor/assets/img`.
-- **Tratamiento**: `tools/duotono.py` hornea el duotono verde #0A1A14 -> dorado #D8B25A (una vez,
-  no un filtro CSS por frame). El grano (SVG animado) y el Ken Burns van en la composición.
-- **3D**: columnas de monedas (Three.js) sincronizadas por construcción con el contador de $8M
-  (misma curva invertida). Con WebGL el render usa 1 worker.
-- **Música**: `gen_musica.py`, sintetizada y determinista, sigue la forma del guion (tensión en
-  el gancho, groove, caída a oscuro en "the part nobody says", resolución, CTA).
-- **Cifras**: la curva es la ILUSTRATIVA del #7 ($170/mes, 10 %/año nominal, 60 años -> $8M) y
-  el aviso YMYL del #7 sale mientras hay cifras en pantalla y en la tarjeta final. Las crisis de
-  la línea de años (1962, 1973, 1987, 2000, 2008) son hechos históricos, no datos de su cartera.
+Este Short se hizo primero a mano (23-sep) y después se migró al storyboard como **prueba de oro**
+del motor: mismo resultado en lint y QA (-14,54 LUFS; tramo quieto máx. 2,0 s frente a 1,4 s a mano,
+en la escena "same engine"). ⚠ Kokoro no es determinista bit a bit entre síntesis (mismo largo,
+±0,2 s en 15/162 palabras): el alineamiento se hace SIEMPRE sobre el audio final.
 
 ## Deuda técnica conocida
 - Composición **monolítica** (1 archivo): `lint` da 31 avisos `nested_structure_needs_subcomposition`.
