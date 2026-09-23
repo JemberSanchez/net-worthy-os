@@ -1,0 +1,42 @@
+"""Tests de la descripción que se publica (video-v2/motor/producir.py): lo que va a YouTube tiene
+que llevar SIEMPRE el aviso YMYL, las fuentes de las cifras y la atribución de imágenes (CC BY la
+exige: publicar sin ella es incumplir la licencia)."""
+from __future__ import annotations
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video-v2", "motor"))
+
+import producir  # noqa: E402
+
+SB = {"publicacion": {"descripcion": "The janitor.", "hashtags": ["#shorts"]},
+      "aviso": {"lineas": ["Illustrative", "Not financial advice"]},
+      "cifras": [{"dato": "$8M", "fuente": "https://a.org"}, {"dato": "95", "fuente": "https://a.org"}]}
+
+
+class DescripcionTest(unittest.TestCase):
+    def test_lleva_aviso_fuentes_creditos_y_hashtags(self):
+        with tempfile.TemporaryDirectory() as d:
+            img = Path(d, "assets", "img"); img.mkdir(parents=True)
+            (img / "creditos.json").write_text(json.dumps([{"archivo": "x.jpg", "titulo": "File:Crash.jpg",
+                "autor": "Orange County Archives", "licencia": "CC BY 2.0", "url_licencia": "https://cc/by/2.0",
+                "fuente": "https://commons/x"}]))
+            t = producir.descripcion(SB, Path(d))
+        self.assertTrue(t.startswith("The janitor."))
+        self.assertIn("Not financial advice", t)
+        self.assertEqual(t.count("https://a.org"), 1)                 # fuentes sin repetir
+        self.assertIn("Orange County Archives — CC BY 2.0", t)       # atribución exigida por CC BY
+        self.assertTrue(t.rstrip().endswith("#shorts"))
+        self.assertLessEqual(len(t), 5000)
+
+    def test_sin_creditos_no_rompe(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIn("Not financial advice", producir.descripcion(SB, Path(d)))
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

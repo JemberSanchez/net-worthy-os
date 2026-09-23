@@ -933,6 +933,24 @@ def cmd_backup() -> None:
     print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
+def cmd_estado_bajar() -> None:
+    """Repo PRIVADO de estado -> data/omega.sqlite (no pisa una base local sin --forzar)."""
+    from . import estado
+    try:
+        print(estado.bajar(forzar="--forzar" in sys.argv))
+    except estado.EstadoError as e:
+        raise SystemExit(f"✗ {e}")
+
+
+def cmd_estado_subir() -> None:
+    """data/omega.sqlite -> repo PRIVADO de estado (commit + push; no sube una base recortada)."""
+    from . import estado
+    try:
+        print(estado.subir(forzar="--forzar" in sys.argv))
+    except estado.EstadoError as e:
+        raise SystemExit(f"✗ {e}")
+
+
 def main(argv: list[str]) -> int:
     cmds = {
         "ingest": cmd_ingest,
@@ -961,6 +979,8 @@ def main(argv: list[str]) -> int:
         "hypotheses": cmd_hypotheses,
         "resolve-prediction": cmd_resolve_prediction,
         "backup": cmd_backup,
+        "estado-bajar": cmd_estado_bajar,
+        "estado-subir": cmd_estado_subir,
         "status": cmd_status,
     }
     if len(argv) < 1 or argv[0] not in cmds:
