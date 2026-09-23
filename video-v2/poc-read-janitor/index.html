@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Anton"; src: url("assets/fonts/anton.woff2") format("woff2"); font-weight: 400; }
+      @font-face { font-family: "InterX"; src: url("assets/fonts/inter-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "InterX"; src: url("assets/fonts/inter-latin-800-normal.woff2") format("woff2"); font-weight: 800; }
+      @font-face { font-family: "InterX"; src: url("assets/fonts/inter-latin-900-normal.woff2") format("woff2"); font-weight: 900; }
+      :root {
+        --bg: #0a1a14; --bg2: #0e241b; --ink: #f4f6f3; --gold: #d8b25a; --green: #1f9e6e; --mute: #8da298;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: "InterX", sans-serif; color: var(--ink); }
+      .full { position: absolute; inset: 0; }
+      .clip { position: absolute; inset: 0; }
+
+      /* ---------- persistent ground ---------- */
+      #ground { background: radial-gradient(120% 80% at 50% 38%, #123a2a 0%, var(--bg2) 45%, var(--bg) 100%); }
+      #glow { position: absolute; width: 1400px; height: 1400px; left: -160px; top: 120px; border-radius: 50%;
+              background: radial-gradient(circle, rgba(216,178,90,0.22) 0%, rgba(216,178,90,0) 60%); }
+      #gridwrap { position: absolute; left: -200px; right: -200px; bottom: -60px; height: 900px; perspective: 700px; }
+      #grid { position: absolute; inset: 0; transform-origin: 50% 100%;
+              background-image: linear-gradient(rgba(31,158,110,0.28) 2px, transparent 2px), linear-gradient(90deg, rgba(31,158,110,0.28) 2px, transparent 2px);
+              background-size: 120px 120px; -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 85%); mask-image: linear-gradient(to top, #000 0%, transparent 85%); }
+      #vignette { background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,0.65) 100%); pointer-events: none; }
+      #grain { position: absolute; left: -200px; top: -200px; width: 1480px; height: 2320px; opacity: 0.11; mix-blend-mode: overlay;
+               background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+      #flash { background: var(--gold); opacity: 0; mix-blend-mode: screen; }
+
+      /* ---------- brand + progress ---------- */
+      #brand { position: absolute; top: 120px; width: 100%; text-align: center; font-weight: 800; letter-spacing: 0.42em; font-size: 26px; color: var(--gold); }
+      #progress { position: absolute; top: 0; left: 0; height: 10px; width: 1080px; background: linear-gradient(90deg, var(--green), var(--gold)); transform-origin: 0 50%; }
+
+      /* ---------- scene typography ---------- */
+      #cam { position: absolute; inset: 0; transform-origin: 50% 42%; }
+      .scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 420px; }
+      .kicker { font-weight: 800; font-size: 40px; letter-spacing: 0.3em; color: var(--mute); margin-bottom: 26px; }
+      .huge { font-family: "Anton", sans-serif; font-size: 230px; line-height: 0.92; text-transform: uppercase; text-align: center; letter-spacing: 0.005em; }
+      .big { font-family: "Anton", sans-serif; font-size: 150px; line-height: 0.95; text-transform: uppercase; text-align: center; }
+      .gold { color: var(--gold); }
+      .green { color: var(--green); }
+      .icon { width: 360px; height: 360px; margin-bottom: 40px; overflow: visible; }
+      .icon path, .icon line, .icon rect, .icon circle { fill: none; stroke: var(--gold); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* paycheck card */
+      #check { width: 820px; height: 380px; border-radius: 28px; background: linear-gradient(160deg, #f4f6f3, #d9e2dc); color: #0a1a14; position: relative;
+               box-shadow: 0 40px 90px rgba(0,0,0,0.55); padding: 44px 52px; margin-bottom: 70px; }
+      #check .row { display: flex; justify-content: space-between; font-weight: 800; font-size: 30px; letter-spacing: 0.12em; color: #5e6f66; }
+      #check .amt { font-family: "Anton", sans-serif; font-size: 120px; margin-top: 38px; color: #0a1a14; }
+      #check .line { position: absolute; left: 52px; right: 52px; bottom: 60px; height: 4px; background: #8da298; }
+      #stamp { position: absolute; right: 36px; top: 150px; border: 10px solid #c0392b; color: #c0392b; font-family: "Anton", sans-serif; font-size: 84px; padding: 4px 26px; border-radius: 14px; }
+
+      /* chart */
+      #chartbox { position: absolute; left: 70px; right: 70px; top: 760px; height: 640px; }
+      #chart { width: 100%; height: 100%; overflow: visible; }
+      #money { position: absolute; top: 440px; width: 100%; text-align: center; font-family: "Anton", sans-serif; font-size: 168px; color: var(--ink);
+               text-shadow: 0 0 60px rgba(216,178,90,0.0); font-variant-numeric: tabular-nums; }
+      #moneyLabel { position: absolute; top: 690px; width: 100%; text-align: center; font-weight: 800; font-size: 40px; letter-spacing: 0.28em; color: var(--mute); }
+      #who { position: absolute; top: 250px; width: 100%; text-align: center; }
+      #who .nm { font-family: "Anton", sans-serif; font-size: 120px; color: var(--gold); }
+      #who .yrs { font-weight: 800; font-size: 34px; letter-spacing: 0.3em; color: var(--mute); margin-top: 6px; }
+      .coin { position: absolute; left: 540px; top: 560px; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%;
+              background: radial-gradient(circle at 35% 30%, #f3dc9a, #d8b25a 55%, #9c7a2e); color: #6b5217; font-family: "Anton", sans-serif; font-size: 44px;
+              display: flex; align-items: center; justify-content: center; opacity: 0; }
+
+      /* captions */
+      #caps { position: absolute; left: 60px; right: 60px; top: 1300px; height: 200px; display: flex; align-items: center; justify-content: center; }
+      .cg { position: absolute; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 34px; opacity: 0; }
+      .w { font-weight: 900; font-size: 74px; text-transform: uppercase; color: var(--ink); letter-spacing: -0.01em;
+           text-shadow: 0 6px 0 rgba(0,0,0,0.55), 0 0 30px rgba(0,0,0,0.6); display: inline-block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="9.9" data-width="1080" data-height="1920">
+      <!-- audio -->
+      <audio id="vo" src="assets/voice.wav" data-start="0" data-track-index="20" data-volume="1"></audio>
+      <audio id="sfx-impact-1" src="assets/impact.wav" data-start="0.22" data-track-index="21" data-volume="0.55"></audio>
+      <audio id="sfx-whoosh-1" src="assets/whoosh.wav" data-start="1.02" data-track-index="22" data-volume="0.5"></audio>
+      <audio id="sfx-whoosh-2" src="assets/whoosh.wav" data-start="2.08" data-track-index="23" data-volume="0.5"></audio>
+      <audio id="sfx-impact-2" src="assets/impact.wav" data-start="3.3" data-track-index="24" data-volume="0.45"></audio>
+      <audio id="sfx-whoosh-3" src="assets/whoosh.wav" data-start="3.9" data-track-index="25" data-volume="0.5"></audio>
+      <audio id="sfx-ding" src="assets/ding.wav" data-start="7.5" data-track-index="26" data-volume="0.7"></audio>
+      <audio id="sfx-impact-3" src="assets/impact.wav" data-start="7.5" data-track-index="27" data-volume="0.6"></audio>
+      <audio id="sfx-whoosh-4" src="assets/whoosh.wav" data-start="7.66" data-track-index="28" data-volume="0.5"></audio>
+
+      <!-- ground -->
+      <div id="ground" class="clip" data-start="0" data-duration="9.9" data-track-index="0">
+        <div id="glow"></div>
+        <div id="gridwrap"><div id="grid"></div></div>
+      </div>
+
+      <div id="camclip" class="clip" data-start="0" data-duration="9.9" data-track-index="1">
+        <div id="cam">
+          <!-- S1: janitor -->
+          <section id="s1" class="clip" data-start="0" data-duration="1.3" data-track-index="2">
+            <div class="scene" id="s1in">
+              <svg class="icon" id="broom" viewBox="0 0 200 200">
+                <line x1="140" y1="18" x2="92" y2="118" />
+                <path d="M62 112 L124 132 L112 176 Q80 186 44 168 Z" />
+                <line x1="62" y1="140" x2="56" y2="170" /><line x1="80" y1="146" x2="74" y2="178" /><line x1="98" y1="150" x2="94" y2="180" />
+              </svg>
+              <div class="huge" id="t1">A janitor.</div>
+            </div>
+          </section>
+          <!-- S2: gas station -->
+          <section id="s2" class="clip" data-start="1.1" data-duration="1.2" data-track-index="3">
+            <div class="scene" id="s2in">
+              <svg class="icon" id="pump" viewBox="0 0 200 200">
+                <rect x="40" y="30" width="80" height="150" rx="10" />
+                <rect x="56" y="50" width="48" height="36" rx="4" />
+                <path d="M120 70 L150 92 L150 150 Q150 164 164 164 Q176 164 176 150 L176 80 L160 64" />
+                <line x1="30" y1="180" x2="130" y2="180" />
+              </svg>
+              <div class="big" id="t2">A gas station<br/></div>
+              <div class="big gold" id="t2b">attendant.</div>
+            </div>
+          </section>
+          <!-- S3: salary -->
+          <section id="s3" class="clip" data-start="2.15" data-duration="1.95" data-track-index="4">
+            <div class="scene" id="s3in">
+              <div id="check">
+                <div class="row"><span>PAY TO: R. READ</span><span>WEEKLY</span></div>
+                <div class="amt">$ <span id="pay">0</span></div>
+                <div class="line"></div>
+                <div id="stamp">MODEST</div>
+              </div>
+              <div class="big" id="t3">Never a <span class="gold">big salary</span></div>
+            </div>
+          </section>
+          <!-- S4: the reveal -->
+          <section id="s4" class="clip" data-start="3.95" data-duration="3.9" data-track-index="5">
+            <div id="s4in" class="full">
+              <div id="who"><div class="nm" id="nm">RONALD READ</div><div class="yrs" id="yrs">1921 — 2014 · VERMONT</div></div>
+              <div id="money">$0</div>
+              <div id="moneyLabel">SLOW… THEN ALL AT ONCE</div>
+              <div id="chartbox">
+                <svg id="chart" viewBox="0 0 940 640" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#1f9e6e" stop-opacity="0.55" />
+                      <stop offset="1" stop-color="#1f9e6e" stop-opacity="0" />
+                    </linearGradient>
+                    <clipPath id="reveal"><rect id="revealRect" x="0" y="0" width="0" height="640" /></clipPath>
+                  </defs>
+                  <g id="axes" stroke="rgba(244,246,243,0.14)" stroke-width="2">
+                    <line x1="0" y1="620" x2="940" y2="620" /><line x1="0" y1="470" x2="940" y2="470" /><line x1="0" y1="320" x2="940" y2="320" /><line x1="0" y1="170" x2="940" y2="170" />
+                  </g>
+                  <path id="areaPath" clip-path="url(#reveal)" fill="url(#area)" />
+                  <path id="curve" fill="none" stroke="#d8b25a" stroke-width="9" stroke-linecap="round" />
+                  <circle id="dot" r="16" fill="#f4f6f3" />
+                  <circle id="dotHalo" r="40" fill="rgba(216,178,90,0.35)" />
+                </svg>
+              </div>
+              <div id="coins"></div>
+            </div>
+          </section>
+          <!-- S5: payoff tease -->
+          <section id="s5" class="clip" data-start="7.7" data-duration="2.2" data-track-index="6">
+            <div class="scene" id="s5in">
+              <div class="kicker" id="k5">NO LOTTERY · NO INHERITANCE</div>
+              <div class="huge" id="t5a">Here's</div>
+              <div class="huge gold" id="t5b">exactly how</div>
+              <svg class="icon" id="arrow" viewBox="0 0 200 200" style="width:160px;height:160px;margin-top:40px;margin-bottom:0">
+                <line x1="100" y1="20" x2="100" y2="170" /><path d="M50 120 L100 172 L150 120" />
+              </svg>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div id="flash" class="clip" data-start="0" data-duration="9.9" data-track-index="7"></div>
+      <div id="captions" class="clip" data-start="0" data-duration="9.9" data-track-index="8"><div id="caps"></div></div>
+      <div id="chrome" class="clip" data-start="0" data-duration="9.9" data-track-index="9">
+        <div id="progress"></div>
+        <div id="brand">NET WORTHY</div>
+        <div id="vignette" class="full"></div>
+        <div id="grain"></div>
+      </div>
+    </div>
+
+    <script>
+      // Word timings: in production these come from tools/alinear_voz.py (data/<voz>.align.json).
+      const WORDS = [
+        {"text":"A","start":0.04,"end":0.261},{"text":"janitor.","start":0.261,"end":0.759},{"text":"A","start":0.759,"end":0.939},{"text":"gas","start":0.939,"end":1.12},{"text":"station","start":1.12,"end":1.438},{"text":"attendant.","start":1.438,"end":2.06},
+        {"text":"He","start":2.41,"end":2.53},{"text":"never","start":2.53,"end":2.75},{"text":"earned","start":2.75,"end":2.94},{"text":"a","start":2.94,"end":3.06},{"text":"big","start":3.06,"end":3.2},{"text":"salary.","start":3.2,"end":3.72},
+        {"text":"But","start":4.22,"end":4.42},{"text":"when","start":4.42,"end":4.62},{"text":"Ronald","start":4.62,"end":5.11},{"text":"Read","start":5.11,"end":5.35},{"text":"died,","start":5.35,"end":5.6},{"text":"he","start":5.6,"end":5.8},{"text":"left","start":5.8,"end":6.0},{"text":"behind","start":6.0,"end":6.49},{"text":"eight","start":6.49,"end":6.73},{"text":"million","start":6.73,"end":7.13},{"text":"dollars.","start":7.13,"end":7.53},
+        {"text":"Here","start":7.91,"end":8.1},{"text":"is","start":8.1,"end":8.25},{"text":"exactly","start":8.25,"end":8.66},{"text":"how","start":8.66,"end":8.81},{"text":"he","start":8.81,"end":8.95},{"text":"did","start":8.95,"end":9.1},{"text":"it.","start":9.1,"end":9.27}
+      ];
+      const HOT = new Set(["janitor.", "attendant.", "salary.", "eight", "million", "dollars.", "exactly", "how"]);
+      const tl = gsap.timeline({ paused: true });
+      const D = 9.9;
+
+      // seeded PRNG (determinism)
+      let seed = 1337; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+      // ---------- persistent motion ----------
+      tl.fromTo("#glow", { x: -120, y: 0 }, { x: 260, y: 220, duration: D, ease: "sine.inOut" }, 0);
+      tl.fromTo("#grid", { rotationX: 62, y: 0 }, { rotationX: 62, y: 240, duration: D, ease: "none" }, 0);
+      tl.fromTo("#progress", { scaleX: 0 }, { scaleX: 1, duration: D, ease: "none" }, 0);
+      tl.fromTo("#grain", { x: 0, y: 0 }, { x: -180, y: -140, duration: D, ease: "steps(120)" }, 0);
+      // camera: slow push + punches on beats
+      tl.set("#cam", { scale: 1 }, 0);
+      [[0, 1.08, 1.05], [1.1, 1.03, 1.05], [2.15, 1.78, 1.04], [3.95, 2.5, 1.03]].forEach(([t0, d, s1]) => {
+        tl.set("#cam", { scale: 1 }, t0);
+        tl.to("#cam", { scale: s1, duration: d, ease: "none" }, t0);
+      });
+      tl.to("#cam", { scale: 1.12, duration: 0.16, ease: "power4.out" }, 7.5);
+      tl.set("#cam", { scale: 1 }, 7.7);
+      tl.to("#cam", { scale: 1.05, duration: 2.15, ease: "none" }, 7.72);
+
+      // ---------- S1 ----------
+      const draw = (sel, at, dur) => {
+        document.querySelectorAll(sel + " line, " + sel + " path, " + sel + " rect").forEach((el, i) => {
+          const L = el.getTotalLength ? el.getTotalLength() : 600;
+          tl.fromTo(el, { strokeDasharray: L, strokeDashoffset: L }, { strokeDashoffset: 0, duration: dur, ease: "power2.out" }, at + i * 0.05);
+        });
+      };
+      tl.fromTo("#t1", { scale: 1.9, opacity: 0, filter: "blur(18px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.32, ease: "power4.out" }, 0.2);
+      draw("#broom", 0.05, 0.55);
+      tl.fromTo("#broom", { rotation: -14, y: 30 }, { rotation: 4, y: 0, duration: 1.1, ease: "power2.out" }, 0.05);
+      tl.to("#s1in", { y: -260, opacity: 0, filter: "blur(14px)", duration: 0.22, ease: "power3.in" }, 1.08);
+
+      // ---------- S2 ----------
+      tl.fromTo("#s2in", { y: 320, opacity: 0, filter: "blur(16px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.26, ease: "power3.out" }, 1.1);
+      draw("#pump", 1.12, 0.5);
+      tl.fromTo("#t2b", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2.2)" }, 1.45);
+      tl.to("#s2in", { y: -260, opacity: 0, filter: "blur(14px)", duration: 0.2, ease: "power3.in" }, 2.1);
+
+      // ---------- S3 ----------
+      tl.fromTo("#check", { y: 420, rotation: 8, opacity: 0 }, { y: 0, rotation: -3, opacity: 1, duration: 0.42, ease: "power3.out" }, 2.15);
+      const pay = { v: 0 };
+      tl.fromTo(pay, { v: 0 }, { v: 32, duration: 0.8, ease: "power2.out", onUpdate: () => { document.getElementById("pay").textContent = Math.round(pay.v) + ".00"; } }, 2.35);
+      tl.fromTo("#t3", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 2.5);
+      tl.fromTo("#stamp", { scale: 2.6, opacity: 0, rotation: -24 }, { scale: 1, opacity: 1, rotation: -12, duration: 0.2, ease: "power4.in" }, 3.3);
+      tl.fromTo("#check", { x: 0 }, { x: 14, duration: 0.05, yoyo: true, repeat: 3, ease: "none", immediateRender: false }, 3.5);
+      tl.to("#s3in", { y: -300, opacity: 0, filter: "blur(14px)", duration: 0.22, ease: "power3.in" }, 3.92);
+
+      // ---------- S4 ----------
+      // compound curve: $ grows ~ e^(k t)
+      const W = 940, H = 640, N = 60, pts = [];
+      for (let i = 0; i <= N; i++) { const x = (i / N) * W; const g = (Math.exp(4.2 * i / N) - 1) / (Math.exp(4.2) - 1); pts.push([x, 610 - g * 560]); }
+      const dPath = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+      const curve = document.getElementById("curve"); curve.setAttribute("d", dPath);
+      document.getElementById("areaPath").setAttribute("d", dPath + ` L ${W} ${H} L 0 ${H} Z`);
+      const CL = curve.getTotalLength();
+      tl.fromTo("#who", { y: -80, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power3.out" }, 4.6);
+      tl.fromTo("#nm", { scale: 1.25 }, { scale: 1, duration: 0.7, ease: "power3.out" }, 4.6);
+      tl.fromTo("#money", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 4.35);
+      tl.fromTo("#moneyLabel", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 4.5);
+      const prog = { p: 0 };
+      const dot = document.getElementById("dot"), halo = document.getElementById("dotHalo"), rr = document.getElementById("revealRect");
+      const SAMPLES = Array.from({ length: 401 }, (_, i) => { const q = curve.getPointAtLength(CL * i / 400); return { x: q.x, y: q.y }; });
+      const place = () => { const pt = SAMPLES[Math.round(prog.p * 400)]; dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y); halo.setAttribute("cx", pt.x); halo.setAttribute("cy", pt.y); rr.setAttribute("width", pt.x); };
+      tl.fromTo(curve, { strokeDasharray: CL, strokeDashoffset: CL }, { strokeDashoffset: 0, duration: 3.2, ease: "power1.in" }, 4.3);
+      tl.fromTo(prog, { p: 0 }, { p: 1, duration: 3.2, ease: "power1.in", onUpdate: place }, 4.3);
+      const money = { v: 0 };
+      const fmt = (v) => "$" + Math.round(v).toLocaleString("en-US");
+      const paint = () => { document.getElementById("money").textContent = fmt(money.v); };
+      tl.fromTo(money, { v: 0 }, { v: 60000, duration: 2.1, ease: "power1.in", onUpdate: paint }, 4.37);
+      tl.to(money, { v: 8000000, duration: 1.04, ease: "power3.in", onUpdate: paint }, 6.47);
+      tl.to("#money", { color: "#d8b25a", scale: 1.12, textShadow: "0 0 80px rgba(216,178,90,0.8)", duration: 0.12, ease: "power4.out" }, 7.5);
+      tl.to("#money", { scale: 1.0, duration: 0.3, ease: "power2.out" }, 7.62);
+      tl.fromTo("#flash", { opacity: 0 }, { opacity: 0.22, duration: 0.06, ease: "none" }, 7.5);
+      tl.to("#flash", { opacity: 0, duration: 0.35, ease: "power2.out" }, 7.56);
+      tl.fromTo("#dotHalo", { scale: 1 }, { scale: 2.2, opacity: 0, transformOrigin: "50% 50%", duration: 0.5 }, 7.5);
+      // coin burst (seeded)
+      const coins = document.getElementById("coins");
+      for (let i = 0; i < 26; i++) {
+        const c = document.createElement("div"); c.className = "coin"; c.id = "coin" + i; c.textContent = "$"; coins.appendChild(c);
+        const ang = rnd() * Math.PI * 2, dist = 380 + rnd() * 520;
+        tl.fromTo(c, { x: 0, y: 0, opacity: 1, scale: 0.4, rotation: 0 },
+          { x: Math.cos(ang) * dist, y: Math.sin(ang) * dist * 0.9 + 200, scale: 0.8 + rnd() * 0.9, rotation: (rnd() - 0.5) * 720, opacity: 0, duration: 0.9 + rnd() * 0.4, ease: "power3.out" }, 7.5 + rnd() * 0.06);
+      }
+      tl.to("#s4in", { y: -300, opacity: 0, filter: "blur(14px)", duration: 0.2, ease: "power3.in" }, 7.68);
+
+      // ---------- S5 ----------
+      tl.fromTo("#k5", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.3 }, 7.72);
+      tl.fromTo("#t5a", { y: 200, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power4.out" }, 7.9);
+      tl.fromTo("#t5b", { y: 200, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.34, ease: "power4.out" }, 8.25);
+      draw("#arrow", 8.7, 0.4);
+      tl.fromTo("#arrow", { y: -20 }, { y: 20, duration: 0.3, yoyo: true, repeat: 3, ease: "sine.inOut" }, 9.0);
+
+      // ---------- captions: groups of <=3 words, active word gold + pop ----------
+      const caps = document.getElementById("caps");
+      const groups = []; let cur = [];
+      WORDS.forEach((w, i) => { cur.push(w); const endSent = /[.,]$/.test(w.text); const gap = WORDS[i + 1] ? WORDS[i + 1].start - w.end : 1; if (cur.length === 3 || endSent || gap > 0.25) { groups.push(cur); cur = []; } });
+      if (cur.length) groups.push(cur);
+      groups.forEach((g, gi) => {
+        const el = document.createElement("div"); el.className = "cg"; el.id = "cg" + gi; caps.appendChild(el);
+        const gStart = g[0].start - 0.05, gEnd = (groups[gi + 1] ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35) : D);
+        tl.fromTo(el, { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "power2.out" }, gStart);
+        tl.to(el, { opacity: 0, duration: 0.05 }, gEnd - 0.05);
+        g.forEach((w, wi) => {
+          const s = document.createElement("span"); s.className = "w"; s.id = `w${gi}_${wi}`; s.textContent = w.text.replace(/[.,]$/, ""); el.appendChild(s);
+          const hot = HOT.has(w.text);
+          tl.fromTo(s, { color: "#f4f6f3", scale: 1 }, { color: hot ? "#d8b25a" : "#9fe3c4", scale: hot ? 1.1 : 1.04, duration: 0.08, ease: "power2.out" }, w.start - 0.04);
+          tl.to(s, { color: "#f4f6f3", scale: 1, duration: 0.1 }, w.end);
+        });
+      });
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

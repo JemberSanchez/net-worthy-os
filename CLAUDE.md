@@ -114,7 +114,7 @@ el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va 
   orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
 
 ## Docs (leer al retomar)
-`docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/POLITICA.md` ·
+`docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/V2-CALIDAD.md` (motor v2 en HyperFrames: decisión verificada + PoC en `video-v2/`) · `docs/POLITICA.md` ·
 `docs/VISION.md` (arquitectura congelada) · `docs/guiones/` (guiones, motor, calibración) · `marca/`.
 
 ## CÓMO TRABAJAR (método — sale de errores medidos, no de teoría)
