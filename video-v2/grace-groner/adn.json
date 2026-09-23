@@ -1,0 +1,38 @@
+{
+  "production_ref": "grace-groner-secretary-v2-2026-09",
+  "hook_type": "story",
+  "story_type": "character",
+  "cta_type": "comment",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 58,
+  "blocks": [
+    {
+      "block": "intro",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "thesis",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "proof",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "payoff",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "honesty",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "lesson",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "cta",
+      "technique": "v2-storyboard"
+    }
+  ]
+}
