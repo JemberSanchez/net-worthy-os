@@ -69,6 +69,15 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   `pacing_2_3s`). Sale con código 1 si se pasa del máximo. PySceneDetect no sirve para esto: los
   barridos, contadores y columnas que crecen son cambio visual real sin ser cortes de plano.
 
+## Motor v2 (HyperFrames) — imagen real con licencia registrada
+- `python tools/imagenes_libres.py buscar|lote|creditos` — Wikimedia Commons filtrado por
+  licencia (lista cerrada: PD, CC0, CC BY; fuera SA/NC/ND) + `creditos.json` por imagen. ⚠ La API
+  de Commons limita por IP y en la nube la IP es compartida (429, `Retry-After` hasta 600 s): usar
+  `lote` (UNA consulta para N títulos), nunca bucles de `bajar`. Solo tamaños de miniatura estándar.
+- `python tools/duotono.py <in> <out> [--recorte 0.04]` — duotono de marca horneado (no filtro CSS).
+- Proyecto de referencia: `video-v2/read-janitor/` (su README: build desde `words.json`, ducking
+  con carve, deuda técnica). Registrar el ADN con `"renderer_version": "v2-hyperframes"`.
+
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
 El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento
 publicado revele una limitación concreta. Excepción: instrumentación de captura-en-origen.

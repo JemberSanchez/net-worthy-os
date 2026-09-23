@@ -17,7 +17,16 @@ import sqlite3
 import time
 
 # Dimensiones categóricas por las que se puede calibrar (whitelist: también evita inyección SQL).
-DIMENSIONS = {"hook_type", "story_type", "cta_type"}
+DIMENSIONS = {"hook_type", "story_type", "cta_type", "renderer_version"}
+
+# Motor que RENDERIZÓ el video. v1 (canvas 2D procedural, docs/guiones/short-renderer.html) y v2
+# (HyperFrames: imagen real, 3D, ritmo medido — docs/V2-CALIDAD.md) NO son comparables: cambiar de
+# renderer cambia a la vez imagen, ritmo, tipografía y mezcla. Misma lógica que `score_version`:
+# mirar SIEMPRE esto antes de comparar dos videos. Lista cerrada: un typo no crea un grupo nuevo.
+RENDERERS = {"v1-canvas", "v2-hyperframes"}
+# Todo lo registrado antes de que existiera esta columna salió del motor canvas: el v2 nació el
+# 23-sep-2026 (todos los `ref` publicados viven en SHORTS[...] de short-renderer.html).
+RENDERER_PREVIO = "v1-canvas"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS production_dna (
@@ -26,6 +35,7 @@ CREATE TABLE IF NOT EXISTS production_dna (
     story_type     TEXT,                    -- personal | character | case_study | none ...
     cta_type       TEXT,                    -- session | subscribe | comment | none ...
     length_s       INTEGER,                 -- duración total del video (s)
+    renderer_version TEXT,                  -- v1-canvas | v2-hyperframes (ver RENDERERS)
     block_count    INTEGER NOT NULL,
     blocks         TEXT    NOT NULL,        -- json: [{block, technique, length_s}]
     recorded_at    INTEGER NOT NULL
@@ -54,27 +64,35 @@ CREATE TABLE IF NOT EXISTS production_cost (
 """
 
 
-def _ensure_columns(con: sqlite3.Connection, table: str, columns: dict[str, str]) -> None:
+def _ensure_columns(con: sqlite3.Connection, table: str, columns: dict[str, str]) -> set[str]:
     """Añade columnas que faltan en una tabla ya existente. `CREATE TABLE IF NOT EXISTS` NO
     migra: si el esquema gana una columna nueva, una BD creada con el esquema viejo se queda
-    sin ella y los INSERT petan en silencio. Idempotente."""
+    sin ella y los INSERT petan en silencio. Idempotente. Devuelve las columnas AÑADIDAS."""
     have = {r[1] for r in con.execute(f"PRAGMA table_info({table})")}
+    added = set()
     for name, decl in columns.items():
         if name not in have:
             con.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+            added.add(name)
+    return added
 
 
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA)
     # Migraciones idempotentes para BDs creadas antes de que el esquema ganara estas columnas.
     _ensure_columns(con, "production_analytics", {"views": "INTEGER"})
+    if "renderer_version" in _ensure_columns(con, "production_dna", {"renderer_version": "TEXT"}):
+        # Solo en el instante en que nace la columna: lo que ya había es v1 por construcción.
+        # Después, un NULL significa "no declarado" y así se muestra — no se rellena a ciegas.
+        con.execute("UPDATE production_dna SET renderer_version=? WHERE renderer_version IS NULL",
+                    (RENDERER_PREVIO,))
     con.commit()
 
 
 def record_dna(con: sqlite3.Connection, *, production_ref: str, blocks: list[dict],
                hook_type: str | None = None, story_type: str | None = None,
                cta_type: str | None = None, length_s: int | None = None,
-               now: int | None = None) -> None:
+               renderer_version: str | None = None, now: int | None = None) -> None:
     """Registra el ADN de producción (el 'cómo se hizo') ANTES de publicar. Idempotente por ref.
 
     blocks: lista de {block, technique, length_s}. block_count se deriva. Capturar esto antes de
@@ -83,11 +101,13 @@ def record_dna(con: sqlite3.Connection, *, production_ref: str, blocks: list[dic
         raise ValueError("falta production_ref")
     if not isinstance(blocks, list):
         raise ValueError("blocks debe ser una lista de {block, technique, length_s}")
+    if renderer_version is not None and renderer_version not in RENDERERS:
+        raise ValueError(f"renderer_version inválido: {renderer_version!r}. Permitidos: {sorted(RENDERERS)}")
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_dna (production_ref, hook_type, story_type, cta_type, "
-        "length_s, block_count, blocks, recorded_at) VALUES (?,?,?,?,?,?,?,?)",
-        (production_ref, hook_type, story_type, cta_type, length_s, len(blocks),
+        "length_s, renderer_version, block_count, blocks, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)",
+        (production_ref, hook_type, story_type, cta_type, length_s, renderer_version, len(blocks),
          json.dumps(blocks, ensure_ascii=False), now),
     )
     con.commit()
@@ -178,20 +198,24 @@ def dna_calibration(con: sqlite3.Connection, dimension: str, *, min_n: int = 1,
 
     Solo cuenta producciones con resultado MEDIDO (join con production_outcome). Marca
     'provisional': True cuando n < confident_n — con pocos datos NO es una conclusión (confounding).
+    'mixed_renderer': True cuando el grupo junta videos de renderers distintos (v1 y v2 no son
+    comparables: el grupo mezcla la dimensión con el cambio de motor).
     """
     if dimension not in DIMENSIONS:
         raise ValueError(f"dimensión inválida: {dimension!r}. Permitidas: {sorted(DIMENSIONS)}")
     # dimension viene de la whitelist DIMENSIONS -> seguro interpolarlo
     rows = con.execute(
-        f"SELECT d.{dimension} AS v, po.success FROM production_dna d "
+        f"SELECT d.{dimension} AS v, d.renderer_version AS rv, po.success FROM production_dna d "
         "JOIN production_outcome po ON po.production_ref = d.production_ref"
     ).fetchall()
 
     agg: dict[str, list[float]] = {}
+    motores: dict[str, set] = {}
     for r in rows:
         if r["v"] is None:
             continue
         agg.setdefault(r["v"], []).append(r["success"])
+        motores.setdefault(r["v"], set()).add(r["rv"])
 
     out = []
     for value, vals in agg.items():
@@ -199,6 +223,7 @@ def dna_calibration(con: sqlite3.Connection, dimension: str, *, min_n: int = 1,
             continue
         out.append({"value": value, "n": len(vals),
                     "success_rate": round(sum(vals) / len(vals), 3),
-                    "provisional": len(vals) < confident_n})
+                    "provisional": len(vals) < confident_n,
+                    "mixed_renderer": len(motores[value]) > 1})
     out.sort(key=lambda x: x["success_rate"], reverse=True)
     return out

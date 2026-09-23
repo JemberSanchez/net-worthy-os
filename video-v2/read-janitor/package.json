@@ -1,0 +1,12 @@
+{
+  "name": "read-janitor-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python gen_musica.py && python build.py",
+    "dev": "npx --yes hyperframes@0.8.62 preview",
+    "lint": "npx --yes hyperframes@0.8.62 lint",
+    "check": "npx --yes hyperframes@0.8.62 check",
+    "render": "npx --yes hyperframes@0.8.62 render --quality high --output renders/read-janitor-v2.mp4"
+  }
+}

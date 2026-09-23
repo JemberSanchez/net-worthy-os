@@ -56,7 +56,8 @@ MOTOR_DEFECTO = "kokoro"
 VOZ_PIPER = RAIZ / "data" / "voces-piper" / "en_US-ryan-high.onnx"
 VOZ_KOKORO_DEFECTO = "am_adam"
 VENV_KOKORO = RAIZ / "tools" / ".venv-voces"
-PYTHON_KOKORO = VENV_KOKORO / "Scripts" / "python.exe"
+# Windows pone el intérprete del venv en Scripts/, Linux/macOS en bin/ (el render v2 corre en Linux).
+PYTHON_KOKORO = VENV_KOKORO / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
 HELPER_KOKORO = Path(__file__).resolve().parent / "_sintetizar_kokoro.py"
 
 PICO_OBJETIVO = 0.89   # ~ -1 dBFS: dentro del margen, sin clipear (medido: el bruto llegaba a 1.0)

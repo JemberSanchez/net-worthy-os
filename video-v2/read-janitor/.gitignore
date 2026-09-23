@@ -1,0 +1,8 @@
+renders/
+snapshots/
+.hyperframes/
+node_modules/
+# originales descargados: se regeneran con `tools/imagenes_libres.py lote assets/imagenes.txt`
+assets/img/*.jpg
+__pycache__/
+assets/music-bed.wav
