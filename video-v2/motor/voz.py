@@ -1,6 +1,7 @@
 """Voz + tiempos medidos de un proyecto v2, desde su storyboard.json (no desde el motor v1).
 
     python video-v2/motor/voz.py video-v2/<proyecto> [--motor kokoro|piper] [--voz am_adam] [--forzar]
+    python video-v2/motor/voz.py video-v2/<proyecto> --alinear      # solo realinea la voz existente
 
 Sale con `assets/voice.mp3` + `assets/words.json` ({text,start,end} por palabra del GUION), que es
 justo lo que necesita `construir.py`. Reutiliza sin duplicar: síntesis de `tools/generar_voz.py`
@@ -37,6 +38,9 @@ def main() -> None:
     motor = gv._valor_de("--motor") or cfg.get("motor", gv.MOTOR_DEFECTO)
     voz = gv._valor_de("--voz") or cfg.get("voz") or (gv.VOZ_KOKORO_DEFECTO if motor == "kokoro" else None)
     audio = proy / "assets" / "voice.mp3"
+    if "--alinear" in sys.argv:          # solo realinear la voz que ya existe (no re-sintetiza)
+        _escribir_words(proy, alinear_audio(audio, frases_del_storyboard(sb)))
+        return
     if audio.exists() and "--forzar" not in sys.argv:
         raise SystemExit(f"{audio} ya existe. No se sobrescribe sola; usa --forzar si de verdad quieres regenerarla.")
 
@@ -48,7 +52,10 @@ def main() -> None:
     gv.guardar(muestras, sr, audio)
     print(f"✓ {audio.name} ({len(muestras) / sr:.2f}s)\n")
 
-    palabras = alinear_audio(audio, frases)
+    _escribir_words(proy, alinear_audio(audio, frases))
+
+
+def _escribir_words(proy: Path, palabras: list[dict]) -> None:
     (proy / "assets" / "words.json").write_text(json.dumps(
         [{"text": p["w"], "start": round(p["t0"], 3), "end": round(p["t1"], 3)} for p in palabras]), encoding="utf-8")
     print("✓ words.json")

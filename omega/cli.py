@@ -933,6 +933,25 @@ def cmd_backup() -> None:
     print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
+def cmd_youtube_auth() -> None:
+    """Solo el login OAuth de YouTube (abre el navegador) -> data/youtube_token.json, y confirma a
+    qué canal quedó conectado. Sin subir nada. Para la nube: copiar el contenido de ese archivo a
+    la variable de entorno YOUTUBE_TOKEN_JSON (tools/setup_nube.sh lo vuelve a escribir allí)."""
+    from . import publish
+    try:
+        creds = publish._get_credentials()
+    except publish.PublishError as e:
+        raise SystemExit(f"✗ {e}")
+    from googleapiclient.discovery import build
+    yt = build("youtube", "v3", credentials=creds, cache_discovery=False)
+    items = yt.channels().list(part="snippet", mine=True).execute().get("items", [])
+    canal = items[0]["snippet"]["title"] if items else "(sin canal)"
+    print(f"✓ token guardado en {publish.TOKEN_PATH} · canal: {canal}")
+    print(f"  scopes: {', '.join(publish.SCOPES)}")
+    if not creds.refresh_token:
+        print("  ⚠ sin refresh_token: la nube no podrá renovarlo. Revoca el acceso en tu cuenta Google y repite.")
+
+
 def cmd_estado_bajar() -> None:
     """Repo PRIVADO de estado -> data/omega.sqlite (no pisa una base local sin --forzar)."""
     from . import estado
@@ -979,6 +998,7 @@ def main(argv: list[str]) -> int:
         "hypotheses": cmd_hypotheses,
         "resolve-prediction": cmd_resolve_prediction,
         "backup": cmd_backup,
+        "youtube-auth": cmd_youtube_auth,
         "estado-bajar": cmd_estado_bajar,
         "estado-subir": cmd_estado_subir,
         "status": cmd_status,

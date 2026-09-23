@@ -32,8 +32,19 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      personas reales. Declara cada imagen en `imagenes` con su `commons`;
    - subtítulos sin el gancho ni el CTA; como mucho un `contador3d`;
    - `publicacion` con título (≤100), descripción, tags y hashtags; `adn` con `renderer_version: v2-hyperframes`.
+   Lecciones del ensayo del 23-sep (Grace Groner), no repetirlas:
+   - Genera la voz ANTES de escribir las escenas (`python video-v2/motor/voz.py video-v2/<ref>`,
+     con solo `guion` en el storyboard) y lista las frases con sus palabras exactas: las anclas
+     se escriben contra ese listado (p. ej. "—" es una palabra; "seventy-five" va con guion).
+   - Imágenes: busca OBJETOS y lugares ("vintage typewriter", "stock certificate"), no personas:
+     Commons responde mal a conceptos genéricos de gente y las fotos de personas traen contexto
+     (una "stenographer" resultó ser de un campo de internamiento de 1942). Reutiliza las del
+     catálogo ya bajado (`video-v2/*/assets/t/` + su creditos.json) antes de buscar.
+   - CTA: la `pregunta` va ANTES que los `botones` (los botones la ocultan al entrar).
 8. `python video-v2/motor/construir.py video-v2/<ref> --validar` hasta que pase. El mensaje dice
-   qué frase y qué palabra fallan: corrige el storyboard, no el validador.
+   qué frase y qué palabra fallan: corrige el storyboard, no el validador. Después revisa una
+   hoja de contactos (`npx hyperframes snapshot --at ...`) ANTES del render: el validador no ve
+   solapes ni textos que no caben.
 
 ## 4. Producir y medir
 9. `python video-v2/motor/producir.py video-v2/<ref>` — voz, build, lint, render, loudness, ritmo.

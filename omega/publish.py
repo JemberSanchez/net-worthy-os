@@ -19,7 +19,11 @@ from pathlib import Path
 
 from . import config
 
-SCOPES = ["https://www.googleapis.com/auth/youtube"]
+# youtube: subir y editar (videos.update). yt-analytics.readonly: retención por segundo y términos
+# de búsqueda (analítica automática). Se piden JUNTOS para autorizar una sola vez: cambiar los
+# scopes invalida el token y obliga a repetir el login.
+SCOPES = ["https://www.googleapis.com/auth/youtube",
+          "https://www.googleapis.com/auth/yt-analytics.readonly"]
 CLIENT_SECRET_PATH = config.DATA_DIR / "youtube_client_secret.json"
 TOKEN_PATH = config.DATA_DIR / "youtube_token.json"
 

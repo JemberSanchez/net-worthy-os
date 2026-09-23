@@ -84,6 +84,58 @@ def _tiempo_en_activos(frac: float, activos: list[tuple]) -> float:
     return activos[-1][1]
 
 
+_UNI = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
+_DEC = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+
+
+def numero_a_palabras(n: int) -> list[str]:
+    """Entero -> palabras como las dice el TTS en inglés. Las decenas compuestas van en UNA
+    palabra con guion ("seventy-five"), igual que en los guiones del canal."""
+    if n < 20:
+        return [_UNI[n]]
+    if n < 100:
+        return [_DEC[n // 10] + ("-" + _UNI[n % 10] if n % 10 else "")]
+    for valor, nombre in ((10 ** 9, "billion"), (10 ** 6, "million"), (1000, "thousand"), (100, "hundred")):
+        if n >= valor:
+            cabeza, resto = divmod(n, valor)
+            return numero_a_palabras(cabeza) + [nombre] + (numero_a_palabras(resto) if resto else [])
+    return []
+
+
+def expandir_numeros(oidas: list[dict]) -> list[dict]:
+    """Whisper escribe CIFRAS ("$180", "75") donde el guion tiene PALABRAS ("a hundred and eighty
+    dollars", "seventy-five"): sin esto esas palabras no casan y se interpolan. Medido el 23-sep en
+    Grace Groner: "a hundred and eighty" quedó con las 4 palabras en 10,06 s y duración CERO, y el
+    subtítulo se quedó pegado en pantalla. Además Whisper PARTE las cifras ("$7", ",200", ",000.").
+
+    1) une los trozos ",ddd" a la cifra anterior; 2) cifra -> palabras (+ "dollars" si llevaba $,
+    + "percent" si llevaba %), repartiendo el tiempo del token según la longitud de cada palabra."""
+    unidas: list[dict] = []
+    for o in oidas:
+        w = o["word"]
+        if unidas and re.fullmatch(r",\d{3}[.,!?]?", w) and re.search(r"\d$", unidas[-1]["word"]):
+            unidas[-1] = {**unidas[-1], "word": unidas[-1]["word"] + w, "end": o["end"]}
+        else:
+            unidas.append(dict(o))
+    out: list[dict] = []
+    for o in unidas:
+        m = re.fullmatch(r"(\$?)(\d[\d,]*)(%?)([.,!?]*)", o["word"])
+        if not m:
+            out.append(o)
+            continue
+        palabras = numero_a_palabras(int(m.group(2).replace(",", "")))
+        palabras += ["dollars"] if m.group(1) else []
+        palabras += ["percent"] if m.group(3) else []
+        palabras[-1] += m.group(4)
+        total = sum(len(p) for p in palabras) or 1
+        t = o["start"]
+        for p in palabras:
+            d = (o["end"] - o["start"]) * len(p) / total
+            out.append({"word": p, "start": t, "end": t + d})
+            t += d
+    return out
+
+
 def alinear(guion: list[str], oidas: list[dict], hay_voz=None, segmentos=None) -> list[dict]:
     """Needleman-Wunsch entre las palabras del GUION y las que Whisper oyó.
 
@@ -287,6 +339,7 @@ def alinear_audio(audio: Path, frases: list[str]) -> list[dict]:
         for w in (seg.words or []):
             oidas.append({"word": w.word.strip(), "start": w.start, "end": w.end})
     print(f"Whisper oyó {len(oidas)} palabras en {info.duration:.2f}s de audio.")
+    oidas = expandir_numeros(oidas)
 
     guion = [p for f in frases for p in f.split()]
     print(f"El guion tiene {len(guion)}.\n")

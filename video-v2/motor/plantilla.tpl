@@ -116,7 +116,7 @@
 
       /* subtítulos */
       #caps { position: absolute; left: 50px; right: 50px; top: 1200px; height: 200px; }
-      .cg { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 30px; opacity: 0; }
+      .cg { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 40px; opacity: 0; }
       .w { font-weight: 900; font-size: 76px; text-transform: uppercase; color: var(--ink); letter-spacing: -0.01em; display: inline-block;
            text-shadow: 0 6px 0 rgba(0,0,0,0.6), 0 0 30px rgba(0,0,0,0.7); }
     </style>

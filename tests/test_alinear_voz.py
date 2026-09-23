@@ -80,3 +80,24 @@ class AlinearTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class ExpandirNumerosTest(unittest.TestCase):
+    """Whisper escribe cifras donde el guion tiene palabras (y las PARTE: "$7", ",200", ",000.").
+    Sin expandirlas, "a hundred and eighty" quedó con duración 0 y el subtítulo se pegó (23-sep)."""
+
+    def test_numero_a_palabras(self):
+        from alinear_voz import numero_a_palabras
+        self.assertEqual(numero_a_palabras(75), ["seventy-five"])          # una palabra, como el guion
+        self.assertEqual(numero_a_palabras(180), ["one", "hundred", "eighty"])
+        self.assertEqual(numero_a_palabras(7_200_000), ["seven", "million", "two", "hundred", "thousand"])
+
+    def test_une_trozos_y_reparte_el_tiempo(self):
+        from alinear_voz import expandir_numeros
+        out = expandir_numeros([{"word": "$7", "start": 2.64, "end": 2.98}, {"word": ",200", "start": 2.98, "end": 3.52},
+                                {"word": ",000.", "start": 3.52, "end": 4.22}, {"word": "No", "start": 4.96, "end": 5.14}])
+        self.assertEqual([o["word"] for o in out],
+                         ["seven", "million", "two", "hundred", "thousand", "dollars.", "No"])
+        self.assertAlmostEqual(out[0]["start"], 2.64)
+        self.assertAlmostEqual(out[5]["end"], 4.22)                           # el tramo entero se conserva
+        self.assertTrue(all(o["end"] > o["start"] for o in out[:6]))          # ninguna palabra de duración 0
