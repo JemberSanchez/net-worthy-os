@@ -7,7 +7,11 @@ mismo pipeline (`tools/generar_voz.py`, `kokoro` + misaki en el venv 3.12). Se r
 `renderer_version: "v2-hyperframes"` en el ADN: sus resultados NO se comparan con los de v1 sin
 mirar esa columna.
 
-**QA del MP4:** pendiente (render en curso en la sesión del 23-sep; se añade al terminar).
+**QA del MP4 final** (23-sep, tras `loudnorm`): `hyperframes lint` 0 errores · `medir_loudness`
+**-14,55 LUFS / -1,11 dBTP** ✓ · `medir_ritmo` tramo quieto máximo **1,4 s**, 14 % quieto ✓
+(tope 2,5 s; el #7 v1 medido con el mismo instrumento: 6,0 s y 90 %). 49,8 s, 1080x1920, H.264+AAC,
+render de ~6 min. La 1ª pasada falló el ritmo (2,8 s en la tarjeta final) y se corrigió con
+movimiento real, no subiendo el umbral.
 
 ## Reproducir
 Requisitos: Node 22+, Python 3.11+, FFmpeg **con ffprobe**, Chrome (en Linux:
