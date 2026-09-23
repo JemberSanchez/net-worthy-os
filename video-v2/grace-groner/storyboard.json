@@ -94,9 +94,14 @@
    "items": [{"texto": "Own it", "en": "18"},
              {"texto": "Reinvest it", "en": "18:reinvest"},
              {"texto": "Leave it alone", "en": "18:leave", "color": "gold"}]},
-  {"tipo": "cta", "en": "19",
-   "a": {"texto": "Hold", "en": "19:sit"}, "o": "75 years, or", "b": {"texto": "Sell", "en": "20:sold"},
-   "pregunta": {"texto": "at $10,000?", "en": "20:sold", "fondo": "tw"},
+  {"tipo": "titulo", "en": "19", "fondo": "tw",
+   "lineas": [{"texto": "*$180*", "en": "19:hundred", "estilo": "huge"},
+              {"texto": "{n} years", "en": "19:seventy-five", "estilo": "big"},
+              {"texto": "never touched", "en": "19:never", "estilo": "mid", "color": "gold"}],
+   "contador": {"linea": 1, "valor": 75, "en": "19:seventy-five"}},
+  {"tipo": "cta", "en": "20",
+   "a": {"texto": "Hold", "en": "20:or"}, "o": "or", "b": {"texto": "Sell", "en": "20:sold"},
+   "pregunta": {"texto": "at $10,000?", "en": "20:ten", "fondo": "tw"},
    "botones": [{"texto": "Team hold", "en": "20:thousand$"}, {"texto": "Team sell", "en": "20:thousand$+0.4"}],
    "sub": "drop your verdict ↓"}
  ]

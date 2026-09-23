@@ -87,6 +87,18 @@ class PlanTest(unittest.TestCase):
         self.assertEqual(p["subtitulos"], [6, 8])                       # palabras de la frase 1
         self.assertIn("salary", p["escenas"][1]["texto_visible"])       # para no duplicar subtítulo
 
+    def test_aviso_de_hueco_estatico(self):
+        # CTA con un solo elemento durante una frase larga (el fallo de Grace Groner): aviso
+        W2 = [{"text": f"w{i}", "start": i * 1.0, "end": i * 1.0 + 0.5} for i in range(8)]
+        W2[3]["text"], W2[7]["text"] = "w3.", "w7?"
+        d = {"escenas": [{"tipo": "foto", "en": "0", "img": "f"},
+                         {"tipo": "cta", "en": "1", "a": {"texto": "Hold", "en": "1"}, "b": {"texto": "Sell", "en": "1:w7"}}],
+             "imagenes": {"f": {}}}
+        avisos = c.huecos_estaticos(c.plan(d, W2))
+        self.assertEqual(len(avisos), 1)
+        self.assertIn("escena 1 (cta)", avisos[0])
+        self.assertEqual(c.huecos_estaticos(c.plan(sb(), W)), [])     # el bueno no avisa
+
     def test_enfasis_y_escape(self):
         self.assertEqual(c.txt("*3* <b>"), '<span class="gold">3</span> &lt;b&gt;')
 

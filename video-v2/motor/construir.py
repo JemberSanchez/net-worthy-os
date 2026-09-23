@@ -124,6 +124,43 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     return errores
 
 
+# Tipos con movimiento continuo propio (Ken Burns, contador, 3D, años que corren): no se quedan
+# quietos aunque no haya eventos anclados dentro.
+_CONTINUOS = {"foto", "contador3d", "anios", "curva", "puntos", "tarjetas"}
+
+
+def huecos_estaticos(p: dict, maximo: float = 2.5) -> list[str]:
+    """Aviso BARATO antes del render: tramos de más de `maximo` s sin ningún evento anclado en
+    escenas sin movimiento propio. Es un proxy (la puerta real es tools/medir_ritmo.py sobre el
+    MP4), pero habría cazado en <1 s el CTA de Grace Groner que se comió 5 min de render: 4,6 s
+    con solo "HOLD" en pantalla mientras la voz decía una frase larga."""
+    avisos = []
+    for k, s in enumerate(p["escenas"]):
+        if s["tipo"] in _CONTINUOS or s.get("fondo"):
+            continue
+        fin = min(s["t1"], p["fin_voz"])            # tras la voz, la tarjeta final tiene su propio movimiento
+        t = sorted({s["t0"], fin} | {x for x in _tiempos(s) if s["t0"] <= x <= fin})
+        for a, b in zip(t, t[1:]):
+            if b - a > maximo:
+                avisos.append(f"escena {k} ({s['tipo']}): {b - a:.1f}s sin nada nuevo ({a:.1f}-{b:.1f}s) — "
+                              "añade un elemento anclado o parte la frase en otra escena")
+    return avisos
+
+
+def _tiempos(obj) -> list[float]:
+    out = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k in anclas.CLAVES and isinstance(v, (int, float)):
+                out.append(float(v))
+            else:
+                out += _tiempos(v)
+    elif isinstance(obj, list):
+        for x in obj:
+            out += _tiempos(x)
+    return out
+
+
 def _imagenes_usadas(s: dict) -> list[str]:
     refs = []
     if s.get("tipo") == "foto":
@@ -418,6 +455,8 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     if av.get("ventanas"):
         av["ventanas_t"] = [[anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]]
     p = plan(sb, words)
+    for aviso in huecos_estaticos(p):
+        print(f"⚠ ritmo: {aviso}")
     if solo_validar:
         print(f"✓ storyboard válido: {len(p['escenas'])} escenas, {len(p['fotos'])} fotos, {p['D']}s")
         return proy / "storyboard.json"
