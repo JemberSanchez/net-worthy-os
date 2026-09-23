@@ -105,7 +105,9 @@ def producir(proy: Path) -> dict:
                "privacy_status": "private", "made_for_kids": False}
     (RAIZ / "data").mkdir(exist_ok=True)
     (RAIZ / "data" / f"publish_{ref}.json").write_text(json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8")
-    if sb.get("adn"):
+    # El ADN se escribe solo si no existe: uno hecho a mano (técnica por bloque) vale más que este
+    # genérico, y producir no debe destruir instrumentación (pasó en la 1ª prueba con el #7).
+    if sb.get("adn") and not (proy / "adn.json").exists():
         W = json.loads((proy / "assets" / "words.json").read_text())
         dur = round(W[-1]["end"] + float(sb.get("cola_s", 3.0)))
         (proy / "adn.json").write_text(json.dumps({"production_ref": ref, **sb["adn"], "length_s": dur,
