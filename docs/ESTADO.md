@@ -7,7 +7,7 @@
 > el storyboard sin saber segundos); `--validar` rompe con motivo si un ancla, una imagen o una
 > cifra sin fuente fallan. **Prueba de oro superada**: el #7 reconstruido desde storyboard pasa
 > lint y QA (-14,54 LUFS, 2,0 s quieto máx.) y ya es su única fuente. Subtítulos que la escena ya
-> muestra escritos se omiten solos. 196 tests.
+> muestra escritos se omiten solos. 190 tests.
 > - Fase 2 (siguiente): `produce` = tema → guion + storyboard por LLM → validar → voz → build →
 >   render → QA → borrador. Fase 3: cron + aprobación de 1 toque (decisión de infra pendiente).
 > - ⚠ Kokoro no es determinista bit a bit entre síntesis (±0,2 s en 15/162 palabras): alinear
