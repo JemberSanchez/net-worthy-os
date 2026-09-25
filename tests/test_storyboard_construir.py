@@ -82,7 +82,7 @@ class PlanTest(unittest.TestCase):
 
     def test_fotos_subtitulos_y_texto_visible(self):
         p = c.plan(sb(), W)
-        self.assertEqual([f["img"] for f in p["fotos"]], ["foto1"])
+        self.assertEqual([f["img"] for f in p["fotos"] if not f["id"].endswith("a")], ["foto1"])
         self.assertEqual(p["fotos"][0]["opacidad"], 1)
         self.assertEqual(p["subtitulos"], [6, 8])                       # palabras de la frase 1
         self.assertIn("salary", p["escenas"][1]["texto_visible"])       # para no duplicar subtítulo
@@ -101,6 +101,40 @@ class PlanTest(unittest.TestCase):
 
     def test_enfasis_y_escape(self):
         self.assertEqual(c.txt("*3* <b>"), '<span class="gold">3</span> &lt;b&gt;')
+
+
+class RetencionTest(unittest.TestCase):
+    def test_gancho_y_regancho(self):
+        p = c.plan(sb(), W)
+        av = c.avisos_retencion(p)
+        self.assertTrue(any("foto fija" in a for a in av))                 # foto sin clip
+        self.assertFalse(any("re-gancho" in a for a in av))                # vídeo de 5 s
+        p["fin_voz"] = 30.0
+        self.assertTrue(any("sin re-gancho" in a for a in c.avisos_retencion(p)))
+        p["escenas"][0]["tipo"] = "titulo"
+        self.assertTrue(any("gancho sin imagen" in a for a in c.avisos_retencion(p)))
+
+
+class FondoAutoTest(unittest.TestCase):
+    """Ninguna escena de texto sobre verde vacío: fondo automático desenfocado del propio proyecto."""
+
+    def test_escenas_de_texto_reciben_fondo_desenfocado(self):
+        d = sb(imagenes={"foto1": {"commons": "File:X.jpg"}, "foto2": {"commons": "File:Y.jpg"}})
+        p = c.plan(d, W)
+        auto = [f for f in p["fotos"] if f["id"].endswith("a")]
+        self.assertEqual([f["id"] for f in auto], ["ph1a", "ph2a"])          # lista y cta; la foto no
+        self.assertTrue(all(f["opacidad"] == c.OPACIDAD_AUTO and f["archivo"].endswith("-desenfoque") for f in auto))
+        self.assertEqual(auto[0]["img"], "foto2")                         # evita la imagen de la foto vecina
+        self.assertIn('src="assets/t/foto2-desenfoque.jpg"', c._capa_html(auto[0], 0))
+
+    def test_se_puede_desactivar(self):
+        self.assertFalse(any(f["id"].endswith("a") for f in c.plan(sb(fondos_auto=False), W)["fotos"]))
+        d = sb(); d["escenas"][1]["fondo"] = False
+        self.assertNotIn("ph1a", [f["id"] for f in c.plan(d, W)["fotos"]])
+
+    def test_no_altera_el_mov_de_las_fotos(self):
+        mov = lambda p: [f["mov"] for f in p["fotos"] if not f["id"].endswith("a")]
+        self.assertEqual(mov(c.plan(sb(), W)), mov(c.plan(sb(fondos_auto=False), W)))
 
 
 class BrollTest(unittest.TestCase):

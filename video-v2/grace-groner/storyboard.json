@@ -32,6 +32,7 @@
                "shares", "thousands", "reinvest", "uncomfortable", "sold", "strategy", "trade", "nobody", "engine", "alone"],
  "musica": {"oscuro": ["12", "16"]},
  "cola_s": 3.0,
+ "golpes": ["5:eighty", "9:nobody", "15:strategy", "18:alone"],
  "clips": {
   "olivetti": {"commons": "File:Olivetti Dora portable typewriter.webm", "desde": 2.0},
   "typing": {"commons": "File:Typewriter Optima M12 - typing.webm", "desde": 4.0}

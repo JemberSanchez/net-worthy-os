@@ -93,6 +93,42 @@ def subir_borrador(publish: dict, ref: str) -> str:
     return f"privado en {res['url']} · aprobar: python -m omega.cli programar {ref}"
 
 
+def instantes_escena(html: str) -> list[float]:
+    """Un instante por escena (al 60 % de su ventana, cuando sus textos ya han entrado)."""
+    xs = re.findall(r'<section id="s\d+" class="clip scene" data-start="([\d.]+)" data-duration="([\d.]+)"', html)
+    return [round(float(a) + min(float(b) * 0.6, float(b) - 0.1), 2) for a, b in xs]
+
+
+def fallos_contraste(informes: list[dict]) -> list[str]:
+    """Textos por debajo de WCAG AA en los informes de `hyperframes check --json`. Solo contraste:
+    la auditoría de maquetación da falsos positivos con capas decorativas (viñeta 'tapando' el
+    logo, monedas del estallido 'solapadas' — medido en Grace, 25-sep), así que no es puerta."""
+    out = []
+    for d in informes:
+        for f in (d.get("contrast") or {}).get("findings") or []:
+            if f.get("ratio") is not None and f.get("requiredRatio") and f["ratio"] < f["requiredRatio"]:
+                out.append(f'"{f.get("text", "")[:30]}" {f["ratio"]}:1 (< {f["requiredRatio"]}) en t≈{f.get("time", "?")}s')
+    return out
+
+
+def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
+    """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
+    ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
+    informes, textos = [], 0
+    for i in range(0, len(ts), 5):
+        r = _run(["npx", "--yes", HF, "check", "--json", "--at", ",".join(map(str, ts[i:i + 5]))],
+                 cwd=proy, env=env)
+        try:
+            d = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            return False, "check no devolvió JSON: " + (r.stderr or r.stdout)[-300:]
+        informes.append(d)
+        textos += (d.get("contrast") or {}).get("checked", 0)
+    fallos = fallos_contraste(informes)
+    return not fallos, (f"{textos} textos en {len(ts)} escenas, todos >= AA" if not fallos
+                        else f"{len(fallos)} textos ilegibles: " + "; ".join(fallos[:5]))
+
+
 def producir(proy: Path) -> dict:
     proy = proy.resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
@@ -119,6 +155,7 @@ def producir(proy: Path) -> dict:
     r = _run(["npx", "--yes", HF, "lint"], cwd=proy, env=env)
     m = re.search(r"(\d+) error\(s\)", r.stdout + r.stderr)
     puerta("lint", bool(m) and m.group(1) == "0", m.group(0) if m else r.stdout[-300:] + r.stderr[-300:])
+    puerta("contraste", *auditar_contraste(proy, env))
     crudo, final, prev = renders / f"{ref}.mp4", renders / f"{ref}-final.mp4", renders / f"{ref}-preview.mp4"
     r = _run(["npx", "--yes", HF, "render", "--quality", "high", "--output", str(crudo)], cwd=proy, env=env)
     puerta("render", r.returncode == 0 and crudo.exists(), (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0])
