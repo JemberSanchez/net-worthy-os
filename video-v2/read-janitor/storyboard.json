@@ -117,6 +117,9 @@
  },
  "cola_s": 3.0,
  "golpes": ["15:rare", "19:time"],
+ "clips": {
+  "gasolinera": {"pexels": 35560146, "desde": 0}
+ },
  "imagenes": {
   "gas3": {
    "commons": "File:Filling station and garage at Pie Town, New Mexico LCCN2017877695.tif",
@@ -159,7 +162,7 @@
   {
    "tipo": "foto",
    "en": "0",
-   "img": "gas3",
+   "clip": "gasolinera",
    "mov": "izq",
    "kicker": {
     "texto": "Pumped gas",
