@@ -42,6 +42,13 @@ import anclas  # noqa: E402
 
 CATALOGO = ("foto", "revelacion", "lista", "titulo", "tarjetas", "contador3d", "curva", "puntos", "anios", "cta")
 PRE = 0.14            # la escena entra un poco antes de que la voz empiece su frase
+# Escenas de TEXTO que, sin `fondo` propio, reciben uno automático: una imagen del propio proyecto
+# desenfocada al 30 %. Motivo medido (Grace Groner, 25-sep): 4 de cada 8 fotogramas eran texto
+# sobre verde liso = aspecto de diapositiva. Un canal profesional nunca deja el cuadro vacío.
+# `contador3d` no (tiene su escena 3D) ni `foto` (ya es imagen). `"fondo": false` lo desactiva.
+AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "puntos", "cta"}
+OPACIDAD_AUTO = 0.3
+RISER_S = 1.0         # el riser (assets/riser.wav) termina justo en el golpe
 MOVS = ("push", "izq", "sube", "der", "pull")
 
 
@@ -139,6 +146,31 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
 # Tipos con movimiento continuo propio (Ken Burns, contador, 3D, años que corren): no se quedan
 # quietos aunque no haya eventos anclados dentro.
 _CONTINUOS = {"foto", "contador3d", "anios", "curva", "puntos", "tarjetas"}
+
+
+REGANCHO_MAX = 12.0   # s sin golpe/revelación dentro de la voz: la curva del canal cae entre 3 y 20 s
+
+
+def avisos_retencion(p: dict) -> list[str]:
+    """Reglas de Short profesional que se pueden MEDIR en el plan (avisos, no errores: el guion
+    puede tener un buen motivo). Gancho con imagen en movimiento y texto en <0,8 s; re-gancho
+    (golpe, impacto o revelación) al menos cada REGANCHO_MAX s."""
+    avisos, e0 = [], p["escenas"][0]
+    if e0["tipo"] != "foto":
+        avisos.append("gancho sin imagen: la escena 0 debería ser `foto` (mejor con `clip`) — el primer segundo decide el scroll")
+    elif not e0.get("clip"):
+        avisos.append("gancho con foto fija: un `clip` (b-roll en movimiento) frena mejor el scroll")
+    textos = [e0[k]["en"] for k in ("kicker", "titulo", "sub") if isinstance(e0.get(k), dict) and "en" in e0[k]]
+    if not textos or min(textos) > 0.8:
+        avisos.append(f"el gancho no pone texto en pantalla antes de 0,8 s ({min(textos):.1f}s)" if textos
+                      else "el gancho no tiene texto en pantalla (kicker/titulo)")
+    marcas = sorted({0.0, p["fin_voz"], *p["golpes"], *p["impactos"],
+                     *(s["t0"] for s in p["escenas"] if s["tipo"] == "revelacion")})
+    marcas = [t for t in marcas if 0 <= t <= p["fin_voz"]]
+    for a_, b_ in zip(marcas, marcas[1:]):
+        if b_ - a_ > REGANCHO_MAX:
+            avisos.append(f"{b_ - a_:.0f}s sin re-gancho ({a_:.1f}-{b_:.1f}s): mete un giro, una cifra nueva o una `revelacion`")
+    return avisos
 
 
 def huecos_estaticos(p: dict, maximo: float = 2.5) -> list[str]:
@@ -393,7 +425,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
     fotos, mi = [], 0
     clips = sb.get("clips") or {}
 
-    def capa(id_, src: dict, t0, t1, mov, opacidad):
+    def capa(id_, src: dict, t0, t1, mov, opacidad, desenfoque=False):
         f = {"id": id_, "t0": t0, "t1": t1, "mov": mov, "opacidad": opacidad}
         if src.get("clip"):                      # b-roll: archivo propio de la duración exacta
             c = src["clip"]
@@ -401,7 +433,12 @@ def plan(sb: dict, words: list[dict]) -> dict:
                      src=f"{c}-{float(clips[c].get('desde', 0)):g}-{round((t1 - t0) * 100)}.mp4")
         else:
             f["img"] = src["img"]
+            f["archivo"] = f'{src["img"]}-desenfoque' if desenfoque else src["img"]
         return f
+
+    pool = list((sb.get("imagenes") or {}).keys())
+    usadas_foto = {k: s.get("img") for k, s in enumerate(esc) if s["tipo"] == "foto"}
+    ai = 0
 
     for k, s in enumerate(esc):
         if s["tipo"] == "foto":
@@ -412,6 +449,15 @@ def plan(sb: dict, words: list[dict]) -> dict:
             fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
                               f.get("opacidad", 0.4)))
             mi += 1
+        elif (s["tipo"] in AUTO_FONDO and "fondo" not in s and sb.get("fondos_auto", True) and pool
+              and not (s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"))):
+            vecinas = {usadas_foto.get(k - 1), usadas_foto.get(k + 1)}
+            cand = [x for x in pool if x not in vecinas] or pool
+            img = cand[ai % len(cand)]
+            # contador propio: no altera el `mov` que ya tenían las fotos de vídeos verificados
+            fotos.append(capa(f"ph{k}a", {"img": img}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
+                              OPACIDAD_AUTO, desenfoque=True))
+            ai += 1
         if s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"):
             fotos.append({"id": f"ph{k}q", "img": s["pregunta"]["fondo"], "t0": s["pregunta"]["en"] - 0.3, "t1": END,
                           "mov": "final", "opacidad": 0.55, "aparece": s["pregunta"]["en"] - 0.29})
@@ -442,13 +488,24 @@ def _capa_html(f: dict, j: int) -> str:
     tiempo = f'data-start="{f["t0"]:.3f}" data-duration="{f["t1"] - f["t0"]:.3f}"'
     if not f.get("video"):
         return (f'      <div id="{f["id"]}" class="clip ph" {tiempo} data-track-index="{2 + j}">'
-                f'<img id="{f["id"]}-img" src="assets/t/{f["img"]}.jpg" alt="" /><div class="shade"></div></div>')
+                f'<img id="{f["id"]}-img" src="assets/t/{f.get("archivo", f["img"])}.jpg" alt="" /><div class="shade"></div></div>')
     # Vídeo: el tiempo va en el <video> y NO en su contenedor (lint `video_nested_in_timed_element`:
     # con los dos, el extractor saca fotogramas desplazados). El contenedor, sin tiempo, es el que
     # se anima (zoom lento); la sombra es su propio clip con la misma ventana.
     return (f'      <div id="{f["id"]}" class="ph phv"><video id="{f["id"]}-img" class="clip" src="assets/v/{f["src"]}" '
             f'{tiempo} data-track-index="{2 + j}" muted playsinline></video></div>\n'
-            f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{60 + j}"><div class="shade"></div></div>')
+            f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{80 + j}"><div class="shade"></div></div>')
+
+
+def asegurar_desenfoques(proy: Path, p: dict, radio: float = 14) -> None:
+    """Versión desenfocada (horneada, no filtro CSS por fotograma) de las imágenes usadas como
+    fondo automático: separa el texto de la imagen como una profundidad de campo corta."""
+    from PIL import Image, ImageFilter
+    for f in p["fotos"]:
+        if f.get("archivo", "").endswith("-desenfoque"):
+            dst = proy / "assets" / "t" / f'{f["archivo"]}.jpg'
+            if not dst.exists():
+                Image.open(proy / "assets" / "t" / f'{f["img"]}.jpg').filter(ImageFilter.GaussianBlur(radio)).save(dst, quality=80)
 
 
 def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
@@ -480,6 +537,7 @@ def _html(p: dict) -> str:
         if s["t0"] - ult >= 1.2:
             sfx.append(("whoosh.wav", s["t0"] - 0.12, 0.38)); ult = s["t0"]
     sfx += [("impact.wav", g - 0.02, 0.6) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
+    sfx += [("riser.wav", g - RISER_S, 0.3) for g in p["golpes"] if g - RISER_S >= 0.5]
     sfx += [("impact.wav", t, 0.45) for t in p["impactos"]]
     audio += [f'      <audio id="sfx{j}" src="assets/_motor/{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
               for j, (f, t, v) in enumerate(sfx)]
@@ -511,10 +569,13 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     p = plan(sb, words)
     for aviso in huecos_estaticos(p):
         print(f"⚠ ritmo: {aviso}")
+    for aviso in avisos_retencion(p):
+        print(f"⚠ retención: {aviso}")
     if solo_validar:
         print(f"✓ storyboard válido: {len(p['escenas'])} escenas, {len(p['fotos'])} fotos, {p['D']}s")
         return proy / "storyboard.json"
     asegurar_imagenes(proy, sb.get("imagenes") or {})
+    asegurar_desenfoques(proy, p)
     asegurar_clips(proy, sb, p)
     dst = proy / "assets" / "_motor"
     if dst.exists():

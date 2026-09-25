@@ -27,6 +27,16 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
 5. Estructura: gancho de contraste (≤2 frases, la primera palabra ya dice algo) → qué pasó / datos
    → por qué funciona → **la parte honesta** (riesgo, sesgo de superviviente) → "y a ti qué" →
    CTA con UNA sola dicotomía para comentarios. Frases cortas: cada frase es un ancla.
+   Técnicas de retención de Shorts (por qué: la curva del canal cae entre 3 s y 20 s):
+   - **Gancho en 1 s con la cifra de payoff**: la primera frase ya dice el resultado raro
+     ("died with $7.2 million") — no se guarda el dato para el final. Nada de "hoy vamos a…".
+   - **Open loop**: la primera o segunda frase abre una pregunta que se cierra tarde ("how?",
+     "nobody knew"). El espectador se queda por la respuesta.
+   - **Re-gancho cada ~8-10 s**: una frase de giro ("But here's the part nobody tells you",
+     "That's not the crazy part") o una cifra nueva. El validador avisa si pasan >12 s sin golpe.
+   - **Final en bucle**: la última frase del CTA enlaza con la primera, para que la repetición
+     suene continua (una vista repetida sube el % visto por encima de 100 %).
+   - Ritmo de voz 150-175 palabras/min; nada de frases de relleno ("so basically", "you see").
 6. **Cada cifra con fuente** (URL en `cifras`). Si no puedes verificar un número, no lo uses. Nada
    de consejo financiero personalizado; las curvas son ILUSTRATIVAS y se dice.
 

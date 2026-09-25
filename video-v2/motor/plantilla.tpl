@@ -10,7 +10,7 @@
       @font-face { font-family: "InterX"; src: url("assets/_motor/fonts/inter-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
       @font-face { font-family: "InterX"; src: url("assets/_motor/fonts/inter-latin-800-normal.woff2") format("woff2"); font-weight: 800; }
       @font-face { font-family: "InterX"; src: url("assets/_motor/fonts/inter-latin-900-normal.woff2") format("woff2"); font-weight: 900; }
-      :root { --bg: #0a1a14; --bg2: #0e241b; --ink: #f4f6f3; --gold: #d8b25a; --green: #1f9e6e; --mute: #8da298; --red: #e0533d; }
+      :root { --bg: #0a1a14; --bg2: #0e241b; --ink: #f4f6f3; --gold: #d8b25a; --green: #1f9e6e; --mute: #8da298; --red: #e0533d; --red-txt: #ff6450; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
       #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: "InterX", sans-serif; color: var(--ink); background: var(--bg); }
@@ -22,7 +22,10 @@
       .ph img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
       .ph video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
       .ph .shade { position: absolute; inset: 0;
-        background: linear-gradient(180deg, rgba(10,26,20,0.55) 0%, rgba(10,26,20,0.05) 30%, rgba(10,26,20,0.15) 55%, rgba(10,26,20,0.92) 100%); }
+        background: linear-gradient(180deg, rgba(10,26,20,0.6) 0%, rgba(10,26,20,0.32) 28%, rgba(10,26,20,0.38) 55%, rgba(10,26,20,0.93) 100%); }
+      /* texto grande SIEMPRE legible sobre imagen o vídeo (puerta de contraste WCAG en producir.py) */
+      .huge, .big, .mid, .row .tx, .yr, .money, .boton { text-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 0 42px rgba(0,0,0,0.75); }
+      #cam { position: absolute; inset: 0; transform-origin: 50% 45%; }
       #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 42%, rgba(0,0,0,0.7) 100%); }
       #grain { position: absolute; left: -200px; top: -200px; width: 1480px; height: 2320px; opacity: 0.13; mix-blend-mode: overlay;
                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
@@ -42,7 +45,7 @@
       .big { font-family: "Anton", sans-serif; font-size: 150px; line-height: 0.98; text-transform: uppercase; text-align: center; }
       .mid { font-family: "Anton", sans-serif; font-size: 104px; line-height: 1.0; text-transform: uppercase; text-align: center; }
       .sub { font-weight: 800; font-size: 36px; letter-spacing: 0.18em; color: var(--mute); text-align: center; margin-top: 26px; text-transform: uppercase; }
-      .gold { color: var(--gold); } .green { color: var(--green); } .red { color: var(--red); } .mute { color: var(--mute); } .ink { color: var(--ink); }
+      .gold { color: var(--gold); } .green { color: var(--green); } .red { color: var(--red-txt); } .mute { color: var(--mute); } .ink { color: var(--ink); }
       .shadow { text-shadow: 0 8px 0 rgba(0,0,0,0.45), 0 0 50px rgba(0,0,0,0.6); }
       .linea { position: relative; margin: 14px 0; }
       .strike { position: absolute; left: -20px; right: -20px; top: 50%; height: 16px; margin-top: -8px; background: var(--red); transform-origin: 0 50%; border-radius: 8px; }
@@ -64,6 +67,8 @@
       .cert { position: absolute; left: 150px; top: 330px; width: 780px; height: 520px; border-radius: 10px; overflow: hidden;
               box-shadow: 0 40px 90px rgba(0,0,0,0.6); border: 4px solid rgba(216,178,90,0.7); }
       .cert img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* "$" decorativo vía CSS: no es texto a leer (el auditor WCAG lo medía contra el verde, no contra el oro) */
+      .coin::after { content: "$"; }
       .coin { position: absolute; left: 510px; top: 560px; width: 64px; height: 64px; border-radius: 50%;
               background: radial-gradient(circle at 35% 30%, #f3dc9a, #d8b25a 55%, #9c7a2e); color: #6b5217; font-family: "Anton", sans-serif; font-size: 40px;
               display: flex; align-items: center; justify-content: center; opacity: 0; }
@@ -97,7 +102,7 @@
       .yr { font-family: "Anton", sans-serif; font-size: 250px; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
       .track { position: absolute; left: 120px; right: 120px; top: 1010px; height: 8px; background: rgba(141,162,152,0.35); border-radius: 4px; }
       .track .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 840px; background: var(--gold); border-radius: 4px; transform-origin: 0 50%; }
-      .hito { position: absolute; top: 760px; width: 100%; text-align: center; font-weight: 900; font-size: 50px; letter-spacing: 0.1em; color: var(--red); opacity: 0; text-transform: uppercase; }
+      .hito { position: absolute; top: 760px; width: 100%; text-align: center; font-weight: 900; font-size: 50px; letter-spacing: 0.1em; color: var(--red-txt); opacity: 0; text-transform: uppercase; }
 
       /* titulo: icono y cheque */
       .gear { width: 230px; height: 230px; margin-bottom: 30px; }
@@ -127,9 +132,11 @@
 __AUDIO__
 
       <div id="groundclip" class="clip" data-start="0" data-duration="__END__" data-track-index="0"><div id="ground"><div id="glow"></div></div></div>
+      <div id="cam">
 __FOTOS__
 
 __ESCENAS__
+      </div>
 
       <div id="flashclip" class="clip" data-start="0" data-duration="__END__" data-track-index="60"><div id="flash"></div></div>
       <div id="captions" class="clip" data-start="0" data-duration="__END__" data-track-index="61"><div id="caps"></div></div>

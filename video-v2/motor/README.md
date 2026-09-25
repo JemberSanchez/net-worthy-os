@@ -36,7 +36,8 @@ el build con el motivo** (qué frase, qué palabra): esa es la puerta para story
 | `subtitulos` | `[frase_desde, frase_hasta]` — normalmente sin el gancho ni el CTA (llevan su texto) |
 | `calientes` | palabras que se resaltan en dorado en el subtítulo |
 | `musica` | `{oscuro: [frase, frase]}` — tramo en que la música cae (p. ej. "the part nobody says") |
-| `golpes` | anclas extra de impacto (los de `revelacion` y `contador3d` ya son automáticos) |
+| `golpes` | anclas extra de impacto (los de `revelacion` y `contador3d` ya son automáticos). Úsalos como **re-ganchos** en las frases de giro: cada golpe trae riser 1 s antes, impacto y punch-in de cámara. El validador avisa si pasan >12 s sin ninguno |
+| `fondos_auto` | `true` por defecto: las escenas de texto sin `fondo` reciben una imagen del proyecto desenfocada al 30 % (nunca texto sobre verde vacío). `false` lo apaga; `"fondo": false` en una escena, solo en esa |
 | `cola_s` | segundos tras la última palabra (tarjeta final). Por defecto 3.0 |
 
 Texto: `*así*` sale en dorado. Cada escena dura desde su `en` hasta el `en` de la siguiente.
@@ -62,4 +63,11 @@ Referencia completa y verificada: `video-v2/read-janitor/storyboard.json` (el #7
 ## Puertas (en este orden, cada una barata antes que la siguiente)
 1. `construir.py --validar` — esquema, anclas, imágenes declaradas, fuentes de cifras, aviso.
 2. `hyperframes lint` — 0 errores.
-3. Render → `loudnorm` → `tools/medir_loudness.py` (-14 ±1 LUFS) → `tools/medir_ritmo.py --max 2.5`.
+3. **Contraste WCAG AA** (`hyperframes check`, un instante por escena en pasadas de 5): ningún texto
+   ilegible. Solo contraste: su auditoría de maquetación da falsos positivos con capas decorativas.
+4. Render → `loudnorm` → `tools/medir_loudness.py` (-14 ±1 LUFS) → `tools/medir_ritmo.py --max 2.5`.
+
+Lenguaje de edición automático (sale del plan, nadie lo escribe): punch-in de cámara (zoom-cut)
+en golpes y palabras `calientes` con 1,8 s de separación mínima, riser→impacto en cada golpe,
+franja oscura central sobre imagen/vídeo y sombra en todo texto grande. Avisos de retención al
+validar: gancho sin imagen/clip, gancho sin texto antes de 0,8 s, >12 s sin re-gancho.

@@ -24,7 +24,7 @@
   const money = (p) => (v) => p + Math.round(v).toLocaleString("en-US");
   const burst = (host, at, n = 24) => {
     for (let i = 0; i < n; i++) {
-      const c = document.createElement("div"); c.className = "coin"; c.id = host.id + "-bc" + i; c.textContent = "$"; host.appendChild(c);
+      const c = document.createElement("div"); c.className = "coin"; c.id = host.id + "-bc" + i; host.appendChild(c);
       const a = rnd() * Math.PI * 2, d = 380 + rnd() * 480;
       tl.fromTo(c, { x: 0, y: 0, opacity: 1, scale: 0.4, rotation: 0 },
         { x: Math.cos(a) * d, y: Math.sin(a) * d * 0.9 + 160, scale: 0.8 + rnd(), rotation: (rnd() - 0.5) * 720, opacity: 0, duration: 0.9 + rnd() * 0.4, ease: "power3.out" }, at + rnd() * 0.05);
@@ -125,7 +125,7 @@
         if (f.contador) inn(`#${id}-cnt`, f.en, { y: 40, opacity: 0 }, 0.25);
         const host = $(`${id}-coins`), N = 12, c0 = f.en + 0.1, c1 = f.hasta;
         for (let i = 0; i < N; i++) {
-          const c = document.createElement("div"); c.className = "coin"; c.id = `${id}-dc${i}`; c.textContent = "$"; host.appendChild(c);
+          const c = document.createElement("div"); c.className = "coin"; c.id = `${id}-dc${i}`; host.appendChild(c);
           const t = c0 + (c1 - c0) * i / N;
           tl.fromTo(c, { x: (rnd() - 0.5) * 520, y: (rnd() - 0.5) * 300, opacity: 0, scale: 0.5 }, { x: 0, y: 420, opacity: 1, scale: 1, duration: 0.42, ease: "power2.in" }, t);
           tl.to(c, { opacity: 0, scale: 0.3, duration: 0.08 }, t + 0.42);
@@ -256,6 +256,22 @@
       tl.to(s, { color: "#f4f6f3", scale: 1, duration: 0.1 }, x.end);
     });
   });
+
+  // ---------- punch-in de cámara (zoom-cut): el recurso nº 1 de edición en Shorts ----------
+  // Prioridad a los golpes; después, palabras calientes. Separación mínima 1,8 s (más seguido marea)
+  // y nunca en el primer 0,8 s (el gancho ya entra con su propia animación).
+  const HUECO = 1.8, hechos = [];
+  const libre = (t) => t >= 0.8 && t <= P.fin_voz && hechos.every((h) => Math.abs(h - t) >= HUECO);
+  const punch = (t, z) => {
+    if (!libre(t)) return;
+    // fromTo con valores explícitos: el render salta a cualquier instante (seek) y un `to` fuera de
+    // orden sobre la misma propiedad cogería un valor inicial equivocado
+    tl.fromTo("#cam", { scale: 1 }, { scale: z, duration: 0.07, ease: "power3.out", immediateRender: false }, t - 0.02);
+    tl.fromTo("#cam", { scale: z }, { scale: 1, duration: 0.65, ease: "power2.inOut", immediateRender: false }, t + 0.08);
+    hechos.push(t);
+  };
+  P.golpes.forEach((t) => punch(t, 1.08));
+  W.filter((x) => HOT.has(nrm(x.text))).forEach((x) => punch(x.start, 1.05));
 
   window.__timelines["main"] = tl;
 })();

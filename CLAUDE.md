@@ -83,6 +83,9 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   descripción). En el storyboard: `clips` + `"clip"` en una `foto`/`fondo`; `construir.py` lo baja
   y lo trata (1080x1920, duotono por LUT 1D = la misma rampa que las fotos, duración exacta).
   Pexels necesita `PEXELS_API_KEY` y el dominio `videos.pexels.com` permitido.
+- **Lenguaje profesional (25-sep):** fondos automáticos desenfocados en escenas de texto, punch-in
+  en golpes/palabras calientes, riser→impacto, puerta de contraste WCAG AA por escena en
+  `producir.py`, avisos de gancho/re-gancho al validar. Detalle en `video-v2/motor/README.md`.
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie

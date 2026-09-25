@@ -159,3 +159,35 @@ def generar(ruta: Path, dur: float, golpes: list[float], oscuro: tuple[float, fl
             m.tic(x, 0.05)
             x += BEAT
     m.guardar(ruta)
+
+
+def riser(ruta: Path, dur: float = 1.0, semilla: int = 3) -> None:
+    """Riser de tensión (ruido que se abre + barrido ascendente) que termina JUSTO en el golpe.
+    Es la gramática sonora de un Short profesional: subida -> impacto. Generado aquí (no un sample
+    de terceros) para no depender de licencias; construir.py lo coloca 1 s antes de cada golpe."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    rng = np.random.default_rng(semilla)
+    env = (t / dur) ** 2.4
+    env[-int(0.012 * SR):] *= np.linspace(1, 0, int(0.012 * SR))          # sin clic al cortar
+    corte = 300 * (9000 / 300) ** (t / dur)                              # el ruido "se abre"
+    a = 1 - np.exp(-2 * np.pi * corte / SR)
+    canales = []
+    for c in range(2):                                                   # ruido distinto por canal = ancho
+        ruido, y, out = rng.standard_normal(n), 0.0, np.empty(n)
+        for i in range(n):
+            y += a[i] * (ruido[i] - y)
+            out[i] = y
+        canales.append(out)
+    f = 180 * (1400 / 180) ** (t / dur)                                  # barrido exponencial
+    tono = 0.35 * np.sin(2 * np.pi * np.cumsum(f) / SR)
+    st = np.stack([canales[0] + tono, canales[1] + tono], axis=1) * env[:, None]
+    st = (st / np.abs(st).max() * 10 ** (-6 / 20) * 32767).astype(np.int16)
+    with wave.open(str(ruta), "wb") as w:
+        w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes(st.tobytes())
+
+
+if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "riser":
+    riser(Path(__file__).resolve().parent / "assets" / "riser.wav")
+    print("✓ assets/riser.wav")

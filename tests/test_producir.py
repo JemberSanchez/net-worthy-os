@@ -18,6 +18,21 @@ SB = {"publicacion": {"descripcion": "The janitor.", "hashtags": ["#shorts"]},
       "cifras": [{"dato": "$8M", "fuente": "https://a.org"}, {"dato": "95", "fuente": "https://a.org"}]}
 
 
+class ContrasteTest(unittest.TestCase):
+    def test_un_instante_por_escena(self):
+        h = ('<section id="s0" class="clip scene" data-start="0.000" data-duration="2.000">'
+             '<section id="s1" class="clip scene" data-start="2.000" data-duration="0.100">')
+        self.assertEqual(producir.instantes_escena(h), [1.2, 2.0])        # escena corta: nunca fuera de su ventana
+
+    def test_solo_cuenta_lo_que_no_llega_a_aa(self):
+        inf = [{"contrast": {"findings": [
+            {"text": "Here's", "ratio": 2.67, "requiredRatio": 3, "time": 31.3},
+            {"text": "ok", "ratio": 4.8, "requiredRatio": 4.5, "time": 2}]}}, {"contrast": None}]
+        f = producir.fallos_contraste(inf)
+        self.assertEqual(len(f), 1)
+        self.assertIn('"Here\'s" 2.67:1', f[0])
+
+
 class DescripcionTest(unittest.TestCase):
     def test_lleva_aviso_fuentes_creditos_y_hashtags(self):
         with tempfile.TemporaryDirectory() as d:
