@@ -98,7 +98,12 @@ publicado revele una limitación concreta. Excepción: instrumentación de captu
 Hito actual: **10 videos instrumentados**. Progreso = filas del dataset, no commits ni módulos.
 No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
-## Estado actual (2026-07-24, verificado contra la DB) — LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
+## Estado actual (2026-09-25) — BASE REINICIADA DESDE 0, LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
+**Base nueva en el repo privado (`estado-bajar`)**: solo el ADN de #7 y #8 (v2-hyperframes), sin
+publicar aún. Hito: **10 vídeos v2**. Todo lo que sigue en esta sección es la base v1 ANTERIOR
+(PC viejo, no migrada: v1 y v2 no son comparables) — sirve como contexto, no como dato vigente.
+
+### Historial v1 (2026-07-24, base anterior — ya no existe en la base actual)
 **6 de 10 instrumentados, 5 medidos.** 117 tests verdes. `production_cost` = **0 filas**.
 **Score v2 (28-jul, `omega/creative/scoring.py`): `0.70·min(1, retención/0.50) + 0.30·min(1, alcance/750)`.**
 Se calcula desde `production_analytics` con `python -m omega.cli rescore`, NO se teclea a mano, y

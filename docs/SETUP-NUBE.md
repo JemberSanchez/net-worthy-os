@@ -69,10 +69,8 @@ Get-Content data\youtube_token.json -Raw | Set-Clipboard
 ```
 Pega el portapapeles en el entorno de la nube como variable **`YOUTUBE_TOKEN_JSON`**.
 
-En el PC que tiene la base de datos (una sola vez, con `ESTADO_REPO` en su `.env`):
-```powershell
-python -m omega.cli estado-subir
-```
+~~Subir la base del PC anterior~~ — ya no hace falta: el 25-sep se decidió empezar desde 0 y la
+base nueva ya está en el repo privado (ADN de #7 y #8).
 
 Meta (opcional, cuando quieras publicar también en Facebook/Instagram): `.env` con
 `META_APP_ID`/`META_APP_SECRET` → `python -m omega.cli meta-auth` → contenido de

@@ -1,5 +1,20 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-25 · BASE REINICIADA DESDE 0 (decisión del usuario) + MOTOR PROFESIONAL
+>
+> - **Base nueva** en el repo privado `net-worthy-data` (`omega.sql`): solo el ADN de #7 (Ronald
+>   Read) y #8 (Grace Groner), ambos `v2-hyperframes`, registrados ANTES de publicar. La base v1
+>   (PC anterior: #1-#6, corpus de julio, predicciones) no se migró: v1 y v2 no son comparables y
+>   el corpus estaba congelado. Las métricas de YouTube de los v1 siguen en la plataforma:
+>   `vincular <ref> <id>` + `analytics-sync` las traen si alguna vez hacen falta.
+> - **Hito:** 10 vídeos v2 instrumentados. Progreso = filas, no commits.
+> - Motor: b-roll (Commons/Pexels), fondos automáticos, punch-in, riser, re-ganchos, puerta de
+>   contraste WCAG que FALLA si no mide, analytics automático (curva de 100 puntos, búsquedas).
+> - **Siguiente:** sesión nueva → "publica #7 y #8 en YouTube" (docs/SETUP-NUBE.md, sección E) →
+>   rutina diaria `/producir`. Pexels pendiente de clave (sección D). Música: el punto más débil.
+> - Trampa conocida: la auditoría `check` de HyperFrames con 10 s de carga devolvía 0 textos "ok"
+>   en vídeos pesados; producir.py usa 60 s y exige que haya medido.
+
 > ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-23 (tarde) · AUTOMATIZACIÓN FASE 1: MOTOR v2 POR STORYBOARD
 >
 > `video-v2/motor/` (léase su README): un Short = `storyboard.json` → `voz.py` → `construir.py`.
