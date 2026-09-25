@@ -78,6 +78,11 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   de Commons limita por IP y en la nube la IP es compartida (429, `Retry-After` hasta 600 s): usar
   `lote` (UNA consulta para N títulos), nunca bucles de `bajar`. Solo tamaños de miniatura estándar.
 - `python tools/duotono.py <in> <out> [--recorte 0.04]` — duotono de marca horneado (no filtro CSS).
+- `python tools/broll.py buscar commons|pexels "<q>"` — b-roll de VÍDEO con la misma lista cerrada
+  de licencias (+ Pexels License) y créditos en `assets/clips/creditos.json` ("Footage:" en la
+  descripción). En el storyboard: `clips` + `"clip"` en una `foto`/`fondo`; `construir.py` lo baja
+  y lo trata (1080x1920, duotono por LUT 1D = la misma rampa que las fotos, duración exacta).
+  Pexels necesita `PEXELS_API_KEY` y el dominio `videos.pexels.com` permitido.
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie

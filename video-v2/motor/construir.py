@@ -15,7 +15,8 @@ Qué hace, en orden (y por qué en este orden):
   2. Resuelve anclas -> segundos y calcula las ventanas de escena (la escena k dura hasta que
      arranca la k+1; la última, hasta el final de la voz + `cola_s`).
   3. Imágenes: baja de Commons (UNA consulta, licencia filtrada, créditos) y hornea el duotono
-     de las que falten.
+     de las que falten. Clips de vídeo (b-roll, `clips`): igual, con tools/broll.py -> MP4
+     1080x1920 con el MISMO duotono (LUT 1D) y la duración exacta de su escena.
   4. Genera markup + PLAN (JSON) + música que sigue la forma del guion + sfx en los cortes.
   5. Ducking con carve.mjs (skill hyperframes-audio) DESPUÉS de escribir el HTML.
 
@@ -81,6 +82,12 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     if not esc:
         errores.append("storyboard sin `escenas`")
     imgs = set((sb.get("imagenes") or {}).keys())
+    clips = sb.get("clips") or {}
+    for nombre, c in clips.items():
+        if not (c.get("commons") or c.get("pexels")):
+            errores.append(f"clip {nombre!r}: declara `commons` (File:...webm) o `pexels` (id)")
+        if float(c.get("desde", 0)) < 0:
+            errores.append(f"clip {nombre!r}: `desde` negativo")
     n3d = 0
     for k, s in enumerate(esc):
         tipo = s.get("tipo")
@@ -93,6 +100,11 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
         for ref in _imagenes_usadas(s):
             if ref not in imgs:
                 errores.append(f"escena {k} ({tipo}): imagen {ref!r} no declarada en `imagenes`")
+        for ref in _clips_usados(s):
+            if ref not in clips:
+                errores.append(f"escena {k} ({tipo}): clip {ref!r} no declarado en `clips`")
+        if tipo == "foto" and bool(s.get("img")) == bool(s.get("clip")):
+            errores.append(f"escena {k} (foto): lleva `img` O `clip` (uno de los dos)")
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
     try:
@@ -173,6 +185,13 @@ def _imagenes_usadas(s: dict) -> list[str]:
         refs.append(s["cae"]["img"])
     if (s.get("pregunta") or {}).get("fondo"):
         refs.append(s["pregunta"]["fondo"])
+    return [r for r in refs if r]
+
+
+def _clips_usados(s: dict) -> list[str]:
+    refs = [s.get("clip")] if s.get("tipo") == "foto" else []
+    if isinstance(s.get("fondo"), dict):
+        refs.append(s["fondo"].get("clip"))
     return [r for r in refs if r]
 
 
@@ -372,15 +391,26 @@ def plan(sb: dict, words: list[dict]) -> dict:
         s["texto_visible"] = sorted(palabras_de(s))
     # fotos: escena `foto` a opacidad plena; `fondo` al 40 %; la pregunta del CTA al 55 %
     fotos, mi = [], 0
+    clips = sb.get("clips") or {}
+
+    def capa(id_, src: dict, t0, t1, mov, opacidad):
+        f = {"id": id_, "t0": t0, "t1": t1, "mov": mov, "opacidad": opacidad}
+        if src.get("clip"):                      # b-roll: archivo propio de la duración exacta
+            c = src["clip"]
+            f.update(video=True, clip=c, desde=float(clips[c].get("desde", 0)),
+                     src=f"{c}-{float(clips[c].get('desde', 0)):g}-{round((t1 - t0) * 100)}.mp4")
+        else:
+            f["img"] = src["img"]
+        return f
+
     for k, s in enumerate(esc):
         if s["tipo"] == "foto":
-            fotos.append({"id": f"ph{k}", "img": s["img"], "t0": s["t0"], "t1": min(END, s["t1"] + 0.3),
-                          "mov": s.get("mov", MOVS[mi % len(MOVS)]), "opacidad": 1})
+            fotos.append(capa(f"ph{k}", s, s["t0"], min(END, s["t1"] + 0.3), s.get("mov", MOVS[mi % len(MOVS)]), 1))
             mi += 1
         if s.get("fondo"):
             f = s["fondo"] if isinstance(s["fondo"], dict) else {"img": s["fondo"]}
-            fotos.append({"id": f"ph{k}b", "img": f["img"], "t0": s["t0"], "t1": s["t1"] + 0.04,
-                          "mov": f.get("mov", MOVS[mi % len(MOVS)]), "opacidad": f.get("opacidad", 0.4)})
+            fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
+                              f.get("opacidad", 0.4)))
             mi += 1
         if s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"):
             fotos.append({"id": f"ph{k}q", "img": s["pregunta"]["fondo"], "t0": s["pregunta"]["en"] - 0.3, "t1": END,
@@ -408,6 +438,33 @@ def plan(sb: dict, words: list[dict]) -> dict:
     }
 
 
+def _capa_html(f: dict, j: int) -> str:
+    tiempo = f'data-start="{f["t0"]:.3f}" data-duration="{f["t1"] - f["t0"]:.3f}"'
+    if not f.get("video"):
+        return (f'      <div id="{f["id"]}" class="clip ph" {tiempo} data-track-index="{2 + j}">'
+                f'<img id="{f["id"]}-img" src="assets/t/{f["img"]}.jpg" alt="" /><div class="shade"></div></div>')
+    # Vídeo: el tiempo va en el <video> y NO en su contenedor (lint `video_nested_in_timed_element`:
+    # con los dos, el extractor saca fotogramas desplazados). El contenedor, sin tiempo, es el que
+    # se anima (zoom lento); la sombra es su propio clip con la misma ventana.
+    return (f'      <div id="{f["id"]}" class="ph phv"><video id="{f["id"]}-img" class="clip" src="assets/v/{f["src"]}" '
+            f'{tiempo} data-track-index="{2 + j}" muted playsinline></video></div>\n'
+            f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{60 + j}"><div class="shade"></div></div>')
+
+
+def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
+    """Baja (tools/broll.py, licencia filtrada + créditos) y trata los clips de vídeo que falten."""
+    usos = [f for f in p["fotos"] if f.get("video") and not (proy / "assets" / "v" / f["src"]).exists()]
+    if not usos:
+        return
+    import broll
+    decl = sb.get("clips") or {}
+    crudos = broll.bajar({f["clip"]: decl[f["clip"]] for f in usos}, proy / "assets" / "clips")
+    for f in usos:
+        info = broll.preparar(crudos[f["clip"]], proy / "assets" / "v" / f["src"], f["desde"], f["t1"] - f["t0"],
+                              float(decl[f["clip"]].get("contraste", 1.15)))
+        print(f"✓ clip {f['clip']} -> {f['src']} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})")
+
+
 def _html(p: dict) -> str:
     tpl = (MOTOR / "plantilla.tpl").read_text(encoding="utf-8")
     esc_html = []
@@ -415,10 +472,7 @@ def _html(p: dict) -> str:
         a, b = s["t0"], s["t1"]
         esc_html.append(f'      <section id="s{k}" class="clip scene" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
                         f'data-track-index="{30 + k}">{MARKUP[s["tipo"]](s, f"s{k}")}</section>')
-    fotos = "\n".join(
-        f'      <div id="{f["id"]}" class="clip ph" data-start="{f["t0"]:.3f}" data-duration="{f["t1"] - f["t0"]:.3f}" '
-        f'data-track-index="{2 + j}"><img id="{f["id"]}-img" src="assets/t/{f["img"]}.jpg" alt="" /><div class="shade"></div></div>'
-        for j, f in enumerate(p["fotos"]))
+    fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
     audio = ['      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
              '      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="0.5"></audio>']
     sfx, ult = [], -9.0
@@ -461,6 +515,7 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
         print(f"✓ storyboard válido: {len(p['escenas'])} escenas, {len(p['fotos'])} fotos, {p['D']}s")
         return proy / "storyboard.json"
     asegurar_imagenes(proy, sb.get("imagenes") or {})
+    asegurar_clips(proy, sb, p)
     dst = proy / "assets" / "_motor"
     if dst.exists():
         shutil.rmtree(dst)
@@ -494,7 +549,7 @@ def _andamiaje(proy: Path) -> None:
             indent=2) + "\n")
     gi = proy / ".gitignore"
     if not gi.exists():
-        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\n")
+        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\n")
 
 
 def _carve(out: Path) -> None:

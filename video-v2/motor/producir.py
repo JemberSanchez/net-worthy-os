@@ -40,8 +40,8 @@ def _entorno() -> dict:
 
 
 def descripcion(sb: dict, proy: Path) -> str:
-    """Descripción para YouTube: la del storyboard + aviso YMYL + fuentes + créditos de imagen
-    (CC BY los EXIGE; PD se cita igual). Función pura salvo la lectura de creditos.json."""
+    """Descripción para YouTube: la del storyboard + aviso YMYL + fuentes + créditos de imagen y
+    de metraje (CC BY los EXIGE; PD y Pexels se citan igual). Función pura salvo la lectura de creditos.json."""
     pub = sb.get("publicacion") or {}
     partes = [pub.get("descripcion", "").strip()]
     if (sb.get("aviso") or {}).get("lineas"):
@@ -54,6 +54,14 @@ def descripcion(sb: dict, proy: Path) -> str:
         sys.path.insert(0, str(RAIZ / "tools"))
         import imagenes_libres
         partes.append(imagenes_libres.texto_creditos(json.loads(cred.read_text(encoding="utf-8"))))
+    cred_v = proy / "assets" / "clips" / "creditos.json"
+    usados = {f"{k}.src" for k in sb.get("clips") or {}}
+    if cred_v.exists() and usados:                   # solo los clips que el storyboard usa hoy
+        sys.path.insert(0, str(RAIZ / "tools"))
+        import broll
+        fichas = [f for f in json.loads(cred_v.read_text(encoding="utf-8")) if f["archivo"] in usados]
+        if fichas:
+            partes.append(broll.texto_creditos(fichas))
     hashtags = " ".join(pub.get("hashtags", []))
     if hashtags:
         partes.append(hashtags)

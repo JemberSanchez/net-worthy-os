@@ -32,6 +32,7 @@ el build con el motivo** (qué frase, qué palabra): esa es la puerta para story
 | `cifras` | `[{dato, fuente}]` — **cada número con URL** (YMYL); sin fuente no construye |
 | `aviso` | `{lineas: [..], ventanas: [[ancla, ancla]], final: true}` — obligatorio si hay cifras |
 | `imagenes` | `{id: {commons: "File:…", recorte: 0.04}}` — solo PD/CC0/CC BY (lo filtra `imagenes_libres`) |
+| `clips` | `{id: {commons: "File:….webm" \| pexels: <id>, desde: s, [contraste]}}` — b-roll de vídeo (`tools/broll.py`): mismas licencias + Pexels License; se trata a 1080x1920 con el MISMO duotono (LUT 1D), sin audio y con la duración exacta de su escena (`assets/v/`, regenerable) |
 | `subtitulos` | `[frase_desde, frase_hasta]` — normalmente sin el gancho ni el CTA (llevan su texto) |
 | `calientes` | palabras que se resaltan en dorado en el subtítulo |
 | `musica` | `{oscuro: [frase, frase]}` — tramo en que la música cae (p. ej. "the part nobody says") |
@@ -45,7 +46,7 @@ Campos opcionales entre corchetes. `fondo` (cualquier escena) = foto de fondo al
 
 | Tipo | Campos | Para qué |
 |---|---|---|
-| `foto` | `img, [mov], [kicker{texto,en}], [titulo{texto,en}], [sub{texto,en}]` | imagen real a sangre con Ken Burns. `mov`: push/pull/izq/der/sube |
+| `foto` | `img` o `clip`, `[mov], [kicker{texto,en}], [titulo{texto,en}], [sub{texto,en}]` | imagen real a sangre con Ken Burns (`mov`: push/pull/izq/der/sube), o metraje real (`clip`) con un empuje suave. `fondo` también admite `{clip, opacidad}` |
 | `revelacion` | `linea1{texto}, linea2{texto,en}, [golpe]` | contraste de 2 líneas + estallido de monedas en `golpe` |
 | `lista` | `icono: x\|check, items[{texto,en,[marca],[color]}]` | ✗ que caen (negaciones) o ✓ (receta) |
 | `titulo` | `lineas[{texto,en,[estilo],[color],[tam]}], [kicker{texto,en,color}], [contador{linea,valor,en}], [tachar{linea,en}], [icono{tipo:"engranaje",en}], [cheque{monto,en,tachar}], [alarma], [posicion]` | frases fuertes. `estilo`: huge/big/mid/boton; `{n}` en una línea = contador |

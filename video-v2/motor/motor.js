@@ -50,10 +50,13 @@
     sube: [{ scale: 1.2, x: -30, y: 70 }, { scale: 1.06, x: 20, y: -50 }],
     final: [{ scale: 1.12, x: -80, y: 60 }, { scale: 1.5, x: 80, y: -160 }],
   };
+  // b-roll de vídeo: el metraje ya se mueve; solo un empuje suave, sobre el CONTENEDOR (no el <video>)
+  const KBV = { pull: [{ scale: 1.12 }, { scale: 1.02 }] };
   P.fotos.forEach((f) => {
-    const [a, b] = KB[f.mov] || KB.push;
-    tl.fromTo("#" + f.id + "-img", { ...a, opacity: f.opacidad }, { ...b, opacity: f.opacidad, duration: f.t1 - f.t0, ease: "none" }, f.t0);
-    if (f.aparece) tl.fromTo("#" + f.id + "-img", { opacity: 0 }, { opacity: f.opacidad, duration: 0.5, immediateRender: false }, f.aparece);
+    const sel = "#" + f.id + (f.video ? "" : "-img");
+    const [a, b] = f.video ? KBV[f.mov] || [{ scale: 1.02 }, { scale: 1.12 }] : KB[f.mov] || KB.push;
+    tl.fromTo(sel, { ...a, opacity: f.opacidad }, { ...b, opacity: f.opacidad, duration: f.t1 - f.t0, ease: "none" }, f.t0);
+    if (f.aparece) tl.fromTo(sel, { opacity: 0 }, { opacity: f.opacidad, duration: 0.5, immediateRender: false }, f.aparece);
   });
 
   // ---------- catálogo de escenas ----------

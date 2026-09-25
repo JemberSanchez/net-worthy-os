@@ -44,7 +44,10 @@ y pregúntame. Hazlo en este orden y al final dime qué hiciste y qué quedó pe
       suggestqueries.google.com
       graph.facebook.com
       rupload.facebook.com
-   c) Guarda.
+      videos.pexels.com
+   c) (Opcional, b-roll de Pexels además del de Commons) Variable PEXELS_API_KEY: créala gratis
+      en https://www.pexels.com/api/ con la cuenta del usuario y pega su valor en el entorno.
+   d) Guarda.
 
 4. Dime cuáles de los pasos 1-3 quedaron hechos y cuáles no, sin mostrar ningún valor secreto.
 ```

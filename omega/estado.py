@@ -129,9 +129,12 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
 # que las producciones viven a su lado: producciones/<proyecto>/ (storyboard, voz, words.json,
 # imágenes tratadas, créditos, ADN, qa.json). NO viajan: MP4 (se regeneran), originales de
 # imágenes, música generada ni los assets comunes del motor.
-EXCLUIR_PROD = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/img/")
+# Clips de vídeo: ni el crudo (assets/clips/*.src) ni el tratado (assets/v/) — pesan MB y se
+# regeneran desde `clips` del storyboard; los créditos sí viajan.
+EXCLUIR_PROD = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/img/",
+                "assets/clips/", "assets/v/")
 EXCLUIR_ARCH = ("music-bed.wav",)
-INCLUIR_SIEMPRE = ("assets/img/creditos.json", "renders/qa.json")
+INCLUIR_SIEMPRE = ("assets/img/creditos.json", "assets/clips/creditos.json", "renders/qa.json")
 
 
 def archivos_produccion(proy: Path) -> list[Path]:

@@ -29,16 +29,9 @@ CLARO = np.array([0xD8, 0xB2, 0x5A], dtype=np.float32)    # --gold de la marca
 LUZ = np.array([0xF4, 0xE6, 0xC0], dtype=np.float32)      # altas luces: papel envejecido, no blanco puro
 
 
-def duotono(img: Image.Image, recorte: float = 0.0, contraste: float = 1.15,
-            ancho: int | None = None) -> Image.Image:
-    """Función pura sobre PIL (testeable sin disco)."""
-    if recorte > 0:
-        dx, dy = int(img.width * recorte), int(img.height * recorte)
-        img = img.crop((dx, dy, img.width - dx, img.height - dy))
-    if ancho and img.width > ancho:
-        img = img.resize((ancho, round(img.height * ancho / img.width)), Image.LANCZOS)
-    g = ImageOps.autocontrast(img.convert("L"), cutoff=1)
-    y = np.asarray(g, dtype=np.float32) / 255.0
+def rampa(y: np.ndarray, contraste: float = 1.15) -> np.ndarray:
+    """Luminancia [0,1] -> RGB de marca [0,255]. La MISMA curva para fotos (duotono) y vídeo
+    (lut_1d): si cambia aquí, cambia en los dos y el b-roll sigue casando con las fotos."""
     # curva S suave centrada en 0.5 (contraste > 1 separa sombras y luces)
     y = np.clip(0.5 + (y - 0.5) * contraste, 0, 1)
     y = y * y * (3 - 2 * y) * 0.35 + y * 0.65
@@ -49,7 +42,34 @@ def duotono(img: Image.Image, recorte: float = 0.0, contraste: float = 1.15,
         m = (y >= t0) & (y <= t1)
         u = ((y[m] - t0) / (t1 - t0))[:, None]
         out[m] = c0 * (1 - u) + c1 * u
-    return Image.fromarray(out.clip(0, 255).astype(np.uint8), "RGB")
+    return out
+
+
+def duotono(img: Image.Image, recorte: float = 0.0, contraste: float = 1.15,
+            ancho: int | None = None) -> Image.Image:
+    """Función pura sobre PIL (testeable sin disco)."""
+    if recorte > 0:
+        dx, dy = int(img.width * recorte), int(img.height * recorte)
+        img = img.crop((dx, dy, img.width - dx, img.height - dy))
+    if ancho and img.width > ancho:
+        img = img.resize((ancho, round(img.height * ancho / img.width)), Image.LANCZOS)
+    g = ImageOps.autocontrast(img.convert("L"), cutoff=1)
+    y = np.asarray(g, dtype=np.float32) / 255.0
+    return Image.fromarray(rampa(y, contraste).clip(0, 255).astype(np.uint8), "RGB")
+
+
+def lut_1d(contraste: float = 1.15, bajo: float = 0.0, alto: float = 1.0, n: int = 256) -> str:
+    """El duotono como LUT 1D (.cube) para `ffmpeg -vf format=gray,format=rgb24,lut1d=...`.
+
+    Con la entrada en gris (R=G=B=Y) una LUT por canal ES el mapeo Y -> RGB de marca. `bajo`/`alto`
+    hacen de autocontraste (percentiles medidos en el clip), el equivalente de ImageOps.autocontrast
+    de las fotos: sin él, un clip lavado saldría todo verde medio."""
+    if not 0 <= bajo < alto <= 1:
+        raise ValueError(f"niveles inválidos: bajo={bajo} alto={alto}")
+    x = np.linspace(0, 1, n, dtype=np.float32)
+    rgb = rampa(np.clip((x - bajo) / (alto - bajo), 0, 1), contraste) / 255.0
+    filas = "\n".join(f"{r:.6f} {g:.6f} {b:.6f}" for r, g, b in rgb)
+    return f"LUT_1D_SIZE {n}\nDOMAIN_MIN 0 0 0\nDOMAIN_MAX 1 1 1\n{filas}\n"
 
 
 def main() -> None:

@@ -5,3 +5,5 @@ node_modules/
 assets/_motor/
 assets/music-bed.wav
 assets/img/*.jpg
+assets/clips/*.src
+assets/v/
