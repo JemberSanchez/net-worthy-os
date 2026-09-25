@@ -1,0 +1,24 @@
+[
+ {
+  "archivo": "typing.src",
+  "origen": "wikimedia",
+  "titulo": "File:Typewriter Optima M12 - typing.webm",
+  "autor": "Sounds of Changes",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Typewriter_Optima_M12_-_typing.webm",
+  "desde": 0.0
+ },
+ {
+  "archivo": "olivetti.src",
+  "origen": "wikimedia",
+  "titulo": "File:Olivetti Dora portable typewriter.webm",
+  "autor": "Erik Pålsson",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Olivetti_Dora_portable_typewriter.webm",
+  "desde": 0.0
+ }
+]

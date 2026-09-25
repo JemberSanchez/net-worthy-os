@@ -32,6 +32,10 @@
                "shares", "thousands", "reinvest", "uncomfortable", "sold", "strategy", "trade", "nobody", "engine", "alone"],
  "musica": {"oscuro": ["12", "16"]},
  "cola_s": 3.0,
+ "clips": {
+  "olivetti": {"commons": "File:Olivetti Dora portable typewriter.webm", "desde": 2.0},
+  "typing": {"commons": "File:Typewriter Optima M12 - typing.webm", "desde": 4.0}
+ },
  "imagenes": {
   "tw":      {"commons": "File:Vintage typewriter (Unsplash).jpg", "recorte": 0.0},
   "hands":   {"commons": "File:Hands typing on a vintage typewriter in a cozy workspace.jpg", "recorte": 0.0},
@@ -41,7 +45,7 @@
   "cert3":   {"commons": "File:Chicago, Burlington & Quincy Railroad Stock Certificate 1887.jpg", "recorte": 0.01}
  },
  "escenas": [
-  {"tipo": "foto", "en": "0", "img": "tw", "mov": "push",
+  {"tipo": "foto", "en": "0", "clip": "olivetti", "mov": "push",
    "titulo": {"texto": "A secretary.", "en": "0:secretary"}},
   {"tipo": "revelacion", "en": "1",
    "linea1": {"texto": "A secretary."}, "linea2": {"texto": "$7,200,000.", "en": "1:seven"}, "golpe": "1:dollars"},
@@ -54,7 +58,7 @@
               {"texto": "*$180*", "en": "5:hundred", "estilo": "huge"},
               {"texto": "{n} years untouched", "en": "5:seventy-five", "estilo": "mid"}],
    "contador": {"linea": 2, "valor": 75, "en": "5:seventy-five"}},
-  {"tipo": "foto", "en": "6", "img": "hands", "mov": "izq",
+  {"tipo": "foto", "en": "6", "clip": "typing", "mov": "izq",
    "kicker": {"texto": "43 years, same company", "en": "6:forty-three"}},
   {"tipo": "foto", "en": "7", "img": "rummage", "mov": "sube",
    "kicker": {"texto": "Rummage-sale clothes", "en": "7:rummage"}},

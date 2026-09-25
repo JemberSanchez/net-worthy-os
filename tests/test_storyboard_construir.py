@@ -103,5 +103,78 @@ class PlanTest(unittest.TestCase):
         self.assertEqual(c.txt("*3* <b>"), '<span class="gold">3</span> &lt;b&gt;')
 
 
+class BrollTest(unittest.TestCase):
+    """Clips de vídeo en `foto`/`fondo`: validación, plan y el HTML que exige el lint de HyperFrames."""
+
+    def _sb(self):
+        d = sb(clips={"parque": {"commons": "File:P.webm", "desde": 4}})
+        d["escenas"][0].pop("img")
+        d["escenas"][0]["clip"] = "parque"
+        d["escenas"][1]["fondo"] = {"clip": "parque", "opacidad": 0.3}
+        return d
+
+    def test_valida_clips(self):
+        self.assertEqual(c.validar(self._sb(), W), [])
+        d = self._sb(); d["escenas"][0]["clip"] = "nada"
+        self.assertTrue(any("clip 'nada' no declarado" in e for e in c.validar(d, W)))
+        d = self._sb(); d["escenas"][0]["img"] = "foto1"
+        self.assertTrue(any("`img` O `clip`" in e for e in c.validar(d, W)))
+        d = self._sb(); d["clips"]["parque"] = {"desde": 1}
+        self.assertTrue(any("declara `commons`" in e for e in c.validar(d, W)))
+
+    def test_plan_y_html(self):
+        p = c.plan(self._sb(), W)
+        v = [f for f in p["fotos"] if f.get("video")]
+        self.assertEqual(len(v), 2)
+        self.assertEqual(v[0]["desde"], 4.0)
+        dur = round((v[0]["t1"] - v[0]["t0"]) * 100)
+        self.assertEqual(v[0]["src"], f"parque-4-{dur}.mp4")             # archivo por duración exacta
+        self.assertNotEqual(v[0]["src"], v[1]["src"])
+        h = c._capa_html(v[0], 0)
+        # el <video> lleva el tiempo; su contenedor NO (lint video_nested_in_timed_element)
+        contenedor = h.split("<video")[0]
+        self.assertNotIn("data-start", contenedor)
+        self.assertIn('muted playsinline', h)
+        self.assertNotIn("crossorigin", h)
+        self.assertIn(f'id="{v[0]["id"]}-sh" class="clip ph"', h)       # sombra con su propia ventana
+
+    def test_lut_1d_es_la_rampa_de_marca(self):
+        import numpy as np
+        from duotono import lut_1d, rampa, OSCURO, LUZ
+        filas = lut_1d().splitlines()
+        self.assertEqual(filas[0], "LUT_1D_SIZE 256")
+        rgb = np.array([[float(x) for x in f.split()] for f in filas[3:]]) * 255
+        self.assertTrue(np.allclose(rgb[0], OSCURO, atol=0.01) and np.allclose(rgb[-1], LUZ, atol=0.01))
+        self.assertTrue(np.allclose(rgb[128], rampa(np.array([128 / 255], dtype=np.float32))[0], atol=0.01))
+        estirada = np.array([[float(x) for x in f.split()] for f in lut_1d(bajo=0.2, alto=0.8).splitlines()[3:]])
+        self.assertTrue(np.allclose(estirada[:51], estirada[0]))           # por debajo de `bajo` = negro de marca
+        with self.assertRaises(ValueError):
+            lut_1d(bajo=0.5, alto=0.5)
+
+    def test_eleccion_de_archivo(self):
+        import broll
+        self.assertEqual(broll.mejor_derivado([{"transcodekey": "480p.vp9.webm", "src": "a"},
+                                               {"transcodekey": "1080p.vp9.webm", "src": "b"}])["src"], "b")
+        self.assertIsNone(broll.mejor_derivado([{"transcodekey": "240p.vp9.webm", "src": "x"}]))
+        fs = [{"file_type": "video/mp4", "width": 2160, "height": 3840, "link": "4k"},
+              {"file_type": "video/mp4", "width": 1080, "height": 1920, "link": "hd"},
+              {"file_type": "video/mp4", "width": 720, "height": 1280, "link": "sd"}]
+        self.assertEqual(broll.mejor_archivo_pexels(fs)["link"], "hd")   # cubre 1920 sin pasarse
+        self.assertEqual(broll.mejor_archivo_pexels(fs[2:])["link"], "sd")
+        self.assertIsNone(broll.mejor_archivo_pexels([]))
+
+    def test_ficha_pexels(self):
+        """Forma documentada de GET /videos/videos/:id -> ficha de créditos con la licencia de Pexels."""
+        import broll
+        v = {"id": 3843454, "width": 1080, "height": 1920, "duration": 12, "url": "https://www.pexels.com/video/x-3843454/",
+             "user": {"name": "Ana", "url": "https://www.pexels.com/@ana"},
+             "video_files": [{"quality": "hd", "file_type": "video/mp4", "width": 1080, "height": 1920,
+                              "link": "https://videos.pexels.com/video-files/3843454/hd.mp4"}]}
+        f = broll._ficha_pexels(v)
+        self.assertEqual((f["clase"], f["autor"], f["titulo"]), ("pexels", "Ana", "pexels:3843454"))
+        self.assertTrue(f["src"].endswith("hd.mp4"))
+        self.assertIn("Footage:\n- pexels:3843454 — Ana — Pexels License", broll.texto_creditos([f]))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

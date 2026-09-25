@@ -113,7 +113,7 @@ def _info_commons(params: dict) -> list[dict]:
             "titulo": pg["title"], "mime": ii.get("mime", ""),
             "ancho": ii.get("width"), "alto": ii.get("height"),
             "licencia": lic, "clase": licencia_ok(lic),
-            "autor": _limpiar(em.get("Artist", {}).get("value", "")) or "Unknown",
+            "autor": _limpiar(em.get("Artist", {}).get("value", "")).strip(" ;,") or "Unknown",
             "url_licencia": em.get("LicenseUrl", {}).get("value", ""),
             "fuente": ii.get("descriptionurl", ""),
             "thumb": miniatura(pg["title"], ii.get("width"), ii.get("height")) or ii.get("url"),

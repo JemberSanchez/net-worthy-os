@@ -20,6 +20,7 @@
               background: radial-gradient(circle, rgba(216,178,90,0.18) 0%, rgba(216,178,90,0) 60%); }
       .ph { position: absolute; inset: 0; overflow: hidden; }
       .ph img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+      .ph video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
       .ph .shade { position: absolute; inset: 0;
         background: linear-gradient(180deg, rgba(10,26,20,0.55) 0%, rgba(10,26,20,0.05) 30%, rgba(10,26,20,0.15) 55%, rgba(10,26,20,0.92) 100%); }
       #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 42%, rgba(0,0,0,0.7) 100%); }
