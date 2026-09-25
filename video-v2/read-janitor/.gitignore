@@ -6,3 +6,4 @@ assets/_motor/
 assets/music-bed.wav
 assets/img/*.jpg
 __pycache__/
+assets/t/*-desenfoque.jpg

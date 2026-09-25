@@ -33,6 +33,18 @@ class ContrasteTest(unittest.TestCase):
         self.assertIn('"Here\'s" 2.67:1', f[0])
 
 
+class MedicionValidaTest(unittest.TestCase):
+    def test_no_aprueba_si_no_midio(self):
+        """El falso aprobado real del #7: runtime con timeout, 0 muestras, contraste 'ok'."""
+        falso = {"contrast": {"ok": True, "samples": [], "checked": 0},
+                 "runtime": {"errorCount": 1, "findings": [{"message": "Navigation timeout of 10000 ms exceeded"}]}}
+        ok, motivo = producir.medicion_valida(falso)
+        self.assertFalse(ok)
+        self.assertIn("Navigation timeout", motivo)
+        self.assertFalse(producir.medicion_valida({"contrast": {"samples": [1.0], "checked": 0}, "runtime": {}})[0])
+        self.assertTrue(producir.medicion_valida({"contrast": {"samples": [1.0], "checked": 7}, "runtime": {"errorCount": 0}})[0])
+
+
 class DescripcionTest(unittest.TestCase):
     def test_lleva_aviso_fuentes_creditos_y_hashtags(self):
         with tempfile.TemporaryDirectory() as d:

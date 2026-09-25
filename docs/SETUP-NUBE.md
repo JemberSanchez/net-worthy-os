@@ -83,3 +83,35 @@ Abre una **sesión nueva** (las variables solo entran al arrancar) y pide: "ejec
 vigilada de /producir y programa la rutina diaria". Claude verifica todo, produce el primer vídeo
 de punta a punta (queda como borrador PRIVADO en YouTube) y deja la rutina programada.
 Aprobar cada día = `python -m omega.cli programar <ref>` (lo publica a las 12:00 de Nueva York).
+
+## D) Pexels (b-roll moderno en vertical) — prompt para Claude in Chrome
+```
+Necesito una clave de la API de Pexels para mi proyecto Net Worthy OS. Reglas: NUNCA escribas el
+valor de la clave en ningún chat ni en otro campo que el indicado; si algo pide pago o permisos
+distintos de los que indico, para y pregúntame.
+
+1. Ve a https://www.pexels.com/api/ . Si no hay sesión iniciada, pídeme que inicie sesión yo
+   (no crees cuentas ni escribas contraseñas).
+2. Pulsa "Your API Key" / "Get Started" y rellena el formulario de solicitud:
+   - Project name / Nombre: Net Worthy
+   - Descripción: "Faceless personal-finance YouTube Shorts. Uses Pexels videos as b-roll with
+     attribution in each video description."
+   - URL: https://www.youtube.com/@networthytv
+   Acepta los términos de la API de Pexels y envía. Copia la clave al portapapeles.
+3. Abre claude.ai/code, la sesión del proyecto net-worthy-os, menú del entorno en la barra de
+   título -> "Edit":
+   a) Variables de entorno: añade PEXELS_API_KEY = (pega la clave).
+   b) Acceso de red / dominios permitidos: añade videos.pexels.com (sin quitar los que hay).
+   c) Guarda.
+4. Dime qué pasos quedaron hechos, sin mostrar la clave.
+```
+
+## E) Publicar #7 y #8 (en una sesión NUEVA, con el token de YouTube ya cargado)
+Pedir: "publica #7 y #8 en YouTube". La sesión hace:
+1. `bash tools/setup_nube.sh` y `python -m omega.cli estado-bajar`.
+2. `python video-v2/motor/producir.py video-v2/read-janitor` y lo mismo con `video-v2/grace-groner`
+   (render + todas las puertas + subida como PRIVADO; los MP4 no viajan entre sesiones).
+3. Solo si las dos pasan todas las puertas: `python -m omega.cli programar ronald-read-janitor-v2-2026-09`
+   y `python -m omega.cli programar grace-groner-secretary-v2-2026-09 --dias 1` (uno por día, 12:00 NY).
+4. `record-dna` de los dos `adn.json`, `estado-subir` y `produccion-guardar` de los dos.
+Facebook/Instagram NO van en este paso: requieren confirmación explícita aparte.

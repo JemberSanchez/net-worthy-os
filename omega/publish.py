@@ -120,9 +120,11 @@ HORA_PICO = "12:00"                 # hora de Nueva York; ajustable con --hora
 ZONA_AUDIENCIA = "America/New_York"
 
 
-def proximo_slot(ahora_utc, hora: str = HORA_PICO, zona: str = ZONA_AUDIENCIA, margen_min: int = 20):
-    """Próximo instante `hora` en `zona` que caiga al menos `margen_min` después de ahora.
-    Devuelve un datetime en UTC. Función pura (horario de verano incluido vía zoneinfo)."""
+def proximo_slot(ahora_utc, hora: str = HORA_PICO, zona: str = ZONA_AUDIENCIA, margen_min: int = 20,
+                 dias: int = 0):
+    """Próximo instante `hora` en `zona` que caiga al menos `margen_min` después de ahora, más
+    `dias` días (para escalonar: uno al día rinde más que dos a la vez). Devuelve un datetime en
+    UTC. Función pura (horario de verano incluido vía zoneinfo: se suma en calendario LOCAL)."""
     from datetime import datetime, timedelta, timezone
     from zoneinfo import ZoneInfo
     tz = ZoneInfo(zona)
@@ -132,6 +134,9 @@ def proximo_slot(ahora_utc, hora: str = HORA_PICO, zona: str = ZONA_AUDIENCIA, m
     if cand < local + timedelta(minutes=margen_min):
         cand = (local + timedelta(days=1)).replace(hour=h, minute=m, second=0, microsecond=0)
         cand = datetime(cand.year, cand.month, cand.day, h, m, tzinfo=tz)   # re-normaliza DST
+    if dias:
+        d = cand.date() + timedelta(days=dias)
+        cand = datetime(d.year, d.month, d.day, h, m, tzinfo=tz)
     return cand.astimezone(timezone.utc)
 
 

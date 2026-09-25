@@ -610,7 +610,7 @@ def _andamiaje(proy: Path) -> None:
             indent=2) + "\n")
     gi = proy / ".gitignore"
     if not gi.exists():
-        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\n")
+        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\nassets/t/*-desenfoque.jpg\n")
 
 
 def _carve(out: Path) -> None:
