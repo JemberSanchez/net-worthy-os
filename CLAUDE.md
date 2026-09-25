@@ -23,6 +23,7 @@ Publicar: `youtube-auth` (login una vez; también da permiso de Analytics) · `p
   públicos. Meta (FB/IG) SIEMPRE requiere confirmación explícita en el chat antes de correr
   `--publicar` — no se automatiza publicar en vivo sin que el usuario lo vea primero.
 Aprobar: `programar <ref>` (Short ya subido como privado -> publicación a las 12:00 de Nueva York; `--ahora`)
+Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `vincular <ref> <video_id>` (videos antiguos)
 Estado/nube: `estado-bajar` · `estado-subir` · `produccion-guardar video-v2/<ref>` (repo PRIVADO `ESTADO_REPO`)
 Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` · `dna` · `learnings`
 Atajo: **/daily** corre ingest+youtube-scan+signals+decide.

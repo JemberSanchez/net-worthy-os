@@ -61,6 +61,33 @@ CREATE TABLE IF NOT EXISTS production_cost (
     time_to_publish_h  REAL,                -- horas de calendario idea -> publicado
     recorded_at        INTEGER NOT NULL
 );
+-- DÓNDE vive cada video publicado. Antes solo estaba en data/publish_<ref>.json, que NO viaja al
+-- repo de estado: una sesión nueva en la nube no sabía qué video aprobar ni de cuál leer analytics.
+CREATE TABLE IF NOT EXISTS production_video (
+    production_ref TEXT    NOT NULL,
+    platform       TEXT    NOT NULL,        -- youtube | facebook | instagram
+    video_id       TEXT    NOT NULL,
+    publish_at     TEXT,                    -- ISO UTC si se programó
+    recorded_at    INTEGER NOT NULL,
+    PRIMARY KEY (production_ref, platform)
+);
+-- Curva de retención COMPLETA (100 puntos de YouTube Analytics). watch_ratio puede pasar de 1 en
+-- Shorts (bucles/repeticiones): se guarda tal cual; solo retention_by_block se recorta a [0,1].
+CREATE TABLE IF NOT EXISTS production_retention (
+    production_ref TEXT    NOT NULL,
+    t_ratio        REAL    NOT NULL,        -- posición en el video (0..1)
+    watch_ratio    REAL    NOT NULL,        -- audienceWatchRatio
+    relative       REAL,                    -- relativeRetentionPerformance (vs videos de igual duración)
+    PRIMARY KEY (production_ref, t_ratio)
+);
+-- Qué BUSCÓ la gente que llegó al video desde la búsqueda de YouTube: demanda real, medida.
+CREATE TABLE IF NOT EXISTS production_search_terms (
+    production_ref TEXT    NOT NULL,
+    term           TEXT    NOT NULL,
+    views          INTEGER NOT NULL,
+    measured_at    INTEGER NOT NULL,
+    PRIMARY KEY (production_ref, term)
+);
 """
 
 
@@ -80,7 +107,8 @@ def _ensure_columns(con: sqlite3.Connection, table: str, columns: dict[str, str]
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA)
     # Migraciones idempotentes para BDs creadas antes de que el esquema ganara estas columnas.
-    _ensure_columns(con, "production_analytics", {"views": "INTEGER"})
+    _ensure_columns(con, "production_analytics", {"views": "INTEGER", "engaged_views": "INTEGER",
+                                                  "avg_view_pct_raw": "REAL"})
     if "renderer_version" in _ensure_columns(con, "production_dna", {"renderer_version": "TEXT"}):
         # Solo en el instante en que nace la columna: lo que ya había es v1 por construcción.
         # Después, un NULL significa "no declarado" y así se muestra — no se rellena a ciegas.
@@ -116,7 +144,8 @@ def record_dna(con: sqlite3.Connection, *, production_ref: str, blocks: list[dic
 def record_analytics(con: sqlite3.Connection, *, production_ref: str, ctr: float | None = None,
                      avd_pct: float | None = None, retention_avg: float | None = None,
                      views: int | None = None, traffic_source: str | None = None,
-                     retention_by_block: dict | None = None, now: int | None = None) -> None:
+                     retention_by_block: dict | None = None, engaged_views: int | None = None,
+                     avg_view_pct_raw: float | None = None, now: int | None = None) -> None:
     """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome.
 
     GUARD de captura-en-origen: ctr/avd_pct/retention_avg son FRACCIONES [0,1], pero YouTube
@@ -136,11 +165,34 @@ def record_analytics(con: sqlite3.Connection, *, production_ref: str, ctr: float
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_analytics (production_ref, ctr, avd_pct, retention_avg, "
-        "views, traffic_source, retention_by_block, measured_at) VALUES (?,?,?,?,?,?,?,?)",
+        "views, traffic_source, retention_by_block, engaged_views, avg_view_pct_raw, measured_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)",
         (production_ref, ctr, avd_pct, retention_avg, views, traffic_source,
-         json.dumps(retention_by_block, ensure_ascii=False) if retention_by_block else None, now),
+         json.dumps(retention_by_block, ensure_ascii=False) if retention_by_block else None,
+         engaged_views, avg_view_pct_raw, now),
     )
     con.commit()
+
+
+def record_video(con: sqlite3.Connection, production_ref: str, video_id: str, *, platform: str = "youtube",
+                 publish_at: str | None = None, now: int | None = None) -> None:
+    """Dónde quedó publicado (o subido como privado) un video. Idempotente; conserva publish_at
+    previo si no se pasa uno nuevo."""
+    if not production_ref or not video_id:
+        raise ValueError("faltan production_ref o video_id")
+    con.execute(
+        "INSERT INTO production_video (production_ref, platform, video_id, publish_at, recorded_at) "
+        "VALUES (?,?,?,?,?) ON CONFLICT(production_ref, platform) DO UPDATE SET "
+        "video_id=excluded.video_id, publish_at=COALESCE(excluded.publish_at, publish_at), "
+        "recorded_at=excluded.recorded_at",
+        (production_ref, platform, video_id, publish_at, now or int(time.time())))
+    con.commit()
+
+
+def video_de(con: sqlite3.Connection, production_ref: str, platform: str = "youtube") -> str | None:
+    row = con.execute("SELECT video_id FROM production_video WHERE production_ref=? AND platform=?",
+                      (production_ref, platform)).fetchone()
+    return row[0] if row else None
 
 
 def record_cost(con: sqlite3.Connection, *, production_ref: str, research_hours: float | None = None,

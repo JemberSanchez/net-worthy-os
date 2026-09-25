@@ -23,6 +23,8 @@ Comandos:
   python -m omega.cli dna                          # dataset de ADN + calibracion + rendimiento/hora
   python -m omega.cli record-outcome <ref> <0..1>  # tras publicar: registra el resultado medido
   python -m omega.cli rescore [--dry-run]          # recalcula el exito de todos desde analytics
+  python -m omega.cli analytics-sync [<ref>] [--dry-run]  # trae de YouTube Analytics retención/búsquedas + rescore
+  python -m omega.cli vincular <ref> <video_id>    # asocia un video ya subido a su ref (para analytics/programar)
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli resolve-prediction <id> <outcome> [nota]  # cierra una predicción vencida
@@ -618,6 +620,7 @@ def cmd_publish() -> None:
           f"privacy={d.get('privacy_status', 'private')})")
     d["video_id"] = result["video_id"]          # lo necesita `programar` para aprobar sin re-subir
     path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+    _registrar_video(d.get("production_ref", ref), result["video_id"])
     log_path = config.DATA_DIR / "publish_log.jsonl"
     with log_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps({"production_ref": d.get("production_ref", ref),
@@ -935,6 +938,104 @@ def cmd_backup() -> None:
     print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
+def _registrar_video(ref: str, video_id: str, publish_at: str | None = None) -> None:
+    """El video_id va a la BASE (viaja al repo de estado), no solo a data/publish_<ref>.json: una
+    sesión nueva en la nube tiene que poder aprobar y medir un video que subió otra sesión."""
+    from .reasoning import store as kstore
+    from .creative import production_dna
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    production_dna.record_video(con, ref, video_id, publish_at=publish_at)
+    con.close()
+
+
+def _video_id(ref: str) -> str | None:
+    from .reasoning import store as kstore
+    from .creative import production_dna
+    if not config.DB_PATH.exists():
+        return None
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    vid = production_dna.video_de(con, ref)
+    con.close()
+    return vid
+
+
+def cmd_vincular() -> None:
+    """Asocia un video YA subido a su ref (los #1-#6 se subieron a mano). Así analytics-sync lo mide."""
+    if len(sys.argv) < 4:
+        raise SystemExit("Uso: python -m omega.cli vincular <ref> <video_id>   (el id de youtu.be/<id>)")
+    ref, vid = sys.argv[2], sys.argv[3].rstrip("/").split("/")[-1].split("?v=")[-1]
+    _registrar_video(ref, vid)
+    print(f"✓ {ref} -> https://youtu.be/{vid}")
+
+
+def cmd_analytics_sync() -> None:
+    """Analytics AUTOMÁTICO: por cada video publicado trae retención (curva entera), vistas, fuente
+    de tráfico y términos de búsqueda de YouTube Analytics, lo guarda y recalcula el outcome."""
+    from .reasoning import store as kstore
+    from .creative import patterns, decisions, production_dna, scoring
+    from . import analytics_yt as ay
+
+    seco = "--dry-run" in sys.argv
+    args = [a for a in sys.argv[2:] if not a.startswith("--")]
+    con = kstore.connect(str(config.DB_PATH))
+    for mod in (patterns, decisions, production_dna):
+        mod.init(con)
+    refs = args or ay.refs_publicados(con)
+    if not refs:
+        print("No hay videos publicados vinculados. Usa `vincular <ref> <video_id>` para los antiguos.")
+        con.close()
+        return
+    try:
+        yt, yta = ay._clientes()
+    except ay.AnalyticsError as e:
+        con.close()
+        raise SystemExit(f"✗ {e}")
+    medidos = 0
+    for ref in refs:
+        vid = production_dna.video_de(con, ref)
+        if not vid:
+            vid = ay.video_desde_archivos(ref)
+            if not vid:
+                print(f"  {ref}: sin video_id (vincular {ref} <video_id>)")
+                continue
+            if not seco:
+                production_dna.record_video(con, ref, vid)
+        try:
+            datos = ay.consultar(vid, yt, yta)
+        except Exception as e:                                         # noqa: BLE001
+            msg = str(e)
+            if "insufficient" in msg.lower() or "403" in msg:
+                msg += "  -> ¿token sin permiso de Analytics? repetir `youtube-auth`"
+            print(f"  {ref}: ✗ {msg[:300]}")
+            continue
+        if datos["estado"] == "privado":
+            cuando = f" (programado {datos['publish_at']})" if datos.get("publish_at") else ""
+            print(f"  {ref}: aún privado{cuando}")
+            continue
+        if datos["estado"] == "sin_datos":
+            print(f"  {ref}: sin datos aún (Analytics va con ~2-3 días de retraso)")
+            continue
+        b = datos["basicas"]
+        if seco:
+            print(f"  {ref}: {int(b['views'])} vistas, {b.get('averageViewPercentage')} % visto (dry-run)")
+            continue
+        r = ay.guardar(con, ref, datos)
+        score, partes = scoring.desde_analytics(con, ref)
+        decisions.record_outcome(con, ref, score, score_version=scoring.SCORE_VERSION, score_parts=partes)
+        medidos += 1
+        pc = " → ".join(f"{k} {v:.0%}" for k, v in r["puntos_control"].items())
+        eng = f" ({r['engaged_views']} comprometidas)" if r.get("engaged_views") is not None else ""
+        bus = ", ".join(f"'{t}' {n}" for t, n in r["busquedas"]) or "—"
+        print(f"  {ref}: {r['views']} vistas{eng} · visto {r['avg_view_pct_raw']:.0%} · {pc}\n"
+              f"      tráfico: {r['traffic_source']} · búsquedas: {bus} · score {score:.3f} ({scoring.SCORE_VERSION})")
+    con.close()
+    if medidos:
+        print(f"\n{medidos} medidos y re-puntuados. Curvas en production_retention; búsquedas en "
+              "production_search_terms (demanda real: úsala al elegir el próximo tema).")
+
+
 def cmd_programar() -> None:
     """APROBAR un Short ya subido como privado: lo programa a la hora pico de EE. UU. (12:00 de Nueva
     York por defecto, --hora HH:MM) o lo hace público ya (--ahora). Lee el video_id de
@@ -949,9 +1050,10 @@ def cmd_programar() -> None:
     ref = sys.argv[2]
     path = config.DATA_DIR / f"publish_{ref}.json"
     d = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-    vid = d.get("video_id")
+    vid = _video_id(ref) or d.get("video_id")
     if not vid:
-        raise SystemExit(f"✗ {path.name} no tiene video_id: súbelo primero como privado (`publish {ref}`).")
+        raise SystemExit(f"✗ {ref} no tiene video_id (ni en la base ni en {path.name}): súbelo primero "
+                         f"como privado (`publish {ref}`) o vincúlalo (`vincular {ref} <video_id>`).")
     try:
         if "--ahora" in sys.argv:
             publish.hacer_publico(vid)
@@ -967,7 +1069,9 @@ def cmd_programar() -> None:
             d["publish_at"] = t.strftime("%Y-%m-%dT%H:%M:%SZ")
     except publish.PublishError as e:
         raise SystemExit(f"✗ {e}")
-    path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+    _registrar_video(ref, vid, publish_at=d.get("publish_at"))
+    if path.exists():
+        path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def cmd_youtube_auth() -> None:
@@ -1049,6 +1153,8 @@ def main(argv: list[str]) -> int:
         "backup": cmd_backup,
         "youtube-auth": cmd_youtube_auth,
         "programar": cmd_programar,
+        "vincular": cmd_vincular,
+        "analytics-sync": cmd_analytics_sync,
         "estado-bajar": cmd_estado_bajar,
         "estado-subir": cmd_estado_subir,
         "produccion-guardar": cmd_produccion_guardar,

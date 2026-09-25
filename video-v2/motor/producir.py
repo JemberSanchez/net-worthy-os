@@ -77,6 +77,11 @@ def subir_borrador(publish: dict, ref: str) -> str:
         return f"FALLÓ: {e}"
     publish["video_id"] = res["video_id"]
     (RAIZ / "data" / f"publish_{ref}.json").write_text(json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:                                         # a la BASE: viaja al repo de estado (sesión de mañana)
+        from omega.cli import _registrar_video
+        _registrar_video(ref, res["video_id"])
+    except Exception as e:                       # noqa: BLE001
+        return f"privado en {res['url']} · ⚠ no quedó en la base ({e}): vincular {ref} {res['video_id']}"
     return f"privado en {res['url']} · aprobar: python -m omega.cli programar {ref}"
 
 
