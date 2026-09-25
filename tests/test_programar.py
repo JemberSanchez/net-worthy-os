@@ -33,6 +33,12 @@ class ProximoSlotTest(unittest.TestCase):
         self.assertEqual(publish.proximo_slot(datetime(2026, 10, 31, 18, 0, tzinfo=timezone.utc)),
                          datetime(2026, 11, 1, 17, 0, tzinfo=timezone.utc))
 
+    def test_escalonar_dias_cruzando_el_cambio_de_hora(self):
+        # 30-oct 12:00 NY es UTC-4 (16:00Z); +2 días = 1-nov, ya UTC-5 -> 17:00Z (no 16:00Z)
+        ahora = datetime(2026, 10, 30, 10, 0, tzinfo=timezone.utc)
+        self.assertEqual(publish.proximo_slot(ahora, dias=0), datetime(2026, 10, 30, 16, 0, tzinfo=timezone.utc))
+        self.assertEqual(publish.proximo_slot(ahora, dias=2), datetime(2026, 11, 1, 17, 0, tzinfo=timezone.utc))
+
 
 class _Llamada:
     def __init__(self, resultado): self.resultado = resultado

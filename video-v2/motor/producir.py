@@ -111,19 +111,36 @@ def fallos_contraste(informes: list[dict]) -> list[str]:
     return out
 
 
+def medicion_valida(d: dict) -> tuple[bool, str]:
+    """¿La pasada de `check` MIDIÓ de verdad? Sin muestras, sin textos o con error de runtime, su
+    'ok' no significa nada (así pasó en falso el #7: 'Navigation timeout', 0 textos, ok=True)."""
+    c, rt = d.get("contrast") or {}, d.get("runtime") or {}
+    if rt.get("errorCount"):
+        msgs = [str(f.get("message", ""))[:120] for f in rt.get("findings") or []]
+        return False, "error de runtime: " + "; ".join(msgs[:2])
+    if not c.get("samples") or not c.get("checked"):
+        return False, f"0 textos medidos (samples={c.get('samples')})"
+    return True, "ok"
+
+
 def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
     ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
     informes, textos = [], 0
     for i in range(0, len(ts), 5):
-        r = _run(["npx", "--yes", HF, "check", "--json", "--at", ",".join(map(str, ts[i:i + 5]))],
-                 cwd=proy, env=env)
+        # --timeout: con 10 s (defecto) el #7 (3D + 18 capas) no llegaba a cargar y la auditoría
+        # devolvía 0 textos medidos SIN fallar (25-sep). Un instrumento que no mide no aprueba.
+        r = _run(["npx", "--yes", HF, "check", "--json", "--timeout", "60000",
+                  "--at", ",".join(map(str, ts[i:i + 5]))], cwd=proy, env=env)
         try:
             d = json.loads(r.stdout)
         except json.JSONDecodeError:
             return False, "check no devolvió JSON: " + (r.stderr or r.stdout)[-300:]
+        ok_medida, motivo = medicion_valida(d)
+        if not ok_medida:
+            return False, f"la auditoría NO midió (t={ts[i:i + 5]}): {motivo}"
         informes.append(d)
-        textos += (d.get("contrast") or {}).get("checked", 0)
+        textos += d["contrast"]["checked"]
     fallos = fallos_contraste(informes)
     return not fallos, (f"{textos} textos en {len(ts)} escenas, todos >= AA" if not fallos
                         else f"{len(fallos)} textos ilegibles: " + "; ".join(fallos[:5]))

@@ -1046,7 +1046,7 @@ def cmd_programar() -> None:
     from . import publish
 
     if len(sys.argv) < 3:
-        raise SystemExit("Uso: python -m omega.cli programar <ref> [--hora 12:00] [--ahora]")
+        raise SystemExit("Uso: python -m omega.cli programar <ref> [--hora 12:00] [--dias N] [--ahora]")
     ref = sys.argv[2]
     path = config.DATA_DIR / f"publish_{ref}.json"
     d = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
@@ -1061,7 +1061,8 @@ def cmd_programar() -> None:
             d["privacy_status"] = "public"
         else:
             hora = sys.argv[sys.argv.index("--hora") + 1] if "--hora" in sys.argv else publish.HORA_PICO
-            t = publish.proximo_slot(datetime.now(timezone.utc), hora)
+            dias = int(sys.argv[sys.argv.index("--dias") + 1]) if "--dias" in sys.argv else 0
+            t = publish.proximo_slot(datetime.now(timezone.utc), hora, dias=dias)
             publish.programar(vid, t)
             ny = t.astimezone(ZoneInfo(publish.ZONA_AUDIENCIA)).strftime("%a %d %b %H:%M")
             co = t.astimezone(ZoneInfo("America/Bogota")).strftime("%H:%M")
