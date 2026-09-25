@@ -27,6 +27,9 @@ jobs:
       - run: npm install --no-save eslint
       - run: node tools/check_motor.mjs
       - run: node tools/lint_motor.mjs
+      # motor v2: un error de sintaxis aquí no falla en consola, el render sale en blanco
+      - run: node --check video-v2/motor/motor.js
+      - run: node --check --input-type=module < video-v2/motor/motor3d.js
 
   semgrep:
     runs-on: ubuntu-latest

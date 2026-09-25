@@ -94,5 +94,19 @@ class FlujoGitTest(unittest.TestCase):
             estado.subir()
 
 
+    def test_guardar_produccion_sin_regenerables(self):
+        proy = Path(self.tmp.name) / "mi-short"
+        for rel in ("storyboard.json", "assets/voice.mp3", "assets/words.json", "assets/t/a.jpg",
+                    "assets/img/creditos.json", "assets/img/a.jpg", "assets/music-bed.wav",
+                    "assets/_motor/gsap.min.js", "renders/x-final.mp4", "renders/qa.json", "index.html"):
+            (proy / rel).parent.mkdir(parents=True, exist_ok=True)
+            (proy / rel).write_text("x")
+        guardados = {p.as_posix() for p in estado.archivos_produccion(proy)}
+        self.assertEqual(guardados, {"storyboard.json", "assets/voice.mp3", "assets/words.json", "assets/t/a.jpg",
+                                     "assets/img/creditos.json", "renders/qa.json", "index.html"})
+        self.assertIn("guardada (7 archivos)", estado.guardar_produccion(proy))
+        self.assertIn("sin cambios", estado.guardar_produccion(proy))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

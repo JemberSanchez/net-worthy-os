@@ -616,6 +616,8 @@ def cmd_publish() -> None:
 
     print(f"Subido: {result['url']}  (video_id={result['video_id']}, "
           f"privacy={d.get('privacy_status', 'private')})")
+    d["video_id"] = result["video_id"]          # lo necesita `programar` para aprobar sin re-subir
+    path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
     log_path = config.DATA_DIR / "publish_log.jsonl"
     with log_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps({"production_ref": d.get("production_ref", ref),
@@ -933,6 +935,41 @@ def cmd_backup() -> None:
     print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
+def cmd_programar() -> None:
+    """APROBAR un Short ya subido como privado: lo programa a la hora pico de EE. UU. (12:00 de Nueva
+    York por defecto, --hora HH:MM) o lo hace público ya (--ahora). Lee el video_id de
+    data/publish_<ref>.json (lo deja ahí `publish` / producir.py). Nunca re-sube el vídeo."""
+    import json
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+    from . import publish
+
+    if len(sys.argv) < 3:
+        raise SystemExit("Uso: python -m omega.cli programar <ref> [--hora 12:00] [--ahora]")
+    ref = sys.argv[2]
+    path = config.DATA_DIR / f"publish_{ref}.json"
+    d = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    vid = d.get("video_id")
+    if not vid:
+        raise SystemExit(f"✗ {path.name} no tiene video_id: súbelo primero como privado (`publish {ref}`).")
+    try:
+        if "--ahora" in sys.argv:
+            publish.hacer_publico(vid)
+            print(f"✓ PÚBLICO ya: https://youtu.be/{vid}")
+            d["privacy_status"] = "public"
+        else:
+            hora = sys.argv[sys.argv.index("--hora") + 1] if "--hora" in sys.argv else publish.HORA_PICO
+            t = publish.proximo_slot(datetime.now(timezone.utc), hora)
+            publish.programar(vid, t)
+            ny = t.astimezone(ZoneInfo(publish.ZONA_AUDIENCIA)).strftime("%a %d %b %H:%M")
+            co = t.astimezone(ZoneInfo("America/Bogota")).strftime("%H:%M")
+            print(f"✓ programado: {ny} Nueva York ({co} Colombia) · https://youtu.be/{vid}")
+            d["publish_at"] = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+    except publish.PublishError as e:
+        raise SystemExit(f"✗ {e}")
+    path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def cmd_youtube_auth() -> None:
     """Solo el login OAuth de YouTube (abre el navegador) -> data/youtube_token.json, y confirma a
     qué canal quedó conectado. Sin subir nada. Para la nube: copiar el contenido de ese archivo a
@@ -957,6 +994,18 @@ def cmd_estado_bajar() -> None:
     from . import estado
     try:
         print(estado.bajar(forzar="--forzar" in sys.argv))
+    except estado.EstadoError as e:
+        raise SystemExit(f"✗ {e}")
+
+
+def cmd_produccion_guardar() -> None:
+    """Guarda un proyecto v2 (sin MP4 ni assets regenerables) en el repo PRIVADO de estado."""
+    from pathlib import Path
+    from . import estado
+    if len(sys.argv) < 3:
+        raise SystemExit("Uso: python -m omega.cli produccion-guardar video-v2/<proyecto>")
+    try:
+        print(estado.guardar_produccion(Path(sys.argv[2])))
     except estado.EstadoError as e:
         raise SystemExit(f"✗ {e}")
 
@@ -999,8 +1048,10 @@ def main(argv: list[str]) -> int:
         "resolve-prediction": cmd_resolve_prediction,
         "backup": cmd_backup,
         "youtube-auth": cmd_youtube_auth,
+        "programar": cmd_programar,
         "estado-bajar": cmd_estado_bajar,
         "estado-subir": cmd_estado_subir,
+        "produccion-guardar": cmd_produccion_guardar,
         "status": cmd_status,
     }
     if len(argv) < 1 or argv[0] not in cmds:

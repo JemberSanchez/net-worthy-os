@@ -109,3 +109,54 @@ def upload_video(video_path: Path, title: str, description: str, *, tags: list[s
 
     video_id = response["id"]
     return {"video_id": video_id, "url": f"https://youtu.be/{video_id}"}
+
+
+# ── Borrador privado + publicación programada (tarea 8b) ─────────────────────────────────────────
+# La rutina diaria sube el Short como PRIVADO en cuanto pasa el QA (así no se pierde si el
+# contenedor de la nube se recicla antes de que el usuario apruebe). Aprobar = programarlo a la
+# hora pico de la audiencia (EE. UU.) o hacerlo público ya. Motivo del horario: el S3 salió a las
+# 02:00 hora local con audiencia EN/US, confounder anotado en CLAUDE.md.
+HORA_PICO = "12:00"                 # hora de Nueva York; ajustable con --hora
+ZONA_AUDIENCIA = "America/New_York"
+
+
+def proximo_slot(ahora_utc, hora: str = HORA_PICO, zona: str = ZONA_AUDIENCIA, margen_min: int = 20):
+    """Próximo instante `hora` en `zona` que caiga al menos `margen_min` después de ahora.
+    Devuelve un datetime en UTC. Función pura (horario de verano incluido vía zoneinfo)."""
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo
+    tz = ZoneInfo(zona)
+    h, m = (int(x) for x in hora.split(":"))
+    local = ahora_utc.astimezone(tz)
+    cand = local.replace(hour=h, minute=m, second=0, microsecond=0)
+    if cand < local + timedelta(minutes=margen_min):
+        cand = (local + timedelta(days=1)).replace(hour=h, minute=m, second=0, microsecond=0)
+        cand = datetime(cand.year, cand.month, cand.day, h, m, tzinfo=tz)   # re-normaliza DST
+    return cand.astimezone(timezone.utc)
+
+
+def _actualizar_status(video_id: str, cambios: dict, youtube=None) -> dict:
+    """videos.update REEMPLAZA el bloque status entero: se lee el actual y se modifica encima, para
+    no perder selfDeclaredMadeForKids, licencia, etc."""
+    if youtube is None:
+        from googleapiclient.discovery import build
+        youtube = build("youtube", "v3", credentials=_get_credentials())
+    items = youtube.videos().list(part="status", id=video_id).execute().get("items", [])
+    if not items:
+        raise PublishError(f"YouTube no encuentra el video {video_id} (¿borrado o de otro canal?)")
+    status = {k: v for k, v in items[0]["status"].items()
+              if k in ("privacyStatus", "publishAt", "selfDeclaredMadeForKids", "license",
+                       "embeddable", "publicStatsViewable", "containsSyntheticMedia")}
+    status.update(cambios)
+    status = {k: v for k, v in status.items() if v is not None}
+    return youtube.videos().update(part="status", body={"id": video_id, "status": status}).execute()
+
+
+def programar(video_id: str, publish_at_utc, youtube=None) -> dict:
+    """Programa la publicación: YouTube exige privacyStatus=private + publishAt en el futuro."""
+    iso = publish_at_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return _actualizar_status(video_id, {"privacyStatus": "private", "publishAt": iso}, youtube)
+
+
+def hacer_publico(video_id: str, youtube=None) -> dict:
+    return _actualizar_status(video_id, {"privacyStatus": "public", "publishAt": None}, youtube)

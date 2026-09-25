@@ -51,14 +51,17 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    Si una puerta falla, arregla la CAUSA (máx. 2 rondas). Nunca subas un umbral para pasar.
 
 ## 5. Entregar y PARAR
-10. `python -m omega.cli estado-subir` y commit + push del proyecto (sin `renders/` ni `assets/_motor/`).
+10. `python -m omega.cli estado-subir` y `python -m omega.cli produccion-guardar video-v2/<ref>`
+    (el proyecto va al repo PRIVADO, no a una rama suelta del repo de código). `producir.py` ya lo
+    habrá subido a YouTube como PRIVADO si hay token.
 11. Envía la preview con SendUserFile y un resumen corto: tema y por qué ganó, el guion, las
     fuentes, la tabla de puertas de `renders/qa.json`, título y descripción propuestos.
 12. **PARA aquí.** No publiques nada. Espera la aprobación explícita del usuario en esta sesión.
 
 ## 6. Solo si el usuario aprueba
-13. YouTube: pon `"privacy_status": "public"` en `data/publish_<ref>.json` (o déjalo privado si
-    lo pide) y `python -m omega.cli publish <ref>`.
+13. YouTube: `python -m omega.cli programar <ref>` (lo publica a las 12:00 de Nueva York, hora
+    pico de la audiencia; `--hora HH:MM` para otra) o `--ahora` si lo pide ya. Si no se subió como
+    borrador (sin token), antes `python -m omega.cli publish <ref>`.
 14. Facebook/Instagram: **solo con confirmación explícita para Meta** (regla del proyecto):
     `publish-fb <ref> --publicar` / `publish-ig <ref> --publicar`.
 15. `python -m omega.cli record-dna video-v2/<ref>/adn.json` y `estado-subir`.
