@@ -121,3 +121,48 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
          "commit", "-q", "-m", mensaje, cwd=clon)
     _git("push", "-q", cwd=clon)
     return f"✓ estado subido ({len(local):,} B)"
+
+
+# ── Producciones: cada Short producido se guarda en el MISMO repo privado ─────────────────────────
+# Una sesión nueva en la nube trabaja en su propia rama del repo de código: guardar allí los
+# proyectos los dejaría dispersos en ramas sueltas. El repo privado ya existe para el estado, así
+# que las producciones viven a su lado: producciones/<proyecto>/ (storyboard, voz, words.json,
+# imágenes tratadas, créditos, ADN, qa.json). NO viajan: MP4 (se regeneran), originales de
+# imágenes, música generada ni los assets comunes del motor.
+EXCLUIR_PROD = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/img/")
+EXCLUIR_ARCH = ("music-bed.wav",)
+INCLUIR_SIEMPRE = ("assets/img/creditos.json", "renders/qa.json")
+
+
+def archivos_produccion(proy: Path) -> list[Path]:
+    """Qué archivos de un proyecto se guardan (relativos al proyecto). Función pura sobre el disco."""
+    out = []
+    for f in sorted(proy.rglob("*")):
+        if not f.is_file():
+            continue
+        rel = f.relative_to(proy).as_posix()
+        if rel in INCLUIR_SIEMPRE or not (rel.startswith(EXCLUIR_PROD) or f.name in EXCLUIR_ARCH):
+            out.append(Path(rel))
+    return out
+
+
+def guardar_produccion(proy: Path, mensaje: str | None = None) -> str:
+    import shutil
+    proy = Path(proy).resolve()
+    if not (proy / "storyboard.json").exists():
+        raise EstadoError(f"{proy} no es un proyecto v2 (falta storyboard.json)")
+    clon = _clon()
+    dst = clon / "producciones" / proy.name
+    if dst.exists():
+        shutil.rmtree(dst)
+    archivos = archivos_produccion(proy)
+    for rel in archivos:
+        (dst / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(proy / rel, dst / rel)
+    _git("add", "-A", "producciones", cwd=clon)
+    if not _git("status", "--porcelain", cwd=clon).strip():
+        return f"sin cambios: producciones/{proy.name} ya estaba guardada"
+    _git("-c", "user.name=net-worthy-os", "-c", "user.email=net-worthy-os@users.noreply.github.com",
+         "commit", "-q", "-m", mensaje or f"produccion: {proy.name}", cwd=clon)
+    _git("push", "-q", cwd=clon)
+    return f"✓ producciones/{proy.name} guardada ({len(archivos)} archivos)"

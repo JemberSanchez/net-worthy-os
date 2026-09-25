@@ -35,3 +35,4 @@ soundfile>=0.14              # tools/generar_voz.py: lee el WAV que devuelve el 
 
 # Kokoro (motor de voz por defecto) NO va aqui: exige Python <3.13 y este proyecto va en 3.14.
 # Vive en un venv aparte, ver tools/requirements-kokoro.txt y CLAUDE.md ("Voz automática").
+tzdata>=2024.1               # zoneinfo en Windows (programar a hora de Nueva York)

@@ -11,7 +11,9 @@ Encadena (cada paso es una puerta: si falla, se para y sale con código 1):
   6. loudnorm -> medir_loudness   -14 ±1 LUFS, pico < -1 dBTP
   7. medir_ritmo --max 2.5        el cuadro nunca muerto más de 2,5 s
   8. preview <30 MB + publish_<ref>.json (PRIVADO) + adn.json
-Escribe `renders/qa.json` con cada puerta. NO publica: publicar exige una persona (política del canal).
+  9. si hay token de YouTube: sube el MP4 como PRIVADO (borrador; `--sin-subir` lo evita)
+Escribe `renders/qa.json` con cada puerta. NO publica: aprobar = `python -m omega.cli programar <ref>`
+(hora pico de EE. UU.) — publicar exige una persona (política del canal).
 """
 from __future__ import annotations
 
@@ -56,6 +58,26 @@ def descripcion(sb: dict, proy: Path) -> str:
     if hashtags:
         partes.append(hashtags)
     return "\n\n".join(p for p in partes if p)[:5000]
+
+
+def subir_borrador(publish: dict, ref: str) -> str:
+    """Sube el MP4 final a YouTube como PRIVADO (no es publicar: nadie lo ve) para que no se pierda
+    si el contenedor se recicla antes de la aprobación. Aprobar = `omega.cli programar <ref>`.
+    Sin token o con --sin-subir se salta; un fallo aquí NO invalida el QA (el vídeo es bueno)."""
+    if "--sin-subir" in sys.argv:
+        return "omitido (--sin-subir)"
+    if not (RAIZ / "data" / "youtube_token.json").exists():
+        return "omitido: no hay data/youtube_token.json (YOUTUBE_TOKEN_JSON en el entorno)"
+    sys.path.insert(0, str(RAIZ))
+    from omega import publish as pub
+    try:
+        res = pub.upload_video(Path(publish["video_path"]), publish["title"], publish["description"],
+                               tags=publish["tags"], privacy_status="private")
+    except Exception as e:                       # noqa: BLE001 - se reporta, no se aborta el QA
+        return f"FALLÓ: {e}"
+    publish["video_id"] = res["video_id"]
+    (RAIZ / "data" / f"publish_{ref}.json").write_text(json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8")
+    return f"privado en {res['url']} · aprobar: python -m omega.cli programar {ref}"
 
 
 def producir(proy: Path) -> dict:
@@ -113,9 +135,11 @@ def producir(proy: Path) -> dict:
         (proy / "adn.json").write_text(json.dumps({"production_ref": ref, **sb["adn"], "length_s": dur,
                                                    "blocks": [{"block": g["id"], "technique": "v2-storyboard"} for g in sb.get("guion", [])]},
                                                   ensure_ascii=False, indent=2), encoding="utf-8")
+    qa["borrador_youtube"] = subir_borrador(publish, ref)
     qa.update(final=str(final), preview=str(prev), preview_mb=round(prev.stat().st_size / 2**20, 1) if prev.exists() else None)
     (renders / "qa.json").write_text(json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n✓ TODAS LAS PUERTAS OK · final {final.name} · preview {qa['preview_mb']} MB · data/publish_{ref}.json (privado)")
+    print(f"  YouTube: {qa['borrador_youtube']}")
     return qa
 
 
