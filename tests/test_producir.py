@@ -45,6 +45,22 @@ class MedicionValidaTest(unittest.TestCase):
         self.assertTrue(producir.medicion_valida({"contrast": {"samples": [1.0], "checked": 7}, "runtime": {"errorCount": 0}})[0])
 
 
+class BloquesAdnTest(unittest.TestCase):
+    W = [{"text": x, "start": i * 1.0, "end": i * 1.0 + 0.8} for i, x in enumerate("Hi there. Big news! It works. The end.".split())]
+
+    def test_duracion_real_y_tecnica(self):
+        sb = {"cola_s": 2, "guion": [{"id": "hook", "texto": "Hi there. Big news!"}, {"id": "cierre", "texto": "It works. The end."}],
+              "escenas": [{"tipo": "foto", "en": "0", "clip": "x"}, {"tipo": "revelacion", "en": "1"}, {"tipo": "cta", "en": "3:end"}]}
+        b = producir.bloques_adn(sb, self.W)
+        self.assertEqual(b, [{"block": "hook", "technique": "foto+clip,revelacion", "length_s": 4.0},
+                             {"block": "cierre", "technique": "cta", "length_s": 5.8}])
+        self.assertAlmostEqual(sum(x["length_s"] for x in b), self.W[-1]["end"] + 2)
+
+    def test_si_guion_y_voz_no_casan_no_inventa(self):
+        sb = {"guion": [{"id": "a", "texto": "Solo una frase."}], "escenas": []}
+        self.assertNotIn("length_s", producir.bloques_adn(sb, self.W)[0])
+
+
 class DescripcionTest(unittest.TestCase):
     def test_lleva_aviso_fuentes_creditos_y_hashtags(self):
         with tempfile.TemporaryDirectory() as d:

@@ -93,6 +93,42 @@ def subir_borrador(publish: dict, ref: str) -> str:
     return f"privado en {res['url']} · aprobar: python -m omega.cli programar {ref}"
 
 
+def bloques_adn(sb: dict, words: list[dict]) -> list[dict]:
+    """Bloques del ADN con su duración REAL (voz medida) y la técnica = tipos de escena que lo
+    componen. Sin `length_s` por bloque, analytics-sync no puede decir en qué parte del guion se
+    va la gente (solo 3s/10s/20s). Cada `guion[i]` son N frases: se cuentan con la MISMA regla que
+    anclas.frases (. ? ! al final de palabra) para no depender del texto exacto de la voz."""
+    sys.path.insert(0, str(MOTOR))
+    import anclas
+    fr = anclas.frases(words)
+    fin = words[-1]["end"] + float(sb.get("cola_s", 3.0))
+    n_frases = [max(1, len(re.findall(r"[.?!](?=\s|$)", g["texto"].strip()))) for g in sb.get("guion", [])]
+    inicios, k = [], 0
+    for n in n_frases:
+        inicios.append(k)
+        k += n
+    if k != len(fr):                                 # guion y voz no casan: no inventar duraciones
+        return [{"block": g["id"], "technique": "v2-storyboard"} for g in sb.get("guion", [])]
+    t0s = [0.0 if i == 0 else words[fr[p][0]]["start"] for i, p in enumerate(inicios)]
+    out = []
+    for i, g in enumerate(sb["guion"]):
+        t1 = t0s[i + 1] if i + 1 < len(t0s) else fin
+        rango = range(inicios[i], inicios[i] + n_frases[i])
+        tipos = []
+        for e in sb.get("escenas", []):
+            try:
+                p_ = int(str(e.get("en", "")).split(":")[0].split("+")[0].split("-")[0])
+            except ValueError:
+                continue
+            if p_ in rango:
+                tipo = e["tipo"] + ("+clip" if e.get("clip") else "")
+                if tipo not in tipos:
+                    tipos.append(tipo)
+        out.append({"block": g["id"], "technique": ",".join(tipos) or "v2-storyboard",
+                    "length_s": round(t1 - t0s[i], 2)})
+    return out
+
+
 def instantes_escena(html: str) -> list[float]:
     """Un instante por escena (al 60 % de su ventana, cuando sus textos ya han entrado)."""
     xs = re.findall(r'<section id="s\d+" class="clip scene" data-start="([\d.]+)" data-duration="([\d.]+)"', html)
@@ -200,7 +236,7 @@ def producir(proy: Path) -> dict:
         W = json.loads((proy / "assets" / "words.json").read_text())
         dur = round(W[-1]["end"] + float(sb.get("cola_s", 3.0)))
         (proy / "adn.json").write_text(json.dumps({"production_ref": ref, **sb["adn"], "length_s": dur,
-                                                   "blocks": [{"block": g["id"], "technique": "v2-storyboard"} for g in sb.get("guion", [])]},
+                                                   "blocks": bloques_adn(sb, W)},
                                                   ensure_ascii=False, indent=2), encoding="utf-8")
     qa["borrador_youtube"] = subir_borrador(publish, ref)
     qa.update(final=str(final), preview=str(prev), preview_mb=round(prev.stat().st_size / 2**20, 1) if prev.exists() else None)

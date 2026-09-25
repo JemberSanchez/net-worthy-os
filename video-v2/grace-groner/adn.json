@@ -8,31 +8,38 @@
   "blocks": [
     {
       "block": "intro",
-      "technique": "v2-storyboard"
+      "technique": "foto+clip,revelacion",
+      "length_s": 4.96
     },
     {
       "block": "thesis",
-      "technique": "v2-storyboard"
+      "technique": "lista,titulo",
+      "length_s": 8.52
     },
     {
       "block": "proof",
-      "technique": "v2-storyboard"
+      "technique": "foto+clip,foto,tarjetas,titulo",
+      "length_s": 10.42
     },
     {
       "block": "payoff",
-      "technique": "v2-storyboard"
+      "technique": "contador3d",
+      "length_s": 6.52
     },
     {
       "block": "honesty",
-      "technique": "v2-storyboard"
+      "technique": "titulo,anios",
+      "length_s": 10.66
     },
     {
       "block": "lesson",
-      "technique": "v2-storyboard"
+      "technique": "titulo,curva,lista",
+      "length_s": 8.07
     },
     {
       "block": "cta",
-      "technique": "v2-storyboard"
+      "technique": "titulo,cta",
+      "length_s": 8.87
     }
   ]
 }
