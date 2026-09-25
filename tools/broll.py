@@ -87,11 +87,19 @@ def buscar_commons(q: str, n: int = 12) -> list[dict]:
 
 
 def _pexels(ruta: str, params: dict | None = None) -> dict:
+    """La clave puede venir como variable (PEXELS_API_KEY) o inyectada por el proxy del entorno de
+    la nube (la cabecera la añade el proxy y la clave nunca entra al contenedor — medido el 25-sep:
+    sin variable, la API respondía 200). Sin ninguna de las dos, Pexels responde 401."""
+    import urllib.error
     clave = os.environ.get("PEXELS_API_KEY")
-    if not clave:
-        raise SystemExit("Falta PEXELS_API_KEY (gratis en pexels.com/api). En la nube: variable del entorno.")
     q = "?" + urllib.parse.urlencode(params) if params else ""
-    return json.loads(il._get(f"{API_PEXELS_V}/{ruta}{q}", {"Authorization": clave}))
+    try:
+        return json.loads(il._get(f"{API_PEXELS_V}/{ruta}{q}", {"Authorization": clave} if clave else None))
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            raise SystemExit("Pexels rechaza la petición (sin clave): define PEXELS_API_KEY o el secreto "
+                             "del entorno para api.pexels.com (gratis en pexels.com/api).")
+        raise
 
 
 def _ficha_pexels(v: dict) -> dict:

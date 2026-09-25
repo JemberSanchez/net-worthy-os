@@ -93,6 +93,26 @@ def subir_borrador(publish: dict, ref: str) -> str:
     return f"privado en {res['url']} · aprobar: python -m omega.cli programar {ref}"
 
 
+LUFS_OBJ, TP_OBJ = -14.0, -2.0   # -2 (no -1.5): la codificación AAC posterior sube el pico ~0,5 dB
+
+
+def loudnorm_2pasos(crudo: Path, final: Path) -> tuple[bool, str]:
+    """loudnorm en DOS pasadas: medir y aplicar ganancia LINEAL con los valores medidos. La pasada
+    única es dinámica y no garantiza el pico real: el #7 salió con -0,20 dBTP (25-sep) aunque se
+    pedía -1,5; antes pasaba por margen, no por construcción."""
+    filtro = f"loudnorm=I={LUFS_OBJ}:TP={TP_OBJ}:LRA=11"
+    r = _run(["ffmpeg", "-hide_banner", "-i", str(crudo), "-af", filtro + ":print_format=json", "-f", "null", "-"])
+    m = re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", r.stderr)
+    if not m:
+        return False, "no se pudo medir el audio: " + r.stderr[-300:]
+    med = json.loads(m.group(0))
+    af = (f"{filtro}:measured_I={med['input_i']}:measured_TP={med['input_tp']}:measured_LRA={med['input_lra']}"
+          f":measured_thresh={med['input_thresh']}:offset={med['target_offset']}:linear=true")
+    r = _run(["ffmpeg", "-v", "error", "-y", "-i", str(crudo), "-af", af + ",aresample=48000",
+              "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(final)])
+    return r.returncode == 0, (r.stderr or f"2 pasadas: medido {med['input_i']} LUFS / {med['input_tp']} dBTP")
+
+
 def bloques_adn(sb: dict, words: list[dict]) -> list[dict]:
     """Bloques del ADN con su duración REAL (voz medida) y la técnica = tipos de escena que lo
     componen. Sin `length_s` por bloque, analytics-sync no puede decir en qué parte del guion se
@@ -212,9 +232,8 @@ def producir(proy: Path) -> dict:
     crudo, final, prev = renders / f"{ref}.mp4", renders / f"{ref}-final.mp4", renders / f"{ref}-preview.mp4"
     r = _run(["npx", "--yes", HF, "render", "--quality", "high", "--output", str(crudo)], cwd=proy, env=env)
     puerta("render", r.returncode == 0 and crudo.exists(), (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0])
-    r = _run(["ffmpeg", "-v", "error", "-y", "-i", str(crudo), "-af", "loudnorm=I=-14:TP=-1.5:LRA=11",
-              "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(final)])
-    puerta("loudnorm", r.returncode == 0, r.stderr or "ok")
+    ok_ln, det_ln = loudnorm_2pasos(crudo, final)
+    puerta("loudnorm", ok_ln, det_ln)
     r = _run([PY, str(RAIZ / "tools" / "medir_loudness.py"), str(final)])
     lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)
     pico = re.search(r"Pico real\s*:\s*(-?[\d.]+)", r.stdout)

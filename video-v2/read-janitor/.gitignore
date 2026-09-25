@@ -7,3 +7,5 @@ assets/music-bed.wav
 assets/img/*.jpg
 __pycache__/
 assets/t/*-desenfoque.jpg
+assets/clips/*.src
+assets/v/
