@@ -50,6 +50,12 @@ y pregúntame. Hazlo en este orden y al final dime qué hiciste y qué quedó pe
 ```
 
 ## B) En tu PC (terminal, 3 minutos) — lo único que Chrome no puede hacer
+**Atajo en un comando** (descarga antes el JSON del cliente OAuth "Escritorio" de Google Cloud →
+Credenciales, y el script `tools/preparar_pc.ps1` desde GitHub):
+```powershell
+powershell -ExecutionPolicy Bypass -File preparar_pc.ps1 -ClientSecret "$HOME\Downloads\client_secret_XXXX.json"
+```
+Paso a paso, si prefieres hacerlo a mano:
 ```powershell
 git clone https://github.com/JemberSanchez/net-worthy-os.git ; cd net-worthy-os
 pip install -r requirements.txt
