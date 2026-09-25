@@ -17,7 +17,7 @@ foreach ($c in "git", "python") { if (-not (Get-Command $c -ErrorAction Silently
 
 if (Test-Path "$Destino\.git") { git -C $Destino pull --ff-only } else { git clone https://github.com/JemberSanchez/net-worthy-os.git $Destino }
 Set-Location $Destino
-python -m pip install -q google-api-python-client google-auth-oauthlib google-auth-httplib2 requests tzdata
+python -m pip install -q -r requirements.txt tzdata
 
 New-Item -ItemType Directory -Force -Path data | Out-Null
 Copy-Item $ClientSecret data\youtube_client_secret.json -Force
