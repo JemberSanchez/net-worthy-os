@@ -67,12 +67,6 @@
       .cert { position: absolute; left: 150px; top: 330px; width: 780px; height: 520px; border-radius: 10px; overflow: hidden;
               box-shadow: 0 40px 90px rgba(0,0,0,0.6); border: 4px solid rgba(216,178,90,0.7); }
       .cert img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      /* "$" decorativo vía CSS: no es texto a leer (el auditor WCAG lo medía contra el verde, no contra el oro) */
-      .coin::after { content: "$"; }
-      .coin { position: absolute; left: 510px; top: 560px; width: 64px; height: 64px; border-radius: 50%;
-              background: radial-gradient(circle at 35% 30%, #f3dc9a, #d8b25a 55%, #9c7a2e); color: #6b5217; font-family: "Anton", sans-serif; font-size: 40px;
-              display: flex; align-items: center; justify-content: center; opacity: 0; }
-      .burst { position: absolute; inset: 0; }
       .pill { font-weight: 900; font-size: 44px; letter-spacing: 0.08em; padding: 18px 34px; border-radius: 999px; text-transform: uppercase; }
       .pill.gold { background: var(--gold); color: var(--bg); }
       .pill.line { border: 4px solid var(--gold); color: var(--gold); background: rgba(10,26,20,0.8); }
@@ -90,6 +84,11 @@
       .chart .curve { fill: none; stroke: var(--gold); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
       .chart .paid { stroke: var(--green); stroke-width: 7; }
       .chart .axis { stroke: rgba(141,162,152,0.5); stroke-width: 3; }
+      .chart .grid { stroke: rgba(244,246,243,0.14); stroke-width: 2; stroke-dasharray: 8 10; }
+      .chart .tickl { stroke: rgba(244,246,243,0.45); stroke-width: 3; }
+      .chart .tick { fill: #cfd8d3; font-weight: 800; font-size: 30px; letter-spacing: 0.04em; }
+      .chart .playhead .dot { fill: #f4e6c0; } .chart .playhead .halo { fill: rgba(216,178,90,0.35); }
+      .chart .phl { fill: #f4e6c0; font-weight: 900; font-size: 40px; paint-order: stroke; stroke: rgba(10,26,20,0.85); stroke-width: 10px; }
 
       /* puntos */
       .dots { position: absolute; left: 126px; top: 520px; width: 828px; height: 560px; }

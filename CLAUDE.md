@@ -89,6 +89,8 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
 - **26-sep:** color híbrido (metraje moderno en color con grado de marca, archivo en duotono),
   fondos de texto con clips en movimiento (≥4 clips por Short), transiciones con desenfoque de
   movimiento en los cortes, loudnorm en 2 pasadas. Pexels llega por el proxy del entorno.
+  "Todo real, nada genérico": fuera monedas 3D/estallidos/monedas que caen; curvas con ejes reales
+  (años verificados o "Yr N") y punto con año y valor; temblor de cámara en los golpes grandes.
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie

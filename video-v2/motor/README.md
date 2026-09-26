@@ -77,3 +77,10 @@ Color híbrido (26-sep, elegido viendo A/B): metraje moderno en COLOR con grado 
 Movimiento en todo el vídeo: con clips, los fondos automáticos son clips desenfocados en movimiento
 (`OPACIDAD_AUTO_CLIP`, cada reutilización avanza `TRAMO_FONDO` s). Transiciones en los cortes con
 whoosh (≥1,2 s entre sí): zoom a través y barridos con desenfoque de movimiento, en `#trans`.
+
+"Todo real, nada genérico" (26-sep): sin clip-art. `contador3d` = número sobre metraje real (fondo
+automático al 55 %; `"monedas3d": true` recupera la capa Three.js). `revelacion` y la llegada del
+contador llevan temblor de cámara en vez de estallido de monedas. `tarjetas` sin monedas que caen.
+`curva` con ejes reales: años en X (`serie.desde_anio` si está VERIFICADO; si no, "Yr N"), dólares
+en Y con líneas de referencia (salvo con `escalas`), y un punto que recorre la línea con año y
+valor; el área aparece cuando la línea llega.
