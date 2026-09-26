@@ -66,7 +66,9 @@ def licencia_ok(nombre_corto: str) -> str | None:
         return "pd"
     if n.startswith("cc0") or n == "cc-zero":
         return "cc0"
-    if re.fullmatch(r"cc[ -]by[ -]\d(\.\d)?", n) or n in ("cc by", "cc-by"):
+    # CC BY con o sin adaptación a una jurisdicción ("CC BY 3.0 us", "cc-by-3.0-de"): sigue siendo
+    # CC BY (atribución) — la música de Kevin MacLeod en Commons viene como "CC BY 3.0 us".
+    if re.fullmatch(r"cc[ -]by[ -]\d(\.\d)?(?:[ -][a-z]{2})?", n) or n in ("cc by", "cc-by"):
         return "cc-by"
     return None
 

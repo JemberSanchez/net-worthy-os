@@ -54,6 +54,10 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      (o en un `fondo`). Antes de fijar `desde`, mira UNA hoja de miniaturas
      (`ffmpeg -i assets/clips/<n>.src -vf "fps=1/2,scale=192:108,tile=8x2" -frames:v 1 hoja.jpg`):
      objetos/manos/lugares sí; caras reconocibles, logos o noticias con personas reales, no;
+   - **Música real:** `"musica": {"pista": {"commons": "File:Kevin MacLeod - X.ogg", "desde": s}}`
+     (catálogo: `python tools/musica_libre.py buscar "Kevin MacLeod"`); varía la pista entre vídeos
+     (la política de "contenido inauténtico" castiga plantillas idénticas). Certificados y
+     periódicos en `imagenes` llevan `"documento": true` (sin parallax 2.5D).
    - **Nada genérico ni de clip-art (26-sep):** cada visual es metraje real, un documento real
      (certificados, fotos de archivo) o un dato real con ejes. En `curva`, pon `"desde_anio"` SOLO
      si el año de inicio está verificado en las fuentes (Grace: 1935); si no, el eje va en "Yr N".

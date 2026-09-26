@@ -49,7 +49,7 @@ PRE = 0.14            # la escena entra un poco antes de que la voz empiece su f
 AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "puntos", "cta", "contador3d"}
 OPACIDAD_TIPO = {"contador3d": 0.55}   # el payoff: metraje real con más presencia detrás del número
 OPACIDAD_AUTO = 0.3
-OPACIDAD_AUTO_CLIP = 0.38   # el metraje desenfocado pesa menos que una foto: algo más de presencia
+OPACIDAD_AUTO_CLIP = 0.46   # el metraje desenfocado pesa menos que una foto: algo más de presencia
 TRAMO_FONDO = 2.5     # s: cada reutilización de un clip como fondo arranca más adelante (nunca el mismo plano)
 SEP_CORTES = 1.2      # s mínimos entre cortes con whoosh + transición (más seguido marea)
 RISER_S = 1.0         # el riser (assets/riser.wav) termina justo en el golpe
@@ -488,10 +488,16 @@ def plan(sb: dict, words: list[dict]) -> dict:
             desde = float(clips[c].get("desde", 0)) + desde_extra
             # el nombre lleva modo y si es fondo: un tratado viejo nunca se reutiliza por error
             f.update(video=True, clip=c, desde=desde, modo=modo, fondo_vid=desenfoque,
-                     src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{'f' if desenfoque else ''}.mp4")
+                     src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{'f2' if desenfoque else ''}.mp4")
         else:
             f["img"] = src["img"]
             f["archivo"] = f'{src["img"]}-desenfoque' if desenfoque else src["img"]
+            # Parallax 2.5D (26-sep): la foto de una escena `foto` se convierte en un clip donde cada
+            # píxel se mueve según su profundidad. Fuera: fondos, documentos y quien lo desactive.
+            decl = (sb.get("imagenes") or {}).get(src["img"]) or {}
+            if (src.get("tipo") == "foto" and not desenfoque and sb.get("parallax", True)
+                    and src.get("parallax", True) and not decl.get("documento")):
+                f.update(video=True, p25d=True, src=f'{src["img"]}-2p5d-{mov}-{round((t1 - t0) * 100)}.mp4')
         return f
 
     pool = list((sb.get("imagenes") or {}).keys())
@@ -581,9 +587,21 @@ def asegurar_desenfoques(proy: Path, p: dict, radio: float = 14) -> None:
                 Image.open(proy / "assets" / "t" / f'{f["img"]}.jpg').filter(ImageFilter.GaussianBlur(radio)).save(dst, quality=80)
 
 
+def asegurar_parallax(proy: Path, p: dict) -> None:
+    """Renderiza (una vez, cacheado por nombre) los clips 2.5D de las fotos: tools/profundidad.py."""
+    usos = [f for f in p["fotos"] if f.get("p25d") and not (proy / "assets" / "v" / f["src"]).exists()]
+    if not usos:
+        return
+    import profundidad
+    for f in usos:
+        info = profundidad.video_2p5d(proy / "assets" / "t" / f'{f["img"]}.jpg', proy / "assets" / "v" / f["src"],
+                                      f["t1"] - f["t0"], f["mov"])
+        print(f"✓ 2.5D {f['img']} -> {f['src']} ({info['frames']} fotogramas)")
+
+
 def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
     """Baja (tools/broll.py, licencia filtrada + créditos) y trata los clips de vídeo que falten."""
-    usos = [f for f in p["fotos"] if f.get("video") and not (proy / "assets" / "v" / f["src"]).exists()]
+    usos = [f for f in p["fotos"] if f.get("clip") and not (proy / "assets" / "v" / f["src"]).exists()]
     if not usos:
         return
     import broll
@@ -647,11 +665,18 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     asegurar_imagenes(proy, sb.get("imagenes") or {})
     asegurar_desenfoques(proy, p)
     asegurar_clips(proy, sb, p)
+    asegurar_parallax(proy, p)
     dst = proy / "assets" / "_motor"
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(MOTOR / "assets", dst)
-    if con_musica:
+    pista = (sb.get("musica") or {}).get("pista")
+    if con_musica and pista:                     # música REAL con licencia (tools/musica_libre.py)
+        import musica_libre
+        crudo = musica_libre.bajar({"pista": pista["commons"]}, proy / "assets" / "musica")["pista"]
+        info = musica_libre.cama(crudo, proy / "assets" / "music-bed.wav", p["D"], float(pista.get("desde", 0)))
+        print(f"✓ música: {pista['commons'][5:]} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})")
+    elif con_musica:
         import musica
         musica.generar(proy / "assets" / "music-bed.wav", p["D"], p["golpes"],
                        tuple(p["oscuro"]) if p["oscuro"] else None, p["cta"])
@@ -680,7 +705,7 @@ def _andamiaje(proy: Path) -> None:
             indent=2) + "\n")
     gi = proy / ".gitignore"
     if not gi.exists():
-        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\nassets/t/*-desenfoque.jpg\nsocial/\n")
+        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\nassets/t/*-desenfoque.jpg\nsocial/\nassets/musica/*.src\n")
 
 
 def _carve(out: Path) -> None:

@@ -20,3 +20,4 @@ package-lock.json
 # entorno Python 3.12 aparte para Kokoro TTS (torch+spacy, ~2GB) — herramienta local, no fuente.
 # El proyecto principal sigue en Python 3.14; ver tools/generar_voz.py y CLAUDE.md.
 tools/.venv-voces/
+tools/.modelos/

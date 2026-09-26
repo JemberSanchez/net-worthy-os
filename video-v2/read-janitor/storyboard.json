@@ -109,7 +109,11 @@
   "oscuro": [
    "6",
    "8"
-  ]
+  ],
+  "pista": {
+   "commons": "File:Kevin MacLeod - 06 - Hustle.ogg",
+   "desde": 8
+  }
  },
  "cola_s": 0.6,
  "golpes": [
@@ -159,15 +163,18 @@
   },
   "cert1": {
    "commons": "File:Baltimore and Ohio Railroad stock certificate.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   },
   "cert2": {
    "commons": "File:Boston and Providence Railroad stock certificate.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   },
   "cert3": {
    "commons": "File:Chicago, Burlington & Quincy Railroad Stock Certificate 1887.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   },
   "nyse": {
    "commons": "File:Trading floor, New York Stock Exchange, New York, New York LCCN2011630168.tif",
@@ -175,7 +182,8 @@
   },
   "crash": {
    "commons": "File:Santa Ana Register front page, Oct 28, 1929 - Flickr - Orange County Archives.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   }
  },
  "escenas": [

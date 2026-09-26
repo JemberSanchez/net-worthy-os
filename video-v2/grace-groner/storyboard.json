@@ -105,7 +105,11 @@
   "oscuro": [
    "6",
    "9"
-  ]
+  ],
+  "pista": {
+   "commons": "File:Kevin MacLeod - Broken Reality.ogg",
+   "desde": 20
+  }
  },
  "cola_s": 0.6,
  "golpes": [
@@ -149,15 +153,18 @@
   },
   "cert1": {
    "commons": "File:Baltimore and Ohio Railroad stock certificate.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   },
   "cert2": {
    "commons": "File:Boston and Providence Railroad stock certificate.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   },
   "cert3": {
    "commons": "File:Chicago, Burlington & Quincy Railroad Stock Certificate 1887.jpg",
-   "recorte": 0.01
+   "recorte": 0.01,
+   "documento": true
   }
  },
  "escenas": [

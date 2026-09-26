@@ -92,6 +92,12 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   movimiento en los cortes, loudnorm en 2 pasadas. Pexels llega por el proxy del entorno.
   "Todo real, nada genérico": fuera monedas 3D/estallidos/monedas que caen; curvas con ejes reales
   (años verificados o "Yr N") y punto con año y valor; temblor de cámara en los golpes grandes.
+- **Nivel documental (26-sep):** parallax 2.5D automático en las fotos de escenas `foto`
+  (`tools/profundidad.py`: Depth Anything V2 Small ONNX, Apache-2.0, en CPU; remap por píxel
+  según profundidad, sin huecos; `"documento": true` en la imagen o `"parallax": false` lo
+  apagan). Música REAL con licencia: `tools/musica_libre.py` (Commons: Kevin MacLeod CC BY 3.0) +
+  `"musica": {"pista": {"commons": "File:...", "desde": s}}`; créditos "Music:" solos. Fondos de
+  texto con la mitad de desenfoque.
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie
