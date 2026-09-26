@@ -94,7 +94,7 @@
               {"texto": "or one stock", "en": "16:one", "estilo": "mid"}],
    "tachar": {"linea": 0, "en": "16:one"}},
   {"tipo": "curva", "en": "17",
-   "serie": {"inicial": 180, "mensual": 0, "tasa": 0.1518, "anios": 75, "final": 7200000},
+   "serie": {"inicial": 180, "mensual": 0, "tasa": 0.1518, "anios": 75, "final": 7200000, "desde_anio": 1935},
    "titulo": {"texto": "Same engine. Any size.", "en": "17:engine"},
    "escalas": [{"texto": "$7.2M"}, {"texto": "$720K", "en": "17:same"}, {"texto": "$72K", "en": "17:any"}],
    "encoger": {"en": "17:engine", "hasta": "17:size"}},

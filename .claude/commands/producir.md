@@ -54,6 +54,10 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      (o en un `fondo`). Antes de fijar `desde`, mira UNA hoja de miniaturas
      (`ffmpeg -i assets/clips/<n>.src -vf "fps=1/2,scale=192:108,tile=8x2" -frames:v 1 hoja.jpg`):
      objetos/manos/lugares sí; caras reconocibles, logos o noticias con personas reales, no;
+   - **Nada genérico ni de clip-art (26-sep):** cada visual es metraje real, un documento real
+     (certificados, fotos de archivo) o un dato real con ejes. En `curva`, pon `"desde_anio"` SOLO
+     si el año de inicio está verificado en las fuentes (Grace: 1935); si no, el eje va en "Yr N".
+     El `contador3d` va sobre metraje real (sin monedas 3D).
    - subtítulos sin el gancho ni el CTA; como mucho un `contador3d`;
    - `publicacion` con título (≤100), descripción, tags y hashtags; `adn` con `renderer_version: v2-hyperframes`.
    Lecciones del ensayo del 23-sep (Grace Groner), no repetirlas:

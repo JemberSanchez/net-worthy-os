@@ -137,6 +137,37 @@ class FondoAutoTest(unittest.TestCase):
         self.assertEqual(mov(c.plan(sb(), W)), mov(c.plan(sb(fondos_auto=False), W)))
 
 
+class RealNoGenericoTest(unittest.TestCase):
+    """26-sep, "todo real": sin clip-art (monedas 3D, estallidos, monedas que caen) y gráficas con
+    ejes de verdad."""
+
+    def test_ejes_de_la_curva(self):
+        self.assertEqual(c.ticks_anios(75, 1935)[0], (0, "1935"))
+        self.assertEqual(c.ticks_anios(75, 1935)[-1], (75, "2010"))
+        self.assertEqual([t for _, t in c.ticks_anios(60, None)][:2], ["Yr 0", "Yr 15"])   # sin fecha verificada: relativo
+        self.assertEqual(c.ticks_anios(33, None)[-1], (33, "Yr 33"))                     # el último año siempre visible
+        self.assertEqual((c._compacto(7_200_000), c._compacto(72_000), c._compacto(400)), ("$7.2M", "$72K", "$400"))
+
+    def test_curva_con_ejes_y_punto(self):
+        s = {"serie": {"inicial": 180, "tasa": 0.15, "anios": 75, "final": 7_200_000, "desde_anio": 1935}}
+        h = c.m_curva(s, "s9")
+        self.assertIn(">1935<", h); self.assertIn(">2010<", h); self.assertIn(">$7.2M<", h)
+        self.assertIn('id="s9-ph" class="playhead"', h)
+        self.assertEqual(s["curva_pts"][-1][2], 7_200_000)
+        self.assertEqual(s["curva_pts"][-1][3], 2010)
+        s2 = {"serie": {"mensual": 170, "tasa": 0.1, "anios": 60}, "escalas": [{"texto": "$8M"}]}
+        h2 = c.m_curva(s2, "s1")
+        self.assertNotIn('class="grid"', h2)                                   # escala cambiante: sin valores
+        self.assertFalse(s2["curva_valores"])
+
+    def test_sin_clip_art(self):
+        self.assertNotIn("burst", c.m_revelacion({"linea1": {"texto": "A"}, "linea2": {"texto": "B"}}, "s1"))
+        self.assertNotIn("three-layer", c.m_contador3d({"valor": 1}, "s2"))
+        self.assertIn("three-layer", c.m_contador3d({"valor": 1, "monedas3d": True}, "s2"))
+        self.assertNotIn("coins", c.m_tarjetas({"imgs": [], "flujo": {"texto": "x"}}, "s3"))
+        self.assertIn("contador3d", c.AUTO_FONDO)                              # el payoff sobre metraje real
+
+
 class BrollTest(unittest.TestCase):
     """Clips de vídeo en `foto`/`fondo`: validación, plan y el HTML que exige el lint de HyperFrames."""
 

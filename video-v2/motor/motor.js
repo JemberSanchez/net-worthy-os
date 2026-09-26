@@ -22,13 +22,15 @@
     tl.fromTo(o, { v: from }, { v: to, duration: dur, ease, onUpdate: () => { el.textContent = fmt(o.v); } }, at);
   };
   const money = (p) => (v) => p + Math.round(v).toLocaleString("en-US");
-  const burst = (host, at, n = 24) => {
-    for (let i = 0; i < n; i++) {
-      const c = document.createElement("div"); c.className = "coin"; c.id = host.id + "-bc" + i; host.appendChild(c);
-      const a = rnd() * Math.PI * 2, d = 380 + rnd() * 480;
-      tl.fromTo(c, { x: 0, y: 0, opacity: 1, scale: 0.4, rotation: 0 },
-        { x: Math.cos(a) * d, y: Math.sin(a) * d * 0.9 + 160, scale: 0.8 + rnd(), rotation: (rnd() - 0.5) * 720, opacity: 0, duration: 0.9 + rnd() * 0.4, ease: "power3.out" }, at + rnd() * 0.05);
-    }
+  // Temblor de cámara en los golpes grandes (revelación, llegada del contador): lenguaje de edición
+  // real en vez del estallido de monedas de clip-art (26-sep). Solo x/y de #cam: el punch-in usa scale.
+  const sacudida = (at, a = 16) => {
+    const pasos = [[a, -a * 0.6], [-a * 0.8, a * 0.5], [a * 0.5, a * 0.35], [-a * 0.3, -a * 0.2], [0, 0]];
+    let prev = [0, 0];
+    pasos.forEach(([x, y], i) => {
+      tl.fromTo("#cam", { x: prev[0], y: prev[1] }, { x, y, duration: 0.045, ease: "none", immediateRender: false }, at + i * 0.045);
+      prev = [x, y];
+    });
   };
 
   // ---------- capas persistentes ----------
@@ -73,7 +75,7 @@
         tl.to(`#${id}-l2`, { scale: 1.08, duration: 0.12, ease: "power4.out" }, s.golpe);
         tl.to(`#${id}-l2`, { scale: 1.0, duration: 0.4, ease: "power2.out" }, s.golpe + 0.12);
         tl.to(`#${id}-l1`, { opacity: 0.35, duration: 0.3 }, s.golpe);
-        flash(s.golpe, 0.25); burst($(`${id}-burst`), s.golpe);
+        flash(s.golpe, 0.25); sacudida(s.golpe);
       }
       out(`#${id} .stack`, s.t1 - 0.2);
     },
@@ -123,13 +125,7 @@
         const f = s.flujo;
         inn(`#${id}-flujo`, f.en, { y: 30, opacity: 0 }, 0.25);
         if (f.contador) inn(`#${id}-cnt`, f.en, { y: 40, opacity: 0 }, 0.25);
-        const host = $(`${id}-coins`), N = 12, c0 = f.en + 0.1, c1 = f.hasta;
-        for (let i = 0; i < N; i++) {
-          const c = document.createElement("div"); c.className = "coin"; c.id = `${id}-dc${i}`; host.appendChild(c);
-          const t = c0 + (c1 - c0) * i / N;
-          tl.fromTo(c, { x: (rnd() - 0.5) * 520, y: (rnd() - 0.5) * 300, opacity: 0, scale: 0.5 }, { x: 0, y: 420, opacity: 1, scale: 1, duration: 0.42, ease: "power2.in" }, t);
-          tl.to(c, { opacity: 0, scale: 0.3, duration: 0.08 }, t + 0.42);
-        }
+        const c0 = f.en + 0.1, c1 = f.hasta;   // sin monedas que caen: los certificados reales ya lo cuentan
         if (f.contador) {
           counter($(`${id}-cntn`), f.contador.desde, f.contador.valor, c0 + 0.4, c1 - c0 + 0.45, (v) => Math.round(v), "power1.in");
           tl.to(`#${id}-cnt .n`, { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1 }, c1 - 0.2);
@@ -146,16 +142,36 @@
       tl.to(m, { v: P2[2], duration: P2[1], ease: "power3.in", onUpdate: () => { el.textContent = f(m.v); } }, P2[0]);
       tl.to(`#${id}-money`, { color: "#d8b25a", scale: 1.12, duration: 0.12, ease: "power4.out" }, L);
       tl.to(`#${id}-money`, { scale: 1.0, duration: 0.3, ease: "power2.out" }, L + 0.12);
-      flash(L, 0.22);
+      flash(L, 0.22); sacudida(L, 20);
       if (s.kicker) inn(`#${id}-k`, s.kicker.en - 0.05, { y: -30, opacity: 0 }, 0.25);
       if (s.pill) inn(`#${id}-pill`, s.pill.en - 0.05, { y: 60, opacity: 0 }, 0.3, "back.out(1.8)");
     },
     curva(s, id) {
       const dibuja = s.fin || s.t0 + 0.8;
       tl.fromTo(`#${id}-curve`, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dibuja - s.t0, ease: "power1.in" }, s.t0 + 0.05);
+      // punto que recorre la línea con año y valor: misma curva de avance (power1.in) que el trazo,
+      // muestreado sobre los puntos del plan (no getPointAtLength: seek-safe y sin depender del layout)
+      const pts = s.curva_pts || [], ph = $(`${id}-ph`), lab = $(`${id}-phl`);
+      if (pts.length > 1 && ph && lab) {
+        const L = pts.length - 1, fmt = money("$");
+        const pon = (p) => {
+          const f = Math.min(L, Math.max(0, p * L)), i = Math.floor(f), u = f - i, a = pts[i], b = pts[Math.min(L, i + 1)];
+          const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u, v = a[2] + (b[2] - a[2]) * u, an = a[3] + (b[3] - a[3]) * u;
+          ph.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+          lab.setAttribute("x", Math.min(760, Math.max(100, x)).toFixed(1));
+          lab.setAttribute("y", Math.max(40, y - 40).toFixed(1));
+          const anio = s.curva_desde ? String(Math.floor(an)) : `Yr ${Math.floor(an)}`;
+          lab.textContent = s.curva_valores ? `${anio} · ${fmt(v)}` : anio;
+        };
+        const o = { p: 0 };
+        tl.fromTo(o, { p: 0 }, { p: 1, duration: dibuja - s.t0, ease: "power1.in", onUpdate: () => pon(o.p), immediateRender: false }, s.t0 + 0.05);
+        tl.fromTo([ph, lab], { opacity: 0 }, { opacity: 1, duration: 0.2 }, s.t0 + 0.05);
+        pon(0);
+      }
       if (s.aportado) { inn(`#${id}-ap`, s.aportado.en, { x: -40, opacity: 0 }, 0.25); tl.fromTo(`#${id}-paid`, { opacity: 0 }, { opacity: 1, duration: 0.25 }, s.aportado.en); }
       if (s.area) { tl.fromTo(`#${id}-area`, { opacity: 0 }, { opacity: 1, duration: 0.5 }, s.area.en); inn(`#${id}-ar`, s.area.en, { scale: 0.7, opacity: 0 }, 0.3, "back.out(2)"); }
-      else tl.fromTo(`#${id}-area`, { opacity: 0 }, { opacity: 0.6, duration: 0.5 }, s.t0 + 0.3);
+      // el área entra cuando la línea LLEGA: antes destapaba el final de la curva (Grace, 26-sep)
+      else tl.fromTo(`#${id}-area`, { opacity: 0 }, { opacity: 0.6, duration: 0.4 }, dibuja + 0.05);
       if (s.ilustrativo) inn(`#${id}-ill`, s.t0 + 0.1, { opacity: 0 }, 0.3);
       if (s.titulo) inn(`#${id}-tit`, s.titulo.en - 0.05, { y: -20, opacity: 0 }, 0.25);
       (s.escalas || []).forEach((e, k, arr) => {

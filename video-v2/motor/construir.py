@@ -46,7 +46,8 @@ PRE = 0.14            # la escena entra un poco antes de que la voz empiece su f
 # desenfocada al 30 %. Motivo medido (Grace Groner, 25-sep): 4 de cada 8 fotogramas eran texto
 # sobre verde liso = aspecto de diapositiva. Un canal profesional nunca deja el cuadro vacío.
 # `contador3d` no (tiene su escena 3D) ni `foto` (ya es imagen). `"fondo": false` lo desactiva.
-AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "puntos", "cta"}
+AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "puntos", "cta", "contador3d"}
+OPACIDAD_TIPO = {"contador3d": 0.55}   # el payoff: metraje real con más presencia detrás del número
 OPACIDAD_AUTO = 0.3
 OPACIDAD_AUTO_CLIP = 0.38   # el metraje desenfocado pesa menos que una foto: algo más de presencia
 TRAMO_FONDO = 2.5     # s: cada reutilización de un clip como fondo arranca más adelante (nunca el mismo plano)
@@ -240,7 +241,7 @@ def m_foto(s, id_):
 
 def m_revelacion(s, id_):
     return (f'<div class="stack"><div id="{id_}-l1" class="mid mute" style="margin-bottom:50px">{txt(s["linea1"]["texto"])}</div>'
-            f'<div id="{id_}-l2" class="huge gold shadow">{txt(s["linea2"]["texto"])}</div></div><div id="{id_}-burst" class="burst"></div>')
+            f'<div id="{id_}-l2" class="huge gold shadow">{txt(s["linea2"]["texto"])}</div></div>')
 
 
 _X = '<path pathLength="1" d="M18 18 L82 82" /><path pathLength="1" d="M82 18 L18 82" />'
@@ -291,7 +292,7 @@ def m_tarjetas(s, id_):
     out += "".join(f'<div class="cert" id="{id_}-c{k}"><img src="assets/t/{c["img"]}.jpg" alt="" /></div>' for k, c in enumerate(s["imgs"]))
     if s.get("flujo"):
         f = s["flujo"]
-        out += f'<div id="{id_}-coins"></div><div id="{id_}-flujo" class="tag green" style="top:880px;left:0;right:0;text-align:center">{txt(f["texto"])}</div>'
+        out += f'<div id="{id_}-flujo" class="tag green" style="top:880px;left:0;right:0;text-align:center">{txt(f["texto"])}</div>'
         if f.get("contador"):     # opcional: sin un número real verificable, no se inventa uno
             out += (f'<div class="cnt" id="{id_}-cnt"><div class="n"><span id="{id_}-cntn">{f["contador"]["desde"]}</span></div>'
                     f'<div class="sub" style="margin-top:0">{txt(f["contador"].get("etiqueta", ""))}</div></div>')
@@ -300,9 +301,12 @@ def m_tarjetas(s, id_):
 
 def m_contador3d(s, id_):
     k = f'<div id="{id_}-k" class="kicker" style="position:absolute;top:250px;width:100%">{txt(s["kicker"]["texto"])}</div>' if s.get("kicker") else ""
-    p = (f'<div style="position:absolute;top:520px;width:100%;text-align:center"><span class="pill line" id="{id_}-pill">'
+    p = (f'<div style="position:absolute;top:560px;width:100%;text-align:center"><span class="pill line" id="{id_}-pill">'
          f'{txt(s["pill"]["texto"])}</span></div>') if s.get("pill") else ""
-    return f'<canvas id="three-layer" width="1080" height="1920"></canvas>{k}<div class="money" id="{id_}-money">{s.get("prefijo", "$")}0</div>{p}'
+    # Sin monedas 3D por defecto (26-sep, "todo real"): el número va sobre metraje real (fondo
+    # automático). `"monedas3d": true` recupera la capa Three.js.
+    capa3d = '<canvas id="three-layer" width="1080" height="1920"></canvas>' if s.get("monedas3d") else ""
+    return f'{capa3d}{k}<div class="money" id="{id_}-money">{s.get("prefijo", "$")}0</div>{p}'
 
 
 def serie(sr: dict) -> list[tuple[float, float]]:
@@ -318,20 +322,63 @@ def serie(sr: dict) -> list[tuple[float, float]]:
     return [(a, x * k) for a, x in out]
 
 
+def _compacto(v: float) -> str:
+    """$7,200,000 -> $7.2M; $72,000 -> $72K (etiquetas de eje, como en una gráfica financiera)."""
+    for d, suf in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
+        if v >= d:
+            x = v / d
+            return f"${x:.1f}{suf}".replace(".0" + suf, suf) if x < 100 else f"${x:.0f}{suf}"
+    return f"${v:.0f}"
+
+
+def ticks_anios(anios: float, desde: int | None) -> list[tuple[float, str]]:
+    """Marcas del eje X: cada 10/15/20 años según el tramo. Con `desde_anio` (verificado en la
+    historia), años de calendario; sin él, relativos ("Yr 15") — nunca se inventa una fecha."""
+    paso = 10 if anios <= 40 else 15 if anios <= 90 else 20
+    out, a = [], 0
+    while a <= anios + 1e-9:
+        out.append((a, str(desde + a) if desde else ("Yr 0" if a == 0 else f"Yr {a:g}")))
+        a += paso
+    if out[-1][0] < anios - paso * 0.4:                 # el último año real siempre visible
+        out.append((anios, str(desde + int(anios)) if desde else f"Yr {anios:g}"))
+    elif out[-1][0] != anios:
+        out[-1] = (anios, str(desde + int(anios)) if desde else f"Yr {anios:g}")
+    return out
+
+
 def m_curva(s, id_):
+    """Gráfica con ejes REALES (26-sep, "nada genérico"): años en X, dólares en Y con líneas de
+    referencia, y un punto que recorre la línea con año y valor. La serie sigue siendo el cálculo
+    ILUSTRATIVO (el aviso lo dice); no se marcan crisis sobre una línea que no cae."""
     W, H = 860, 620
-    pts = serie(s["serie"])
+    sr = s["serie"]
+    pts = serie(sr)
     top = pts[-1][1]
-    xy = [(a / s["serie"]["anios"] * W, H - v / top * H) for a, v in pts]
+    xy = [(a / sr["anios"] * W, H - v / top * H) for a, v in pts]
     linea = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in xy)
     area = linea + f" L{W},{H} L0,{H} Z"
-    aport = s["serie"].get("mensual", 0) * 12 * s["serie"]["anios"] + s["serie"].get("inicial", 0)
+    aport = sr.get("mensual", 0) * 12 * sr["anios"] + sr.get("inicial", 0)
     py = H - aport / top * H
+    desde = sr.get("desde_anio")
+    ejes = "".join(f'<line class="tickl" x1="{a / sr["anios"] * W:.1f}" y1="{H}" x2="{a / sr["anios"] * W:.1f}" y2="{H + 14}" />'
+                   f'<text class="tick" x="{a / sr["anios"] * W:.1f}" y="{H + 52}" text-anchor="middle">{lab}</text>'
+                   for a, lab in ticks_anios(sr["anios"], desde))
+    con_valores = not s.get("escalas")               # "Same engine. Any size." cambia la escala a propósito
+    if con_valores:
+        ejes += "".join(f'<line class="grid" x1="0" y1="{H - f * H:.1f}" x2="{W}" y2="{H - f * H:.1f}" />'
+                        f'<text class="tick" x="{W - 6}" y="{H - f * H - 12:.1f}" text-anchor="end">{_compacto(top * f)}</text>'
+                        for f in ((0.5,) if s.get("etiqueta_max") else (0.5, 1.0)))   # sin duplicar la etiqueta grande
+    # punto que recorre la línea: posiciones y valores muestreados para el runtime (seek-safe)
+    s["curva_pts"] = [[round(x, 1), round(y, 1), round(v), round((desde or 0) + a, 2)] for (x, y), (a, v) in zip(xy, pts)]
+    s["curva_desde"] = desde
+    s["curva_valores"] = con_valores
     out = (f'<svg class="chart" id="{id_}-svg" viewBox="0 0 {W} {H}"><defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">'
            f'<stop offset="0" stop-color="#d8b25a" stop-opacity="0.75" /><stop offset="1" stop-color="#d8b25a" stop-opacity="0.05" /></linearGradient></defs>'
-           f'<line class="axis" x1="0" y1="{H}" x2="{W}" y2="{H}" /><path class="area" id="{id_}-area" d="{area}" />'
+           f'{ejes}<line class="axis" x1="0" y1="{H}" x2="{W}" y2="{H}" /><path class="area" id="{id_}-area" d="{area}" />'
            f'<path class="curve" id="{id_}-curve" pathLength="1" d="{linea}" />'
-           + (f'<line class="paid" id="{id_}-paid" x1="0" y1="{H}" x2="{W}" y2="{py:.1f}" />' if s.get("aportado") else "") + "</svg>")
+           + (f'<line class="paid" id="{id_}-paid" x1="0" y1="{H}" x2="{W}" y2="{py:.1f}" />' if s.get("aportado") else "")
+           + f'<g id="{id_}-ph" class="playhead"><circle r="16" class="halo" /><circle r="9" class="dot" /></g>'
+           + f'<text id="{id_}-phl" class="phl" text-anchor="middle"></text></svg>')
     if s.get("ilustrativo"):
         out += f'<div class="tag mute" id="{id_}-ill" style="top:250px;right:90px;font-size:26px">Illustrative</div>'
     if s.get("aportado"):
@@ -469,7 +516,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
                 n = usos_clip.get(elegido, 0)
                 usos_clip[elegido] = n + 1
                 fotos.append(capa(f"ph{k}a", {"clip": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_AUTO_CLIP, desenfoque=True, desde_extra=TRAMO_FONDO * n))
+                                  OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP), desenfoque=True,
+                                  desde_extra=TRAMO_FONDO * n))
             else:
                 fotos.append(capa(f"ph{k}a", {"img": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
                                   OPACIDAD_AUTO, desenfoque=True))
@@ -559,7 +607,7 @@ def _html(p: dict) -> str:
     audio += [f'      <audio id="sfx{j}" src="assets/_motor/{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
               for j, (f, t, v) in enumerate(sfx)]
     aviso = '<span style="display:block">' + '</span><span style="display:block">'.join(html.escape(x) for x in p["aviso"]["lineas"]) + "</span>"
-    tiene3d = any(s["tipo"] == "contador3d" for s in p["escenas"])
+    tiene3d = any(s["tipo"] == "contador3d" and s.get("monedas3d") for s in p["escenas"])
     rep = {
         "__END__": f'{p["D"]}', "__AUDIO__": "\n".join(audio), "__FOTOS__": fotos, "__ESCENAS__": "\n".join(esc_html),
         "__AVISO__": aviso if p["aviso"]["lineas"] else "",
