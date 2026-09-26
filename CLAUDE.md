@@ -22,6 +22,7 @@ Publicar: `youtube-auth` (login una vez; también da permiso de Analytics) · `p
   `publish-ig <ref> [--publicar]` — los tres privados/borrador por defecto; `--publicar` los hace
   públicos. Meta (FB/IG) SIEMPRE requiere confirmación explícita en el chat antes de correr
   `--publicar` — no se automatiza publicar en vivo sin que el usuario lo vea primero.
+Páginas: `python video-v2/motor/social.py video-v2/<ref>` (carrusel 4:5 + historia 9:16 + textos; lo hace producir.py) · `publish-social <ref> [--publicar]` (IG/FB; sin --publicar solo el plan; --publicar SOLO con confirmación en el chat)
 Aprobar: `programar <ref>` (Short ya subido como privado -> publicación a las 12:00 de Nueva York; `--ahora`)
 Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `vincular <ref> <video_id>` (videos antiguos)
 Estado/nube: `estado-bajar` · `estado-subir` · `produccion-guardar video-v2/<ref>` (repo PRIVADO `ESTADO_REPO`)
@@ -148,6 +149,9 @@ el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va 
   dataset, no commits. La palanca que señalan los datos es la RETENCIÓN entre 3s y 20s, no el gancho.
 - **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen (alcance
   orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
+  (26-sep: los CARRUSELES de imagen sí — Instagram los recomienda a no seguidores y se guardan/
+  comparten; salen del mismo Short sin trabajo extra. Las historias solo llegan a seguidores:
+  reutilización barata del gancho, no una apuesta de alcance.)
 
 ## Docs (leer al retomar)
 `docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/V2-CALIDAD.md` (motor v2 en HyperFrames: decisión verificada + PoC en `video-v2/`) · `docs/POLITICA.md` ·

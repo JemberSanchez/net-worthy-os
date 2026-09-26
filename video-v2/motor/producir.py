@@ -121,7 +121,7 @@ def bloques_adn(sb: dict, words: list[dict]) -> list[dict]:
     sys.path.insert(0, str(MOTOR))
     import anclas
     fr = anclas.frases(words)
-    fin = words[-1]["end"] + float(sb.get("cola_s", 3.0))
+    fin = words[-1]["end"] + float(sb.get("cola_s", 0.6))
     n_frases = [max(1, len(re.findall(r"[.?!](?=\s|$)", g["texto"].strip()))) for g in sb.get("guion", [])]
     inicios, k = [], 0
     for n in n_frases:
@@ -253,10 +253,17 @@ def producir(proy: Path) -> dict:
     # genérico, y producir no debe destruir instrumentación (pasó en la 1ª prueba con el #7).
     if sb.get("adn") and not (proy / "adn.json").exists():
         W = json.loads((proy / "assets" / "words.json").read_text())
-        dur = round(W[-1]["end"] + float(sb.get("cola_s", 3.0)))
+        dur = round(W[-1]["end"] + float(sb.get("cola_s", 0.6)))
         (proy / "adn.json").write_text(json.dumps({"production_ref": ref, **sb["adn"], "length_s": dur,
                                                    "blocks": bloques_adn(sb, W)},
                                                   ensure_ascii=False, indent=2), encoding="utf-8")
+    if sb.get("social"):                          # páginas vivas: carrusel + historia (no publica nada)
+        import social
+        try:
+            s = social.generar(proy, env)
+            puerta("social", True, f"carrusel {len(s['carrusel'])} diapositivas · historia {'sí' if s['historia'] else 'no'}")
+        except (social.SocialError, subprocess.CalledProcessError) as e:
+            puerta("social", False, str(e))
     qa["borrador_youtube"] = subir_borrador(publish, ref)
     qa.update(final=str(final), preview=str(prev), preview_mb=round(prev.stat().st_size / 2**20, 1) if prev.exists() else None)
     (renders / "qa.json").write_text(json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8")

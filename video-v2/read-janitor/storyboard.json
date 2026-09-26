@@ -29,31 +29,31 @@
  "guion": [
   {
    "id": "intro",
-   "texto": "He pumped gas and cleaned floors his whole life. He died with eight million dollars."
+   "texto": "This janitor died with eight million dollars."
   },
   {
-   "id": "thesis",
-   "texto": "No big salary. No hot tips. No tech stocks. Just three boring habits, for sixty years."
+   "id": "who",
+   "texto": "Ronald Read pumped gas and cleaned floors his whole life. No big salary. No hot tips."
   },
   {
-   "id": "proof",
-   "texto": "He bought companies that paid him to hold them, and reinvested every dividend into more shares. Sixty years later, eight million dollars."
+   "id": "how",
+   "texto": "He bought boring companies that paid him dividends, and reinvested every single one."
   },
   {
    "id": "payoff",
-   "texto": "He put in a little at a time. Everything past that number is dividends buying more dividends. The machine, not the paycheck."
+   "texto": "Sixty years later: eight million dollars."
   },
   {
    "id": "honesty",
-   "texto": "Now the part nobody says. He held ninety-five stocks so one collapse couldn't sink him, and some did cut their dividends. And he never had to sell. Sixty years, no emergency big enough to touch it. That is the rare part, not the picking."
+   "texto": "Here's the part nobody tells you. He owned ninety-five stocks, so one collapse couldn't sink him. And he never had to sell."
   },
   {
    "id": "lesson",
-   "texto": "You don't need his eight million. The engine is the same at any size. Own things that pay you, reinvest, and don't interrupt it."
+   "texto": "You don't need his millions. Own things that pay you, reinvest, and don't interrupt."
   },
   {
    "id": "cta",
-   "texto": "So, skill, or just time? Could you do it on a gas station paycheck? Team skill, or team time?"
+   "texto": "So was it skill, or just time?"
   }
  ],
  "cifras": [
@@ -77,52 +77,68 @@
   ],
   "ventanas": [
    [
-    "6:shares+0.74",
-    "10"
+    "5",
+    "6"
    ]
   ],
   "final": true
  },
  "subtitulos": [
-  "2",
-  "18"
+  "1",
+  "10"
  ],
  "calientes": [
+  "pumped",
+  "floors",
   "salary",
   "tips",
-  "stocks",
-  "sixty",
-  "years",
+  "boring",
+  "dividends",
   "reinvested",
-  "dividend",
+  "sixty",
   "eight",
   "million",
-  "dollars",
-  "little",
-  "dividends",
-  "machine",
   "ninety-five",
   "collapse",
   "sell",
-  "emergency",
-  "rare",
+  "millions",
   "reinvest",
   "interrupt"
  ],
  "musica": {
   "oscuro": [
-   "11",
-   "16"
+   "6",
+   "8"
   ]
  },
- "cola_s": 3.0,
- "golpes": ["15:rare", "19:time"],
+ "cola_s": 0.6,
+ "golpes": [
+  "0:dollars",
+  "4:reinvested",
+  "7:ninety-five",
+  "9:millions"
+ ],
  "clips": {
-  "gasolinera": {"pexels": 35560146, "desde": 0},
-  "fregona": {"pexels": 9462889, "desde": 0},
-  "bolsa": {"pexels": 38431825, "desde": 0},
-  "monedas": {"pexels": 3943961, "desde": 0},
-  "reloj": {"pexels": 7034335, "desde": 0}
+  "gasolinera": {
+   "pexels": 35560146,
+   "desde": 0
+  },
+  "fregona": {
+   "pexels": 9462889,
+   "desde": 0
+  },
+  "bolsa": {
+   "pexels": 38431825,
+   "desde": 0
+  },
+  "monedas": {
+   "pexels": 3943961,
+   "desde": 0
+  },
+  "reloj": {
+   "pexels": 7034335,
+   "desde": 0
+  }
  },
  "imagenes": {
   "gas3": {
@@ -169,45 +185,37 @@
    "clip": "gasolinera",
    "mov": "izq",
    "kicker": {
-    "texto": "Pumped gas",
-    "en": "0:pumped"
+    "texto": "This janitor died with",
+    "en": "0-0.4"
+   },
+   "titulo": {
+    "texto": "$8 million",
+    "en": "0:eight"
    }
   },
   {
    "tipo": "foto",
-   "en": "0:cleaned",
+   "en": "1",
    "img": "sweep",
    "mov": "push",
-   "titulo": {
-    "texto": "A janitor.",
-    "en": "0:cleaned+0.05"
+   "kicker": {
+    "texto": "Ronald Read · janitor",
+    "en": "1"
    }
   },
   {
    "tipo": "foto",
-   "en": "0:whole",
+   "en": "1:cleaned",
    "img": "bratt1",
    "mov": "sube",
    "kicker": {
     "texto": "Brattleboro, Vermont",
-    "en": "0:whole"
+    "en": "1:cleaned"
    },
    "sub": {
     "texto": "his whole life · 1921–2014",
-    "en": "0:whole+0.1"
+    "en": "1:whole"
    }
-  },
-  {
-   "tipo": "revelacion",
-   "en": "1",
-   "linea1": {
-    "texto": "A janitor."
-   },
-   "linea2": {
-    "texto": "$8 million.",
-    "en": "1:eight"
-   },
-   "golpe": "1:dollars"
   },
   {
    "tipo": "lista",
@@ -224,254 +232,119 @@
      "texto": "No hot tips",
      "en": "3",
      "marca": "3:hot"
-    },
-    {
-     "texto": "No tech stocks",
-     "en": "4",
-     "marca": "4:tech"
     }
    ]
   },
   {
-   "tipo": "titulo",
-   "en": "5",
-   "lineas": [
-    {
-     "texto": "*3* boring habits",
-     "en": "5:three",
-     "estilo": "big"
-    },
-    {
-     "texto": "{n} *years*",
-     "en": "5:sixty",
-     "estilo": "huge"
-    }
-   ],
-   "contador": {
-    "linea": 1,
-    "valor": 60,
-    "en": "5:sixty"
-   }
-  },
-  {
    "tipo": "tarjetas",
-   "en": "6",
+   "en": "4",
    "imgs": [
     {
      "img": "cert1",
-     "en": "6:bought"
+     "en": "4:bought"
     },
     {
      "img": "cert2",
-     "en": "6:companies"
+     "en": "4:companies"
     },
     {
      "img": "cert3",
-     "en": "6:that"
+     "en": "4:paid"
     }
    ],
    "titulo": {
     "texto": "Companies that pay you",
-    "en": "6:paid"
+    "en": "4:dividends"
    },
    "flujo": {
     "texto": "Every dividend reinvested",
-    "en": "6:reinvested",
-    "hasta": "6:shares+0.1",
-    "contador": {
-     "desde": 100,
-     "valor": 152,
-     "etiqueta": "shares owned"
-    }
+    "en": "4:reinvested",
+    "hasta": "4:one$"
    }
   },
   {
    "tipo": "contador3d",
-   "en": "6:shares+0.34",
+   "en": "5",
    "valor": 8000000,
    "prefijo": "$",
-   "llega": "7:eight",
-   "columnas": 6,
+   "llega": "5:dollars",
    "kicker": {
     "texto": "Sixty years later",
-    "en": "7"
+    "en": "5"
    },
    "pill": {
     "texto": "He put in: $122,400",
-    "en": "8"
-   }
-  },
-  {
-   "tipo": "curva",
-   "en": "9",
-   "fin": "9:is",
-   "ilustrativo": true,
-   "etiqueta_max": "$8M",
-   "serie": {
-    "mensual": 170,
-    "tasa": 0.1,
-    "anios": 60,
-    "final": 8000000
-   },
-   "aportado": {
-    "texto": "$122,400 he put in",
-    "en": "9:past"
-   },
-   "area": {
-    "texto": "Dividends buying dividends",
-    "en": "9:dividends"
+    "en": "5:eight"
    }
   },
   {
    "tipo": "titulo",
-   "en": "10",
-   "icono": {
-    "tipo": "engranaje",
-    "en": "10:machine"
-   },
-   "lineas": [
-    {
-     "texto": "The machine.",
-     "en": "10:machine",
-     "estilo": "big",
-     "color": "gold"
-    }
-   ],
-   "cheque": {
-    "monto": "$ 32.00",
-    "etiqueta": "Paycheck",
-    "en": "10:not",
-    "tachar": "10:paycheck"
-   }
-  },
-  {
-   "tipo": "titulo",
-   "en": "11",
+   "en": "6",
    "alarma": true,
    "kicker": {
     "texto": "Now",
-    "en": "11",
+    "en": "6",
     "color": "red"
    },
    "lineas": [
     {
      "texto": "The part",
-     "en": "11:the"
+     "en": "6:the"
     },
     {
-     "texto": "nobody says.",
-     "en": "11:nobody",
+     "texto": "nobody tells you.",
+     "en": "6:nobody",
      "color": "red"
     }
    ]
   },
   {
    "tipo": "puntos",
-   "en": "12",
+   "en": "7",
    "n": 95,
    "etiqueta": "stocks",
    "fondo": "nyse",
    "cuenta": {
-    "en": "12:ninety-five"
+    "en": "7:ninety-five"
    },
    "cae": {
-    "en": "12:collapse",
-    "hasta": "12:sink",
+    "en": "7:collapse",
+    "hasta": "7:sink",
     "img": "crash",
     "texto": "One collapse can't sink him"
-   },
-   "atenuar": {
-    "en": "12:cut",
-    "n": 7,
-    "texto": "Some cut their dividends"
    }
   },
   {
    "tipo": "titulo",
-   "en": "13",
+   "en": "8",
    "lineas": [
     {
      "texto": "He never had",
-     "en": "13",
+     "en": "8",
      "estilo": "big"
     },
     {
      "texto": "Sell",
-     "en": "13:had",
+     "en": "8:had",
      "estilo": "boton"
     }
    ],
    "tachar": {
     "linea": 1,
-    "en": "13:sell"
-   }
-  },
-  {
-   "tipo": "anios",
-   "en": "14",
-   "desde": 1954,
-   "hasta": 2014,
-   "cuenta": {
-    "en": "14"
-   },
-   "fin": "14:it$",
-   "kicker": "60 years · never sold",
-   "fondo": "bratt2",
-   "hitos": [
-    [
-     1962,
-     "Kennedy slide"
-    ],
-    [
-     1973,
-     "Oil shock crash"
-    ],
-    [
-     1987,
-     "Black Monday"
-    ],
-    [
-     2000,
-     "Dot-com bust"
-    ],
-    [
-     2008,
-     "Financial crisis"
-    ]
-   ],
-   "etiqueta": {
-    "texto": "No emergency big enough",
-    "en": "14:no"
+    "en": "8:sell"
    }
   },
   {
    "tipo": "titulo",
-   "en": "15",
-   "fondo": "bratt1",
-   "lineas": [
-    {
-     "texto": "That's the *rare part.*",
-     "en": "15"
-    },
-    {
-     "texto": "Not the picking.",
-     "en": "15:not",
-     "estilo": "mid",
-     "color": "mute"
-    }
-   ]
-  },
-  {
-   "tipo": "titulo",
-   "en": "16",
+   "en": "9",
    "kicker": {
     "texto": "You don't need",
-    "en": "16"
+    "en": "9"
    },
    "lineas": [
     {
      "texto": "$8,000,000",
-     "en": "16:need",
+     "en": "9:his",
      "estilo": "huge",
      "color": "gold",
      "tam": 170
@@ -479,88 +352,97 @@
    ],
    "tachar": {
     "linea": 0,
-    "en": "16:eight"
-   }
-  },
-  {
-   "tipo": "curva",
-   "en": "17",
-   "serie": {
-    "mensual": 170,
-    "tasa": 0.1,
-    "anios": 60,
-    "final": 8000000
-   },
-   "titulo": {
-    "texto": "Same engine. Any size.",
-    "en": "17:engine"
-   },
-   "escalas": [
-    {
-     "texto": "$8M"
-    },
-    {
-     "texto": "$800K",
-     "en": "17:same"
-    },
-    {
-     "texto": "$80K",
-     "en": "17:any"
-    }
-   ],
-   "encoger": {
-    "en": "17:engine",
-    "hasta": "17:size"
+    "en": "9:millions"
    }
   },
   {
    "tipo": "lista",
-   "en": "18",
+   "en": "10",
    "icono": "check",
    "items": [
     {
      "texto": "Own what pays you",
-     "en": "18"
+     "en": "10"
     },
     {
      "texto": "Reinvest it",
-     "en": "18:reinvest"
+     "en": "10:reinvest"
     },
     {
      "texto": "Don't interrupt it",
-     "en": "18:don't",
+     "en": "10:don't",
      "color": "gold"
     }
    ]
   },
   {
    "tipo": "cta",
-   "en": "19",
+   "en": "11",
    "a": {
     "texto": "Skill",
-    "en": "19:skill"
+    "en": "11:skill"
    },
    "o": "or just",
    "b": {
     "texto": "Time",
-    "en": "19:time"
-   },
-   "pregunta": {
-    "texto": "On a gas station paycheck?",
-    "en": "20",
-    "fondo": "gas3"
+    "en": "11:time"
    },
    "botones": [
     {
      "texto": "Team skill",
-     "en": "21:team"
+     "en": "11:time$"
     },
     {
      "texto": "Team time",
-     "en": "21:team#2"
+     "en": "11:time$+0.35"
     }
    ],
    "sub": "drop your verdict ↓"
   }
- ]
+ ],
+ "social": {
+  "carrusel": [
+   {
+    "fondo": "clip:gasolinera@1.5",
+    "kicker": "This janitor died with",
+    "titulo": "*$8 million*",
+    "texto": "Ronald Read never earned a big salary. Here's exactly how he did it."
+   },
+   {
+    "fondo": "img:sweep",
+    "kicker": "Who",
+    "titulo": "Gas station. *Janitor.*",
+    "texto": "Brattleboro, Vermont · 1921–2014. No big salary. No hot tips. No inheritance story."
+   },
+   {
+    "fondo": "img:cert1",
+    "kicker": "The habit",
+    "titulo": "Boring companies *that pay you*",
+    "texto": "Dividend-paying blue chips. And every dividend went straight back into more shares."
+   },
+   {
+    "fondo": "img:nyse",
+    "kicker": "The safety net",
+    "titulo": "*95* stocks",
+    "texto": "So one collapse could never sink him. And he never had to sell."
+   },
+   {
+    "fondo": "img:bratt2",
+    "kicker": "The honest part",
+    "titulo": "Time, *uninterrupted*",
+    "texto": "Not genius picks. Sixty years without touching it. That's the rare part."
+   },
+   {
+    "fondo": "img:gas3",
+    "kicker": "Your turn",
+    "titulo": "Skill, or *just time?*",
+    "texto": "Tell us in the comments. The engine works at any size."
+   }
+  ],
+  "caption": "A gas station attendant and janitor left an $8 million estate. No big salary, no hot tips: boring dividend stocks, every dividend reinvested, 95 holdings, and 60 years of never selling.\n\nSkill, or just time? 👇",
+  "historia": {
+   "hasta": "1:life$",
+   "cierre": "How a janitor made *$8M*"
+  }
+ }
 }

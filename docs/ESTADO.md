@@ -1,5 +1,20 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-26 · NIVEL VIRAL + PÁGINAS VIVAS
+>
+> - Análisis contra Shorts virales 2026: los nuestros eran largos (50-58 s vs 20-45 s), la cifra
+>   llegaba a los 3,9 s (el 50-60 % se va en los 3 primeros) y había 3 s de cola muda. #7 y #8
+>   reescritos: 85-92 palabras (~28-30 s), cifra en la 1.ª frase y en pantalla desde el fotograma 0,
+>   cola 0,6 s, final que enlaza con el inicio. El validador avisa si la voz pasa de 42 s.
+> - Páginas: `video-v2/motor/social.py` → carrusel 4:5 + historia 9:16 + textos por Short (lo hace
+>   producir.py si el storyboard tiene `social`). `publish-social <ref>` para IG/FB: sin
+>   `--publicar` solo el plan; con él, en vivo y SOLO con confirmación en el chat. Carrusel de IG
+>   vía URL de CDN de una foto no publicada de la Página (IG no acepta imágenes locales).
+>   ⚠ La publicación en Meta de historias/carruseles NO está probada en real (sin token en la nube).
+> - Riesgo: política de "contenido inauténtico" de YouTube (plantillas a escala, detección por
+>   canal desde ene-2026). Defensas: guion investigado con fuentes, historias distintas,
+>   aprobación humana; variar también el formato visual.
+
 > ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-25 · BASE REINICIADA DESDE 0 (decisión del usuario) + MOTOR PROFESIONAL
 >
 > - **Base nueva** en el repo privado `net-worthy-data` (`omega.sql`): solo el ADN de #7 (Ronald

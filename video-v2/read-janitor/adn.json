@@ -3,43 +3,43 @@
   "hook_type": "story",
   "story_type": "character",
   "cta_type": "comment",
-  "length_s": 50,
+  "length_s": 28,
   "renderer_version": "v2-hyperframes",
   "blocks": [
     {
       "block": "intro",
-      "technique": "contrast_archive_photos",
-      "length_s": 4.86
+      "technique": "foto+clip",
+      "length_s": 2.9
     },
     {
-      "block": "thesis",
-      "technique": "checklist_x_then_years_counter",
-      "length_s": 5.1
+      "block": "who",
+      "technique": "foto,lista",
+      "length_s": 5.62
     },
     {
-      "block": "proof",
-      "technique": "certificates_dividends_then_3d_coins_counter",
-      "length_s": 7.88
+      "block": "how",
+      "technique": "tarjetas",
+      "length_s": 4.34
     },
     {
       "block": "payoff",
-      "technique": "illustrative_curve_then_machine",
-      "length_s": 5.06
+      "technique": "contador3d",
+      "length_s": 2.06
     },
     {
       "block": "honesty",
-      "technique": "dots_95_crash_headline_years_ticker",
-      "length_s": 12.96
+      "technique": "titulo,puntos",
+      "length_s": 6.0
     },
     {
       "block": "lesson",
-      "technique": "strike_8m_same_curve_checklist",
-      "length_s": 6.04
+      "technique": "titulo,lista",
+      "length_s": 5.15
     },
     {
       "block": "cta",
-      "technique": "skill_vs_time_split_team_pills",
-      "length_s": 7.9
+      "technique": "cta",
+      "length_s": 2.05
     }
   ]
 }

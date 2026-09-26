@@ -132,8 +132,8 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
 # Clips de vídeo: ni el crudo (assets/clips/*.src) ni el tratado (assets/v/) — pesan MB y se
 # regeneran desde `clips` del storyboard; los créditos sí viajan.
 EXCLUIR_PROD = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/img/",
-                "assets/clips/", "assets/v/")
-EXCLUIR_ARCH = ("music-bed.wav",)
+                "assets/clips/", "assets/v/", "social/_render/", "social/_tarjeta/")
+EXCLUIR_ARCH = ("music-bed.wav", "historia.mp4")   # la historia se regenera del render (pesa MB)
 INCLUIR_SIEMPRE = ("assets/img/creditos.json", "assets/clips/creditos.json", "renders/qa.json")
 
 

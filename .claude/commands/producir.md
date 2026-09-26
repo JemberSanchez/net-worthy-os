@@ -23,7 +23,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    Si `analytics-sync` mostró búsquedas reales que encajan con un candidato de `decide`, ese
    candidato gana el empate (demanda medida en NUESTRO canal > demanda estimada). Dilo en el resumen.
 
-## 2. Guion (inglés, 110-160 palabras ≈ 35-50 s con Kokoro)
+## 2. Guion (inglés, 85-110 palabras ≈ 27-35 s con Kokoro — medido 26-sep: 85 palabras = 27,5 s)
 5. Estructura: gancho de contraste (≤2 frases, la primera palabra ya dice algo) → qué pasó / datos
    → por qué funciona → **la parte honesta** (riesgo, sesgo de superviviente) → "y a ti qué" →
    CTA con UNA sola dicotomía para comentarios. Frases cortas: cada frase es un ancla.
@@ -73,6 +73,15 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    qué frase y qué palabra fallan: corrige el storyboard, no el validador. Después revisa una
    hoja de contactos (`npx hyperframes snapshot --at ...`) ANTES del render: el validador no ve
    solapes ni textos que no caben.
+
+## 3b. Páginas vivas (carrusel + historia)
+Añade al storyboard un bloque `social` (formato en `video-v2/motor/social.py`): 5-7 diapositivas
+con `fondo` real (`img:<clave>` o `clip:<clave>@<s>`), portada con la cifra del gancho, una idea por
+diapositiva (texto ≤170 caracteres, dato verificado en `cifras`), última con la pregunta del CTA;
+`caption` sin hashtags ni fuentes (se añaden solos); `historia.hasta` = final de la 2.ª frase.
+`producir.py` lo genera en `social/` como una puerta más. Publicar en Facebook/Instagram:
+`python -m omega.cli publish-social <ref>` muestra el plan; `--publicar` SOLO con confirmación
+explícita del usuario en el chat (regla del proyecto).
 
 ## 4. Producir y medir
 9. `python video-v2/motor/producir.py video-v2/<ref>` — voz, build, lint, render, loudness, ritmo.

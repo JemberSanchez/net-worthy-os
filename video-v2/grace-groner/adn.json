@@ -4,42 +4,42 @@
   "story_type": "character",
   "cta_type": "comment",
   "renderer_version": "v2-hyperframes",
-  "length_s": 58,
+  "length_s": 30,
   "blocks": [
     {
       "block": "intro",
-      "technique": "foto+clip,revelacion",
-      "length_s": 4.96
+      "technique": "foto+clip",
+      "length_s": 4.19
     },
     {
-      "block": "thesis",
-      "technique": "lista,titulo",
-      "length_s": 8.52
+      "block": "who",
+      "technique": "titulo",
+      "length_s": 4.37
     },
     {
-      "block": "proof",
-      "technique": "foto+clip,foto,tarjetas,titulo",
-      "length_s": 10.42
+      "block": "how",
+      "technique": "revelacion,tarjetas",
+      "length_s": 4.88
     },
     {
       "block": "payoff",
       "technique": "contador3d",
-      "length_s": 6.52
+      "length_s": 2.48
     },
     {
       "block": "honesty",
       "technique": "titulo,anios",
-      "length_s": 10.66
+      "length_s": 7.0
     },
     {
       "block": "lesson",
-      "technique": "titulo,curva,lista",
-      "length_s": 8.07
+      "technique": "lista",
+      "length_s": 2.9
     },
     {
       "block": "cta",
-      "technique": "titulo,cta",
-      "length_s": 8.87
+      "technique": "cta",
+      "length_s": 3.78
     }
   ]
 }
