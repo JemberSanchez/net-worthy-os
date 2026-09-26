@@ -17,12 +17,13 @@ class LicenciaTest(unittest.TestCase):
     def test_admitidas(self):
         for n, clase in (("Public domain", "pd"), ("PD-US", "pd"), ("PD-USGov", "pd"),
                          ("CC0", "cc0"), ("CC BY 4.0", "cc-by"), ("CC BY 2.0", "cc-by"),
-                         ("CC-BY-3.0", "cc-by")):
+                         ("CC-BY-3.0", "cc-by"), ("CC BY 3.0 us", "cc-by"), ("cc-by-3.0-de", "cc-by")):
             self.assertEqual(il.licencia_ok(n), clase, n)
 
     def test_rechazadas(self):
         # SA: el share-alike puede extenderse al video · NC: el canal monetiza · ND: el duotono ES derivada
-        for n in ("CC BY-SA 4.0", "CC BY-SA 3.0", "CC BY-NC 4.0", "CC BY-ND 2.0",
+        for n in ("CC BY-SA 4.0", "CC BY-SA 3.0", "CC BY-NC 4.0", "CC BY-ND 2.0", "CC BY-SA 3.0 us",
+                  "CC BY-NC 3.0 us", "CC BY 3.0 usa",
                   "CC BY-NC-SA 2.0", "GFDL", "Fair use", "", None, "Copyrighted", "All rights reserved"):
             self.assertIsNone(il.licencia_ok(n), n)
 

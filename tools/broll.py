@@ -192,7 +192,7 @@ GRADO_MARCA = ("eq=contrast=1.08:saturation=0.82:brightness=-0.03,"
                "colorbalance=rs=-0.06:gs=0.02:bs=0.03:rh=0.06:gh=0.03:bh=-0.07,vignette=PI/4.5")
 # Fondo detrás de texto: desenfoque fuerte (reducir -> desenfocar -> ampliar: igual a la vista y
 # ~10x más rápido que un gblur a 1080x1920).
-DESENFOQUE_FONDO = "scale=270:480,gblur=sigma=4,scale=1080:1920"
+DESENFOQUE_FONDO = "scale=540:960,gblur=sigma=3,scale=1080:1920"   # 26-sep: la mitad de desenfoque (más metraje real)
 MODOS = ("color", "duotono")
 
 

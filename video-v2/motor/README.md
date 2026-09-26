@@ -84,3 +84,9 @@ contador llevan temblor de cámara en vez de estallido de monedas. `tarjetas` si
 `curva` con ejes reales: años en X (`serie.desde_anio` si está VERIFICADO; si no, "Yr N"), dólares
 en Y con líneas de referencia (salvo con `escalas`), y un punto que recorre la línea con año y
 valor; el área aparece cuando la línea llega.
+
+Nivel documental (26-sep): las fotos de escenas `foto` se convierten solas en clips 2.5D
+(`tools/profundidad.py`: mapa de profundidad Depth Anything V2 + remap por píxel; lo cercano se
+mueve más que lo lejano, sin huecos). `imagenes.<k>.documento: true` (certificados, periódicos) o
+`"parallax": false` en la escena lo desactivan. `musica.pista` = pista real de Commons
+(`tools/musica_libre.py`, CC BY/CC0/PD) en lugar de la generada; cama a -20 LUFS antes del ducking.

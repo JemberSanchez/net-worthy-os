@@ -168,6 +168,33 @@ class RealNoGenericoTest(unittest.TestCase):
         self.assertIn("contador3d", c.AUTO_FONDO)                              # el payoff sobre metraje real
 
 
+class DocumentalTest(unittest.TestCase):
+    """26-sep: parallax 2.5D automático en fotos de escenas `foto` y música real por `musica.pista`."""
+
+    def test_fotos_de_escena_pasan_a_2p5d(self):
+        p = c.plan(sb(), W)
+        f = p["fotos"][0]
+        self.assertTrue(f.get("p25d") and f.get("video"))
+        self.assertEqual(f["src"], f"foto1-2p5d-{f['mov']}-{round((f['t1'] - f['t0']) * 100)}.mp4")
+        self.assertNotIn("clip", f)                                        # no pasa por broll/Pexels
+        self.assertFalse(any(x.get("p25d") for x in p["fotos"] if x["id"].endswith("a")))   # fondos no
+
+    def test_documentos_y_desactivar(self):
+        d = sb(); d["imagenes"]["foto1"]["documento"] = True
+        self.assertFalse(c.plan(d, W)["fotos"][0].get("p25d"))
+        d = sb(); d["escenas"][0]["parallax"] = False
+        self.assertFalse(c.plan(d, W)["fotos"][0].get("p25d"))
+        self.assertFalse(c.plan(sb(parallax=False), W)["fotos"][0].get("p25d"))
+
+    def test_creditos_de_musica(self):
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        import musica_libre
+        t = musica_libre.texto_creditos([{"titulo": "File:Kevin MacLeod - Hustle.ogg", "autor": "Kevin MacLeod",
+                                          "licencia": "CC BY 3.0", "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+                                          "fuente": "https://commons.wikimedia.org/wiki/File:X"}])
+        self.assertTrue(t.startswith("Music:\n- Kevin MacLeod - Hustle — Kevin MacLeod (incompetech.com) — CC BY 3.0"))
+
+
 class BrollTest(unittest.TestCase):
     """Clips de vídeo en `foto`/`fondo`: validación, plan y el HTML que exige el lint de HyperFrames."""
 
@@ -211,7 +238,7 @@ class BrollTest(unittest.TestCase):
         p = c.plan(d, W)
         auto = [f for f in p["fotos"] if f["id"].endswith("a")]
         self.assertTrue(auto and all(f.get("video") and f["fondo_vid"] and f["modo"] == "color" for f in auto))
-        self.assertTrue(all(f["src"].endswith("-cf.mp4") and f["opacidad"] == c.OPACIDAD_AUTO_CLIP for f in auto))
+        self.assertTrue(all(f["src"].endswith("-cf2.mp4") and f["opacidad"] == c.OPACIDAD_AUTO_CLIP for f in auto))
         tramos = [(f["clip"], f["desde"]) for f in auto]
         self.assertEqual(len(tramos), len(set(tramos)))                     # ningún plano repetido
         # sin clips, vuelve a las fotos desenfocadas

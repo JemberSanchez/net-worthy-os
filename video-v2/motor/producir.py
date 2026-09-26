@@ -62,6 +62,13 @@ def descripcion(sb: dict, proy: Path) -> str:
         fichas = [f for f in json.loads(cred_v.read_text(encoding="utf-8")) if f["archivo"] in usados]
         if fichas:
             partes.append(broll.texto_creditos(fichas))
+    cred_m = proy / "assets" / "musica" / "creditos.json"
+    if cred_m.exists() and ((sb.get("musica") or {}).get("pista")):   # CC BY exige citar la música
+        sys.path.insert(0, str(RAIZ / "tools"))
+        import musica_libre
+        fichas = [f for f in json.loads(cred_m.read_text(encoding="utf-8")) if f["archivo"] == "pista.src"]
+        if fichas:
+            partes.append(musica_libre.texto_creditos(fichas))
     hashtags = " ".join(pub.get("hashtags", []))
     if hashtags:
         partes.append(hashtags)
