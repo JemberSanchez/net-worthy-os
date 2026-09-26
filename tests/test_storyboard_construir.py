@@ -78,7 +78,7 @@ class PlanTest(unittest.TestCase):
         for a, b in zip(e, e[1:]):
             self.assertAlmostEqual(a["t1"], b["t0"] + 0.02)             # solape mínimo, sin huecos
         self.assertEqual(e[-1]["t1"], p["D"])
-        self.assertEqual(p["D"], round(W[-1]["end"] + 3.0, 2))          # cola por defecto 3 s
+        self.assertEqual(p["D"], round(W[-1]["end"] + c.COLA_S, 2))      # cola corta por defecto (bucle)
 
     def test_fotos_subtitulos_y_texto_visible(self):
         p = c.plan(sb(), W)

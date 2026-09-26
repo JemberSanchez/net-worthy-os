@@ -25,6 +25,7 @@ Comandos:
   python -m omega.cli rescore [--dry-run]          # recalcula el exito de todos desde analytics
   python -m omega.cli analytics-sync [<ref>] [--dry-run]  # trae de YouTube Analytics retención/búsquedas + rescore
   python -m omega.cli vincular <ref> <video_id>    # asocia un video ya subido a su ref (para analytics/programar)
+  python -m omega.cli publish-social <ref> [--publicar]  # carrusel + historia en IG/FB (sin --publicar: solo el plan)
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
   python -m omega.cli resolve-prediction <id> <outcome> [nota]  # cierra una predicción vencida
@@ -961,6 +962,52 @@ def _video_id(ref: str) -> str | None:
     return vid
 
 
+def _proyecto_de(ref: str):
+    """video-v2/<proyecto> cuyo storyboard tiene ese `ref` (o cuyo nombre de carpeta es ref)."""
+    import json
+    from pathlib import Path
+    raiz = Path(__file__).resolve().parents[1] / "video-v2"
+    for sb in raiz.glob("*/storyboard.json"):
+        if sb.parent.name == ref or json.loads(sb.read_text(encoding="utf-8")).get("ref") == ref:
+            return sb.parent
+    raise SystemExit(f"✗ no hay proyecto en video-v2/ con ref {ref!r}")
+
+
+def cmd_publish_social() -> None:
+    """Carrusel + historia de un Short en Instagram y Facebook (generados por video-v2/motor/social.py).
+    Sin --publicar NO envía nada: muestra el plan. Con --publicar publica EN VIVO — la regla del
+    proyecto exige confirmación explícita del usuario en el chat antes de usarlo.
+      publish-social <ref> [--publicar] [--solo carrusel|historia] [--red ig|fb]"""
+    from . import publish_meta as pm
+    if len(sys.argv) < 3:
+        raise SystemExit("Uso: python -m omega.cli publish-social <ref> [--publicar] [--solo carrusel|historia] [--red ig|fb]")
+    proy = _proyecto_de(sys.argv[2])
+    plan = pm.plan_social(proy / "social")
+    solo = sys.argv[sys.argv.index("--solo") + 1] if "--solo" in sys.argv else None
+    red = sys.argv[sys.argv.index("--red") + 1] if "--red" in sys.argv else None
+    publicar = "--publicar" in sys.argv
+    if not plan["carrusel"] and not plan["historia"]:
+        raise SystemExit(f"✗ {proy.name}/social está vacío: genera antes con `python video-v2/motor/social.py video-v2/{proy.name}`")
+    tareas = [(n, r) for n in ("carrusel", "historia") for r in ("ig", "fb") if (not solo or solo == n) and (not red or red == r)]
+    print(f"{'PUBLICANDO EN VIVO' if publicar else 'PLAN (no se envía nada; --publicar para publicar)'} · {proy.name}")
+    for n, r in tareas:
+        destino = {"ig": "Instagram", "fb": "Facebook"}[r]
+        if n == "carrusel":
+            if not plan["carrusel"]:
+                continue
+            print(f"  carrusel → {destino}: {len(plan['carrusel'])} imágenes")
+            if publicar:
+                fn = pm.upload_instagram_carousel if r == "ig" else pm.upload_facebook_carousel
+                print("    ✓", fn(plan["carrusel"], plan["caption_ig"] if r == "ig" else plan["caption_fb"], publish=True))
+        else:
+            if not plan["historia"]:
+                continue
+            print(f"  historia → {destino}: {plan['historia'].name}")
+            if publicar:
+                fn = pm.upload_instagram_story if r == "ig" else pm.upload_facebook_story
+                print("    ✓", fn(plan["historia"], publish=True))
+
+
 def cmd_vincular() -> None:
     """Asocia un video YA subido a su ref (los #1-#6 se subieron a mano). Así analytics-sync lo mide."""
     if len(sys.argv) < 4:
@@ -1155,6 +1202,7 @@ def main(argv: list[str]) -> int:
         "youtube-auth": cmd_youtube_auth,
         "programar": cmd_programar,
         "vincular": cmd_vincular,
+        "publish-social": cmd_publish_social,
         "analytics-sync": cmd_analytics_sync,
         "estado-bajar": cmd_estado_bajar,
         "estado-subir": cmd_estado_subir,

@@ -241,3 +241,133 @@ def upload_instagram_reel(video_path: Path, caption: str, *, publish: bool = Fal
         "fields": "permalink", "access_token": page_token,
     })
     return {"media_id": media_id, "url": media["permalink"]}
+
+
+# ── Páginas vivas (26-sep): historias y carruseles, derivados de cada Short ─────────────────────
+# Todo lo de aquí PUBLICA al llamarse con publish=True, y la regla del proyecto exige confirmación
+# explícita en el chat antes de hacerlo (Meta nunca se automatiza en vivo). Sin publish=True no se
+# envía nada: `plan_social` solo describe lo que se haría.
+
+def _ig_user() -> tuple[str, str]:
+    creds = _get_page_token()
+    ig_user_id = creds.get("ig_user_id")
+    if not ig_user_id:
+        raise PublishError("No hay cuenta de Instagram Business vinculada (meta_token.json sin ig_user_id).")
+    return ig_user_id, creds["page_access_token"]
+
+
+def _esperar_contenedor(container_id: str, token: str) -> None:
+    deadline, status = time.time() + _POLL_TIMEOUT_S, None
+    while time.time() < deadline:
+        status = _request("GET", f"{GRAPH}/{container_id}", params={"fields": "status_code", "access_token": token}).get("status_code")
+        if status == "FINISHED":
+            return
+        if status == "ERROR":
+            raise PublishError(f"Instagram rechazó el contenedor {container_id}.")
+        time.sleep(_POLL_INTERVAL_S)
+    raise PublishError(f"Timeout esperando el contenedor {container_id} (último estado: {status}).")
+
+
+def _ig_publicar(ig_user_id: str, container_id: str, token: str) -> dict:
+    media_id = _request("POST", f"{GRAPH}/{ig_user_id}/media_publish",
+                        data={"creation_id": container_id, "access_token": token}, retriable=False)["id"]
+    media = _request("GET", f"{GRAPH}/{media_id}", params={"fields": "permalink", "access_token": token})
+    return {"media_id": media_id, "url": media.get("permalink")}
+
+
+def upload_instagram_story(video_path: Path, *, publish: bool = False) -> dict:
+    """Historia de Instagram desde un MP4 LOCAL (subida reanudable, media_type=STORIES).
+    Las historias no admiten texto de pie ni borrador: con publish=False no se envía nada."""
+    if not video_path.exists():
+        raise PublishError(f"No existe el video: {video_path}")
+    if not publish:
+        return {"status": "sin enviar (publish=False)"}
+    ig_user_id, token = _ig_user()
+    cid = _request("POST", f"{GRAPH}/{ig_user_id}/media", data={
+        "media_type": "STORIES", "upload_type": "resumable", "access_token": token})["id"]
+    _request("POST", f"https://rupload.facebook.com/ig-api-upload/{API_VERSION}/{cid}",
+             headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(video_path.stat().st_size)},
+             data=video_path.read_bytes(), retriable=False)
+    _esperar_contenedor(cid, token)
+    return _ig_publicar(ig_user_id, cid, token)
+
+
+def upload_facebook_story(video_path: Path, *, publish: bool = False) -> dict:
+    """Historia de la Página de Facebook (/video_stories: start -> subida -> finish). Facebook no
+    tiene borrador de historias: finish la publica, así que solo se llama con publish=True."""
+    if not video_path.exists():
+        raise PublishError(f"No existe el video: {video_path}")
+    if not publish:
+        return {"status": "sin enviar (publish=False)"}
+    creds = _get_page_token()
+    page_id, token = creds["page_id"], creds["page_access_token"]
+    start = _request("POST", f"{GRAPH}/{page_id}/video_stories", data={"upload_phase": "start", "access_token": token})
+    _request("POST", start["upload_url"], headers={
+        "Authorization": f"OAuth {token}", "offset": "0", "file_size": str(video_path.stat().st_size)},
+        data=video_path.read_bytes(), retriable=False)
+    fin = _request("POST", f"{GRAPH}/{page_id}/video_stories", data={
+        "upload_phase": "finish", "video_id": start["video_id"], "access_token": token}, retriable=False)
+    return {"post_id": fin.get("post_id"), "video_id": start["video_id"]}
+
+
+def _foto_sin_publicar(page_id: str, token: str, img: Path) -> str:
+    """Sube una imagen a la Página SIN publicarla (published=false) y devuelve su id. Es también
+    la forma de tener una URL pública para Instagram, que no acepta imágenes locales."""
+    with img.open("rb") as f:
+        return _request("POST", f"{GRAPH}/{page_id}/photos", data={"published": "false", "access_token": token},
+                        files={"source": (img.name, f, "image/jpeg")}, retriable=False)["id"]
+
+
+def upload_facebook_carousel(images: list[Path], message: str, *, publish: bool = False) -> dict:
+    """Publicación de la Página con varias fotos (fotos sin publicar + /feed con attached_media)."""
+    faltan = [str(p) for p in images if not p.exists()]
+    if faltan:
+        raise PublishError(f"No existen: {faltan}")
+    if not publish:
+        return {"status": "sin enviar (publish=False)"}
+    creds = _get_page_token()
+    page_id, token = creds["page_id"], creds["page_access_token"]
+    ids = [_foto_sin_publicar(page_id, token, p) for p in images]
+    import json as _json
+    post = _request("POST", f"{GRAPH}/{page_id}/feed", data={
+        "message": message, "access_token": token,
+        "attached_media": _json.dumps([{"media_fbid": i} for i in ids])}, retriable=False)
+    return {"post_id": post["id"], "url": f"https://www.facebook.com/{post['id']}"}
+
+
+def upload_instagram_carousel(images: list[Path], caption: str, *, publish: bool = False) -> dict:
+    """Carrusel de Instagram (2-10 imágenes JPEG). Instagram solo acepta imágenes por URL pública:
+    se suben a la Página sin publicar y se usa la URL de su CDN (campo `images`)."""
+    if not 2 <= len(images) <= 10:
+        raise PublishError(f"Un carrusel lleva 2-10 imágenes (hay {len(images)})")
+    faltan = [str(p) for p in images if not p.exists()]
+    if faltan:
+        raise PublishError(f"No existen: {faltan}")
+    if not publish:
+        return {"status": "sin enviar (publish=False)"}
+    creds = _get_page_token()
+    page_id, token = creds["page_id"], creds["page_access_token"]
+    ig_user_id, _ = _ig_user()
+    hijos = []
+    for p in images:
+        fid = _foto_sin_publicar(page_id, token, p)
+        urls = _request("GET", f"{GRAPH}/{fid}", params={"fields": "images", "access_token": token}).get("images") or []
+        if not urls:
+            raise PublishError(f"Facebook no devolvió URL para {p.name}")
+        mayor = max(urls, key=lambda u: u.get("width", 0))["source"]
+        hijos.append(_request("POST", f"{GRAPH}/{ig_user_id}/media", data={
+            "image_url": mayor, "is_carousel_item": "true", "access_token": token})["id"])
+    cid = _request("POST", f"{GRAPH}/{ig_user_id}/media", data={
+        "media_type": "CAROUSEL", "children": ",".join(hijos), "caption": caption, "access_token": token})["id"]
+    _esperar_contenedor(cid, token)
+    return _ig_publicar(ig_user_id, cid, token)
+
+
+def plan_social(social_dir: Path) -> dict:
+    """Qué se publicaría desde video-v2/<proyecto>/social (sin enviar nada). Función pura sobre disco."""
+    import json as _json
+    car = sorted((social_dir / "carrusel").glob("*.jpg"))
+    textos = _json.loads((social_dir / "textos.json").read_text(encoding="utf-8")) if (social_dir / "textos.json").exists() else {}
+    hist = social_dir / "historia.mp4"
+    return {"carrusel": car, "historia": hist if hist.exists() else None,
+            "caption_ig": textos.get("caption_ig", ""), "caption_fb": textos.get("caption_fb", "")}

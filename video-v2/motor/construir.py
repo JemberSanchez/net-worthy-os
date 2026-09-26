@@ -152,6 +152,8 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
 _CONTINUOS = {"foto", "contador3d", "anios", "curva", "puntos", "tarjetas"}
 
 
+COLA_S = 0.6          # s tras la voz: los virales cortan en seco (bucle); 3 s de cola restaban % visto
+VOZ_MAX = 42.0        # s: la franja que más retiene es 20-45 s (media de un Short ~33 s, 2026)
 REGANCHO_MAX = 12.0   # s sin golpe/revelación dentro de la voz: la curva del canal cae entre 3 y 20 s
 
 
@@ -165,9 +167,12 @@ def avisos_retencion(p: dict) -> list[str]:
     elif not e0.get("clip"):
         avisos.append("gancho con foto fija: un `clip` (b-roll en movimiento) frena mejor el scroll")
     textos = [e0[k]["en"] for k in ("kicker", "titulo", "sub") if isinstance(e0.get(k), dict) and "en" in e0[k]]
-    if not textos or min(textos) > 0.8:
-        avisos.append(f"el gancho no pone texto en pantalla antes de 0,8 s ({min(textos):.1f}s)" if textos
+    if not textos or min(textos) > 0.3:
+        avisos.append(f"el gancho no pone texto desde el primer fotograma ({min(textos):.2f}s): ancla con \"0-0.4\" — "
+                      "lo que ve quien hace scroll es el fotograma 0" if textos
                       else "el gancho no tiene texto en pantalla (kicker/titulo)")
+    if p["fin_voz"] > VOZ_MAX:
+        avisos.append(f"voz de {p['fin_voz']:.0f}s (> {VOZ_MAX:.0f}s): recorta el guion a ~85-110 palabras (20-45 s es lo que más retiene)")
     marcas = sorted({0.0, p["fin_voz"], *p["golpes"], *p["impactos"],
                      *(s["t0"] for s in p["escenas"] if s["tipo"] == "revelacion")})
     marcas = [t for t in marcas if 0 <= t <= p["fin_voz"]]
@@ -464,7 +469,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
     fr = anclas.frases(words)
     r = anclas.resolver(sb, words, fr)
     fin_voz = words[-1]["end"]
-    END = round(fin_voz + float(sb.get("cola_s", 3.0)), 2)
+    END = round(fin_voz + float(sb.get("cola_s", COLA_S)), 2)
     esc = r["escenas"]
     for k, s in enumerate(esc):
         s["t0"] = 0.0 if k == 0 else round(s["en"] - PRE, 3)
@@ -675,7 +680,7 @@ def _andamiaje(proy: Path) -> None:
             indent=2) + "\n")
     gi = proy / ".gitignore"
     if not gi.exists():
-        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\nassets/t/*-desenfoque.jpg\n")
+        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\nassets/t/*-desenfoque.jpg\nsocial/\n")
 
 
 def _carve(out: Path) -> None:
