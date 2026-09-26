@@ -18,8 +18,9 @@ Mismas reglas que las imágenes (tools/imagenes_libres.py):
     siempre un DERIVADO transcodificado (1080p/720p/480p .webm), nunca el original.
   - Pexels sirve los archivos desde videos.pexels.com: ese dominio tiene que estar permitido.
 
-Tratamiento (`preparar`): recorte a 9:16, 1080x1920, 30 fps, sin audio, y el MISMO duotono de
-marca que las fotos (LUT 1D generada por duotono.lut_1d con autocontraste medido en el clip). Si
+Tratamiento (`preparar`): recorte a 9:16, 1080x1920, 30 fps, sin audio y, por defecto, COLOR real
+con el grado de marca (GRADO_MARCA); `"duotono": true` en el clip le aplica el mismo duotono que a
+las fotos (LUT 1D de duotono.lut_1d con autocontraste medido en el clip). Si
 el tramo útil es más corto que la escena se hace bucle (-stream_loop). Clave de fotogramas cada
 0,5 s: HyperFrames extrae fotogramas por posición y una GOP larga lo haría lento.
 """
@@ -184,28 +185,54 @@ def niveles(crudo: Path, desde: float, dur: float) -> tuple[float, float]:
     return (bajo, alto) if alto - bajo > 0.05 else (0.0, 1.0)
 
 
-def preparar(crudo: Path, destino: Path, desde: float, dur: float, contraste: float = 1.15) -> dict:
-    """Crudo -> MP4 1080x1920 con duotono de marca, sin audio, de `dur` segundos exactos."""
+# Grado de marca para metraje MODERNO en color (decisión del usuario 26-sep, comparativa A/B vista):
+# sombras hacia verde-azulado, altas luces hacia dorado, saturación contenida y viñeta. Las fotos de
+# archivo siguen en duotono (casi todas son B/N de 1900-1950: en color quedarían grises).
+GRADO_MARCA = ("eq=contrast=1.08:saturation=0.82:brightness=-0.03,"
+               "colorbalance=rs=-0.06:gs=0.02:bs=0.03:rh=0.06:gh=0.03:bh=-0.07,vignette=PI/4.5")
+# Fondo detrás de texto: desenfoque fuerte (reducir -> desenfocar -> ampliar: igual a la vista y
+# ~10x más rápido que un gblur a 1080x1920).
+DESENFOQUE_FONDO = "scale=270:480,gblur=sigma=4,scale=1080:1920"
+MODOS = ("color", "duotono")
+
+
+def filtro(modo: str, fondo: bool, cube: str | None = None) -> str:
+    """Cadena -vf de ffmpeg para tratar un clip. Función pura (testeable sin ffmpeg)."""
+    if modo not in MODOS:
+        raise ValueError(f"modo {modo!r} no existe ({', '.join(MODOS)})")
+    color = GRADO_MARCA if modo == "color" else f"format=gray,format=rgb24,lut1d=file={cube}"
+    return f"{_geometria()},{color}" + (f",{DESENFOQUE_FONDO}" if fondo else "")
+
+
+def preparar(crudo: Path, destino: Path, desde: float, dur: float, contraste: float = 1.15,
+             modo: str = "color", fondo: bool = False) -> dict:
+    """Crudo -> MP4 1080x1920 sin audio, de `dur` segundos exactos. `modo`: "color" (grado de
+    marca, por defecto para metraje moderno) o "duotono" (la misma rampa que las fotos, vía LUT 1D).
+    `fondo=True`: además, desenfocado, para ir detrás de texto."""
     from duotono import lut_1d
     total = _duracion(crudo)
-    if desde >= total:
-        raise SystemExit(f"✗ {crudo.name}: `desde`={desde}s pero el clip dura {total:.1f}s")
+    if desde >= total:            # fondos que reutilizan un clip avanzan de tramo: dar la vuelta
+        desde = desde % max(total - 0.5, 0.5)
     util = total - desde
-    bajo, alto = niveles(crudo, desde, min(util, dur))
     destino.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", suffix=".cube", delete=False) as f:
-        f.write(lut_1d(contraste, bajo, alto))
-        cube = f.name
+    cube, niveles_ = None, None
+    if modo == "duotono":
+        bajo, alto = niveles(crudo, desde, min(util, dur))
+        niveles_ = [round(bajo, 3), round(alto, 3)]
+        with tempfile.NamedTemporaryFile("w", suffix=".cube", delete=False) as f:
+            f.write(lut_1d(contraste, bajo, alto))
+            cube = f.name
     try:
         bucle = ["-stream_loop", "-1"] if util < dur else []
         cmd = ["ffmpeg", "-v", "error", "-y", *bucle, "-ss", f"{desde:.3f}", "-i", str(crudo), "-t", f"{dur:.3f}",
-               "-an", "-vf", f"{_geometria()},format=gray,format=rgb24,lut1d=file={cube}",
+               "-an", "-vf", filtro(modo, fondo, cube),
                "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
                "-g", str(FPS // 2), "-movflags", "+faststart", str(destino)]
         subprocess.run(cmd, check=True)
     finally:
-        os.unlink(cube)
-    return {"duracion": round(_duracion(destino), 2), "bucle": bool(bucle), "niveles": [round(bajo, 3), round(alto, 3)]}
+        if cube:
+            os.unlink(cube)
+    return {"duracion": round(_duracion(destino), 2), "bucle": bool(bucle), "niveles": niveles_}
 
 
 def texto_creditos(fichas: list[dict]) -> str:

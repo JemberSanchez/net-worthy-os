@@ -71,3 +71,9 @@ Lenguaje de edición automático (sale del plan, nadie lo escribe): punch-in de 
 en golpes y palabras `calientes` con 1,8 s de separación mínima, riser→impacto en cada golpe,
 franja oscura central sobre imagen/vídeo y sombra en todo texto grande. Avisos de retención al
 validar: gancho sin imagen/clip, gancho sin texto antes de 0,8 s, >12 s sin re-gancho.
+
+Color híbrido (26-sep, elegido viendo A/B): metraje moderno en COLOR con grado de marca
+(`broll.GRADO_MARCA`), fotos de archivo en duotono; `"duotono": true` en un clip lo pasa a duotono.
+Movimiento en todo el vídeo: con clips, los fondos automáticos son clips desenfocados en movimiento
+(`OPACIDAD_AUTO_CLIP`, cada reutilización avanza `TRAMO_FONDO` s). Transiciones en los cortes con
+whoosh (≥1,2 s entre sí): zoom a través y barridos con desenfoque de movimiento, en `#trans`.

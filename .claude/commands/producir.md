@@ -46,9 +46,10 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    - ≥3 imágenes reales: `python tools/imagenes_libres.py buscar "<q>"` (Commons, solo PD/CC0/CC BY;
      UNA búsqueda por concepto, sin bucles: la API limita por IP). Nunca fotos de prensa de
      personas reales. Declara cada imagen en `imagenes` con su `commons`;
-   - 1-3 clips de vídeo (b-roll) donde más ayude el movimiento real — SIEMPRE el gancho (0-3 s):
-     `python tools/broll.py buscar commons "<q>"` (o `buscar pexels` si hay PEXELS_API_KEY y
-     videos.pexels.com está permitido). Declara en `clips` (`{"commons": "File:X.webm", "desde": s}`
+   - **≥4 clips de vídeo (b-roll)**: uno SIEMPRE en el gancho (0-3 s); el resto se usan solos como
+     fondos en movimiento de las escenas de texto. Metraje moderno: `python tools/broll.py buscar
+     pexels "<q>"` (sale en COLOR con el grado de marca); histórico: `buscar commons` (o
+     `"duotono": true` en el clip para que case con fotos de archivo). Declara en `clips` (`{"commons": "File:X.webm", "desde": s}`
      o `{"pexels": id, "desde": s}`) y usa `"clip": "<nombre>"` en lugar de `"img"` en esa `foto`
      (o en un `fondo`). Antes de fijar `desde`, mira UNA hoja de miniaturas
      (`ffmpeg -i assets/clips/<n>.src -vf "fps=1/2,scale=192:108,tile=8x2" -frames:v 1 hoja.jpg`):

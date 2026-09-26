@@ -118,7 +118,11 @@
  "cola_s": 3.0,
  "golpes": ["15:rare", "19:time"],
  "clips": {
-  "gasolinera": {"pexels": 35560146, "desde": 0}
+  "gasolinera": {"pexels": 35560146, "desde": 0},
+  "fregona": {"pexels": 9462889, "desde": 0},
+  "bolsa": {"pexels": 38431825, "desde": 0},
+  "monedas": {"pexels": 3943961, "desde": 0},
+  "reloj": {"pexels": 7034335, "desde": 0}
  },
  "imagenes": {
   "gas3": {

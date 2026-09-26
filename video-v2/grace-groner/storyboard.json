@@ -35,7 +35,10 @@
  "golpes": ["5:eighty", "9:nobody", "15:strategy", "18:alone"],
  "clips": {
   "olivetti": {"commons": "File:Olivetti Dora portable typewriter.webm", "desde": 2.0},
-  "typing": {"commons": "File:Typewriter Optima M12 - typing.webm", "desde": 4.0}
+  "typing": {"commons": "File:Typewriter Optima M12 - typing.webm", "desde": 4.0},
+  "bolsa": {"pexels": 38431825, "desde": 0},
+  "monedas": {"pexels": 3943961, "desde": 0},
+  "reloj": {"pexels": 7034335, "desde": 0}
  },
  "imagenes": {
   "tw":      {"commons": "File:Vintage typewriter (Unsplash).jpg", "recorte": 0.0},

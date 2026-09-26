@@ -25,7 +25,7 @@
         background: linear-gradient(180deg, rgba(10,26,20,0.6) 0%, rgba(10,26,20,0.32) 28%, rgba(10,26,20,0.38) 55%, rgba(10,26,20,0.93) 100%); }
       /* texto grande SIEMPRE legible sobre imagen o vídeo (puerta de contraste WCAG en producir.py) */
       .huge, .big, .mid, .row .tx, .yr, .money, .boton { text-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 0 42px rgba(0,0,0,0.75); }
-      #cam { position: absolute; inset: 0; transform-origin: 50% 45%; }
+      #cam, #trans { position: absolute; inset: 0; transform-origin: 50% 45%; }
       #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 42%, rgba(0,0,0,0.7) 100%); }
       #grain { position: absolute; left: -200px; top: -200px; width: 1480px; height: 2320px; opacity: 0.13; mix-blend-mode: overlay;
                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
@@ -132,11 +132,11 @@
 __AUDIO__
 
       <div id="groundclip" class="clip" data-start="0" data-duration="__END__" data-track-index="0"><div id="ground"><div id="glow"></div></div></div>
-      <div id="cam">
+      <div id="trans"><div id="cam">
 __FOTOS__
 
 __ESCENAS__
-      </div>
+      </div></div>
 
       <div id="flashclip" class="clip" data-start="0" data-duration="__END__" data-track-index="60"><div id="flash"></div></div>
       <div id="captions" class="clip" data-start="0" data-duration="__END__" data-track-index="61"><div id="caps"></div></div>

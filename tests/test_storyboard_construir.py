@@ -158,11 +158,11 @@ class BrollTest(unittest.TestCase):
 
     def test_plan_y_html(self):
         p = c.plan(self._sb(), W)
-        v = [f for f in p["fotos"] if f.get("video")]
+        v = [f for f in p["fotos"] if f.get("video") and not f["id"].endswith("a")]
         self.assertEqual(len(v), 2)
         self.assertEqual(v[0]["desde"], 4.0)
         dur = round((v[0]["t1"] - v[0]["t0"]) * 100)
-        self.assertEqual(v[0]["src"], f"parque-4-{dur}.mp4")             # archivo por duración exacta
+        self.assertEqual(v[0]["src"], f"parque-4-{dur}-c.mp4")           # duración exacta + modo color
         self.assertNotEqual(v[0]["src"], v[1]["src"])
         h = c._capa_html(v[0], 0)
         # el <video> lleva el tiempo; su contenedor NO (lint video_nested_in_timed_element)
@@ -171,6 +171,40 @@ class BrollTest(unittest.TestCase):
         self.assertIn('muted playsinline', h)
         self.assertNotIn("crossorigin", h)
         self.assertIn(f'id="{v[0]["id"]}-sh" class="clip ph"', h)       # sombra con su propia ventana
+
+    def test_fondos_automaticos_con_clips_en_movimiento(self):
+        """Movimiento en todo el vídeo: con clips, los fondos de texto son clips desenfocados y cada
+        reutilización avanza de tramo (nunca el mismo plano dos veces)."""
+        d = sb(clips={"a": {"pexels": 1, "desde": 1}, "b": {"pexels": 2}})
+        d["escenas"].insert(2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]})
+        p = c.plan(d, W)
+        auto = [f for f in p["fotos"] if f["id"].endswith("a")]
+        self.assertTrue(auto and all(f.get("video") and f["fondo_vid"] and f["modo"] == "color" for f in auto))
+        self.assertTrue(all(f["src"].endswith("-cf.mp4") and f["opacidad"] == c.OPACIDAD_AUTO_CLIP for f in auto))
+        tramos = [(f["clip"], f["desde"]) for f in auto]
+        self.assertEqual(len(tramos), len(set(tramos)))                     # ningún plano repetido
+        # sin clips, vuelve a las fotos desenfocadas
+        self.assertTrue(all(f.get("archivo", "").endswith("-desenfoque") for f in c.plan(sb(), W)["fotos"] if f["id"].endswith("a")))
+
+    def test_cortes_con_transicion_separados_y_con_whoosh(self):
+        p = c.plan(sb(), W)
+        self.assertTrue(p["cortes"])
+        self.assertTrue(all(b - a >= c.SEP_CORTES for a, b in zip(p["cortes"], p["cortes"][1:])))
+        self.assertNotIn(0.0, p["cortes"])                                  # el gancho entra sin transición
+        h = c._html(p)
+        self.assertEqual(h.count('src="assets/_motor/whoosh.wav"'), len(p["cortes"]))   # sonido = imagen
+        self.assertIn('<div id="trans"><div id="cam">', h)
+
+    def test_duotono_opcional_por_clip_y_filtro(self):
+        import broll
+        d = self._sb(); d["clips"]["parque"]["duotono"] = True
+        v = [f for f in c.plan(d, W)["fotos"] if f.get("video")]
+        self.assertTrue(all(f["modo"] == "duotono" and "-d" in f["src"] for f in v))
+        self.assertIn("colorbalance", broll.filtro("color", False))
+        self.assertIn("gblur", broll.filtro("color", True))
+        self.assertIn("lut1d=file=x.cube", broll.filtro("duotono", False, "x.cube"))
+        with self.assertRaises(ValueError):
+            broll.filtro("sepia", False)
 
     def test_lut_1d_es_la_rampa_de_marca(self):
         import numpy as np

@@ -86,6 +86,9 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
 - **Lenguaje profesional (25-sep):** fondos automáticos desenfocados en escenas de texto, punch-in
   en golpes/palabras calientes, riser→impacto, puerta de contraste WCAG AA por escena en
   `producir.py`, avisos de gancho/re-gancho al validar. Detalle en `video-v2/motor/README.md`.
+- **26-sep:** color híbrido (metraje moderno en color con grado de marca, archivo en duotono),
+  fondos de texto con clips en movimiento (≥4 clips por Short), transiciones con desenfoque de
+  movimiento en los cortes, loudnorm en 2 pasadas. Pexels llega por el proxy del entorno.
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie
