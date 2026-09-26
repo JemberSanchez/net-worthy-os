@@ -20,5 +20,38 @@
   "url_licencia": "https://creativecommons.org/licenses/by/3.0",
   "fuente": "https://commons.wikimedia.org/wiki/File:Olivetti_Dora_portable_typewriter.webm",
   "desde": 0.0
+ },
+ {
+  "archivo": "bolsa.src",
+  "origen": "pexels",
+  "titulo": "pexels:38431825",
+  "autor": "Zulfugar Karimov",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-financial-stock-market-display-animation-38431825/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "monedas.src",
+  "origen": "pexels",
+  "titulo": "pexels:3943961",
+  "autor": "cottonbro studio",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/hand-rich-money-gold-3943961/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "reloj.src",
+  "origen": "pexels",
+  "titulo": "pexels:7034335",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-of-clock-hands-7034335/",
+  "desde": 0.0
  }
 ]

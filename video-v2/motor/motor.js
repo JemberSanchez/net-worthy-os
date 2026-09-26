@@ -240,7 +240,9 @@
   const enPantalla = (t) => { const s = P.escenas.find((e) => t >= e.t0 && t < e.t1); return s ? new Set(s.texto_visible) : new Set(); };
   groups.forEach((g, gi) => {
     const vis = enPantalla(g[0].start);
-    if (g.every((x) => vis.has(nrm(x.text)))) return;     // duplicado: la escena ya lo dice
+    // duplicado: la escena ya dice la MAYORÍA del grupo (con "todas" se colaba "NOBODY CAN ACTUALLY"
+    // bajo "ALMOST NOBODY CAN MAKE" — Grace, 26-sep). Grupos de 1-2 palabras: todas.
+    if (g.filter((x) => vis.has(nrm(x.text))).length * 3 >= g.length * 2) return;
     const el = document.createElement("div"); el.className = "cg"; el.id = "cg" + gi; caps.appendChild(el);
     const gS = g[0].start - 0.05;
     // Nunca ocultar antes de mostrar: con palabras de duración 0 (alineación interpolada) el
@@ -255,6 +257,24 @@
       tl.fromTo(s, { color: "#f4f6f3", scale: 1 }, { color: hot ? "#d8b25a" : "#9fe3c4", scale: hot ? 1.06 : 1.03, duration: 0.08, ease: "power2.out", immediateRender: false }, x.start - 0.04);
       tl.to(s, { color: "#f4f6f3", scale: 1, duration: 0.1 }, x.end);
     });
+  });
+
+  // ---------- transiciones en los cortes (los mismos que llevan whoosh) ----------
+  // Van en #trans (contenedor de #cam) para no pelear con el punch-in por `scale`. La escena que
+  // sale acelera hacia el corte con desenfoque de movimiento y la que entra frena desde él.
+  // fromTo + immediateRender:false: el render salta a cualquier instante (seek).
+  const TR = {
+    zoom: [{ scale: 1.14 }, { scale: 1.14 }],
+    izq: [{ x: -150 }, { x: 150 }],
+    sube: [{ y: -220 }, { y: 220 }],
+  };
+  const ORDEN = ["zoom", "izq", "zoom", "sube"];
+  const REPOSO = { scale: 1, x: 0, y: 0 };
+  P.cortes.forEach((t, i) => {
+    const [sale, entra] = TR[ORDEN[i % ORDEN.length]];
+    tl.fromTo("#trans", { ...REPOSO, filter: "blur(0px)" }, { ...REPOSO, ...sale, filter: "blur(12px)", duration: 0.12, ease: "power2.in", immediateRender: false }, t - 0.12);
+    tl.fromTo("#trans", { ...REPOSO, ...entra, filter: "blur(12px)" }, { ...REPOSO, filter: "blur(0px)", duration: 0.24, ease: "power3.out", immediateRender: false }, t);
+    tl.set("#trans", { filter: "none" }, t + 0.25);
   });
 
   // ---------- punch-in de cámara (zoom-cut): el recurso nº 1 de edición en Shorts ----------

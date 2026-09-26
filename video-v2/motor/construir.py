@@ -48,6 +48,9 @@ PRE = 0.14            # la escena entra un poco antes de que la voz empiece su f
 # `contador3d` no (tiene su escena 3D) ni `foto` (ya es imagen). `"fondo": false` lo desactiva.
 AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "puntos", "cta"}
 OPACIDAD_AUTO = 0.3
+OPACIDAD_AUTO_CLIP = 0.38   # el metraje desenfocado pesa menos que una foto: algo más de presencia
+TRAMO_FONDO = 2.5     # s: cada reutilización de un clip como fondo arranca más adelante (nunca el mismo plano)
+SEP_CORTES = 1.2      # s mínimos entre cortes con whoosh + transición (más seguido marea)
 RISER_S = 1.0         # el riser (assets/riser.wav) termina justo en el golpe
 MOVS = ("push", "izq", "sube", "der", "pull")
 
@@ -425,20 +428,26 @@ def plan(sb: dict, words: list[dict]) -> dict:
     fotos, mi = [], 0
     clips = sb.get("clips") or {}
 
-    def capa(id_, src: dict, t0, t1, mov, opacidad, desenfoque=False):
+    def capa(id_, src: dict, t0, t1, mov, opacidad, desenfoque=False, desde_extra=0.0):
         f = {"id": id_, "t0": t0, "t1": t1, "mov": mov, "opacidad": opacidad}
         if src.get("clip"):                      # b-roll: archivo propio de la duración exacta
             c = src["clip"]
-            f.update(video=True, clip=c, desde=float(clips[c].get("desde", 0)),
-                     src=f"{c}-{float(clips[c].get('desde', 0)):g}-{round((t1 - t0) * 100)}.mp4")
+            modo = "duotono" if clips[c].get("duotono") else "color"   # color híbrido (26-sep)
+            desde = float(clips[c].get("desde", 0)) + desde_extra
+            # el nombre lleva modo y si es fondo: un tratado viejo nunca se reutiliza por error
+            f.update(video=True, clip=c, desde=desde, modo=modo, fondo_vid=desenfoque,
+                     src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{'f' if desenfoque else ''}.mp4")
         else:
             f["img"] = src["img"]
             f["archivo"] = f'{src["img"]}-desenfoque' if desenfoque else src["img"]
         return f
 
     pool = list((sb.get("imagenes") or {}).keys())
-    usadas_foto = {k: s.get("img") for k, s in enumerate(esc) if s["tipo"] == "foto"}
-    ai = 0
+    # Movimiento en todo el vídeo (26-sep): si el proyecto tiene clips, los fondos automáticos son
+    # CLIPS desenfocados (rotando clip y tramo); las fotos desenfocadas solo si no hay metraje.
+    pool_clips = list(clips)
+    usadas_foto = {k: s.get("img") or s.get("clip") for k, s in enumerate(esc) if s["tipo"] == "foto"}
+    ai, usos_clip = 0, {}
 
     for k, s in enumerate(esc):
         if s["tipo"] == "foto":
@@ -449,18 +458,29 @@ def plan(sb: dict, words: list[dict]) -> dict:
             fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
                               f.get("opacidad", 0.4)))
             mi += 1
-        elif (s["tipo"] in AUTO_FONDO and "fondo" not in s and sb.get("fondos_auto", True) and pool
+        elif (s["tipo"] in AUTO_FONDO and "fondo" not in s and sb.get("fondos_auto", True) and (pool or pool_clips)
               and not (s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"))):
             vecinas = {usadas_foto.get(k - 1), usadas_foto.get(k + 1)}
-            cand = [x for x in pool if x not in vecinas] or pool
-            img = cand[ai % len(cand)]
+            fuente = pool_clips or pool
+            cand = [x for x in fuente if x not in vecinas] or fuente
+            elegido = cand[ai % len(cand)]
             # contador propio: no altera el `mov` que ya tenían las fotos de vídeos verificados
-            fotos.append(capa(f"ph{k}a", {"img": img}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                              OPACIDAD_AUTO, desenfoque=True))
+            if pool_clips:
+                n = usos_clip.get(elegido, 0)
+                usos_clip[elegido] = n + 1
+                fotos.append(capa(f"ph{k}a", {"clip": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
+                                  OPACIDAD_AUTO_CLIP, desenfoque=True, desde_extra=TRAMO_FONDO * n))
+            else:
+                fotos.append(capa(f"ph{k}a", {"img": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
+                                  OPACIDAD_AUTO, desenfoque=True))
             ai += 1
         if s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"):
             fotos.append({"id": f"ph{k}q", "img": s["pregunta"]["fondo"], "t0": s["pregunta"]["en"] - 0.3, "t1": END,
                           "mov": "final", "opacidad": 0.55, "aparece": s["pregunta"]["en"] - 0.29})
+    cortes, ult = [], -9.0
+    for s in esc[1:]:                                # sin ametrallar: >= SEP_CORTES entre cortes
+        if s["t0"] - ult >= SEP_CORTES:
+            cortes.append(round(s["t0"], 3)); ult = s["t0"]
     sub = sb.get("subtitulos")
     rango = [fr[int(sub[0])][0], fr[int(sub[1])][-1]] if sub else [0, len(words) - 1]
     av = r.get("aviso") or {}
@@ -473,7 +493,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
     oscuro = (sb.get("musica") or {}).get("oscuro")
     cta = next((s["t0"] for s in esc if s["tipo"] == "cta"), None)
     return {
-        "D": END, "fin_voz": fin_voz, "words": words, "escenas": esc, "fotos": fotos,
+        "D": END, "fin_voz": fin_voz, "words": words, "escenas": esc, "fotos": fotos, "cortes": cortes,
         "subtitulos": rango, "calientes": sb.get("calientes", []),
         "aviso": {"lineas": av.get("lineas", []),
                   "ventanas": [[av_a, av_b] for av_a, av_b in (av.get("ventanas_t") or [])],
@@ -518,7 +538,7 @@ def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
     crudos = broll.bajar({f["clip"]: decl[f["clip"]] for f in usos}, proy / "assets" / "clips")
     for f in usos:
         info = broll.preparar(crudos[f["clip"]], proy / "assets" / "v" / f["src"], f["desde"], f["t1"] - f["t0"],
-                              float(decl[f["clip"]].get("contraste", 1.15)))
+                              float(decl[f["clip"]].get("contraste", 1.15)), modo=f["modo"], fondo=f["fondo_vid"])
         print(f"✓ clip {f['clip']} -> {f['src']} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})")
 
 
@@ -532,10 +552,7 @@ def _html(p: dict) -> str:
     fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
     audio = ['      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
              '      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="0.5"></audio>']
-    sfx, ult = [], -9.0
-    for s in p["escenas"][1:]:                       # whoosh en los cortes, sin ametrallar
-        if s["t0"] - ult >= 1.2:
-            sfx.append(("whoosh.wav", s["t0"] - 0.12, 0.38)); ult = s["t0"]
+    sfx = [("whoosh.wav", t - 0.12, 0.38) for t in p["cortes"]]   # whoosh = transición visual (motor.js)
     sfx += [("impact.wav", g - 0.02, 0.6) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
     sfx += [("riser.wav", g - RISER_S, 0.3) for g in p["golpes"] if g - RISER_S >= 0.5]
     sfx += [("impact.wav", t, 0.45) for t in p["impactos"]]
