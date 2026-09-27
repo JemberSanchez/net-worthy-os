@@ -1,0 +1,12 @@
+{
+  "_doc": "Catálogo CURADO de efectos REALES (grabaciones) con licencia de la lista cerrada (PD/CC0/CC BY). Verificados el 27-sep con Whisper (sin voz hablada) y por densidad de golpes. `golpe` = un solo impacto que se ancla a una palabra (el transitorio cae EXACTO en el ancla); `ambiente` = sonido del propio metraje, suena mientras el clip está en pantalla. `desde`/`dur` = tramo útil del archivo. Descartados: 'Paper Radio - Typewriters' (lleva voz), 'Keyboard noise' (ruido continuo), todo 'LL-Q1860 ...' (son pronunciaciones de la palabra, no el sonido).",
+  "maquina":   {"commons": "File:WWS Typewriter.ogg", "tipo": "ambiente", "desde": 7.0, "vol": 0.55},
+  "reloj":     {"commons": "File:Clock ticking.ogg", "tipo": "ambiente", "desde": 0.0, "vol": 0.5},
+  "latido":    {"commons": "File:Heartbeat.ogg", "tipo": "ambiente", "desde": 0.0, "vol": 0.5},
+  "caja":      {"commons": "File:WWS CashregisteratWolkoffHouseMuseum.ogg", "tipo": "golpe", "desde": 8.2, "dur": 1.8, "vol": 0.6},
+  "monedas":   {"commons": "File:Bag of coins.ogg", "tipo": "golpe", "desde": 35.2, "dur": 1.5, "vol": 0.9},
+  "pagina":    {"commons": "File:Turning a page.ogg", "tipo": "golpe", "desde": 0.8, "dur": 1.6, "vol": 0.6},
+  "sello":     {"commons": "File:Rubber seal dabbed on ink pad.ogg", "tipo": "golpe", "desde": 13.7, "dur": 1.0, "vol": 0.6},
+  "ding":      {"commons": "File:406243 stubb typewriter-ding-near-mono.wav", "tipo": "golpe", "desde": 0.0, "dur": 1.1, "vol": 0.5},
+  "obturador": {"commons": "File:Holga shuttersound.ogg", "tipo": "golpe", "desde": 0.0, "dur": 1.2, "vol": 0.55}
+}

@@ -58,6 +58,14 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      (catálogo: `python tools/musica_libre.py buscar "Kevin MacLeod"`); varía la pista entre vídeos
      (la política de "contenido inauténtico" castiga plantillas idénticas). Certificados y
      periódicos en `imagenes` llevan `"documento": true` (sin parallax 2.5D).
+   - **Sonido real sincronizado (27-sep):** 4-7 efectos del catálogo `video-v2/motor/sfx.json`
+     (grabaciones reales, no whoosh genéricos): `"sfx"` en el clip que SE VE (máquina de escribir
+     en un clip de máquina) y `"sonidos"` para golpes en palabras (caja en la cifra del gancho,
+     página/sello cuando entran documentos, reloj bajo "X years later", monedas en el payoff).
+     Solo lo que casa con la imagen: un efecto sin motivo visual es ruido.
+   - **Serie:** `"serie": {"nombre": "Quiet Millionaires", "ep": N}` si el tema es de la serie
+     (gente corriente que se hizo rica en silencio); N = siguiente episodio. El comentario para
+     fijar sale solo de la dicotomía del CTA (`publicacion.comentario` lo sustituye).
    - **Nada genérico ni de clip-art (26-sep):** cada visual es metraje real, un documento real
      (certificados, fotos de archivo) o un dato real con ejes. En `curva`, pon `"desde_anio"` SOLO
      si el año de inicio está verificado en las fuentes (Grace: 1935); si no, el eje va en "Yr N".

@@ -90,3 +90,12 @@ Nivel documental (26-sep): las fotos de escenas `foto` se convierten solas en cl
 mueve más que lo lejano, sin huecos). `imagenes.<k>.documento: true` (certificados, periódicos) o
 `"parallax": false` en la escena lo desactivan. `musica.pista` = pista real de Commons
 (`tools/musica_libre.py`, CC BY/CC0/PD) en lugar de la generada; cama a -20 LUFS antes del ducking.
+
+Sonido real y serie (27-sep): efectos GRABADOS (Commons, catálogo curado en `motor/sfx.json`,
+`tools/sfx_libre.py`), sincronizados con lo que se ve. `clips.<k>.sfx` / `imagenes.<k>.sfx` =
+suena mientras ese clip/foto está a pantalla completa (ambiente) o al entrar (golpe);
+`"sonidos": [{"sfx": "caja", "en": "0:dollars"}]` = golpe anclado a una palabra (el transitorio,
+medido por energía, cae EXACTO en la palabra; los ambientes llevan `dur`). Créditos
+"Sound effects:" solos en la descripción. `"serie": {"nombre": "...", "ep": N}` = sello bajo la
+marca durante el gancho + logo sonoro propio (`assets/logo.wav`, `musica.py logo`, igual en todos
+los episodios) + "Serie · Ep. N" y hashtag en la descripción + lista de YouTube al aprobar.

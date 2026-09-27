@@ -23,6 +23,10 @@
    "#personalfinance"
   ]
  },
+ "serie": {
+  "nombre": "Quiet Millionaires",
+  "ep": 2
+ },
  "voz": {
   "motor": "kokoro",
   "voz": "am_adam"
@@ -116,14 +120,43 @@
   "0:dollars",
   "9:trade"
  ],
+ "sonidos": [
+  {
+   "sfx": "caja",
+   "en": "0:dollars"
+  },
+  {
+   "sfx": "pagina",
+   "en": "4:every"
+  },
+  {
+   "sfx": "pagina",
+   "en": "4:dividend"
+  },
+  {
+   "sfx": "sello",
+   "en": "4:back"
+  },
+  {
+   "sfx": "reloj",
+   "en": "5",
+   "dur": 1.6
+  },
+  {
+   "sfx": "monedas",
+   "en": "5:fortune"
+  }
+ ],
  "clips": {
   "olivetti": {
    "commons": "File:Olivetti Dora portable typewriter.webm",
-   "desde": 2.0
+   "desde": 2.0,
+   "sfx": "maquina"
   },
   "typing": {
    "commons": "File:Typewriter Optima M12 - typing.webm",
-   "desde": 4.0
+   "desde": 4.0,
+   "sfx": "maquina"
   },
   "bolsa": {
    "pexels": 38431825,

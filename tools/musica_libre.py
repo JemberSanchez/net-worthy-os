@@ -84,14 +84,16 @@ def _duracion(p: Path) -> float:
     return float(r.stdout.strip())
 
 
-def cama(crudo: Path, destino: Path, dur: float, desde: float = 0.0, fundido: float = 1.2) -> dict:
-    """Pista -> WAV 48 kHz estéreo de `dur` s exactos al nivel de cama (loudnorm en 2 pasadas).
-    Bucle si la pista (desde `desde`) es más corta que el vídeo."""
+def cama(crudo: Path, destino: Path, dur: float, desde: float = 0.0, fundido: float = 1.2,
+         nivel: float = NIVEL_CAMA, entrada: float = 0.4) -> dict:
+    """Pista -> WAV 48 kHz estéreo de `dur` s exactos a `nivel` LUFS (loudnorm en 2 pasadas).
+    Bucle si la pista (desde `desde`) es más corta que el vídeo. También sirve a los ambientes de
+    tools/sfx_libre.py (otro nivel, fundidos cortos)."""
     total = _duracion(crudo)
     desde = desde % max(total - 5, 1) if desde >= total else desde
     bucle = ["-stream_loop", "-1"] if total - desde < dur else []
-    base = (f"afade=t=in:st=0:d=0.4,afade=t=out:st={max(0.0, dur - fundido):.2f}:d={fundido:.2f},"
-            f"loudnorm=I={NIVEL_CAMA}:TP=-3:LRA=11")
+    base = (f"afade=t=in:st=0:d={entrada:.2f},afade=t=out:st={max(0.0, dur - fundido):.2f}:d={fundido:.2f},"
+            f"loudnorm=I={nivel}:TP=-3:LRA=11")
     medir = subprocess.run(["ffmpeg", "-hide_banner", *bucle, "-ss", f"{desde:.2f}", "-i", str(crudo), "-t", f"{dur:.3f}",
                             "-af", base + ":print_format=json", "-f", "null", "-"], capture_output=True, text=True)
     import re
@@ -107,13 +109,13 @@ def cama(crudo: Path, destino: Path, dur: float, desde: float = 0.0, fundido: fl
     return {"duracion": round(_duracion(destino), 2), "bucle": bool(bucle)}
 
 
-def texto_creditos(fichas: list[dict]) -> str:
+def texto_creditos(fichas: list[dict], titulo: str = "Music") -> str:
     lineas = []
     for f in fichas:
         autor = f["autor"] + (" (incompetech.com)" if "macleod" in f["autor"].lower() else "")
         lic = f["licencia"] + (f" ({f['url_licencia']})" if f.get("url_licencia") else "")
         lineas.append(f"- {f['titulo'].removeprefix('File:').rsplit('.', 1)[0]} — {autor} — {lic} — {f['fuente']}")
-    return "Music:\n" + "\n".join(lineas)
+    return f"{titulo}:\n" + "\n".join(lineas)
 
 
 def main() -> None:

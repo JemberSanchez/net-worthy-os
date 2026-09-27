@@ -22,8 +22,11 @@ from . import config
 # youtube: subir y editar (videos.update). yt-analytics.readonly: retención por segundo y términos
 # de búsqueda (analítica automática). Se piden JUNTOS para autorizar una sola vez: cambiar los
 # scopes invalida el token y obliga a repetir el login.
+# youtube.force-ssl: publicar el comentario preparado (commentThreads.insert solo acepta ese scope).
 SCOPES = ["https://www.googleapis.com/auth/youtube",
-          "https://www.googleapis.com/auth/yt-analytics.readonly"]
+          "https://www.googleapis.com/auth/yt-analytics.readonly",
+          "https://www.googleapis.com/auth/youtube.force-ssl"]
+SCOPE_COMENTARIOS = SCOPES[2]
 CLIENT_SECRET_PATH = config.DATA_DIR / "youtube_client_secret.json"
 TOKEN_PATH = config.DATA_DIR / "youtube_token.json"
 
@@ -43,7 +46,9 @@ def _get_credentials():
 
     creds = None
     if TOKEN_PATH.exists():
-        creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
+        # Con los scopes QUE TIENE el token (no SCOPES): un token anterior a un scope nuevo sigue
+        # sirviendo para lo que ya autorizaba; pedir más al refrescar da invalid_scope y lo rompe todo.
+        creds = Credentials.from_authorized_user_file(str(TOKEN_PATH))
 
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
@@ -165,3 +170,57 @@ def programar(video_id: str, publish_at_utc, youtube=None) -> dict:
 
 def hacer_publico(video_id: str, youtube=None) -> dict:
     return _actualizar_status(video_id, {"privacyStatus": "public", "publishAt": None}, youtube)
+
+
+def _yt(youtube=None):
+    if youtube is None:
+        from googleapiclient.discovery import build
+        youtube = build("youtube", "v3", credentials=_get_credentials())
+    return youtube
+
+
+def asegurar_playlist(nombre: str, descripcion: str = "", youtube=None) -> str:
+    """La lista de la SERIE (la crea pública si no existe). Idempotente por título exacto."""
+    yt = _yt(youtube)
+    token = None
+    while True:
+        r = yt.playlists().list(part="snippet", mine=True, maxResults=50, pageToken=token).execute()
+        for it in r.get("items", []):
+            if it["snippet"]["title"].strip().lower() == nombre.strip().lower():
+                return it["id"]
+        token = r.get("nextPageToken")
+        if not token:
+            break
+    r = yt.playlists().insert(part="snippet,status", body={
+        "snippet": {"title": nombre, "description": descripcion}, "status": {"privacyStatus": "public"}}).execute()
+    return r["id"]
+
+
+def agregar_a_playlist(video_id: str, playlist_id: str, youtube=None) -> bool:
+    """Añade el vídeo a la lista si no está. Devuelve True si lo añadió."""
+    yt = _yt(youtube)
+    ya = yt.playlistItems().list(part="id", playlistId=playlist_id, videoId=video_id, maxResults=1).execute()
+    if ya.get("items"):
+        return False
+    yt.playlistItems().insert(part="snippet", body={"snippet": {
+        "playlistId": playlist_id, "resourceId": {"kind": "youtube#video", "videoId": video_id}}}).execute()
+    return True
+
+
+def comentar(video_id: str, texto: str, youtube=None) -> str:
+    """Publica el comentario del canal (commentThreads.insert). FIJARLO es manual: la API de YouTube
+    no tiene método para fijar comentarios. Devuelve el id del comentario."""
+    if youtube is None:
+        creds = _get_credentials()
+        if SCOPE_COMENTARIOS not in (creds.scopes or []):
+            raise PublishError("el token no tiene permiso de comentarios: repite `youtube-auth` (una vez)")
+        from googleapiclient.discovery import build
+        youtube = build("youtube", "v3", credentials=creds)
+    r = youtube.commentThreads().insert(part="snippet", body={"snippet": {
+        "videoId": video_id, "topLevelComment": {"snippet": {"textOriginal": texto}}}}).execute()
+    return r["id"]
+
+
+def estado_privacidad(video_id: str, youtube=None) -> str | None:
+    items = _yt(youtube).videos().list(part="status", id=video_id).execute().get("items", [])
+    return items[0]["status"].get("privacyStatus") if items else None

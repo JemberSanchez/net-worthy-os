@@ -87,6 +87,27 @@ def palabras_de(obj) -> set[str]:
 
 
 # ───────────────────────────── validación ─────────────────────────────
+def catalogo_sfx() -> dict:
+    import sfx_libre
+    return sfx_libre.catalogo()
+
+
+def _validar_sonidos(sb: dict) -> list[str]:
+    """Efectos reales (tools/sfx_libre.py): nombres del catálogo curado y forma de `sonidos`."""
+    cat, err = catalogo_sfx(), []
+    decl = [(f"clip {k!r}", c.get("sfx")) for k, c in (sb.get("clips") or {}).items()]
+    decl += [(f"imagen {k!r}", i.get("sfx")) for k, i in (sb.get("imagenes") or {}).items()]
+    for d, n in decl:
+        if n is not None and n not in cat:
+            err.append(f"{d}: sfx {n!r} no está en el catálogo ({', '.join(cat)})")
+    for j, x in enumerate(sb.get("sonidos") or []):
+        if not isinstance(x, dict) or x.get("sfx") not in cat or not x.get("en"):
+            err.append(f"sonidos[{j}]: {{\"sfx\": <{'|'.join(cat)}>, \"en\": \"frase:palabra\"}}")
+        elif cat[x["sfx"]]["tipo"] == "ambiente" and not float(x.get("dur", 0)) > 0:
+            err.append(f"sonidos[{j}]: {x['sfx']!r} es ambiente: lleva `dur` (s)")
+    return err
+
+
 def validar(sb: dict, words: list[dict]) -> list[str]:
     errores = []
     esc = sb.get("escenas") or []
@@ -118,6 +139,10 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
             errores.append(f"escena {k} (foto): lleva `img` O `clip` (uno de los dos)")
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
+    errores += _validar_sonidos(sb)
+    sr = sb.get("serie")
+    if sr is not None and not (isinstance(sr, dict) and str(sr.get("nombre", "")).strip() and isinstance(sr.get("ep"), int)):
+        errores.append("`serie` = {\"nombre\": \"...\", \"ep\": <entero>}")
     try:
         anclas.resolver(sb, words)
     except anclas.AnclaError as e:
@@ -125,6 +150,7 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     sueltas = [a for par in (sb.get("aviso") or {}).get("ventanas") or [] for a in par]
     sueltas += list(sb.get("golpes") or []) + list((sb.get("musica") or {}).get("oscuro") or [])
     sueltas += [str(x) for x in (sb.get("subtitulos") or [])]
+    sueltas += [x["en"] for x in sb.get("sonidos") or [] if isinstance(x, dict) and x.get("en")]
     for a in sueltas:
         try:
             anclas.t(words, a)
@@ -510,6 +536,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
     for k, s in enumerate(esc):
         if s["tipo"] == "foto":
             fotos.append(capa(f"ph{k}", s, s["t0"], min(END, s["t1"] + 0.3), s.get("mov", MOVS[mi % len(MOVS)]), 1))
+            fotos[-1]["primer_plano"] = True     # lo que se VE a pantalla completa: aquí suena su sfx
             mi += 1
         if s.get("fondo"):
             f = s["fondo"] if isinstance(s["fondo"], dict) else {"img": s["fondo"]}
@@ -551,6 +578,11 @@ def plan(sb: dict, words: list[dict]) -> dict:
     impactos += [s["cae"]["en"] for s in esc if s["tipo"] == "puntos" and s.get("cae")]
     oscuro = (sb.get("musica") or {}).get("oscuro")
     cta = next((s["t0"] for s in esc if s["tipo"] == "cta"), None)
+    sr = sb.get("serie")
+    serie = None
+    if sr:                    # sello de serie en el gancho: hasta el final de la 1ª frase (máx. 3 s)
+        fin0 = words[fr[0][-1]]["end"]
+        serie = {"texto": f'{sr["nombre"]} · EP {sr["ep"]}', "t0": 0.1, "t1": round(min(3.0, max(1.6, fin0 + 0.3)), 3)}
     return {
         "D": END, "fin_voz": fin_voz, "words": words, "escenas": esc, "fotos": fotos, "cortes": cortes,
         "subtitulos": rango, "calientes": sb.get("calientes", []),
@@ -559,8 +591,39 @@ def plan(sb: dict, words: list[dict]) -> dict:
                   "final": fin_voz + 0.1 if av.get("final", True) and av.get("lineas") else None},
         "golpes": sorted(golpes), "impactos": sorted(impactos),
         "oscuro": [anclas.t(words, oscuro[0], fr) - 0.25, anclas.t(words, oscuro[1], fr) - 0.1] if oscuro else None,
-        "cta": cta,
+        "cta": cta, "serie": serie, "sonidos": sonidos(sb, words, fr, fotos, END),
     }
+
+
+def sonidos(sb: dict, words: list[dict], fr, fotos: list[dict], END: float) -> list[dict]:
+    """Efectos REALES sincronizados con lo que se ve (tools/sfx_libre.py):
+    - clip con `sfx` en primer plano -> su sonido mientras está en pantalla (ambiente) o al entrar (golpe)
+    - imagen con `sfx` en primer plano -> igual
+    - `sonidos` -> golpe anclado a una palabra (el transitorio cae en la palabra)."""
+    cat = catalogo_sfx() if (sb.get("sonidos") or any(
+        c.get("sfx") for c in list((sb.get("clips") or {}).values()) + list((sb.get("imagenes") or {}).values()))) else {}
+    if not cat:
+        return []
+    import sfx_libre
+    out = []
+
+    def uso(n, t, dur=None, vol=None):
+        c = cat[n]
+        u = {"sfx": n, "tipo": c["tipo"], "t": round(max(0.0, t), 3), "vol": float(vol if vol is not None else c.get("vol", 0.5))}
+        if c["tipo"] == "ambiente":
+            u["dur"] = round(min(float(dur), END - u["t"]), 2)
+        u["archivo"] = sfx_libre.archivo(n, u["tipo"], u.get("dur"))
+        out.append(u)
+
+    for f in fotos:
+        if not f.get("primer_plano"):
+            continue
+        decl = (sb.get("clips") or {}).get(f["clip"], {}) if f.get("clip") else (sb.get("imagenes") or {}).get(f.get("img"), {})
+        if decl.get("sfx"):
+            uso(decl["sfx"], f["t0"] + (0.0 if cat[decl["sfx"]]["tipo"] == "ambiente" else 0.04), f["t1"] - f["t0"])
+    for x in sb.get("sonidos") or []:
+        uso(x["sfx"], anclas.t(words, x["en"], fr), x.get("dur"), x.get("vol"))
+    return sorted(out, key=lambda u: u["t"])
 
 
 def _capa_html(f: dict, j: int) -> str:
@@ -627,11 +690,19 @@ def _html(p: dict) -> str:
     sfx += [("impact.wav", g - 0.02, 0.6) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
     sfx += [("riser.wav", g - RISER_S, 0.3) for g in p["golpes"] if g - RISER_S >= 0.5]
     sfx += [("impact.wav", t, 0.45) for t in p["impactos"]]
-    audio += [f'      <audio id="sfx{j}" src="assets/_motor/{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
+    sfx = [(f"assets/_motor/{f}", t, v) for f, t, v in sfx]
+    if p.get("serie"):                            # logo sonoro: la firma de la serie, igual en cada episodio
+        sfx.append(("assets/_motor/logo.wav", p["serie"]["t0"], 0.32))
+    sfx += [(f"assets/sfx/{u['archivo']}", u["t"], u["vol"]) for u in p.get("sonidos") or []]
+    audio += [f'      <audio id="sfx{j}" src="{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
               for j, (f, t, v) in enumerate(sfx)]
     aviso = '<span style="display:block">' + '</span><span style="display:block">'.join(html.escape(x) for x in p["aviso"]["lineas"]) + "</span>"
     tiene3d = any(s["tipo"] == "contador3d" and s.get("monedas3d") for s in p["escenas"])
+    sr = p.get("serie")
+    serie = (f'      <div id="serieclip" class="clip" data-start="{sr["t0"]:.3f}" data-duration="{sr["t1"] - sr["t0"]:.3f}" '
+             f'data-track-index="63"><div id="serie">{html.escape(sr["texto"])}</div></div>') if sr else ""
     rep = {
+        "__SERIE__": serie,
         "__END__": f'{p["D"]}', "__AUDIO__": "\n".join(audio), "__FOTOS__": fotos, "__ESCENAS__": "\n".join(esc_html),
         "__AVISO__": aviso if p["aviso"]["lineas"] else "",
         "__PLAN__": json.dumps(p, ensure_ascii=False).replace("</", "<\\/"),
@@ -666,6 +737,10 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     asegurar_desenfoques(proy, p)
     asegurar_clips(proy, sb, p)
     asegurar_parallax(proy, p)
+    if p["sonidos"]:
+        import sfx_libre
+        sfx_libre.asegurar(p["sonidos"], proy / "assets" / "sfx")
+        print(f"✓ sonidos reales: {', '.join(sorted({u['sfx'] for u in p['sonidos']}))} ({len(p['sonidos'])} usos)")
     dst = proy / "assets" / "_motor"
     if dst.exists():
         shutil.rmtree(dst)
@@ -689,6 +764,11 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     return out
 
 
+IGNORAR = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/music-bed.wav",
+           "assets/img/*.jpg", "assets/clips/*.src", "assets/v/", "assets/t/*-desenfoque.jpg", "social/",
+           "assets/musica/*.src", "assets/sfx/*.src", "assets/sfx/*.wav")
+
+
 def _andamiaje(proy: Path) -> None:
     """hyperframes.json / package.json / .gitignore mínimos si el proyecto es nuevo."""
     if not (proy / "hyperframes.json").exists():
@@ -703,9 +783,11 @@ def _andamiaje(proy: Path) -> None:
                         "lint": "npx --yes hyperframes@0.8.62 lint",
                         "render": f"npx --yes hyperframes@0.8.62 render --quality high --output renders/{proy.name}.mp4"}},
             indent=2) + "\n")
-    gi = proy / ".gitignore"
-    if not gi.exists():
-        gi.write_text("renders/\nsnapshots/\n.hyperframes/\nnode_modules/\nassets/_motor/\nassets/music-bed.wav\nassets/img/*.jpg\nassets/clips/*.src\nassets/v/\nassets/t/*-desenfoque.jpg\nsocial/\nassets/musica/*.src\n")
+    gi = proy / ".gitignore"                     # lo regenerable no se versiona; se AÑADE lo que falte
+    tiene = gi.read_text(encoding="utf-8").splitlines() if gi.exists() else []
+    faltan = [x for x in IGNORAR if x not in tiene]
+    if faltan:
+        gi.write_text("".join(x + "\n" for x in tiene + faltan), encoding="utf-8")
 
 
 def _carve(out: Path) -> None:

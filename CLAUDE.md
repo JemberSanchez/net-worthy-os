@@ -98,6 +98,13 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   apagan). Música REAL con licencia: `tools/musica_libre.py` (Commons: Kevin MacLeod CC BY 3.0) +
   `"musica": {"pista": {"commons": "File:...", "desde": s}}`; créditos "Music:" solos. Fondos de
   texto con la mitad de desenfoque.
+- **27-sep, sonido y serie:** efectos REALES sincronizados (`tools/sfx_libre.py` + catálogo
+  `video-v2/motor/sfx.json`: `sfx` en clips/imágenes y `sonidos` anclados a palabras; créditos
+  "Sound effects:"), serie `"serie": {"nombre", "ep"}` (sello en el gancho + logo sonoro propio +
+  lista de YouTube al `programar`). Comentario para fijar en `publish_<ref>.json`: se aprueba con
+  `programar`, se publica solo cuando el vídeo es público (`comentar <ref>` o `analytics-sync`);
+  FIJARLO es a mano en Studio (la API de YouTube no fija). Scope nuevo `youtube.force-ssl`: un
+  token viejo sigue valiendo para subir/medir; para comentar, repetir `youtube-auth` una vez.
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie

@@ -302,5 +302,56 @@ class BrollTest(unittest.TestCase):
         self.assertIn("Footage:\n- pexels:3843454 — Ana — Pexels License", broll.texto_creditos([f]))
 
 
+class SonidoYSerieTest(unittest.TestCase):
+    """27-sep: efectos REALES sincronizados con lo que se ve + identidad de serie (sello + logo sonoro)."""
+
+    def test_valida_nombres_y_forma(self):
+        self.assertEqual(c.validar(sb(sonidos=[{"sfx": "caja", "en": "0:dollars"}]), W), [])
+        self.assertTrue(any("no está en el catálogo" in e for e in c.validar(sb(clips={"x": {"pexels": 1, "sfx": "trompeta"}}), W)))
+        self.assertTrue(any("sonidos[0]" in e for e in c.validar(sb(sonidos=[{"sfx": "caja"}]), W)))
+        self.assertTrue(any("lleva `dur`" in e for e in c.validar(sb(sonidos=[{"sfx": "reloj", "en": "1"}]), W)))
+        self.assertTrue(any("inexistente" in e.lower() or "dollarz" in e for e in c.validar(sb(sonidos=[{"sfx": "caja", "en": "0:dollarz"}]), W)))
+        self.assertTrue(any("`serie`" in e for e in c.validar(sb(serie={"nombre": "Q"}), W)))
+
+    def test_golpe_en_la_palabra_y_ambiente_bajo_el_clip(self):
+        d = sb(clips={"maq": {"pexels": 1, "sfx": "maquina"}, "fondo": {"pexels": 2, "sfx": "reloj"}},
+               sonidos=[{"sfx": "caja", "en": "0:dollars"}, {"sfx": "reloj", "en": "1", "dur": 1.2}])
+        d["escenas"][0].pop("img"); d["escenas"][0]["clip"] = "maq"
+        p = c.plan(d, W)
+        f0 = p["fotos"][0]
+        amb = [u for u in p["sonidos"] if u["sfx"] == "maquina"]
+        self.assertEqual(len(amb), 1)                                        # solo en primer plano, no en fondos
+        self.assertEqual((amb[0]["t"], amb[0]["dur"]), (round(f0["t0"], 3), round(f0["t1"] - f0["t0"], 2)))
+        self.assertEqual(amb[0]["archivo"], f"maquina-{round(amb[0]['dur'] * 100)}.wav")
+        caja = next(u for u in p["sonidos"] if u["sfx"] == "caja")
+        self.assertEqual(caja["t"], W[5]["start"])                           # el transitorio cae EN la palabra
+        self.assertEqual(caja["archivo"], "caja.wav")
+        self.assertEqual(next(u for u in p["sonidos"] if u["sfx"] == "reloj")["dur"], 1.2)
+        h = c._html(p)
+        self.assertIn('src="assets/sfx/caja.wav" data-start="2.500"', h)
+        self.assertNotIn("logo.wav", h)                                      # sin serie, sin logo
+
+    def test_sin_sonidos_no_toca_nada(self):
+        self.assertEqual(c.plan(sb(), W)["sonidos"], [])
+
+    def test_serie_sello_y_logo(self):
+        p = c.plan(sb(serie={"nombre": "Quiet Millionaires", "ep": 3}), W)
+        self.assertEqual(p["serie"]["texto"], "Quiet Millionaires · EP 3")
+        self.assertTrue(1.6 <= p["serie"]["t1"] <= 3.0)                     # solo el gancho
+        h = c._html(p)
+        self.assertIn('id="serie">Quiet Millionaires · EP 3<', h)
+        self.assertIn('assets/_motor/logo.wav" data-start="0.100"', h)
+
+    def test_arranque_del_golpe(self):
+        import numpy as np
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        import sfx_libre
+        sr = 48000
+        x = np.zeros(sr, dtype=np.float32)
+        x[: int(0.2 * sr)] = 0.01 * np.random.default_rng(1).standard_normal(int(0.2 * sr))   # ruido mecánico previo
+        x[int(0.3 * sr): int(0.35 * sr)] = 0.8                                                # el golpe
+        self.assertAlmostEqual(sfx_libre.arranque(x, sr), 0.29, places=2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

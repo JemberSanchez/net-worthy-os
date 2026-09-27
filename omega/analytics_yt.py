@@ -133,7 +133,7 @@ def _clientes():
     from google.oauth2.credentials import Credentials
     from google.auth.transport.requests import Request
     from googleapiclient.discovery import build
-    creds = Credentials.from_authorized_user_file(str(publish.TOKEN_PATH), publish.SCOPES)
+    creds = Credentials.from_authorized_user_file(str(publish.TOKEN_PATH))   # scopes del propio token
     if not creds.valid:
         if not creds.refresh_token:
             raise AnalyticsError("token sin refresh_token: repetir `youtube-auth`")
