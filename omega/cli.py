@@ -25,6 +25,7 @@ Comandos:
   python -m omega.cli rescore [--dry-run]          # recalcula el exito de todos desde analytics
   python -m omega.cli analytics-sync [<ref>] [--dry-run]  # trae de YouTube Analytics retención/búsquedas + rescore
   python -m omega.cli vincular <ref> <video_id>    # asocia un video ya subido a su ref (para analytics/programar)
+  python -m omega.cli comentar <ref>               # publica el comentario aprobado del Short (ya público); fijarlo es a mano
   python -m omega.cli publish-social <ref> [--publicar]  # carrusel + historia en IG/FB (sin --publicar: solo el plan)
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
@@ -1061,6 +1062,8 @@ def cmd_analytics_sync() -> None:
             cuando = f" (programado {datos['publish_at']})" if datos.get("publish_at") else ""
             print(f"  {ref}: aún privado{cuando}")
             continue
+        if not seco:                               # ya es público: su comentario aprobado, si falta
+            _comentar_pendiente(ref)
         if datos["estado"] == "sin_datos":
             print(f"  {ref}: sin datos aún (Analytics va con ~2-3 días de retraso)")
             continue
@@ -1118,8 +1121,71 @@ def cmd_programar() -> None:
     except publish.PublishError as e:
         raise SystemExit(f"✗ {e}")
     _registrar_video(ref, vid, publish_at=d.get("publish_at"))
+    sr = d.get("serie")
+    if sr:                                        # la serie como LISTA: el espectador encadena episodios
+        try:
+            pl = publish.asegurar_playlist(sr["nombre"], f'{sr["nombre"]} — a Net Worthy series.')
+            nuevo = publish.agregar_a_playlist(vid, pl)
+            print(f"✓ lista '{sr['nombre']}': {'añadido' if nuevo else 'ya estaba'} (https://youtube.com/playlist?list={pl})")
+        except Exception as e:                    # noqa: BLE001 - la lista no bloquea la aprobación
+            print(f"⚠ no se pudo añadir a la lista de la serie: {e}")
+    if d.get("comentario_fijado"):
+        # Aprobar el Short aprueba su comentario (se muestra aquí). Se publica cuando el vídeo ya es
+        # público: `comentar <ref>` o solo en `analytics-sync`. Fijarlo es a mano (la API no fija).
+        d["comentario_aprobado"] = True
+        print("✓ comentario aprobado (se publica cuando el vídeo sea público; fíjalo a mano en Studio):\n  "
+              + d["comentario_fijado"].replace("\n", "\n  "))
+        if d.get("privacy_status") == "public":
+            _comentar(ref, d)
     if path.exists():
         path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _comentar(ref: str, d: dict) -> str:
+    """Publica el comentario aprobado si el vídeo ya es público. Idempotente (guarda comment_id)."""
+    from . import publish
+    if d.get("comment_id"):
+        return "ya publicado"
+    if not (d.get("comentario_aprobado") and d.get("comentario_fijado")):
+        return "sin comentario aprobado"
+    vid = _video_id(ref) or d.get("video_id")
+    if not vid or publish.estado_privacidad(vid) != "public":
+        return "el vídeo aún no es público"
+    d["comment_id"] = publish.comentar(vid, d["comentario_fijado"])
+    return f"publicado ({d['comment_id']}) — fíjalo en Studio: ⋮ > Fijar"
+
+
+def _comentar_pendiente(ref: str) -> None:
+    import json
+    path = config.DATA_DIR / f"publish_{ref}.json"
+    if not path.exists():
+        return
+    d = json.loads(path.read_text(encoding="utf-8"))
+    if d.get("comment_id") or not d.get("comentario_aprobado"):
+        return
+    try:
+        print(f"  {ref}: comentario {_comentar(ref, d)}")
+        path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:                         # noqa: BLE001 - el comentario no frena la medición
+        print(f"  {ref}: ⚠ comentario sin publicar: {str(e)[:200]}")
+
+
+def cmd_comentar() -> None:
+    """Publica el comentario preparado (y aprobado con `programar`) de un Short ya público."""
+    import json
+    from . import publish
+    if len(sys.argv) < 3:
+        raise SystemExit("Uso: python -m omega.cli comentar <ref>")
+    ref = sys.argv[2]
+    path = config.DATA_DIR / f"publish_{ref}.json"
+    if not path.exists():
+        raise SystemExit(f"✗ no existe {path.name}")
+    d = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        print(f"{ref}: {_comentar(ref, d)}")
+    except publish.PublishError as e:
+        raise SystemExit(f"✗ {e}")
+    path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def cmd_youtube_auth() -> None:
@@ -1201,6 +1267,7 @@ def main(argv: list[str]) -> int:
         "backup": cmd_backup,
         "youtube-auth": cmd_youtube_auth,
         "programar": cmd_programar,
+        "comentar": cmd_comentar,
         "vincular": cmd_vincular,
         "publish-social": cmd_publish_social,
         "analytics-sync": cmd_analytics_sync,

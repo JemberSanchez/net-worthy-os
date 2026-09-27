@@ -73,12 +73,50 @@ class DescripcionTest(unittest.TestCase):
         self.assertIn("Not financial advice", t)
         self.assertEqual(t.count("https://a.org"), 1)                 # fuentes sin repetir
         self.assertIn("Orange County Archives — CC BY 2.0", t)       # atribución exigida por CC BY
-        self.assertTrue(t.rstrip().endswith("#shorts"))
+        self.assertIn("\n\n#shorts\n\n", t)          # antes de los créditos: nunca se corta
         self.assertLessEqual(len(t), 5000)
 
     def test_sin_creditos_no_rompe(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertIn("Not financial advice", producir.descripcion(SB, Path(d)))
+
+
+class SerieYComentarioTest(unittest.TestCase):
+    SB = {**SB, "serie": {"nombre": "Quiet Millionaires", "ep": 2},
+          "escenas": [{"tipo": "cta", "en": "5", "a": {"texto": "Skill", "en": "5:skill"}, "b": {"texto": "*Time*", "en": "5:time"}}]}
+
+    def test_descripcion_con_serie_y_creditos_de_efectos(self):
+        sb = {**self.SB, "sonidos": [{"sfx": "caja", "en": "0:dollars"}]}
+        with tempfile.TemporaryDirectory() as d:
+            sfx = Path(d, "assets", "sfx"); sfx.mkdir(parents=True)
+            (sfx / "creditos.json").write_text(json.dumps([
+                {"archivo": "caja.src", "titulo": "File:WWS Cash register.ogg", "autor": "Work With Sounds / Werstas",
+                 "licencia": "CC BY 4.0", "url_licencia": "https://cc/by/4.0", "fuente": "https://commons/c"},
+                {"archivo": "reloj.src", "titulo": "File:Clock.ogg", "autor": "x", "licencia": "Public domain",
+                 "url_licencia": "", "fuente": "https://commons/r"}]))
+            t = producir.descripcion(sb, Path(d))
+        self.assertTrue(t.startswith("Quiet Millionaires · Ep. 2\n\nThe janitor."))
+        self.assertIn("Sound effects:\n- WWS Cash register — Work With Sounds / Werstas — CC BY 4.0", t)
+        self.assertNotIn("Clock", t)                                       # solo los efectos que se usan
+        self.assertIn("\n\n#shorts #QuietMillionaires\n\n", t)
+
+    def test_comentario_por_defecto_y_manual(self):
+        c = producir.comentario(self.SB)
+        self.assertTrue(c.startswith("Skill or Time? Reply with one word"))
+        self.assertIn("Quiet Millionaires · Ep. 3 is next", c)
+        self.assertEqual(producir.comentario({**self.SB, "publicacion": {"comentario": " Hola "}}), "Hola")
+        self.assertIsNone(producir.comentario(SB))                         # sin CTA no se inventa
+
+
+class LimiteDescripcionTest(unittest.TestCase):
+    def test_acorta_titulos_antes_que_cortar_y_si_no_cabe_falla(self):
+        cred = "Images:\n" + "\n".join(f"- {'T' * 300} {i} — Autor {i} — CC BY 4.0 — https://c/{i}" for i in range(12))
+        t = producir.ajustar_limite(["Intro", "#shorts", cred], limite=2000)
+        self.assertLessEqual(len(t), 2000)
+        self.assertIn("#shorts", t)
+        self.assertTrue(all(f"Autor {i} — CC BY 4.0 — https://c/{i}" in t for i in range(12)))   # atribución intacta
+        with self.assertRaises(ValueError):
+            producir.ajustar_limite(["x" * 3000], limite=2000)
 
 
 if __name__ == "__main__":

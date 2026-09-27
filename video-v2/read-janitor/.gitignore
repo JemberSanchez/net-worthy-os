@@ -11,3 +11,5 @@ assets/clips/*.src
 assets/v/
 social/
 assets/musica/*.src
+assets/sfx/*.src
+assets/sfx/*.wav

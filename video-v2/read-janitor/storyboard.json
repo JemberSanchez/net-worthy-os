@@ -22,6 +22,10 @@
    "#personalfinance"
   ]
  },
+ "serie": {
+  "nombre": "Quiet Millionaires",
+  "ep": 1
+ },
  "voz": {
   "motor": "kokoro",
   "voz": "am_adam"
@@ -121,6 +125,33 @@
   "4:reinvested",
   "7:ninety-five",
   "9:millions"
+ ],
+ "sonidos": [
+  {
+   "sfx": "caja",
+   "en": "0:dollars"
+  },
+  {
+   "sfx": "pagina",
+   "en": "4:bought"
+  },
+  {
+   "sfx": "pagina",
+   "en": "4:companies"
+  },
+  {
+   "sfx": "sello",
+   "en": "4:paid"
+  },
+  {
+   "sfx": "reloj",
+   "en": "5",
+   "dur": 1.6
+  },
+  {
+   "sfx": "monedas",
+   "en": "5:dollars"
+  }
  ],
  "clips": {
   "gasolinera": {

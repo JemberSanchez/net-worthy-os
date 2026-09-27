@@ -43,9 +43,12 @@ def descripcion(sb: dict, proy: Path) -> str:
     """Descripción para YouTube: la del storyboard + aviso YMYL + fuentes + créditos de imagen y
     de metraje (CC BY los EXIGE; PD y Pexels se citan igual). Función pura salvo la lectura de creditos.json."""
     pub = sb.get("publicacion") or {}
-    partes = [pub.get("descripcion", "").strip()]
+    sr = sb.get("serie")
+    partes = [(f'{sr["nombre"]} · Ep. {sr["ep"]}' if sr else ""), pub.get("descripcion", "").strip()]
     if (sb.get("aviso") or {}).get("lineas"):
         partes.append(" · ".join(sb["aviso"]["lineas"]))
+    hashtags = " ".join(pub.get("hashtags", []) + ([serie_hashtag(sr)] if sr else []))
+    partes.append(hashtags)                      # ANTES de los créditos: son lo que YouTube lee
     fuentes = [c["fuente"] for c in sb.get("cifras") or [] if c.get("fuente")]
     if fuentes:
         partes.append("Sources:\n" + "\n".join(f"- {u}" for u in dict.fromkeys(fuentes)))
@@ -69,10 +72,62 @@ def descripcion(sb: dict, proy: Path) -> str:
         fichas = [f for f in json.loads(cred_m.read_text(encoding="utf-8")) if f["archivo"] == "pista.src"]
         if fichas:
             partes.append(musica_libre.texto_creditos(fichas))
-    hashtags = " ".join(pub.get("hashtags", []))
-    if hashtags:
-        partes.append(hashtags)
-    return "\n\n".join(p for p in partes if p)[:5000]
+    cred_s = proy / "assets" / "sfx" / "creditos.json"
+    usados_s = {f"{n}.src" for n in sfx_usados(sb)}
+    if cred_s.exists() and usados_s:                 # efectos reales: CC BY exige citarlos igual
+        sys.path.insert(0, str(RAIZ / "tools"))
+        import sfx_libre
+        fichas = [f for f in json.loads(cred_s.read_text(encoding="utf-8")) if f["archivo"] in usados_s]
+        if fichas:
+            partes.append(sfx_libre.texto_creditos(fichas))
+    return ajustar_limite([p for p in partes if p])
+
+
+LIMITE_DESC = 5000   # YouTube rechaza/corta más allá: nunca a costa de una atribución obligatoria
+
+
+def ajustar_limite(partes: list[str], limite: int = LIMITE_DESC) -> str:
+    """Une la descripción sin pasar de `limite`. Si no cabe, acorta los TÍTULOS de los créditos
+    (autor, licencia y enlace se quedan: son lo que exige CC BY) antes que cortar nada. Si ni así
+    cabe, falla: un recorte a ciegas se comía los hashtags y, con un vídeo más, las atribuciones."""
+    t = "\n\n".join(partes)
+    for n in (80, 50, 30):
+        if len(t) <= limite:
+            return t
+        t = "\n\n".join(re.sub(r"(?m)^- (.+?) — ", lambda m: f"- {m.group(1)[:n].rstrip()}{'…' if len(m.group(1)) > n else ''} — ", x)
+                        for x in partes)
+    if len(t) > limite:
+        raise ValueError(f"descripción de {len(t)} caracteres (> {limite}) aun acortando títulos: quita créditos de recursos no usados")
+    return t
+
+
+def sfx_usados(sb: dict) -> set[str]:
+    """Nombres de efectos que el storyboard usa (clips, imágenes y `sonidos`)."""
+    n = {c.get("sfx") for c in (sb.get("clips") or {}).values()}
+    n |= {i.get("sfx") for i in (sb.get("imagenes") or {}).values()}
+    n |= {x.get("sfx") for x in sb.get("sonidos") or [] if isinstance(x, dict)}
+    return {x for x in n if x}
+
+
+def serie_hashtag(sr: dict) -> str:
+    return "#" + re.sub(r"[^A-Za-z0-9]", "", sr["nombre"].title())
+
+
+def comentario(sb: dict) -> str | None:
+    """Comentario para FIJAR: la pregunta del CTA como votación (más comentarios = más señal) + el
+    gancho del siguiente episodio si hay serie. `publicacion.comentario` manda si existe."""
+    pub = sb.get("publicacion") or {}
+    if pub.get("comentario"):
+        return pub["comentario"].strip()
+    cta = next((e for e in sb.get("escenas") or [] if e.get("tipo") == "cta"), None)
+    if not cta or not (cta.get("a") and cta.get("b")):
+        return None
+    a, b = cta["a"]["texto"].strip("*"), cta["b"]["texto"].strip("*")
+    txt = f"{a} or {b}? Reply with one word 👇"
+    sr = sb.get("serie")
+    if sr:
+        txt += f'\n\n{sr["nombre"]} · Ep. {sr["ep"] + 1} is next — follow so you don\'t miss it.'
+    return txt
 
 
 def subir_borrador(publish: dict, ref: str) -> str:
@@ -253,7 +308,8 @@ def producir(proy: Path) -> dict:
     pub = sb.get("publicacion") or {}
     publish = {"production_ref": ref, "video_path": str(final), "title": pub.get("titulo", ref)[:100],
                "description": descripcion(sb, proy), "tags": pub.get("tags", []), "category_id": "27",
-               "privacy_status": "private", "made_for_kids": False}
+               "privacy_status": "private", "made_for_kids": False,
+               "comentario_fijado": comentario(sb), "serie": sb.get("serie")}
     (RAIZ / "data").mkdir(exist_ok=True)
     (RAIZ / "data" / f"publish_{ref}.json").write_text(json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8")
     # El ADN se escribe solo si no existe: uno hecho a mano (técnica por bloque) vale más que este

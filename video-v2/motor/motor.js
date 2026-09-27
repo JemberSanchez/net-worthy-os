@@ -42,6 +42,11 @@
     tl.to("#aviso", { opacity: 0, duration: 0.2 }, b - 0.2);
   });
   if (P.aviso.final != null) tl.fromTo("#aviso", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, P.aviso.final);
+  // sello de serie: entra con el logo sonoro y sale antes de la 2ª frase (no compite con el gancho)
+  if (P.serie) {
+    tl.fromTo("#serie", { opacity: 0, y: -14, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(2)", immediateRender: false }, P.serie.t0);
+    tl.to("#serie", { opacity: 0, y: -10, duration: 0.25, ease: "power2.in" }, P.serie.t1 - 0.25);
+  }
 
   // ---------- fotos: Ken Burns (dirección por preset; el cuadro nunca queda quieto) ----------
   const KB = {

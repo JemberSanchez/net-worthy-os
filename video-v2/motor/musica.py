@@ -188,6 +188,35 @@ def riser(ruta: Path, dur: float = 1.0, semilla: int = 3) -> None:
         w.writeframes(st.tobytes())
 
 
-if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "riser":
-    riser(Path(__file__).resolve().parent / "assets" / "riser.wav")
-    print("✓ assets/riser.wav")
+def logo(ruta: Path, dur: float = 0.75) -> None:
+    """Logo sonoro de la serie (0,75 s): golpe grave + dos campanas FM en La -> Mi (quinta justa, la
+    tonalidad del motor). Es la FIRMA: idéntica en todos los episodios, para que el oído reconozca la
+    serie antes que el ojo. Propio (sin licencias) y determinista. construir.py lo pone con el sello."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    y = np.zeros(n)
+    f_sub = 55 * (1 + 1.5 * np.exp(-t / 0.03))                           # "thump": La1 con caída de tono
+    y += 0.9 * np.sin(2 * np.pi * np.cumsum(f_sub) / SR) * np.exp(-t / 0.11)
+    for t0, midi, g in ((0.0, 69, 0.55), (0.14, 76, 0.7)):                # La4 -> Mi5
+        tt = np.clip(t - t0, 0, None)
+        on = t >= t0
+        fc = nota(midi)
+        indice = 2.2 * np.exp(-tt / 0.08)                                 # brillo de ataque que se apaga
+        bell = np.sin(2 * np.pi * fc * tt + indice * np.sin(2 * np.pi * fc * 3.5 * tt))
+        bell += 0.25 * np.sin(2 * np.pi * fc * 2 * tt)                    # octava: cuerpo
+        y += g * bell * np.exp(-tt / 0.22) * on * np.clip(tt / 0.003, 0, 1)
+    y[-int(0.05 * SR):] *= np.linspace(1, 0, int(0.05 * SR))
+    d = int(0.011 * SR)                                                   # ancho: el derecho llega 11 ms después
+    L = y
+    R = np.concatenate([np.zeros(d), y[:-d]]) * 0.9 + 0.1 * y
+    st = np.stack([L, R], axis=1)
+    st = (st / np.abs(st).max() * 10 ** (-3 / 20) * 32767).astype(np.int16)
+    with wave.open(str(ruta), "wb") as w:
+        w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes(st.tobytes())
+
+
+if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] in ("riser", "logo"):
+    _n = __import__("sys").argv[1]
+    (riser if _n == "riser" else logo)(Path(__file__).resolve().parent / "assets" / f"{_n}.wav")
+    print(f"✓ assets/{_n}.wav")

@@ -31,6 +31,10 @@
                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
       #flash { position: absolute; inset: 0; background: var(--gold); opacity: 0; mix-blend-mode: screen; }
       #brand { position: absolute; top: 118px; width: 100%; text-align: center; font-weight: 800; letter-spacing: 0.42em; font-size: 26px; color: var(--gold); }
+      /* sello de serie (storyboard.serie): bajo la marca, solo en el gancho */
+      #serieclip { position: absolute; top: 166px; left: 0; width: 100%; display: flex; justify-content: center; }
+      #serie { font-weight: 800; font-size: 25px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--gold);
+               padding: 9px 24px 9px 30px; border: 3px solid rgba(216,178,90,0.8); border-radius: 999px; background: rgba(10,26,20,0.78); }
       #progress { position: absolute; top: 0; left: 0; height: 10px; width: 1080px; background: linear-gradient(90deg, var(--green), var(--gold)); transform-origin: 0 50%; }
       #aviso { position: absolute; left: 70px; right: 70px; top: 1440px; text-align: center; font-weight: 600; font-size: 23px; line-height: 1.45; color: rgba(244,246,243,0.72); opacity: 0; }
 
@@ -146,6 +150,7 @@ __ESCENAS__
         <div id="vignette"></div>
         <div id="grain"></div>
       </div>
+__SERIE__
     </div>
     <script>window.PLAN = __PLAN__;</script>
     <script>

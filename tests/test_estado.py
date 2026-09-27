@@ -99,14 +99,15 @@ class FlujoGitTest(unittest.TestCase):
         for rel in ("storyboard.json", "assets/voice.mp3", "assets/words.json", "assets/t/a.jpg",
                     "assets/img/creditos.json", "assets/img/a.jpg", "assets/music-bed.wav",
                     "assets/clips/c.src", "assets/clips/creditos.json", "assets/v/c-0-300.mp4",
-                    "assets/_motor/gsap.min.js", "renders/x-final.mp4", "renders/qa.json", "index.html"):
+                    "assets/_motor/gsap.min.js", "renders/x-final.mp4", "renders/qa.json", "index.html",
+                    "assets/sfx/caja.src", "assets/sfx/caja.wav", "assets/sfx/creditos.json"):
             (proy / rel).parent.mkdir(parents=True, exist_ok=True)
             (proy / rel).write_text("x")
         guardados = {p.as_posix() for p in estado.archivos_produccion(proy)}
         self.assertEqual(guardados, {"storyboard.json", "assets/voice.mp3", "assets/words.json", "assets/t/a.jpg",
                                      "assets/img/creditos.json", "assets/clips/creditos.json",
-                                     "renders/qa.json", "index.html"})
-        self.assertIn("guardada (8 archivos)", estado.guardar_produccion(proy))
+                                     "renders/qa.json", "index.html", "assets/sfx/creditos.json"})
+        self.assertIn("guardada (9 archivos)", estado.guardar_produccion(proy))
         self.assertIn("sin cambios", estado.guardar_produccion(proy))
 
 

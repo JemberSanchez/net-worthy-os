@@ -83,5 +83,38 @@ class GetCredentialsTest(unittest.TestCase):
             token_path.write_text.assert_called_once()
 
 
+class SerieYComentarioTest(unittest.TestCase):
+    def test_playlist_idempotente(self):
+        yt = mock.Mock()
+        yt.playlists.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "PL1", "snippet": {"title": "Quiet Millionaires"}}]}
+        self.assertEqual(publish.asegurar_playlist("quiet millionaires", youtube=yt), "PL1")
+        yt.playlists.return_value.insert.assert_not_called()
+        yt.playlists.return_value.list.return_value.execute.return_value = {"items": []}
+        yt.playlists.return_value.insert.return_value.execute.return_value = {"id": "PL2"}
+        self.assertEqual(publish.asegurar_playlist("Nueva", youtube=yt), "PL2")
+        body = yt.playlists.return_value.insert.call_args.kwargs["body"]
+        self.assertEqual(body["status"]["privacyStatus"], "public")
+
+    def test_agregar_no_duplica(self):
+        yt = mock.Mock()
+        yt.playlistItems.return_value.list.return_value.execute.return_value = {"items": [{"id": "x"}]}
+        self.assertFalse(publish.agregar_a_playlist("v1", "PL1", youtube=yt))
+        yt.playlistItems.return_value.insert.assert_not_called()
+        yt.playlistItems.return_value.list.return_value.execute.return_value = {"items": []}
+        self.assertTrue(publish.agregar_a_playlist("v1", "PL1", youtube=yt))
+
+    def test_comentar_exige_scope(self):
+        creds = mock.Mock(scopes=["https://www.googleapis.com/auth/youtube"])
+        with mock.patch.object(publish, "_get_credentials", return_value=creds):
+            with self.assertRaises(publish.PublishError):
+                publish.comentar("v1", "Skill or time?")
+        yt = mock.Mock()
+        yt.commentThreads.return_value.insert.return_value.execute.return_value = {"id": "C1"}
+        self.assertEqual(publish.comentar("v1", "Skill or time?", youtube=yt), "C1")
+        snip = yt.commentThreads.return_value.insert.call_args.kwargs["body"]["snippet"]
+        self.assertEqual((snip["videoId"], snip["topLevelComment"]["snippet"]["textOriginal"]), ("v1", "Skill or time?"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

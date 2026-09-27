@@ -1,0 +1,52 @@
+[
+ {
+  "archivo": "caja.src",
+  "origen": "wikimedia",
+  "titulo": "File:WWS CashregisteratWolkoffHouseMuseum.ogg",
+  "autor": "Work With Sounds / Werstas",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:WWS_CashregisteratWolkoffHouseMuseum.ogg"
+ },
+ {
+  "archivo": "monedas.src",
+  "origen": "wikimedia",
+  "titulo": "File:Bag of coins.ogg",
+  "autor": "cori",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Bag_of_coins.ogg"
+ },
+ {
+  "archivo": "pagina.src",
+  "origen": "wikimedia",
+  "titulo": "File:Turning a page.ogg",
+  "autor": "planish",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg"
+ },
+ {
+  "archivo": "reloj.src",
+  "origen": "wikimedia",
+  "titulo": "File:Clock ticking.ogg",
+  "autor": "natalie",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Clock_ticking.ogg"
+ },
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ }
+]
