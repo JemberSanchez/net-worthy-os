@@ -105,6 +105,10 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   `programar`, se publica solo cuando el vídeo es público (`comentar <ref>` o `analytics-sync`);
   FIJARLO es a mano en Studio (la API de YouTube no fija). Scope nuevo `youtube.force-ssl`: un
   token viejo sigue valiendo para subir/medir; para comentar, repetir `youtube-auth` una vez.
+- **1-oct, imagen protagonista + la prueba:** fondos de texto con metraje NÍTIDO (antes desenfocado
+  al 46 %: luma media 40-46/255 medida, diapositivas oscuras) + sombra local tras el texto; los clips
+  con mucho detalle (`broll.detalle`) van con desenfoque fuerte. `pruebas`: documento real a pantalla
+  completa, foco + subrayador sobre la frase que localiza el OCR (`tools/ocr_doc.py`, RapidOCR).
 - **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
   10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
   → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie

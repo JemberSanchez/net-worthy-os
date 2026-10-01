@@ -99,3 +99,13 @@ medido por energía, cae EXACTO en la palabra; los ambientes llevan `dur`). Cré
 "Sound effects:" solos en la descripción. `"serie": {"nombre": "...", "ep": N}` = sello bajo la
 marca durante el gancho + logo sonoro propio (`assets/logo.wav`, `musica.py logo`, igual en todos
 los episodios) + "Serie · Ep. N" y hashtag en la descripción + lista de YouTube al aprobar.
+
+Imagen protagonista y la prueba (1-oct). Medido en #7/#8: luma media 40-46/255 y el 79-87 % del
+tiempo texto sobre metraje desenfocado = diapositivas oscuras. Ahora los fondos de las escenas de
+texto son el metraje NÍTIDO a plena presencia con sombra local tras el texto (`.scrim`); los clips
+con mucho detalle en la banda del texto (`broll.detalle` > `UMBRAL_DETALLE`, p. ej. un teletipo)
+van con desenfoque fuerte. `"fondos_nitidos": false` vuelve a lo anterior. La PRUEBA:
+`"pruebas": [{"img": "crash", "texto": "stocks crash", "en": "7:so", "marca": "7:collapse", "hasta": "7:sink"}]`
+= el documento real a pantalla completa, foco que apaga todo menos la frase, empuje de cámara y
+subrayador en `marca`. La caja sale del OCR (`tools/ocr_doc.py`, RapidOCR por tiras, cacheado en
+`assets/t/<img>.ocr.json`) sobre la misma imagen que se ve; frase no encontrada = error.

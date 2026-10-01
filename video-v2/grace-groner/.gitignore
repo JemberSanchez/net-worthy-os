@@ -12,3 +12,5 @@ social/
 assets/musica/*.src
 assets/sfx/*.src
 assets/sfx/*.wav
+assets/clips/detalle.json
+assets/t/*.ocr.json

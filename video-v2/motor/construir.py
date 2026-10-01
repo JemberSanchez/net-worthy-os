@@ -50,6 +50,12 @@ AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "pu
 OPACIDAD_TIPO = {"contador3d": 0.55}   # el payoff: metraje real con más presencia detrás del número
 OPACIDAD_AUTO = 0.3
 OPACIDAD_AUTO_CLIP = 0.46   # el metraje desenfocado pesa menos que una foto: algo más de presencia
+# Imagen protagonista (1-oct): medido en #7/#8, luma media 40-46/255 y el 79-87 % del tiempo era texto
+# sobre metraje desenfocado al 46 % = diapositivas oscuras. Ahora el fondo de una escena de texto es
+# el metraje NÍTIDO a plena presencia; la legibilidad la da una sombra LOCAL detrás del texto
+# (.scrim) y la puerta WCAG, no oscurecer toda la pantalla. `"fondos_nitidos": false` = lo anterior.
+OPACIDAD_NITIDO = 1.0
+UMBRAL_DETALLE = 16.0  # broll.detalle(): por encima, el fondo nítido se come el texto -> desenfoque suave
 TRAMO_FONDO = 2.5     # s: cada reutilización de un clip como fondo arranca más adelante (nunca el mismo plano)
 SEP_CORTES = 1.2      # s mínimos entre cortes con whoosh + transición (más seguido marea)
 RISER_S = 1.0         # el riser (assets/riser.wav) termina justo en el golpe
@@ -140,6 +146,9 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
     errores += _validar_sonidos(sb)
+    for j, x in enumerate(sb.get("pruebas") or []):
+        if not isinstance(x, dict) or x.get("img") not in imgs or not str(x.get("texto", "")).strip() or not x.get("en"):
+            errores.append(f"pruebas[{j}]: {{\"img\": <declarada en imagenes>, \"texto\": \"frase del documento\", \"en\": ancla, [\"marca\"], [\"hasta\"]}}")
     sr = sb.get("serie")
     if sr is not None and not (isinstance(sr, dict) and str(sr.get("nombre", "")).strip() and isinstance(sr.get("ep"), int)):
         errores.append("`serie` = {\"nombre\": \"...\", \"ep\": <entero>}")
@@ -151,6 +160,7 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     sueltas += list(sb.get("golpes") or []) + list((sb.get("musica") or {}).get("oscuro") or [])
     sueltas += [str(x) for x in (sb.get("subtitulos") or [])]
     sueltas += [x["en"] for x in sb.get("sonidos") or [] if isinstance(x, dict) and x.get("en")]
+    sueltas += [x[k] for x in sb.get("pruebas") or [] if isinstance(x, dict) for k in ("en", "marca", "hasta") if x.get(k)]
     for a in sueltas:
         try:
             anclas.t(words, a)
@@ -513,8 +523,9 @@ def plan(sb: dict, words: list[dict]) -> dict:
             modo = "duotono" if clips[c].get("duotono") else "color"   # color híbrido (26-sep)
             desde = float(clips[c].get("desde", 0)) + desde_extra
             # el nombre lleva modo y si es fondo: un tratado viejo nunca se reutiliza por error
+            sufijo = {True: "f2", "fuerte": "f11"}.get(desenfoque, "")
             f.update(video=True, clip=c, desde=desde, modo=modo, fondo_vid=desenfoque,
-                     src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{'f2' if desenfoque else ''}.mp4")
+                     src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{sufijo}.mp4")
         else:
             f["img"] = src["img"]
             f["archivo"] = f'{src["img"]}-desenfoque' if desenfoque else src["img"]
@@ -526,6 +537,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
                 f.update(video=True, p25d=True, src=f'{src["img"]}-2p5d-{mov}-{round((t1 - t0) * 100)}.mp4')
         return f
 
+    nitido = sb.get("fondos_nitidos", True)
     pool = list((sb.get("imagenes") or {}).keys())
     # Movimiento en todo el vídeo (26-sep): si el proyecto tiene clips, los fondos automáticos son
     # CLIPS desenfocados (rotando clip y tramo); las fotos desenfocadas solo si no hay metraje.
@@ -541,7 +553,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
         if s.get("fondo"):
             f = s["fondo"] if isinstance(s["fondo"], dict) else {"img": s["fondo"]}
             fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
-                              f.get("opacidad", 0.4)))
+                              f.get("opacidad", OPACIDAD_NITIDO if nitido else 0.4)))
+            fotos[-1]["capa"] = "fondo"
             mi += 1
         elif (s["tipo"] in AUTO_FONDO and "fondo" not in s and sb.get("fondos_auto", True) and (pool or pool_clips)
               and not (s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"))):
@@ -553,12 +566,15 @@ def plan(sb: dict, words: list[dict]) -> dict:
             if pool_clips:
                 n = usos_clip.get(elegido, 0)
                 usos_clip[elegido] = n + 1
+                ruidoso = clips[elegido].get("_detalle", 0) > UMBRAL_DETALLE
                 fotos.append(capa(f"ph{k}a", {"clip": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP), desenfoque=True,
+                                  OPACIDAD_NITIDO if nitido else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP),
+                                  desenfoque=("fuerte" if ruidoso else False) if nitido else True,
                                   desde_extra=TRAMO_FONDO * n))
             else:
                 fotos.append(capa(f"ph{k}a", {"img": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_AUTO, desenfoque=True))
+                                  OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO, desenfoque=not nitido))
+            fotos[-1]["capa"] = "fondo"
             ai += 1
         if s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"):
             fotos.append({"id": f"ph{k}q", "img": s["pregunta"]["fondo"], "t0": s["pregunta"]["en"] - 0.3, "t1": END,
@@ -592,7 +608,34 @@ def plan(sb: dict, words: list[dict]) -> dict:
         "golpes": sorted(golpes), "impactos": sorted(impactos),
         "oscuro": [anclas.t(words, oscuro[0], fr) - 0.25, anclas.t(words, oscuro[1], fr) - 0.1] if oscuro else None,
         "cta": cta, "serie": serie, "sonidos": sonidos(sb, words, fr, fotos, END),
+        "pruebas": [prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])],
     }
+
+
+PRUEBA_ANCHO_FRASE = 940   # px que ocupa la frase subrayada al final del empuje (de 1080)
+PRUEBA_Y = 700             # px: altura del cuadro donde queda la frase (zona de texto, sobre subtítulos)
+
+
+def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
+    """LA PRUEBA (1-oct): el documento real a pantalla completa, encuadrado para que la frase
+    localizada por OCR (tools/ocr_doc.py -> `_caja_n`, `_aspecto`) quede legible en la zona de
+    texto; empuje de cámara hacia ella y subrayador en `marca`. Geometría pura, en px del cuadro."""
+    t0 = anclas.t(words, x["en"], fr)
+    t1 = min(END, anclas.t(words, x["hasta"], fr)) if x.get("hasta") else min(END, t0 + 1.5)
+    marca = anclas.t(words, x["marca"], fr) if x.get("marca") else t0 + 0.3
+    x0, y0, x1, y1 = x.get("_caja_n") or [0.1, 0.45, 0.9, 0.52]      # sin OCR (solo validar): centro
+    asp = float(x.get("_aspecto") or 1.3)
+    wd = min(3240.0, max(1080.0, PRUEBA_ANCHO_FRASE / max(0.05, x1 - x0)))
+    hd = wd * asp
+    izq = min(0.0, max(1080 - wd, 540 - (x0 + x1) / 2 * wd))
+    arr = PRUEBA_Y - (y0 + y1) / 2 * hd
+    arr = min(max(arr, 1920 - hd), 0.0) if hd >= 1920 else arr       # cubre el cuadro si el documento da
+    pad_x, pad_y = 0.012 * wd, 0.25 * (y1 - y0) * hd
+    caja = [round(izq + x0 * wd - pad_x), round(arr + y0 * hd - pad_y), round((x1 - x0) * wd + 2 * pad_x),
+            round((y1 - y0) * hd + 2 * pad_y)]
+    return {"id": f"pr{j}", "img": x["img"], "t0": round(t0, 3), "t1": round(max(t1, t0 + 0.6), 3),
+            "marca": round(max(t0 + 0.12, marca), 3), "doc": [round(izq), round(arr), round(wd), round(hd)],
+            "caja": caja, "foco": [caja[0] + caja[2] / 2, caja[1] + caja[3] / 2]}
 
 
 def sonidos(sb: dict, words: list[dict], fr, fotos: list[dict], END: float) -> list[dict]:
@@ -626,17 +669,22 @@ def sonidos(sb: dict, words: list[dict], fr, fotos: list[dict], END: float) -> l
     return sorted(out, key=lambda u: u["t"])
 
 
+def _sombra(f: dict) -> str:
+    """Fondo de una escena de texto: sombra general ligera (la legibilidad va en .scrim, local)."""
+    return "shade fondo" if f.get("capa") == "fondo" and f.get("opacidad", 0) >= 0.9 else "shade"
+
+
 def _capa_html(f: dict, j: int) -> str:
     tiempo = f'data-start="{f["t0"]:.3f}" data-duration="{f["t1"] - f["t0"]:.3f}"'
     if not f.get("video"):
         return (f'      <div id="{f["id"]}" class="clip ph" {tiempo} data-track-index="{2 + j}">'
-                f'<img id="{f["id"]}-img" src="assets/t/{f.get("archivo", f["img"])}.jpg" alt="" /><div class="shade"></div></div>')
+                f'<img id="{f["id"]}-img" src="assets/t/{f.get("archivo", f["img"])}.jpg" alt="" /><div class="{_sombra(f)}"></div></div>')
     # Vídeo: el tiempo va en el <video> y NO en su contenedor (lint `video_nested_in_timed_element`:
     # con los dos, el extractor saca fotogramas desplazados). El contenedor, sin tiempo, es el que
     # se anima (zoom lento); la sombra es su propio clip con la misma ventana.
     return (f'      <div id="{f["id"]}" class="ph phv"><video id="{f["id"]}-img" class="clip" src="assets/v/{f["src"]}" '
             f'{tiempo} data-track-index="{2 + j}" muted playsinline></video></div>\n'
-            f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{80 + j}"><div class="shade"></div></div>')
+            f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{80 + j}"><div class="{_sombra(f)}"></div></div>')
 
 
 def asegurar_desenfoques(proy: Path, p: dict, radio: float = 14) -> None:
@@ -662,6 +710,44 @@ def asegurar_parallax(proy: Path, p: dict) -> None:
         print(f"✓ 2.5D {f['img']} -> {f['src']} ({info['frames']} fotogramas)")
 
 
+def localizar_pruebas(proy: Path, sb: dict) -> None:
+    """OCR (tools/ocr_doc.py) sobre la MISMA imagen que se ve (assets/t/, duotono): la caja casa al
+    píxel. Frase no encontrada = error: nunca se subraya a ciegas."""
+    import ocr_doc
+    from PIL import Image
+    for x in sb["pruebas"]:
+        img = proy / "assets" / "t" / f'{x["img"]}.jpg'
+        r = ocr_doc.buscar(img, x["texto"])
+        if not r:
+            raise StoryboardError(f'prueba {x["texto"]!r}: el OCR no la encuentra en {x["img"]} '
+                                  f'(mira {img.with_suffix(".ocr.json").name} y usa el texto tal cual sale)')
+        W, H = Image.open(img).size
+        a, b, c, d = r["caja"]
+        x["_caja_n"], x["_aspecto"] = [a / W, b / H, c / W, d / H], H / W
+        print(f'✓ prueba: "{r["texto"]}" en {x["img"]} (OCR {r["conf"]:.2f}, parecido {r["parecido"]:.2f})')
+
+
+def medir_detalle(proy: Path, sb: dict) -> None:
+    """Antes del plan: cuánto detalle tiene cada clip (cacheado en assets/clips/detalle.json) para
+    decidir qué fondos van nítidos y cuáles suaves. Medido, no a ojo."""
+    import broll
+    decl = sb["clips"]
+    carpeta = proy / "assets" / "clips"
+    cache_p = carpeta / "detalle.json"
+    cache = json.loads(cache_p.read_text(encoding="utf-8")) if cache_p.exists() else {}
+    faltan = [c for c in decl if f"{c}@{float(decl[c].get('desde', 0)):g}" not in cache]
+    if faltan:
+        crudos = broll.bajar({c: decl[c] for c in faltan}, carpeta)
+        for c in faltan:
+            cache[f"{c}@{float(decl[c].get('desde', 0)):g}"] = broll.detalle(crudos[c], float(decl[c].get("desde", 0)))
+        cache_p.write_text(json.dumps(cache, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    for c, d in decl.items():
+        d["_detalle"] = cache[f"{c}@{float(d.get('desde', 0)):g}"]
+    suaves = [c for c, d in decl.items() if d["_detalle"] > UMBRAL_DETALLE]
+    if suaves:
+        print(f"✓ fondos nítidos; suaves por exceso de detalle: {', '.join(suaves)}")
+
+
 def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
     """Baja (tools/broll.py, licencia filtrada + créditos) y trata los clips de vídeo que falten."""
     usos = [f for f in p["fotos"] if f.get("clip") and not (proy / "assets" / "v" / f["src"]).exists()]
@@ -681,8 +767,9 @@ def _html(p: dict) -> str:
     esc_html = []
     for k, s in enumerate(p["escenas"]):
         a, b = s["t0"], s["t1"]
+        scrim = '<div class="scrim"></div>' if s["tipo"] != "foto" else ""   # sombra local tras el texto
         esc_html.append(f'      <section id="s{k}" class="clip scene" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
-                        f'data-track-index="{30 + k}">{MARKUP[s["tipo"]](s, f"s{k}")}</section>')
+                        f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>')
     fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
     audio = ['      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
              '      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="0.5"></audio>']
@@ -701,7 +788,15 @@ def _html(p: dict) -> str:
     sr = p.get("serie")
     serie = (f'      <div id="serieclip" class="clip" data-start="{sr["t0"]:.3f}" data-duration="{sr["t1"] - sr["t0"]:.3f}" '
              f'data-track-index="63"><div id="serie">{html.escape(sr["texto"])}</div></div>') if sr else ""
+    pruebas = "\n".join(
+        f'      <div id="{pr["id"]}" class="clip prueba" data-start="{pr["t0"]:.3f}" data-duration="{pr["t1"] - pr["t0"]:.3f}" '
+        f'data-track-index="{64 + j}"><div id="{pr["id"]}-cam" class="pcam" style="transform-origin:{pr["foco"][0]:.0f}px {pr["foco"][1]:.0f}px">'
+        f'<img src="assets/t/{pr["img"]}.jpg" alt="" style="left:{pr["doc"][0]}px;top:{pr["doc"][1]}px;width:{pr["doc"][2]}px;height:{pr["doc"][3]}px" />'
+        f'<div id="{pr["id"]}-f" class="foco" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
+        f'<div id="{pr["id"]}-m" class="marca" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
+        f'</div></div>' for j, pr in enumerate(p.get("pruebas") or []))
     rep = {
+        "__PRUEBAS__": pruebas,
         "__SERIE__": serie,
         "__END__": f'{p["D"]}', "__AUDIO__": "\n".join(audio), "__FOTOS__": fotos, "__ESCENAS__": "\n".join(esc_html),
         "__AVISO__": aviso if p["aviso"]["lineas"] else "",
@@ -725,6 +820,11 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     av = sb.get("aviso") or {}
     if av.get("ventanas"):
         av["ventanas_t"] = [[anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]]
+    if sb.get("fondos_nitidos", True) and sb.get("clips") and not solo_validar:
+        medir_detalle(proy, sb)
+    if sb.get("pruebas") and not solo_validar:
+        asegurar_imagenes(proy, sb.get("imagenes") or {})
+        localizar_pruebas(proy, sb)
     p = plan(sb, words)
     for aviso in huecos_estaticos(p):
         print(f"⚠ ritmo: {aviso}")
@@ -766,7 +866,8 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
 
 IGNORAR = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/music-bed.wav",
            "assets/img/*.jpg", "assets/clips/*.src", "assets/v/", "assets/t/*-desenfoque.jpg", "social/",
-           "assets/musica/*.src", "assets/sfx/*.src", "assets/sfx/*.wav")
+           "assets/musica/*.src", "assets/sfx/*.src", "assets/sfx/*.wav", "assets/clips/detalle.json",
+           "assets/t/*.ocr.json")
 
 
 def _andamiaje(proy: Path) -> None:

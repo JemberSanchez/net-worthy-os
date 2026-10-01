@@ -42,6 +42,15 @@
     tl.to("#aviso", { opacity: 0, duration: 0.2 }, b - 0.2);
   });
   if (P.aviso.final != null) tl.fromTo("#aviso", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, P.aviso.final);
+  // la PRUEBA: el documento entra de golpe, la cámara empuja hacia la frase y el subrayador la marca
+  (P.pruebas || []).forEach((pr) => {
+    const c = "#" + pr.id + "-cam";
+    tl.fromTo(c, { scale: 1.14, rotation: -1.2, opacity: 0 }, { scale: 0.96, rotation: 0, opacity: 1, duration: 0.2, ease: "power3.out", immediateRender: false }, pr.t0);
+    tl.fromTo(c, { scale: 0.96 }, { scale: 1.06, duration: Math.max(0.2, pr.t1 - pr.t0 - 0.2), ease: "sine.out", immediateRender: false }, pr.t0 + 0.2);
+    tl.fromTo("#" + pr.id + "-f", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out", immediateRender: false }, Math.min(pr.t0 + 0.12, pr.marca - 0.1));
+    tl.fromTo("#" + pr.id + "-m", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out", immediateRender: false }, pr.marca);
+    tl.to(c, { opacity: 0, duration: 0.15 }, pr.t1 - 0.15);
+  });
   // sello de serie: entra con el logo sonoro y sale antes de la 2ª frase (no compite con el gancho)
   if (P.serie) {
     tl.fromTo("#serie", { opacity: 0, y: -14, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(2)", immediateRender: false }, P.serie.t0);
