@@ -196,16 +196,22 @@ DESENFOQUE_FONDO = "scale=540:960,gblur=sigma=3,scale=1080:1920"   # 26-sep: la 
 MODOS = ("color", "duotono")
 
 
-def filtro(modo: str, fondo: bool, cube: str | None = None) -> str:
+# Clip con mucho detalle (broll.detalle > construir.UMBRAL_DETALLE) detrás de texto: con sigma 3 un
+# teletipo seguía leyéndose detrás del titular (1-oct). Fuerte = forma y luz, nunca cifras legibles.
+DESENFOQUE_FUERTE = "scale=540:960,gblur=sigma=11,scale=1080:1920"
+
+
+def filtro(modo: str, fondo: bool | str, cube: str | None = None) -> str:
     """Cadena -vf de ffmpeg para tratar un clip. Función pura (testeable sin ffmpeg)."""
     if modo not in MODOS:
         raise ValueError(f"modo {modo!r} no existe ({', '.join(MODOS)})")
     color = GRADO_MARCA if modo == "color" else f"format=gray,format=rgb24,lut1d=file={cube}"
-    return f"{_geometria()},{color}" + (f",{DESENFOQUE_FONDO}" if fondo else "")
+    blur = DESENFOQUE_FUERTE if fondo == "fuerte" else DESENFOQUE_FONDO
+    return f"{_geometria()},{color}" + (f",{blur}" if fondo else "")
 
 
 def preparar(crudo: Path, destino: Path, desde: float, dur: float, contraste: float = 1.15,
-             modo: str = "color", fondo: bool = False) -> dict:
+             modo: str = "color", fondo: bool | str = False) -> dict:
     """Crudo -> MP4 1080x1920 sin audio, de `dur` segundos exactos. `modo`: "color" (grado de
     marca, por defecto para metraje moderno) o "duotono" (la misma rampa que las fotos, vía LUT 1D).
     `fondo=True`: además, desenfocado, para ir detrás de texto."""
@@ -241,6 +247,23 @@ def texto_creditos(fichas: list[dict]) -> str:
         lic = f["licencia"] + (f" ({f['url_licencia']})" if f.get("url_licencia") else "")
         lineas.append(f"- {f['titulo'].removeprefix('File:')} — {f['autor']} — {lic} — {f['fuente']}")
     return "Footage:\n" + "\n".join(lineas)
+
+
+BANDA_TEXTO = (250, 1150)   # px de 1920 donde viven los textos de escena (plantilla.tpl)
+
+
+def detalle(crudo: Path, desde: float = 0.0, segundos: float = 8.0) -> float:
+    """Cuánto "ruido visual" tiene el clip en la banda del texto: gradiente medio (0-255) de 1 fps
+    en 270x480. Medido (1-oct): teletipo de bolsa 18,1 (el texto encima no se lee), suelo de
+    madera 13,6 y monedas 12,8 (se leen), gasolinera 7,9, reloj 3,1."""
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{desde:.2f}", "-i", str(crudo), "-t", f"{segundos:.2f}",
+                          "-vf", "fps=1,scale=270:480:force_original_aspect_ratio=increase,crop=270:480,format=gray",
+                          "-f", "rawvideo", "-"], capture_output=True, check=True).stdout
+    f = np.frombuffer(raw, np.uint8).reshape(-1, 480, 270).astype(np.float32)
+    a, b = (round(x / 4) for x in BANDA_TEXTO)
+    f = f[:, a:b, :]
+    return round(float(np.abs(np.diff(f, axis=2)).mean() + np.abs(np.diff(f, axis=1)).mean()), 1)
 
 
 def main() -> None:

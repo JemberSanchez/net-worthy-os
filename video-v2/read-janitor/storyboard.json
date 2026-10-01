@@ -151,6 +151,19 @@
   {
    "sfx": "monedas",
    "en": "5:dollars"
+  },
+  {
+   "sfx": "pagina",
+   "en": "7:so"
+  }
+ ],
+ "pruebas": [
+  {
+   "img": "crash",
+   "texto": "stocks crash",
+   "en": "7:so",
+   "marca": "7:collapse",
+   "hasta": "7:sink"
   }
  ],
  "clips": {
@@ -347,9 +360,8 @@
     "en": "7:ninety-five"
    },
    "cae": {
-    "en": "7:collapse",
-    "hasta": "7:sink",
-    "img": "crash",
+    "en": "7:sink",
+    "hasta": "8",
     "texto": "One collapse can't sink him"
    }
   },

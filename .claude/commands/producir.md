@@ -63,6 +63,10 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      en un clip de máquina) y `"sonidos"` para golpes en palabras (caja en la cifra del gancho,
      página/sello cuando entran documentos, reloj bajo "X years later", monedas en el payoff).
      Solo lo que casa con la imagen: un efecto sin motivo visual es ruido.
+   - **La prueba (1-oct):** si hay un documento REAL (periódico, certificado, informe) que dice
+     el dato, ponlo en `pruebas` con la frase TAL CUAL está impresa (`python tools/ocr_doc.py
+     assets/t/<img>.jpg "<frase>"` para comprobarla); `marca` = la palabra de la voz donde se
+     subraya. 1-1,5 s basta. Es lo que convierte "te lo cuento" en "aquí está".
    - **Serie:** `"serie": {"nombre": "Quiet Millionaires", "ep": N}` si el tema es de la serie
      (gente corriente que se hizo rica en silencio); N = siguiente episodio. El comentario para
      fijar sale solo de la dicotomía del CTA (`publicacion.comentario` lo sustituye).

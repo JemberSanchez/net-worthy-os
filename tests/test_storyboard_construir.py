@@ -119,13 +119,24 @@ class FondoAutoTest(unittest.TestCase):
     """Ninguna escena de texto sobre verde vacío: fondo automático desenfocado del propio proyecto."""
 
     def test_escenas_de_texto_reciben_fondo_desenfocado(self):
-        d = sb(imagenes={"foto1": {"commons": "File:X.jpg"}, "foto2": {"commons": "File:Y.jpg"}})
+        d = sb(imagenes={"foto1": {"commons": "File:X.jpg"}, "foto2": {"commons": "File:Y.jpg"}}, fondos_nitidos=False)
         p = c.plan(d, W)
         auto = [f for f in p["fotos"] if f["id"].endswith("a")]
         self.assertEqual([f["id"] for f in auto], ["ph1a", "ph2a"])          # lista y cta; la foto no
         self.assertTrue(all(f["opacidad"] == c.OPACIDAD_AUTO and f["archivo"].endswith("-desenfoque") for f in auto))
         self.assertEqual(auto[0]["img"], "foto2")                         # evita la imagen de la foto vecina
         self.assertIn('src="assets/t/foto2-desenfoque.jpg"', c._capa_html(auto[0], 0))
+
+    def test_por_defecto_fondo_nitido_con_sombra_local(self):
+        """1-oct: luma media 40-46/255 medida -> el fondo de texto es la imagen NÍTIDA a plena
+        presencia y la legibilidad la da la sombra local (.scrim) detrás del texto."""
+        d = sb(imagenes={"foto1": {"commons": "File:X.jpg"}, "foto2": {"commons": "File:Y.jpg"}})
+        p = c.plan(d, W)
+        auto = [f for f in p["fotos"] if f["id"].endswith("a")]
+        self.assertTrue(auto and all(f["opacidad"] == c.OPACIDAD_NITIDO and f["archivo"] == f["img"] for f in auto))
+        self.assertIn('class="shade fondo"', c._capa_html(auto[0], 0))
+        h = c._html(p)
+        self.assertEqual(h.count('<div class="scrim"></div>'), 2)            # lista y cta; la foto no
 
     def test_se_puede_desactivar(self):
         self.assertFalse(any(f["id"].endswith("a") for f in c.plan(sb(fondos_auto=False), W)["fotos"]))
@@ -233,7 +244,7 @@ class BrollTest(unittest.TestCase):
     def test_fondos_automaticos_con_clips_en_movimiento(self):
         """Movimiento en todo el vídeo: con clips, los fondos de texto son clips desenfocados y cada
         reutilización avanza de tramo (nunca el mismo plano dos veces)."""
-        d = sb(clips={"a": {"pexels": 1, "desde": 1}, "b": {"pexels": 2}})
+        d = sb(clips={"a": {"pexels": 1, "desde": 1}, "b": {"pexels": 2}}, fondos_nitidos=False)
         d["escenas"].insert(2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]})
         p = c.plan(d, W)
         auto = [f for f in p["fotos"] if f["id"].endswith("a")]
@@ -242,7 +253,22 @@ class BrollTest(unittest.TestCase):
         tramos = [(f["clip"], f["desde"]) for f in auto]
         self.assertEqual(len(tramos), len(set(tramos)))                     # ningún plano repetido
         # sin clips, vuelve a las fotos desenfocadas
-        self.assertTrue(all(f.get("archivo", "").endswith("-desenfoque") for f in c.plan(sb(), W)["fotos"] if f["id"].endswith("a")))
+        self.assertTrue(all(f.get("archivo", "").endswith("-desenfoque") for f in c.plan(sb(fondos_nitidos=False), W)["fotos"] if f["id"].endswith("a")))
+
+    def test_nitidos_y_los_ruidosos_con_desenfoque_fuerte(self):
+        d = sb(clips={"calma": {"pexels": 1, "_detalle": 5.0}, "teletipo": {"pexels": 2, "_detalle": 18.1}})
+        d["escenas"].insert(2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]})
+        auto = {f["clip"]: f for f in c.plan(d, W)["fotos"] if f["id"].endswith("a")}
+        self.assertEqual(set(auto), {"calma", "teletipo"})
+        self.assertFalse(auto["calma"]["fondo_vid"])
+        self.assertTrue(auto["calma"]["src"].endswith("-c.mp4"))
+        self.assertEqual(auto["teletipo"]["fondo_vid"], "fuerte")             # el texto encima se lee
+        self.assertTrue(auto["teletipo"]["src"].endswith("-cf11.mp4"))
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        import broll
+        self.assertIn("sigma=11", broll.filtro("color", "fuerte"))
+        self.assertIn("sigma=3", broll.filtro("color", True))
+        self.assertNotIn("gblur", broll.filtro("color", False))
 
     def test_cortes_con_transicion_separados_y_con_whoosh(self):
         p = c.plan(sb(), W)
@@ -351,6 +377,49 @@ class SonidoYSerieTest(unittest.TestCase):
         x[: int(0.2 * sr)] = 0.01 * np.random.default_rng(1).standard_normal(int(0.2 * sr))   # ruido mecánico previo
         x[int(0.3 * sr): int(0.35 * sr)] = 0.8                                                # el golpe
         self.assertAlmostEqual(sfx_libre.arranque(x, sr), 0.29, places=2)
+
+
+class PruebaTest(unittest.TestCase):
+    """1-oct: LA PRUEBA — documento real a pantalla completa con la frase (OCR) subrayada."""
+    LIN = [{"texto": "BILLIONS LOST AS STOCKS CRASH", "conf": 0.93, "caja": [35, 272, 1831, 367]},
+           {"texto": "Pantages In Jail Awaits", "conf": 0.95, "caja": [43, 399, 933, 468]}]
+
+    def _ocr(self):
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        import ocr_doc
+        return ocr_doc
+
+    def test_ocr_frase_parcial_errata_y_ausente(self):
+        o = self._ocr()
+        r = o.buscar(None, "stocks crash", self.LIN)
+        self.assertEqual(r["texto"], "BILLIONS LOST AS STOCKS CRASH")
+        self.assertGreater(r["caja"][0], 1000)                               # solo esas palabras, no la línea
+        self.assertEqual(r["caja"][2], 1831)
+        self.assertEqual(o.buscar(None, "Billions lost as stocks crash!", self.LIN)["caja"][0], 35)
+        self.assertGreaterEqual(o.buscar(None, "stocks crsh", self.LIN)["parecido"], 0.8)
+        self.assertIsNone(o.buscar(None, "bitcoin to the moon", self.LIN))
+
+    def test_valida(self):
+        ok = sb(pruebas=[{"img": "foto1", "texto": "stocks crash", "en": "0", "marca": "0:dollars"}])
+        self.assertEqual(c.validar(ok, W), [])
+        self.assertTrue(any("pruebas[0]" in e for e in c.validar(sb(pruebas=[{"img": "nada", "texto": "x", "en": "0"}]), W)))
+        self.assertTrue(any("dollarz" in e for e in c.validar(sb(pruebas=[{"img": "foto1", "texto": "x", "en": "0", "marca": "0:dollarz"}]), W)))
+
+    def test_encuadre_frase_legible_y_html(self):
+        d = sb(pruebas=[{"img": "foto1", "texto": "stocks crash", "en": "0", "marca": "0:dollars", "hasta": "1",
+                         "_caja_n": [1088 / 1920, 272 / 2541, 1831 / 1920, 367 / 2541], "_aspecto": 2541 / 1920}])
+        pr = c.plan(d, W)["pruebas"][0]
+        x, y, w, h = pr["caja"]
+        self.assertTrue(c.PRUEBA_ANCHO_FRASE <= w <= 1060)                   # la frase (+ margen) ocupa el ancho útil
+        self.assertTrue(0 <= x and x + w <= 1080)                            # entera dentro del cuadro
+        self.assertTrue(250 <= y and y + h <= 1150)                         # en la zona de texto (sobre subtítulos)
+        self.assertEqual(pr["marca"], W[5]["start"])                         # subraya EN la palabra
+        izq, arr, wd, hd = pr["doc"]
+        self.assertTrue(izq <= 0 and izq + wd >= 1080)                       # sin bordes vacíos a los lados
+        html = c._html(c.plan(d, W))
+        self.assertIn('class="clip prueba"', html)
+        self.assertIn('src="assets/t/foto1.jpg"', html)
+        self.assertIn(f'id="pr0-m" class="marca" style="left:{x}px;top:{y}px;width:{w}px;height:{h}px"', html)
 
 
 if __name__ == "__main__":

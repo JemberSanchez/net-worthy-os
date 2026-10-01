@@ -22,15 +22,28 @@
       .ph img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
       .ph video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
       .ph .shade { position: absolute; inset: 0;
-        background: linear-gradient(180deg, rgba(10,26,20,0.6) 0%, rgba(10,26,20,0.32) 28%, rgba(10,26,20,0.38) 55%, rgba(10,26,20,0.93) 100%); }
+        background: linear-gradient(180deg, rgba(10,26,20,0.55) 0%, rgba(10,26,20,0.18) 26%, rgba(10,26,20,0.2) 56%, rgba(10,26,20,0.82) 100%); }
+      /* fondo NÍTIDO de escena de texto (1-oct): sombra general ligera; arriba la marca, abajo subtítulos */
+      .ph .shade.fondo { background: linear-gradient(180deg, rgba(10,26,20,0.5) 0%, rgba(10,26,20,0.08) 22%, rgba(10,26,20,0.1) 60%, rgba(10,26,20,0.7) 100%); }
+      /* sombra LOCAL detrás del bloque de texto: el resto del cuadro queda con la luz de la imagen */
+      .scrim { position: absolute; left: -140px; right: -140px; top: 170px; height: 1080px; pointer-events: none;
+               background: radial-gradient(ellipse 52% 46% at 50% 48%, rgba(4,12,9,0.72) 0%, rgba(4,12,9,0.5) 45%, rgba(4,12,9,0) 100%); }
       /* texto grande SIEMPRE legible sobre imagen o vídeo (puerta de contraste WCAG en producir.py) */
       .huge, .big, .mid, .row .tx, .yr, .money, .boton { text-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 0 42px rgba(0,0,0,0.75); }
       #cam, #trans { position: absolute; inset: 0; transform-origin: 50% 45%; }
-      #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 42%, rgba(0,0,0,0.7) 100%); }
+      #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(0,0,0,0.5) 100%); }
       #grain { position: absolute; left: -200px; top: -200px; width: 1480px; height: 2320px; opacity: 0.13; mix-blend-mode: overlay;
                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
       #flash { position: absolute; inset: 0; background: var(--gold); opacity: 0; mix-blend-mode: screen; }
       #brand { position: absolute; top: 118px; width: 100%; text-align: center; font-weight: 800; letter-spacing: 0.42em; font-size: 26px; color: var(--gold); }
+      /* la PRUEBA: documento real a pantalla completa + subrayador (tools/ocr_doc.py) */
+      .prueba { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+      .prueba .pcam { position: absolute; inset: 0; }
+      .prueba img { position: absolute; display: block; box-shadow: 0 30px 90px rgba(0,0,0,0.7); }
+      /* foco: todo el documento se apaga salvo la frase (y las fotos de personas del periódico, de paso, no protagonizan) */
+      .prueba .foco { position: absolute; border-radius: 8px; box-shadow: 0 0 0 4000px rgba(4,10,8,0.84); opacity: 0; }
+      .prueba .marca { position: absolute; background: rgba(255, 208, 40, 0.62); mix-blend-mode: multiply; border-radius: 6px;
+                       transform-origin: 0 50%; transform: scaleX(0); }
       /* sello de serie (storyboard.serie): bajo la marca, solo en el gancho */
       #serieclip { position: absolute; top: 166px; left: 0; width: 100%; display: flex; justify-content: center; }
       #serie { font-weight: 800; font-size: 25px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--gold);
@@ -141,6 +154,7 @@ __FOTOS__
 __ESCENAS__
       </div></div>
 
+__PRUEBAS__
       <div id="flashclip" class="clip" data-start="0" data-duration="__END__" data-track-index="60"><div id="flash"></div></div>
       <div id="captions" class="clip" data-start="0" data-duration="__END__" data-track-index="61"><div id="caps"></div></div>
       <div id="chrome" class="clip" data-start="0" data-duration="__END__" data-track-index="62">
