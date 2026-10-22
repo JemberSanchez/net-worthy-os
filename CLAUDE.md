@@ -65,7 +65,7 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
 ## QA del vídeo exportado (sobre el archivo, no sobre el modelo)
 - `python tools/medir_loudness.py <mp4>` — loudness real contra el estándar de la plataforma
   (YouTube/FB normalizan a **-14 LUFS**, pico < -1 dBTP). Solo mide; no toca la mezcla del motor
-  (congelado, `docs/POLITICA.md`) salvo que el gap sea grande y consistente entre videos.
+  salvo que el gap sea grande y consistente entre videos.
 - `python tools/analizar_video.py <mp4>` — cortes de plano con PySceneDetect (fiable, es de
   terceros) + picos de movimiento con optical flow (⚠ ruidoso con contadores/texto animado —
   probado y documentado en el propio script: úsalo para elegir dónde mirar, nunca como veredicto).
@@ -116,9 +116,9 @@ motor se elige unilateralmente: siempre a partir de audio real escuchado por el 
   Registrar el ADN con `"renderer_version": "v2-hyperframes"`.
 
 ## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
-El motor creativo está **CONGELADO**. NO añadir features nuevas al motor salvo que un experimento
-publicado revele una limitación concreta. Excepción: instrumentación de captura-en-origen.
-Hito actual: **10 videos instrumentados**. Progreso = filas del dataset, no commits ni módulos.
+El motor **NO está congelado** (21-oct, decisión del usuario). Una mejora entra si sube una métrica
+MEDIDA: calificación a ciegas del usuario, distancia a Shorts de referencia del nicho, o retención real.
+Nada de mejorar a ojo en círculos. Hito: juez automático que coincida con el usuario → autonomía.
 No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
 
 ## Estado actual (2026-09-25) — BASE REINICIADA DESDE 0, LEE `docs/ESTADO.md` ANTES DE TOCAR NADA

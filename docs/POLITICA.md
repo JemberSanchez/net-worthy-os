@@ -1,17 +1,24 @@
-# POLÍTICA DE INGENIERÍA — congela el motor, genera datos
+# POLÍTICA DE INGENIERÍA — mejorar el motor, pero solo lo que se mide
 
-> Adoptada tras converger en que el cuello de botella ya NO es el código, es la INFORMACIÓN.
-> El siguiente activo que necesita Omega no es un archivo Python. Es la primera fila real del dataset.
+> 21-oct-2026 (decisión del usuario): el motor **ya no está congelado**. La regla de julio ("ninguna
+> feature sin un experimento publicado") frenaba la calidad: #7 y #8 v2 no se publican porque al
+> usuario no le convencen, y publicar algo flojo solo para tener filas daña el canal.
+> Lo que se mantiene es lo que la regla vieja protegía: nada de mejorar a ojo, en círculos.
 
-## Regla 1 — Ninguna feature del motor creativo sin una limitación revelada por un experimento REAL
-No se añade una nueva capacidad al motor creativo a menos que un experimento **publicado y medido**
-haya revelado una limitación concreta que esa capacidad resolvería.
+## Regla 1 — Una mejora entra si sube una métrica MEDIDA
+Cualquier cambio del motor creativo es bienvenido si mejora, medido antes y después, al menos una de estas:
+- **(a) La calificación a ciegas del usuario** sobre las mismas piezas (sus quejas concretas, con
+  segundo exacto, se convierten en reglas deterministas o en la rúbrica de un juez).
+- **(b) La distancia a los Shorts de referencia** del nicho (datos públicos reales: segundo del
+  gancho, ritmo de cortes, texto en pantalla, duración, voz).
+- **(c) La retención real** una vez publicado.
 
 ```
-❌  idea → módulo → idea → módulo → nunca publicar
-✅  publicar → detectar limitación → diseñar exactamente la capacidad necesaria → publicar
+❌  idea → cambio → "se ve mejor" → otro cambio (seis rondas del LEAD, jul-2026)
+✅  queja o brecha medida → cambio → re-medir → entra solo si la métrica mejora
 ```
-El sistema crece porque la realidad lo obliga, no porque aparezcan ideas interesantes.
+Meta: que un juez automático coincida con el usuario en piezas que no ha visto. Cuando lo haga de
+forma consistente, se gana la autonomía (publicar sin aprobación); antes, no.
 
 **Excepción única:** instrumentación de *captura-en-origen* (ADN de producción, coste, analíticas).
 Se permite ANTES de tener datos porque, si no se captura al producir, la señal se pierde para
@@ -35,15 +42,14 @@ guion, edición, $ de IA, tiempo hasta publicar). Para una fábrica, el **rendim
 esfuerzo** importa tanto como el CTR. Comando: `record-cost`; se ve en `dna`.
 
 ## HITO ACTUAL (medible, no vago)
-> **10 videos instrumentados** con ADN + resultado + coste.
+> **Un juez automático que coincida con el usuario** en piezas que no ha visto, y después
+> **10 videos v2 publicados** con ADN + resultado + coste.
 
-No "mejorar el framework". Diez filas reales. A partir de ~10 empiezan a emerger patrones débiles
-que ya se pueden tratar como hipótesis y decidir cuáles merecen un experimento controlado. Con 1
-no se distingue señal de ruido. Progreso del proyecto = **filas del dataset**, no commits ni módulos.
+Progreso = métricas que se mueven (acuerdo juez↔usuario, distancia a la referencia, retención),
+no commits ni módulos. A partir de ~10 publicados empiezan a emerger patrones débiles del canal.
 
-## Bucle operativo (el único trabajo hasta llegar a 10)
+## Bucle operativo
 ```
-decide  →  think  →  [PRODUCIR + PUBLICAR]  →  record-dna / record-cost / record-analytics
-        →  record-outcome  →  dna  →  (repetir)
+producir → medir (calificación a ciegas / referencia) → mejorar lo que falla → re-medir
+        → publicar lo que convence → record-dna / analytics-sync → dna → (repetir)
 ```
-Todo lo de código para esto YA existe y está probado (86 tests). Lo que falta es humano: publicar.
