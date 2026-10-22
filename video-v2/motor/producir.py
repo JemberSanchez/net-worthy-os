@@ -140,6 +140,9 @@ def subir_borrador(publish: dict, ref: str) -> str:
         return "omitido: no hay data/youtube_token.json (YOUTUBE_TOKEN_JSON en el entorno)"
     sys.path.insert(0, str(RAIZ))
     from omega import publish as pub
+    from omega.cli import _video_id
+    if (previo := _video_id(ref)) and "--forzar" not in sys.argv:   # reintento de la rutina: no duplicar
+        return f"ya subido antes: https://youtu.be/{previo} (no se sube otra vez)"
     try:
         res = pub.upload_video(Path(publish["video_path"]), publish["title"], publish["description"],
                                tags=publish["tags"], privacy_status="private")

@@ -84,7 +84,9 @@ class FlujoGitTest(unittest.TestCase):
         # sesión nueva: sin base local -> bajar la reconstruye
         config.DB_PATH.unlink()
         self.assertIn("✓ base restaurada", estado.bajar())
-        self.assertEqual(sqlite3.connect(config.DB_PATH).execute("SELECT COUNT(*) FROM t").fetchone()[0], 50)
+        con = sqlite3.connect(config.DB_PATH)        # cerrarla: Windows no deja borrar un archivo abierto
+        self.assertEqual(con.execute("SELECT COUNT(*) FROM t").fetchone()[0], 50)
+        con.close()
         # con base local, no la pisa sin --forzar
         self.assertIn("no la piso", estado.bajar())
         # una base casi vacía no se sube encima de la buena

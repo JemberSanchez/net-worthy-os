@@ -32,17 +32,19 @@ def lineas(img: Path) -> list[dict]:
     if cache.exists():
         return json.loads(cache.read_text(encoding="utf-8"))["lineas"]
     from PIL import Image
-    from rapidocr_onnxruntime import RapidOCR
+    from rapidocr import RapidOCR
     import numpy as np
-    motor = RapidOCR()
     im = Image.open(img).convert("RGB")
     W, H = im.size
+    # rapidocr 3 reduce la tira por defecto y parte el titular en dos (medido 21-oct en crash.jpg);
+    # sin reducir el lado largo lo lee entero con confianza 0,99
+    motor = RapidOCR(params={"Det.limit_type": "max", "Det.limit_side_len": max(W, TIRA)})
     out: list[dict] = []
     y = 0
     while True:
         y1 = min(H, y + TIRA)
-        res, _ = motor(np.asarray(im.crop((0, y, W, y1))))
-        for caja, texto, conf in res or []:
+        res = motor(np.asarray(im.crop((0, y, W, y1))))
+        for caja, texto, conf in zip(res.boxes, res.txts, res.scores) if res.boxes is not None else []:
             xs, ys = [p[0] for p in caja], [p[1] + y for p in caja]
             c = [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))]
             # misma línea vista en dos tiras: se queda la de más confianza

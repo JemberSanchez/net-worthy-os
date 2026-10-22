@@ -577,11 +577,12 @@ def cmd_publish() -> None:
     from pathlib import Path
     from . import publish
 
-    if len(sys.argv) < 3:
-        print("Uso: python -m omega.cli publish <ref> [file]")
+    args = [a for a in sys.argv if not a.startswith("--")]
+    if len(args) < 3:
+        print("Uso: python -m omega.cli publish <ref> [file] [--forzar]")
         return
-    ref = sys.argv[2]
-    path = Path(sys.argv[3]) if len(sys.argv) > 3 else (config.DATA_DIR / f"publish_{ref}.json")
+    ref = args[2]
+    path = Path(args[3]) if len(args) > 3 else (config.DATA_DIR / f"publish_{ref}.json")
     if not path.exists():
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
         tpl = {"production_ref": ref, "video_path": "<ruta-al-mp4-exportado>",
@@ -606,6 +607,8 @@ def cmd_publish() -> None:
         return
     if not video_path.exists():
         print(f"Rechazado: 'video_path' no existe: {video_path}")
+        return
+    if _ya_publicado(d.get("production_ref", ref), "youtube"):
         return
 
     try:
@@ -691,6 +694,9 @@ def cmd_publish_fb() -> None:
     if not d:
         return
     live = "--publicar" in sys.argv
+    ref = d.get("production_ref", ref)
+    if live and _ya_publicado(ref, "facebook"):      # un borrador es invisible: solo cuenta lo público
+        return
 
     try:
         result = publish_meta.upload_facebook_reel(
@@ -700,7 +706,9 @@ def cmd_publish_fb() -> None:
         return
 
     print(f"Subido a Facebook: {result['url']}  ({'PÚBLICO' if live else 'borrador, sin publicar'})")
-    _log_publish("facebook", d.get("production_ref", ref), result, live)
+    _log_publish("facebook", ref, result, live)
+    if live:
+        _registrar_publicacion(ref, "facebook", result)
 
 
 def cmd_publish_ig() -> None:
@@ -717,6 +725,9 @@ def cmd_publish_ig() -> None:
         return
     caption = str(d.get("ig_caption") or d["description"])
     live = "--publicar" in sys.argv
+    ref = d.get("production_ref", ref)
+    if live and _ya_publicado(ref, "instagram"):
+        return
 
     try:
         result = publish_meta.upload_instagram_reel(Path(d["video_path"]), caption, publish=live)
@@ -726,10 +737,11 @@ def cmd_publish_ig() -> None:
 
     if live:
         print(f"Publicado en Instagram: {result['url']}")
+        _registrar_publicacion(ref, "instagram", result)
     else:
         print(f"Subido a Instagram, {result['status']} (contenedor {result['container_id']}). "
               "Corré con --publicar para hacerlo público.")
-    _log_publish("instagram", d.get("production_ref", ref), result, live)
+    _log_publish("instagram", ref, result, live)
 
 
 def cmd_dna() -> None:
@@ -940,27 +952,46 @@ def cmd_backup() -> None:
     print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
 
 
-def _registrar_video(ref: str, video_id: str, publish_at: str | None = None) -> None:
+def _registrar_video(ref: str, video_id: str, publish_at: str | None = None, plataforma: str = "youtube") -> None:
     """El video_id va a la BASE (viaja al repo de estado), no solo a data/publish_<ref>.json: una
     sesión nueva en la nube tiene que poder aprobar y medir un video que subió otra sesión."""
     from .reasoning import store as kstore
     from .creative import production_dna
     con = kstore.connect(str(config.DB_PATH))
     production_dna.init(con)
-    production_dna.record_video(con, ref, video_id, publish_at=publish_at)
+    production_dna.record_video(con, ref, video_id, platform=plataforma, publish_at=publish_at)
     con.close()
 
 
-def _video_id(ref: str) -> str | None:
+def _video_id(ref: str, plataforma: str = "youtube") -> str | None:
     from .reasoning import store as kstore
     from .creative import production_dna
     if not config.DB_PATH.exists():
         return None
     con = kstore.connect(str(config.DB_PATH))
     production_dna.init(con)
-    vid = production_dna.video_de(con, ref)
+    vid = production_dna.video_de(con, ref, plataforma)
     con.close()
     return vid
+
+
+def _ya_publicado(ref: str, plataforma: str) -> bool:
+    """Un reintento no puede duplicar: si la base ya tiene ese ref en esa red, no se sube otra vez.
+    shortcut: si la subida termina pero falla el registro, el siguiente reintento sí duplica (no hay
+    estado 'subiendo'); `subir_borrador` avisa con el `vincular` a mano. Ampliar si se ve en real."""
+    vid = _video_id(ref, plataforma)
+    if vid and "--forzar" not in sys.argv:
+        print(f"Ya subido a {plataforma}: {vid}. No subo otra vez (--forzar si lo borraste a mano).")
+        return True
+    return False
+
+
+def _registrar_publicacion(ref: str, plataforma: str, result: dict) -> None:
+    rid = result.get("media_id") or result.get("post_id") or result.get("video_id")
+    if rid:
+        _registrar_video(ref, str(rid), plataforma=plataforma)
+    else:
+        print(f"⚠ {plataforma} no devolvió id: no quedó en la base, un reintento podría duplicar")
 
 
 def _proyecto_de(ref: str):
@@ -993,20 +1024,25 @@ def cmd_publish_social() -> None:
     print(f"{'PUBLICANDO EN VIVO' if publicar else 'PLAN (no se envía nada; --publicar para publicar)'} · {proy.name}")
     for n, r in tareas:
         destino = {"ig": "Instagram", "fb": "Facebook"}[r]
+        plataforma = f"{'instagram' if r == 'ig' else 'facebook'}_{n}"
         if n == "carrusel":
             if not plan["carrusel"]:
                 continue
             print(f"  carrusel → {destino}: {len(plan['carrusel'])} imágenes")
-            if publicar:
+            if publicar and not _ya_publicado(proy.name, plataforma):
                 fn = pm.upload_instagram_carousel if r == "ig" else pm.upload_facebook_carousel
-                print("    ✓", fn(plan["carrusel"], plan["caption_ig"] if r == "ig" else plan["caption_fb"], publish=True))
+                res = fn(plan["carrusel"], plan["caption_ig"] if r == "ig" else plan["caption_fb"], publish=True)
+                print("    ✓", res)
+                _registrar_publicacion(proy.name, plataforma, res)
         else:
             if not plan["historia"]:
                 continue
             print(f"  historia → {destino}: {plan['historia'].name}")
-            if publicar:
+            if publicar and not _ya_publicado(proy.name, plataforma):
                 fn = pm.upload_instagram_story if r == "ig" else pm.upload_facebook_story
-                print("    ✓", fn(plan["historia"], publish=True))
+                res = fn(plan["historia"], publish=True)
+                print("    ✓", res)
+                _registrar_publicacion(proy.name, plataforma, res)
 
 
 def cmd_vincular() -> None:
