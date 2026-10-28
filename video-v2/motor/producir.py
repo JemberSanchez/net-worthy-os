@@ -178,6 +178,38 @@ def loudnorm_2pasos(crudo: Path, final: Path) -> tuple[bool, str]:
     return r.returncode == 0, (r.stderr or f"2 pasadas: medido {med['input_i']} LUFS / {med['input_tp']} dBTP")
 
 
+TP_MAX = -1.2   # pico real máximo del archivo FINAL (la puerta exige < -1; 0,2 dB de margen)
+
+
+def pico_real(mp4: Path) -> float | None:
+    """True peak (dBTP) del audio de un archivo, con el ebur128 de ffmpeg (solo audio: <2 s)."""
+    r = _run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(mp4), "-map", "0:a", "-af", "ebur128=peak=true", "-f", "null", "-"])
+    m = re.findall(r"Peak:\s*(-?[\d.]+|-inf)\s*dBFS", r.stderr)
+    return float(m[-1]) if m and m[-1] != "-inf" else None
+
+
+def asegurar_pico(final: Path, tp_max: float = TP_MAX, intentos: int = 3) -> tuple[bool, str]:
+    """Garantiza el pico real del archivo final. loudnorm NO puede hacerlo solo: si subir al objetivo
+    linealmente pasaría el techo, cae a modo DINÁMICO aunque se pida linear=true, y el AAC posterior
+    rebota el pico ~1 dB (medido 28-oct en el #7: entrada -17,71 LUFS / -1,66 dBTP -> 'dynamic' ->
+    final -0,99 dBTP, puerta fallida). Aquí se mide el archivo y se baja la ganancia lo que falte
+    (lineal, el LUFS cae lo mismo: ~0,2-0,5 dB, dentro de la tolerancia de ±1)."""
+    for _ in range(intentos):
+        tp = pico_real(final)
+        if tp is None:
+            return False, "no se pudo medir el pico real"
+        if tp <= tp_max:
+            return True, f"pico real {tp} dBTP"
+        tmp = final.with_name(final.stem + ".pico.mp4")
+        r = _run(["ffmpeg", "-v", "error", "-y", "-i", str(final), "-af", f"volume={tp_max - tp - 0.1:.2f}dB",
+                  "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(tmp)])
+        if r.returncode != 0:
+            return False, r.stderr[-300:]
+        tmp.replace(final)
+    tp = pico_real(final)
+    return tp is not None and tp <= tp_max, f"pico real {tp} dBTP tras {intentos} correcciones"
+
+
 def bloques_adn(sb: dict, words: list[dict]) -> list[dict]:
     """Bloques del ADN con su duración REAL (voz medida) y la técnica = tipos de escena que lo
     componen. Sin `length_s` por bloque, analytics-sync no puede decir en qué parte del guion se
@@ -298,6 +330,9 @@ def producir(proy: Path) -> dict:
     r = _run(["npx", "--yes", HF, "render", "--quality", "high", "--output", str(crudo)], cwd=proy, env=env)
     puerta("render", r.returncode == 0 and crudo.exists(), (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0])
     ok_ln, det_ln = loudnorm_2pasos(crudo, final)
+    if ok_ln:
+        ok_ln, det_pico = asegurar_pico(final)
+        det_ln = f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
     puerta("loudnorm", ok_ln, det_ln)
     r = _run([PY, str(RAIZ / "tools" / "medir_loudness.py"), str(final)])
     lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)

@@ -891,15 +891,26 @@ def _andamiaje(proy: Path) -> None:
         gi.write_text("".join(x + "\n" for x in tiene + faltan), encoding="utf-8")
 
 
+# The upstream skill moved (Oct-2026): `hyperframes-audio/scripts` -> `media-use/audio/scripts`.
+# Both are tried so an older install keeps working.
+CARVE_RUTAS = ("media-use/audio/scripts/carve.mjs", "hyperframes-audio/scripts/carve.mjs")
+
+
+def ruta_carve() -> str | None:
+    if os.environ.get("HF_CARVE"):
+        return os.environ["HF_CARVE"]
+    return next((str(c) for r in CARVE_RUTAS if (c := Path.home() / ".claude/skills" / r).exists()), None)
+
+
 def _carve(out: Path) -> None:
-    carve = os.environ.get("HF_CARVE", str(Path.home() / ".claude/skills/hyperframes-audio/scripts/carve.mjs"))
+    carve = ruta_carve()
     core = os.environ.get("HF_CORE")
-    if Path(carve).exists() and core:
+    if carve and Path(carve).exists() and core:
         r = subprocess.run(["node", carve, "--comp", str(out), "--bed", "music-bed", "--voice", "vo", "--core", core],
                            capture_output=True, text=True)
         print("✓ carve (ducking)" if r.returncode == 0 else "✗ carve falló:\n" + r.stderr[-800:])
     else:
-        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core@0.8.62) y la skill hyperframes-audio. "
+        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core@0.8.62) y la skill media-use (audio/carve.mjs). "
               "La música pisará la voz.")
 
 
