@@ -45,6 +45,13 @@ medidores** (el juicio se reporta aparte para que una ronda sin juicio no parezc
 - Exactitud semántica de cada cifra contra su fuente: el juicio la revisa; no hay verificador automático.
 - Calidad de la voz (naturalidad); la música como elección estética.
 
+## Calificaciones del usuario (calibración)
+| Fecha | Pieza | A/B a ciegas | Veredicto del usuario | ¿Coincide el crítico? | Comentario del usuario |
+|---|---|---|---|---|---|
+| 28-oct | #7 Ronald Read | A = ronda 2 del crítico (puntuación 10) · B = original (39) | **A mejor**, "sí hay mejoría" | **Sí** (1/1) | "todavía puede mejorar mucho más en temas creativos, en lo que cuenta y cómo lo cuenta" → la rúbrica no mide guion ni narrativa: hueco J1-J5 sin medidor |
+
+n = 1: PROVISIONAL, no mueve umbrales todavía (POLITICA regla 2).
+
 ## Calibración pendiente (cómo se hace)
 1. El usuario califica a ciegas (1-10 + queja con segundo) ~10 vídeos/rondas.
 2. Se cruza cada queja con los fallos del crítico en ese segundo: acierto, falso positivo, omisión.

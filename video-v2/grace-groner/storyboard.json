@@ -83,7 +83,8 @@
    ]
   ],
   "final": true,
-  "placa": true
+  "placa": true,
+  "tam": 30
  },
  "subtitulos": [
   "1",
@@ -132,11 +133,13 @@
   },
   {
    "sfx": "pagina",
-   "en": "4:dividend"
+   "en": "4:dividend",
+   "vol": 0.425
   },
   {
    "sfx": "sello",
-   "en": "4:back"
+   "en": "4:back",
+   "vol": 0.425
   },
   {
    "sfx": "reloj",
@@ -471,5 +474,9 @@
    "hasta": "1:thirty-five$",
    "cierre": "How a secretary made *$7.2M*"
   }
+ },
+ "mezcla": {
+  "riser": 0.169,
+  "whoosh": 0.19
  }
 }
