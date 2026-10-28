@@ -1,0 +1,53 @@
+{
+  "ref": "housing-turn",
+  "nota": "Línea base CONGELADA del bloque 1.1: un solo guion escrito con las reglas actuales de producir.md, ANTES de generar alternativas. No se edita: es el lado 'plantilla' de la prueba a ciegas.",
+  "fecha": "2026-10-28",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "More homes are for sale than in years, and prices still went up."
+    },
+    {
+      "id": "data",
+      "texto": "In September, US inventory hit one point six million homes, and they now sit thirty-three days before selling."
+    },
+    {
+      "id": "twist",
+      "texto": "That should push prices down. Instead, the median hit four hundred seventeen thousand dollars. Thirty-nine months of gains in a row."
+    },
+    {
+      "id": "honesty",
+      "texto": "Here's the part nobody tells you. Mortgage rates are seven point three percent. In twenty twenty-one, they were two point six five."
+    },
+    {
+      "id": "math",
+      "texto": "Same median house, twenty percent down: about twenty-three hundred a month today, versus thirteen fifty back then."
+    },
+    {
+      "id": "why",
+      "texto": "Sellers with cheap loans won't cut prices, and buyers can't pay them."
+    },
+    {
+      "id": "you",
+      "texto": "If you're buying, the leverage is shifting: more listings, longer waits, room to negotiate."
+    },
+    {
+      "id": "cta",
+      "texto": "So is this a stalemate, or the calm before prices crack?"
+    }
+  ],
+  "cifras": [
+    {
+      "dato": "inventory 1.60 million, 33 days on market, median $417,500, 39th consecutive month of annual gains (Sep 2026)",
+      "fuente": "https://www.nar.realtor/research-and-statistics/housing-statistics/existing-home-sales"
+    },
+    {
+      "dato": "30-year fixed 7.32% (2026-10-22); 2.65% (2021-01-07)",
+      "fuente": "https://fred.stlouisfed.org/series/MORTGAGE30US"
+    },
+    {
+      "dato": "payment on $417,500 with 20% down, 30y: $2,294 at 7.32% vs $1,346 at 2.65% (principal+interest, own calculation, illustrative)",
+      "fuente": "calculation"
+    }
+  ]
+}
