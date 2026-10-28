@@ -85,7 +85,9 @@
     "6"
    ]
   ],
-  "final": true
+  "final": true,
+  "placa": true,
+  "tam": 30
  },
  "subtitulos": [
   "1",
@@ -129,11 +131,13 @@
  "sonidos": [
   {
    "sfx": "caja",
-   "en": "0:dollars"
+   "en": "0:dollars",
+   "vol": 0.301
   },
   {
    "sfx": "pagina",
-   "en": "4:bought"
+   "en": "4:bought",
+   "vol": 0.425
   },
   {
    "sfx": "pagina",
@@ -242,7 +246,7 @@
    },
    "titulo": {
     "texto": "$8 million",
-    "en": "0:eight"
+    "en": "0-0.4"
    }
   },
   {
@@ -325,7 +329,7 @@
     "en": "5"
    },
    "pill": {
-    "texto": "He put in: $122,400",
+    "texto": "Model: $122,400 put in",
     "en": "5:eight"
    }
   },
@@ -363,7 +367,8 @@
     "en": "7:sink",
     "hasta": "8",
     "texto": "One collapse can't sink him"
-   }
+   },
+   "fondo_suave": true
   },
   {
    "tipo": "titulo",
@@ -383,7 +388,8 @@
    "tachar": {
     "linea": 1,
     "en": "8:sell"
-   }
+   },
+   "fondo_suave": true
   },
   {
    "tipo": "titulo",

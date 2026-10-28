@@ -244,15 +244,47 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
         d = s.get("dur") or dur(proy / "assets" / "sfx" / s["archivo"])
         i = next((i for i, n, t in sb_t if n == s["sfx"] and abs(t - s["t"]) < 0.06), None)
         ev.append({"t0": s["t"], "t1": s["t"] + d, "fuente": f"sonidos[{i}] {s['sfx']}" if i is not None else f"sfx {s['sfx']}",
-                   "sonido": i, "vol": s.get("vol")})
+                   "sonido": i, "vol": s.get("vol"), "archivo": str(proy / "assets" / "sfx" / s["archivo"])})
     m = MOTOR / "assets"
-    ev += [{"t0": t - 0.12, "t1": t - 0.12 + dur(m / "whoosh.wav"), "fuente": "motor whoosh (corte)"} for t in plan.get("cortes") or []]
-    ev += [{"t0": g - 0.02, "t1": g + dur(m / "impact.wav"), "fuente": "motor impacto (golpe)"} for g in plan.get("golpes") or []]
-    ev += [{"t0": g - 1.0, "t1": g, "fuente": "motor riser (golpe)"} for g in plan.get("golpes") or [] if g - 1.0 >= 0.5]
+    # volúmenes del motor: los de construir._html (whoosh 0.38, impacto 0.6, riser 0.3)
+    ev += [{"t0": t - 0.12, "t1": t - 0.12 + dur(m / "whoosh.wav"), "fuente": "motor whoosh (corte)",
+            "archivo": str(m / "whoosh.wav"), "vol": 0.38} for t in plan.get("cortes") or []]
+    ev += [{"t0": g - 0.02, "t1": g + dur(m / "impact.wav"), "fuente": "motor impacto (golpe)",
+            "archivo": str(m / "impact.wav"), "vol": 0.6} for g in plan.get("golpes") or []]
+    ev += [{"t0": g - 1.0, "t1": g, "fuente": "motor riser (golpe)", "archivo": str(m / "riser.wav"), "vol": 0.3}
+           for g in plan.get("golpes") or [] if g - 1.0 >= 0.5]
     if plan.get("serie"):
         t = float(plan["serie"]["t0"])
         ev.append({"t0": t, "t1": t + dur(proy / "assets" / "_motor" / "logo.wav", 1.5), "fuente": "motor logo de serie"})
     return ev
+
+
+def energia_evento(e: dict, t: float, w: float = 0.5) -> float:
+    """Energía en la banda de voz que mete el efecto `e` (su WAV a su volumen) en [t, t+w].
+    Sirve para repartir la culpa cuando suenan varios a la vez. Sin archivo legible: 0."""
+    import medir_mezcla as M
+    import numpy as np
+    import soundfile as sf
+    try:
+        x, sr = sf.read(e["archivo"], always_2d=True)
+    except Exception:                                    # noqa: BLE001
+        return 0.0
+    x = x.mean(axis=1) * float(e.get("vol") or 0.5)
+    a, b = int(max(0.0, t - e["t0"]) * sr), int(max(0.0, t + w - e["t0"]) * sr)
+    seg = x[a:b]
+    if len(seg) < 64:
+        return 0.0
+    return M.energia_banda(np.asarray(seg, dtype=np.float64), sr)
+
+
+def culpable(x: dict, eventos: list[dict], w: float = 0.5) -> dict | None:
+    """El efecto que MÁS energía mete en la ventana (medido sobre su WAV), no el primero de la
+    lista: en el #7 (2,5-3,0 s) se culpó a la caja, se bajó 6 dB y la ventana no se movió
+    (-29,9 -> -30,0 dB): sonaba también el whoosh del corte de 2,76 s."""
+    hits = [e for e in eventos if e["t0"] < x["t"] + w and e["t1"] > x["t"]]
+    if len(hits) <= 1:
+        return hits[0] if hits else None
+    return max(hits, key=lambda e: energia_evento(e, x["t"], w) if e.get("archivo") else 0.0)
 
 
 def revisar_mezcla(rm: dict | None, loud: dict | None, vol_actual: float, vs, u: dict,
@@ -267,8 +299,8 @@ def revisar_mezcla(rm: dict | None, loud: dict | None, vol_actual: float, vs, u:
         malas = [x for x in rm.get("ventanas") or [] if x["db"] < lim]
         culpa: dict[str, list[dict]] = {}
         for x in malas:
-            hits = [e for e in eventos or [] if e["t0"] < x["t"] + w and e["t1"] > x["t"]]
-            culpa.setdefault(hits[0]["fuente"] if hits else "música", []).append(x)
+            c = culpable(x, eventos or [], w)
+            culpa.setdefault(c["fuente"] if c else "música", []).append(x)
         n = max(1, rm["n_ventanas"])
         solo_mus = [x["db"] for x in rm.get("ventanas") or []
                     if not any(e["t0"] < x["t"] + w and e["t1"] > x["t"] for e in eventos or [])]

@@ -36,6 +36,8 @@ medidores** (el juicio se reporta aparte para que una ronda sin juicio no parezc
 | `medir_texto` | #7 sin filtro de texto diseñado: 631 "fallos", 95 % cuerpo del periódico y certificados | con filtro (tiempo + palabras): 22, todos reales |
 | `medir_mezcla` | voz y música REALES del #7 mezcladas a relación conocida, ganancia 0,7, retardo 2,3 ms, AAC 192k | retardo y ganancia exactos; mediana por ventana con error < 0,4 dB (28,0→27,8 · 18,4→18,3 · 8,0→7,8) |
 | `medir_voz` | `words.json` del #7 trae "This" en 0,42-0,42 s (el alineador no lo midió) | lo encuentra; además, 5/5 palabras de duración 0 son **inicio de frase** (patrón del alineador, ver abajo) |
+| `medir_mezcla` (culpable) | #7, 2,5-3,0 s: se culpó a la caja (1ª de la lista), se bajó 6 dB y la ventana no se movió (−29,9 → −30,0 dB) | ahora se culpa al efecto con más energía en banda (WAV × volumen): el whoosh del corte mete ~26.000× más que la cola de la caja |
+| Crítico completo (#7) | ronda 0 → 1 con parches de medidores + juicio | 26 → 15 fallos, puntuación 39 → 22, texto esperado leído 93,5 → 96,8 %, pasa la puerta WCAG y la de pico; **falso positivo**: "SELL" (botón tachado) no lo lee el OCR y una persona sí |
 | `medir_parecido` | storyboard contra sí mismo = 1; recodificación JPEG q40 del mismo fotograma ≤ 10 bits | ✓ (tests) · #7 vs #8: visual 0,14, guion 0,0, estructura 0,70, **recursos 0,29** (3 clips de Pexels y 1 certificado repetidos) |
 
 ## Lo que la rúbrica NO mide todavía

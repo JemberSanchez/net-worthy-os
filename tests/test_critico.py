@@ -80,6 +80,18 @@ class RevisionesTest(unittest.TestCase):
         self.assertEqual(por["música"]["parche"]["op"], "musica_volumen")
         self.assertLess(por["música"]["parche"]["valor"], 0.5)
 
+    def test_con_dos_efectos_a_la_vez_culpa_al_que_mas_suena(self):
+        import numpy as np
+        import soundfile as sf
+        with tempfile.TemporaryDirectory() as d:
+            sr = 16000
+            t = np.arange(sr) / sr
+            sf.write(f"{d}/flojo.wav", 0.01 * np.sin(2 * np.pi * 1000 * t), sr)
+            sf.write(f"{d}/fuerte.wav", 0.5 * np.sin(2 * np.pi * 1000 * t), sr)
+            ev = [{"t0": 0.0, "t1": 1.0, "fuente": "flojo", "archivo": f"{d}/flojo.wav", "vol": 0.6},
+                  {"t0": 0.2, "t1": 1.2, "fuente": "fuerte", "archivo": f"{d}/fuerte.wav", "vol": 0.38}]
+            self.assertEqual(C.culpable({"t": 0.5}, ev)["fuente"], "fuerte")
+
     def test_efecto_del_motor_se_reporta_sin_parche(self):
         rm = {"pct_tapada": 50.0, "n_ventanas": 2, "mediana_db": 8, "ventanas": [{"t": 0.0, "db": -5}, {"t": 0.5, "db": 20}]}
         f = C.revisar_mezcla(rm, None, 0.5, VS, U, [{"t0": 0.0, "t1": 0.3, "fuente": "motor whoosh (corte)"}])
