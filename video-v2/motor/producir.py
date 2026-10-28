@@ -247,9 +247,23 @@ def bloques_adn(sb: dict, words: list[dict]) -> list[dict]:
 
 
 def instantes_escena(html: str) -> list[float]:
-    """Un instante por escena (al 60 % de su ventana, cuando sus textos ya han entrado)."""
+    """Un instante por escena (al 60 % de su ventana, cuando sus textos ya han entrado), FUERA de las
+    pruebas documentales: el periódico a pantalla completa tapa la escena y la auditoría del DOM no
+    ve oclusiones (28-oct: "stocks" del #7 a 2,95:1 en t=18,37, debajo de la prueba de 17,80-18,98;
+    tres rondas del crítico atacando un texto que nadie veía)."""
     xs = re.findall(r'<section id="s\d+" class="clip scene" data-start="([\d.]+)" data-duration="([\d.]+)"', html)
-    return [round(float(a) + min(float(b) * 0.6, float(b) - 0.1), 2) for a, b in xs]
+    m = re.search(r"window\.PLAN = (\{.*?\});</script>", html, re.S)
+    tapas = [(p["t0"], p["t1"]) for p in (json.loads(m.group(1).replace("<\\/", "</")).get("pruebas") or [])] if m else []
+    out = []
+    for a, b in ((float(a), float(b)) for a, b in xs):
+        t = a + min(b * 0.6, b - 0.1)
+        for t0, t1 in tapas:
+            if t0 - 0.2 <= t <= t1 + 0.2:          # tapado: el tramo visible más largo de la escena
+                antes, despues = t0 - 0.2 - a, a + b - (t1 + 0.2)
+                t = (a + antes * 0.8) if antes >= despues else (t1 + 0.2 + despues * 0.5)
+                t = min(max(t, a + 0.05), a + b - 0.05)
+        out.append(round(t, 2))
+    return out
 
 
 def fallos_contraste(informes: list[dict]) -> list[str]:

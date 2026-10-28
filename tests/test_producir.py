@@ -24,6 +24,13 @@ class ContrasteTest(unittest.TestCase):
              '<section id="s1" class="clip scene" data-start="2.000" data-duration="0.100">')
         self.assertEqual(producir.instantes_escena(h), [1.2, 2.0])        # escena corta: nunca fuera de su ventana
 
+    def test_instante_tapado_por_una_prueba_se_mueve_a_la_parte_visible(self):
+        h = ('<section id="s0" class="clip scene" data-start="16.43" data-duration="3.23"'
+             '<script>window.PLAN = {"pruebas": [{"t0": 17.8, "t1": 18.98}]};</script>')
+        t = producir.instantes_escena(h)[0]
+        self.assertFalse(17.6 <= t <= 19.18, t)
+        self.assertTrue(16.43 < t < 19.66)
+
     def test_solo_cuenta_lo_que_no_llega_a_aa(self):
         inf = [{"contrast": {"findings": [
             {"text": "Here's", "ratio": 2.67, "requiredRatio": 3, "time": 31.3},
