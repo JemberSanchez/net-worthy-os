@@ -2,32 +2,68 @@
   "ref": "housing-turn",
   "guion": [
     {
-      "id": "intro",
-      "texto": "More homes are for sale than in years, and prices still went up."
+      "id": "h1",
+      "texto": "More homes are for sale than in years,"
     },
     {
-      "id": "data",
-      "texto": "In September, US inventory hit one point six million homes, and they now sit thirty-three days before selling."
+      "id": "h2",
+      "texto": "and prices still went up."
     },
     {
-      "id": "twist",
-      "texto": "That should push prices down. Instead, the median hit four hundred seventeen thousand dollars. Thirty-nine months of gains in a row."
+      "id": "sep",
+      "texto": "In September, US inventory hit one point six million homes,"
     },
     {
-      "id": "honesty",
-      "texto": "Here's the part nobody tells you. Mortgage rates are seven point three percent. In twenty twenty-one, they were two point six five."
+      "id": "sit",
+      "texto": "and they now sit thirty-three days before selling."
+    },
+    {
+      "id": "should",
+      "texto": "That should push prices down."
+    },
+    {
+      "id": "instead",
+      "texto": "Instead, the median hit four hundred seventeen thousand dollars."
+    },
+    {
+      "id": "gains",
+      "texto": "Thirty-nine months of gains in a row."
+    },
+    {
+      "id": "nobody",
+      "texto": "Here's the part nobody tells you."
+    },
+    {
+      "id": "rates",
+      "texto": "Mortgage rates are seven point three percent."
+    },
+    {
+      "id": "then",
+      "texto": "In twenty twenty-one, they were two point six five."
+    },
+    {
+      "id": "same",
+      "texto": "Same median house, twenty percent down:"
     },
     {
       "id": "math",
-      "texto": "Same median house, twenty percent down: about twenty-three hundred a month today, versus thirteen fifty back then."
+      "texto": "about twenty-three hundred a month today, versus thirteen fifty back then."
     },
     {
-      "id": "why",
-      "texto": "Sellers with cheap loans won't cut prices, and buyers can't pay them."
+      "id": "sellers",
+      "texto": "Sellers with cheap loans won't cut prices,"
+    },
+    {
+      "id": "buyers",
+      "texto": "and buyers can't pay them."
     },
     {
       "id": "you",
-      "texto": "If you're buying, the leverage is shifting: more listings, longer waits, room to negotiate."
+      "texto": "If you're buying, the leverage is shifting:"
+    },
+    {
+      "id": "list",
+      "texto": "more listings, longer waits, room to negotiate."
     },
     {
       "id": "cta",
@@ -44,9 +80,413 @@
       "fuente": "https://fred.stlouisfed.org/series/MORTGAGE30US"
     },
     {
-      "dato": "payment on $417,500 with 20% down, 30y: $2,294 at 7.32% vs $1,346 at 2.65% (principal+interest, own calculation, illustrative)",
-      "fuente": "calculation"
+      "dato": "payment on $417,500 with 20% down, 30y: $2,294 at 7.32% vs $1,346 at 2.65% (principal+interest, own calculation, illustrative) — rates from FRED, price from NAR",
+      "fuente": "https://fred.stlouisfed.org/series/MORTGAGE30US"
     }
   ],
-  "decision_guion": "28-oct: guion = plantilla B (preferida a ciegas por el usuario y más cerca de la referencia del nicho: distancia 0,13 vs 0,33, solo duración, PROVISIONAL). Alternativas en guiones.md."
+  "decision_guion": "28-oct: guion = plantilla B (preferida a ciegas por el usuario y más cerca de la referencia del nicho: distancia 0,13 vs 0,33, solo duración, PROVISIONAL). Alternativas en guiones.md.",
+  "adn": {
+    "hook_type": "contrast",
+    "story_type": "news_explainer",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "publicacion": {
+    "titulo": "More homes for sale. Prices still up. Here's why.",
+    "descripcion": "US inventory hit 1.6 million homes in September 2026 and homes sit 33 days, yet the median price rose for the 39th month in a row. The reason is the mortgage rate: 7.32% today vs 2.65% in 2021. Payments illustrative (principal + interest, 30-yr fixed, 20% down). Sources: NAR Existing-Home Sales (Sep 2026), Freddie Mac PMMS via FRED. Not financial advice.",
+    "tags": [
+      "housing market",
+      "mortgage rates",
+      "home prices",
+      "real estate 2026",
+      "personal finance"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#housingmarket",
+      "#mortgage",
+      "#personalfinance"
+    ]
+  },
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "aviso": {
+    "lineas": [
+      "Payments: principal + interest · 30-yr fixed · 20% down · illustrative",
+      "Sources: NAR (Sep 2026), Freddie Mac PMMS · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "8",
+        "9"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "1",
+    "10"
+  ],
+  "calientes": [
+    "prices",
+    "inventory",
+    "million",
+    "thirty-three",
+    "median",
+    "thirty-nine",
+    "nobody",
+    "seven",
+    "twenty-three",
+    "thirteen",
+    "won't",
+    "can't",
+    "leverage",
+    "negotiate"
+  ],
+  "musica": {
+    "oscuro": [
+      "5",
+      "5"
+    ],
+    "pista": {
+      "commons": "File:Kevin MacLeod - Relent.ogg",
+      "desde": 0
+    }
+  },
+  "cola_s": 0.6,
+  "golpes": [
+    "0:up",
+    "3:dollars",
+    "5:nobody",
+    "6:percent",
+    "8:today",
+    "9:won't",
+    "10:leverage",
+    "11:crack"
+  ],
+  "sonidos": [
+    {
+      "sfx": "caja",
+      "en": "0:up"
+    },
+    {
+      "sfx": "reloj",
+      "en": "1:and",
+      "dur": 1.4,
+      "vol": 0.25
+    },
+    {
+      "sfx": "monedas",
+      "en": "3:dollars"
+    },
+    {
+      "sfx": "sello",
+      "en": "6:percent"
+    },
+    {
+      "sfx": "pagina",
+      "en": "8"
+    },
+    {
+      "sfx": "ding",
+      "en": "10:room"
+    }
+  ],
+  "clips": {
+    "venta": {
+      "pexels": 7578279,
+      "desde": 0
+    },
+    "calendario": {
+      "pexels": 7550648,
+      "desde": 0
+    },
+    "llaves": {
+      "pexels": 7646797,
+      "desde": 0
+    },
+    "vacia": {
+      "pexels": 4553195,
+      "desde": 0
+    },
+    "suburbio": {
+      "pexels": 31639428,
+      "desde": 0
+    }
+  },
+  "imagenes": {
+    "levittown": {
+      "commons": "File:LevittownPA.jpg",
+      "recorte": 0.03
+    },
+    "cartel": {
+      "commons": "File:House For Sale Sign in Eugene, Oregon.jpg",
+      "recorte": 0.03
+    },
+    "openhouse": {
+      "commons": "File:Home for Sale and Open House signs.jpg",
+      "recorte": 0.03
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "venta",
+      "mov": "izq",
+      "kicker": {
+        "texto": "More homes for sale",
+        "en": "0-0.4"
+      },
+      "titulo": {
+        "texto": "Prices still up",
+        "en": "0:prices"
+      }
+    },
+    {
+      "tipo": "contador3d",
+      "en": "1",
+      "valor": 1600000,
+      "llega": "1:homes",
+      "kicker": {
+        "texto": "US homes for sale · Sep 2026",
+        "en": "1"
+      },
+      "pill": {
+        "texto": "+4.6% vs a year ago",
+        "en": "1:million"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "1:and",
+      "clip": "calendario",
+      "mov": "push",
+      "kicker": {
+        "texto": "Time on market",
+        "en": "1:and"
+      },
+      "titulo": {
+        "texto": "33 days",
+        "en": "1:thirty-three"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "fondo": "openhouse",
+      "lineas": [
+        {
+          "texto": "Prices should",
+          "en": "2",
+          "estilo": "big"
+        },
+        {
+          "texto": "fall.",
+          "en": "2:push",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "3",
+      "img": "levittown",
+      "mov": "push",
+      "kicker": {
+        "texto": "Median price · Sep 2026",
+        "en": "3:median"
+      },
+      "titulo": {
+        "texto": "$417,500",
+        "en": "3:four"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "4",
+      "contador": {
+        "linea": 0,
+        "valor": 39,
+        "en": "4"
+      },
+      "lineas": [
+        {
+          "texto": "{n} months",
+          "en": "4",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "of gains in a row",
+          "en": "4:gains",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "5",
+      "alarma": true,
+      "kicker": {
+        "texto": "Now",
+        "en": "5",
+        "color": "red"
+      },
+      "lineas": [
+        {
+          "texto": "The part",
+          "en": "5:the"
+        },
+        {
+          "texto": "nobody tells you.",
+          "en": "5:nobody",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "kicker": {
+        "texto": "30-yr mortgage rate · today",
+        "en": "6"
+      },
+      "lineas": [
+        {
+          "texto": "7.32%",
+          "en": "6:seven",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "kicker": {
+        "texto": "January 2021",
+        "en": "7"
+      },
+      "lineas": [
+        {
+          "texto": "2.65%",
+          "en": "7:two",
+          "estilo": "huge",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "img": "cartel",
+      "mov": "sube",
+      "kicker": {
+        "texto": "Same median house · 20% down",
+        "en": "8"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "8:about",
+      "lineas": [
+        {
+          "texto": "$2,300/mo today",
+          "en": "8:twenty-three",
+          "estilo": "big",
+          "color": "red"
+        },
+        {
+          "texto": "$1,350/mo at the 2021 rate",
+          "en": "8:thirteen",
+          "estilo": "mid",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "clip": "llaves",
+      "mov": "push",
+      "kicker": {
+        "texto": "Sellers won't cut",
+        "en": "9:won't"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "9:and",
+      "clip": "vacia",
+      "mov": "der",
+      "kicker": {
+        "texto": "Buyers can't pay",
+        "en": "9:can't"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "suburbio",
+      "mov": "push",
+      "kicker": {
+        "texto": "If you're buying",
+        "en": "10"
+      },
+      "titulo": {
+        "texto": "Leverage is shifting",
+        "en": "10:leverage"
+      }
+    },
+    {
+      "tipo": "lista",
+      "en": "10:more",
+      "icono": "check",
+      "items": [
+        {
+          "texto": "More listings",
+          "en": "10:more"
+        },
+        {
+          "texto": "Longer waits",
+          "en": "10:longer"
+        },
+        {
+          "texto": "Room to negotiate",
+          "en": "10:room",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "11",
+      "a": {
+        "texto": "Stalemate",
+        "en": "11:stalemate"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Crack",
+        "en": "11:crack"
+      },
+      "botones": [
+        {
+          "texto": "Team stalemate",
+          "en": "11:crack$"
+        },
+        {
+          "texto": "Team crack",
+          "en": "11:crack$+0.35"
+        }
+      ],
+      "sub": "drop your verdict ↓"
+    }
+  ]
 }
