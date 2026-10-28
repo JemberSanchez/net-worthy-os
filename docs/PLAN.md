@@ -69,6 +69,12 @@ Requisito: dominios `www.youtube.com`, `youtube.com`, `www.googleapis.com`, `i.y
 en la red del entorno + secreto `YOUTUBE_API_KEY`. Lo configura el usuario.
 **3.1 Referencia del nicho**: medir 20-30 Shorts de finanzas con muchas vistas (segundo del gancho,
 cortes/s, texto, palabras/min, duración, estructura) → distancia nuestra a la referencia, métrica (b) de POLITICA.
+_28-oct, PARCIAL (PROVISIONAL, n=30):_ `research/referencia_nicho.json` (solo métricas + URLs, API de
+YouTube) + `video-v2/motor/referencia.py`. Solo mide DURACIÓN: la transcripción no se puede bajar
+legalmente (Términos de YouTube; `captions.download` solo para el canal propio), así que 1.ª cifra,
+palabras/min, giros y bucle siguen sin calibrar. Duración ref.: p25 28 s · mediana 58 s · p75 94 s
+→ G-LARGO calibrado = 87-291 palabras (la regla vieja 85-110 se queda en el cuartil bajo).
+housing-turn: B plantilla (128 pal. ≈ 41 s) distancia **0,13** · A contraste (100 pal. ≈ 32 s) **0,33**.
 **3.2 Elección de tema**: volver a llenar el corpus (`/daily`), separar temas atemporales de noticias,
 medir saturación (cuántos vídeos hay ya), y que el rendimiento propio pese cuando lo haya.
 **3.3 Calendario y anticipación**: Fed, inflación (CPI), resultados de empresas, fechas cripto → guiones
