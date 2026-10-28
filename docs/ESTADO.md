@@ -1,26 +1,33 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
-> ## ▶▶▶▶▶▶▶▶▶▶ 2026-10-28 · FASE 1: CRÍTICO AUTOMÁTICO (revisa → parchea → re-renderiza)
+> ## ▶▶▶▶▶▶▶▶▶▶ 2026-10-28 (cierre) · FASE 1 HECHA — RETOMAR AQUÍ
 >
-> - **Entorno nube:** `estado-bajar` OK (repo de datos añadido a la sesión). Pexels OK vía proxy
->   (`api.pexels.com` 200, `videos.pexels.com` 206) sin `PEXELS_API_KEY` en el entorno. Kokoro OK
->   (venv 3.12). Roto y arreglado: la skill de ducking se renombró upstream
->   (`hyperframes-audio` → `media-use/audio`); sin carve, la puerta build paraba todo.
-> - **Re-render #7/#8 (motor actual):** render 3 min 33 s / 3 min 21 s para ~28-30 s de vídeo
->   (≈7× tiempo real en CPU; un vídeo de 10 min serían ~70 min — EXTRAPOLADO, sin medir), +302 /
->   +191 MB de disco por render. **Ninguno pasaba la puerta WCAG** (aviso 4,19-4,31:1 en #7;
->   "75 years later" 2,2:1 y aviso en #8: efecto de los fondos nítidos del 1-oct) y #7 salía con
->   pico −0,99 dBTP (loudnorm cae a modo dinámico; ahora `asegurar_pico` lo garantiza).
-> - **Crítico** (`video-v2/motor/critico.py`, `docs/RUBRICA.md` PROVISIONAL): 4 medidores nuevos
->   validados contra casos conocidos + juicio de Claude por ronda. #7: ronda 0 = 26 fallos
->   (puntuación 39) → ronda 1 = 15 (22), pasa TODAS las puertas; ronda 2 no mejoró y se descartó.
->   Vídeo para calificar: `video-v2/read-janitor/renders/critica/r1.mp4` (no versionado).
-> - **Lo que el crítico NO puede arreglar (sin perilla):** whoosh de corte y riser del MOTOR tapan
->   la voz (atribución medida por energía de cada WAV); el alineador deja palabras de inicio de
->   frase con duración 0 (6 %); clips de Pexels repetidos entre #7 y #8 (parecido de recursos 0,29).
-> - **Falso positivo conocido:** "SELL" (botón rojo tachado, #7 escena 8) — el OCR no lo lee y una
->   persona sí. Primer caso para la calibración.
-> - **Siguiente:** el usuario califica a ciegas r0 vs r1 de #7 (y #8) → calibrar rúbrica.
+> **Siguiente sesión: leer `docs/PLAN.md` y empezar por el Bloque 1.1 (guion de nivel) SOLO
+> cuando el usuario diga "dale".** Regla del usuario: calidad primero; la autonomía al final y
+> solo cuando él lo pida.
+>
+> - **PR abierto:** https://github.com/JemberSanchez/net-worthy-os/pull/29 (rama
+>   `claude/compassionate-newton-y252cc`, sin mergear). Incluye los arreglos de otras dos sesiones
+>   (pin `av<19` y alineamiento sin palabras de duración 0), traídos con cherry-pick: las ramas
+>   `claude/inspiring-fermat-cm6bgx` y `claude/nice-bardeen-mu2irz` ya no hacen falta.
+> - **Crítico** (`video-v2/motor/critico.py`, `docs/RUBRICA.md` PROVISIONAL): 4 medidores validados
+>   + juicio por ronda. Resultado final: **#7 39 → 10** (0 fallos graves), **#8 25 → 20**; los dos
+>   pasan TODAS las puertas de `producir.py`. Los storyboards versionados son los de la ronda elegida.
+> - **1.ª nota a ciegas del usuario (#7):** prefiere la versión del crítico (coincide, n=1), pero "aún
+>   puede mejorar mucho en lo creativo, en lo que cuenta y cómo lo cuenta" → Bloque 1 del PLAN.
+> - **Arreglos del motor hoy:** ducking (la skill pasó a `media-use`), loudness por ganancia + limitador
+>   MEDIDO sobre el archivo (el limitador + AAC no es monótono), puerta WCAG que ya no audita
+>   escenas tapadas por una prueba, perillas nuevas (`aviso.placa/tam`, `musica.volumen`,
+>   `mezcla.whoosh/impacto/riser`, escena `fondo_suave`/`fondo_opacidad`; por defecto, igual que antes).
+> - **Entorno nube:** Pexels OK por proxy; Kokoro OK; **YouTube BLOQUEADO** (`www.youtube.com`,
+>   `youtube.com`, `www.googleapis.com`, `i.ytimg.com` + secreto `YOUTUBE_API_KEY`: los configura el
+>   usuario; los necesita el Bloque 3). El repo de estado se añadió en **solo lectura** →
+>   `estado-subir`/`produccion-guardar` no funcionan en esa sesión (la base no cambió: 0 filas nuevas).
+> - **No versionado (se pierde si el contenedor se recicla):** renders y MP4 de las rondas
+>   (`video-v2/*/renders/`). Se regeneran con `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`.
+> - **Trampas de hoy:** no hacer `pkill -f` con un patrón que aparezca en tu propio comando (mata
+>   tu shell); con `critico.py --mp4`, el `index.html` y el `qa.json` del proyecto deben ser los de ese
+>   vídeo (el crítico avisa si `index.html` es más nuevo).
 
 > ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-26 · NIVEL VIRAL + PÁGINAS VIVAS
 >
