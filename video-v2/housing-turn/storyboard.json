@@ -1,0 +1,37 @@
+{
+  "ref": "housing-turn",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "Same house. Same price. One buyer pays nine hundred fifty dollars more every month."
+    },
+    {
+      "id": "buyer1",
+      "texto": "Buyer one gets the twenty twenty-one rate: two point six five percent."
+    },
+    {
+      "id": "buyer2",
+      "texto": "Buyer two signs today at seven point three."
+    },
+    {
+      "id": "math",
+      "texto": "On the median home, that's thirteen fifty a month versus twenty-three hundred."
+    },
+    {
+      "id": "twist",
+      "texto": "But here's the strange part. Inventory hit one point six million homes, and prices still rose."
+    },
+    {
+      "id": "freeze",
+      "texto": "Buyer one won't sell and give up that rate. Buyer two can't pay up. So the market freezes."
+    },
+    {
+      "id": "you",
+      "texto": "If you're buying now, homes sit thirty-three days, and that's room to negotiate."
+    },
+    {
+      "id": "cta",
+      "texto": "So which buyer would you rather be?"
+    }
+  ]
+}

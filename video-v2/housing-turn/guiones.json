@@ -1,0 +1,177 @@
+{
+  "ref": "housing-turn",
+  "nota": "Alternativas del bloque 1.1, escritas DESPUÉS de congelar guion_plantilla.json (commit d874a2c). Mismas cifras y fuentes que la plantilla. Ronda 2: recortadas tras G-LARGO (116-122 palabras) y G-GIRO de misterio (12,9 s).",
+  "estructuras": [
+    {
+      "id": "misterio",
+      "nombre": "misterio / revelación",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Thirty-nine months in a row, US home prices went up. Even now."
+        },
+        {
+          "id": "odd",
+          "texto": "More homes are for sale than in years, and they sit thirty-three days."
+        },
+        {
+          "id": "question",
+          "texto": "By every rule, prices should be falling. But they aren't. Why?"
+        },
+        { "id": "clue", "texto": "The answer is the mortgage rate." },
+        {
+          "id": "rates",
+          "texto": "In twenty twenty-one, it was two point six five percent. Today, seven point three."
+        },
+        {
+          "id": "math",
+          "texto": "On the median home, that's about nine hundred fifty dollars more a month."
+        },
+        {
+          "id": "trap",
+          "texto": "Here's the trap. Owners with cheap loans won't sell low. Buyers can't pay high. Nobody moves."
+        },
+        {
+          "id": "you",
+          "texto": "If you're buying, that standoff is your leverage: more listings, longer waits, room to negotiate."
+        },
+        { "id": "cta", "texto": "So how many more months can this last?" }
+      ]
+    },
+    {
+      "id": "contraste",
+      "nombre": "contraste (dos compradores)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Same house. Same price. One buyer pays nine hundred fifty dollars more every month."
+        },
+        {
+          "id": "buyer1",
+          "texto": "Buyer one gets the twenty twenty-one rate: two point six five percent."
+        },
+        {
+          "id": "buyer2",
+          "texto": "Buyer two signs today at seven point three."
+        },
+        {
+          "id": "math",
+          "texto": "On the median home, that's thirteen fifty a month versus twenty-three hundred."
+        },
+        {
+          "id": "twist",
+          "texto": "But here's the strange part. Inventory hit one point six million homes, and prices still rose."
+        },
+        {
+          "id": "freeze",
+          "texto": "Buyer one won't sell and give up that rate. Buyer two can't pay up. So the market freezes."
+        },
+        {
+          "id": "you",
+          "texto": "If you're buying now, homes sit thirty-three days, and that's room to negotiate."
+        },
+        { "id": "cta", "texto": "So which buyer would you rather be?" }
+      ]
+    },
+    {
+      "id": "error",
+      "nombre": "error común",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Waiting for home prices to crash? They just rose for the thirty-ninth month in a row."
+        },
+        {
+          "id": "myth",
+          "texto": "Most people think more listings means cheaper homes. Listings did jump, to one point six million."
+        },
+        {
+          "id": "but",
+          "texto": "But the median price still hit four hundred seventeen thousand."
+        },
+        {
+          "id": "reason",
+          "texto": "The real reason: rates. Seven point three percent today, versus two point six five in twenty twenty-one."
+        },
+        {
+          "id": "math",
+          "texto": "That's about nine hundred fifty dollars more a month on the same home."
+        },
+        {
+          "id": "supply",
+          "texto": "Owners locked into cheap loans don't sell. So supply stays tight, and prices hold."
+        },
+        {
+          "id": "you",
+          "texto": "Here's what nobody tells you: homes now sit thirty-three days, so sellers negotiate."
+        },
+        {
+          "id": "cta",
+          "texto": "So are you still waiting for that crash, or negotiating?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Nine hundred fifty dollars a month. That's what the same house costs extra today."
+    },
+    {
+      "id": "g2",
+      "texto": "Home prices rose thirty-nine months straight, while more homes sit unsold."
+    },
+    {
+      "id": "g3",
+      "texto": "In twenty twenty-one, a mortgage cost two point six five percent. Today, seven point three."
+    },
+    {
+      "id": "g4",
+      "texto": "More homes for sale, yet prices up thirty-nine months in a row. That's not supposed to happen."
+    }
+  ],
+  "juicio": {
+    "misterio": {
+      "una_idea": 4,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "El 'Why?' se abre a los 8 s y se cierra con la tasa: el mejor bucle. Pero la cola (trampa + tú + CTA) va 12 s sin golpe."
+    },
+    "contraste": {
+      "una_idea": 5,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Una sola imagen de principio a fin (dos compradores, misma casa). El gancho da el payoff pero no abre pregunta: el 'por qué' llega solo."
+    },
+    "contraste+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Misma idea que el original con la cifra primero, pero pierde 'buyer' y el final ya no enlaza."
+    },
+    "contraste+g2": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Abre misterio (precios suben sin ventas) pero el cuerpo es de compradores: dos ideas."
+    },
+    "contraste+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 2,
+      "giro": 4,
+      "nota": "Repite casi literal la frase siguiente (buyer1): redundante."
+    },
+    "contraste+g4": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Buen 'that's not supposed to happen', pero adelanta el giro de 'twist' y lo deja sin efecto."
+    },
+    "error": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Le habla al que espera el crash (buen ángulo), pero 'the real reason' es un giro débil y mezcla mito + tasa + oferta."
+    }
+  }
+}

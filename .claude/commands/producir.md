@@ -6,6 +6,7 @@ Produce el Short de hoy con el motor v2. Responde en español; el contenido del 
 Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y anclas).
 
 ## 0. Entorno y estado (sesión nueva en la nube)
+
 1. `bash tools/setup_nube.sh` — idempotente. Si falla, para y reporta qué paso y su salida.
 2. `python -m omega.cli estado-bajar` — si falta `ESTADO_REPO`, PARA: sin la base, `decide` no
    tiene historia y el tema saldría a ciegas. Reporta qué secreto falta.
@@ -15,6 +16,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    rutina. Guarda del resumen: el punto de la curva donde más cae y las búsquedas que trajeron gente.
 
 ## 1. Qué contar (el sistema decide, no el gusto)
+
 3. `/daily`: `ingest`, `youtube-scan`, `signals`, `decide`. Si un paso falla por red (dominio no
    permitido), anota el dominio exacto y sigue con los demás.
 4. Tema = ganador de `decide`. Regla dura: el término crudo es un QUÉ, no un vídeo → conviértelo en
@@ -24,6 +26,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    candidato gana el empate (demanda medida en NUESTRO canal > demanda estimada). Dilo en el resumen.
 
 ## 2. Guion (inglés, 85-110 palabras ≈ 27-35 s con Kokoro — medido 26-sep: 85 palabras = 27,5 s)
+
 5. Estructura: gancho de contraste (≤2 frases, la primera palabra ya dice algo) → qué pasó / datos
    → por qué funciona → **la parte honesta** (riesgo, sesgo de superviviente) → "y a ti qué" →
    CTA con UNA sola dicotomía para comentarios. Frases cortas: cada frase es un ancla.
@@ -39,8 +42,17 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    - Ritmo de voz 150-175 palabras/min; nada de frases de relleno ("so basically", "you see").
 6. **Cada cifra con fuente** (URL en `cifras`). Si no puedes verificar un número, no lo uses. Nada
    de consejo financiero personalizado; las curvas son ILUSTRATIVAS y se dice.
+   6b. **Alternativas, no un guion único (bloque 1.1, PROVISIONAL).** Escribe `video-v2/<ref>/guiones.json`
+   con 2-3 estructuras completas (misterio/revelación, contraste, cuenta atrás, error común, "lo que
+   nadie dice") y 3-5 ganchos, y corre `python video-v2/motor/guionista.py video-v2/<ref>`: aplica
+   las puertas medibles (cifra en la 1.ª frase, 85-110 palabras, relleno, giro cada ≤10 s, final que
+   retoma la 1.ª frase) y pide tu juicio 1-5 (una idea, pregunta abierta, giro) de cada candidato.
+   Si una puerta falla, reescribe la alternativa (no la juzgues para salvarla). Escribe el ganador en
+   el `guion` del storyboard y deja `guiones.md` con las descartadas: enséñaselas al usuario.
+   Referencia: `video-v2/housing-turn/` (plantilla congelada vs. elegido, par ciego con `--ciego`).
 
 ## 3. Storyboard (`video-v2/<ref>/storyboard.json`)
+
 7. Copia la forma de `video-v2/read-janitor/storyboard.json`. Reglas:
    - un cambio visual cada ≤2,5 s (una escena por frase, o sub-anclas dentro de la escena);
    - ≥3 imágenes reales: `python tools/imagenes_libres.py buscar "<q>"` (Commons, solo PD/CC0/CC BY;
@@ -48,7 +60,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      personas reales. Declara cada imagen en `imagenes` con su `commons`;
    - **≥4 clips de vídeo (b-roll)**: uno SIEMPRE en el gancho (0-3 s); el resto se usan solos como
      fondos en movimiento de las escenas de texto. Metraje moderno: `python tools/broll.py buscar
-     pexels "<q>"` (sale en COLOR con el grado de marca); histórico: `buscar commons` (o
+pexels "<q>"` (sale en COLOR con el grado de marca); histórico: `buscar commons` (o
      `"duotono": true` en el clip para que case con fotos de archivo). Declara en `clips` (`{"commons": "File:X.webm", "desde": s}`
      o `{"pexels": id, "desde": s}`) y usa `"clip": "<nombre>"` en lugar de `"img"` en esa `foto`
      (o en un `fondo`). Antes de fijar `desde`, mira UNA hoja de miniaturas
@@ -65,7 +77,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      Solo lo que casa con la imagen: un efecto sin motivo visual es ruido.
    - **La prueba (1-oct):** si hay un documento REAL (periódico, certificado, informe) que dice
      el dato, ponlo en `pruebas` con la frase TAL CUAL está impresa (`python tools/ocr_doc.py
-     assets/t/<img>.jpg "<frase>"` para comprobarla); `marca` = la palabra de la voz donde se
+assets/t/<img>.jpg "<frase>"` para comprobarla); `marca` = la palabra de la voz donde se
      subraya. 1-1,5 s basta. Es lo que convierte "te lo cuento" en "aquí está".
    - **Serie:** `"serie": {"nombre": "Quiet Millionaires", "ep": N}` si el tema es de la serie
      (gente corriente que se hizo rica en silencio); N = siguiente episodio. El comentario para
@@ -76,7 +88,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      El `contador3d` va sobre metraje real (sin monedas 3D).
    - subtítulos sin el gancho ni el CTA; como mucho un `contador3d`;
    - `publicacion` con título (≤100), descripción, tags y hashtags; `adn` con `renderer_version: v2-hyperframes`.
-   Lecciones del ensayo del 23-sep (Grace Groner), no repetirlas:
+     Lecciones del ensayo del 23-sep (Grace Groner), no repetirlas:
    - Genera la voz ANTES de escribir las escenas (`python video-v2/motor/voz.py video-v2/<ref>`,
      con solo `guion` en el storyboard) y lista las frases con sus palabras exactas: las anclas
      se escriben contra ese listado (p. ej. "—" es una palabra; "seventy-five" va con guion).
@@ -91,6 +103,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
    solapes ni textos que no caben.
 
 ## 3b. Páginas vivas (carrusel + historia)
+
 Añade al storyboard un bloque `social` (formato en `video-v2/motor/social.py`): 5-7 diapositivas
 con `fondo` real (`img:<clave>` o `clip:<clave>@<s>`), portada con la cifra del gancho, una idea por
 diapositiva (texto ≤170 caracteres, dato verificado en `cifras`), última con la pregunta del CTA;
@@ -100,10 +113,12 @@ diapositiva (texto ≤170 caracteres, dato verificado en `cifras`), última con 
 explícita del usuario en el chat (regla del proyecto).
 
 ## 4. Producir y medir
+
 9. `python video-v2/motor/producir.py video-v2/<ref>` — voz, build, lint, render, loudness, ritmo.
    Si una puerta falla, arregla la CAUSA (máx. 2 rondas). Nunca subas un umbral para pasar.
 
 ## 4b. Crítico (máx. 2 rondas, nunca publica)
+
 10. `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/<ref>-final.mp4 --solo-revisar`
     → medidores sobre el MP4 (legibilidad por OCR, ritmo, voz, sincronía, mezcla, datos, parecido;
     rúbrica PROVISIONAL en `docs/RUBRICA.md`). Deja `renders/critica/r0/juicio.md` + fotogramas.
@@ -117,6 +132,7 @@ explícita del usuario en el chat (regla del proyecto).
     Si quedó subido un borrador de la ronda 0 y ganó otra ronda: avisa, no re-subas solo.
 
 ## 5. Entregar y PARAR
+
 13. `python -m omega.cli estado-subir` y `python -m omega.cli produccion-guardar video-v2/<ref>`
     (el proyecto va al repo PRIVADO, no a una rama suelta del repo de código). `producir.py` ya lo
     habrá subido a YouTube como PRIVADO si hay token.
@@ -127,6 +143,7 @@ explícita del usuario en el chat (regla del proyecto).
 15. **PARA aquí.** No publiques nada. Espera la aprobación explícita del usuario en esta sesión.
 
 ## 6. Solo si el usuario aprueba
+
 16. YouTube: `python -m omega.cli programar <ref>` (lo publica a las 12:00 de Nueva York, hora
     pico de la audiencia; `--hora HH:MM` para otra) o `--ahora` si lo pide ya. Si no se subió como
     borrador (sin token), antes `python -m omega.cli publish <ref>`.
