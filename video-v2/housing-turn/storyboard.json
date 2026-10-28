@@ -3,35 +3,50 @@
   "guion": [
     {
       "id": "intro",
-      "texto": "Same house. Same price. One buyer pays nine hundred fifty dollars more every month."
+      "texto": "More homes are for sale than in years, and prices still went up."
     },
     {
-      "id": "buyer1",
-      "texto": "Buyer one gets the twenty twenty-one rate: two point six five percent."
-    },
-    {
-      "id": "buyer2",
-      "texto": "Buyer two signs today at seven point three."
-    },
-    {
-      "id": "math",
-      "texto": "On the median home, that's thirteen fifty a month versus twenty-three hundred."
+      "id": "data",
+      "texto": "In September, US inventory hit one point six million homes, and they now sit thirty-three days before selling."
     },
     {
       "id": "twist",
-      "texto": "But here's the strange part. Inventory hit one point six million homes, and prices still rose."
+      "texto": "That should push prices down. Instead, the median hit four hundred seventeen thousand dollars. Thirty-nine months of gains in a row."
     },
     {
-      "id": "freeze",
-      "texto": "Buyer one won't sell and give up that rate. Buyer two can't pay up. So the market freezes."
+      "id": "honesty",
+      "texto": "Here's the part nobody tells you. Mortgage rates are seven point three percent. In twenty twenty-one, they were two point six five."
+    },
+    {
+      "id": "math",
+      "texto": "Same median house, twenty percent down: about twenty-three hundred a month today, versus thirteen fifty back then."
+    },
+    {
+      "id": "why",
+      "texto": "Sellers with cheap loans won't cut prices, and buyers can't pay them."
     },
     {
       "id": "you",
-      "texto": "If you're buying now, homes sit thirty-three days, and that's room to negotiate."
+      "texto": "If you're buying, the leverage is shifting: more listings, longer waits, room to negotiate."
     },
     {
       "id": "cta",
-      "texto": "So which buyer would you rather be?"
+      "texto": "So is this a stalemate, or the calm before prices crack?"
     }
-  ]
+  ],
+  "cifras": [
+    {
+      "dato": "inventory 1.60 million, 33 days on market, median $417,500, 39th consecutive month of annual gains (Sep 2026)",
+      "fuente": "https://www.nar.realtor/research-and-statistics/housing-statistics/existing-home-sales"
+    },
+    {
+      "dato": "30-year fixed 7.32% (2026-10-22); 2.65% (2021-01-07)",
+      "fuente": "https://fred.stlouisfed.org/series/MORTGAGE30US"
+    },
+    {
+      "dato": "payment on $417,500 with 20% down, 30y: $2,294 at 7.32% vs $1,346 at 2.65% (principal+interest, own calculation, illustrative)",
+      "fuente": "calculation"
+    }
+  ],
+  "decision_guion": "28-oct: guion = plantilla B (preferida a ciegas por el usuario y más cerca de la referencia del nicho: distancia 0,13 vs 0,33, solo duración, PROVISIONAL). Alternativas en guiones.md."
 }
