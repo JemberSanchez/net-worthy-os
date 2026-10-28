@@ -951,7 +951,12 @@ def _carve(out: Path) -> None:
     core = os.environ.get("HF_CORE")
     if carve and Path(carve).exists() and core:
         # carve and core must be the HyperFrames version this production renders with
-        quiere, v_core, v_carve = hfversion.version(), hfversion.version_core(core), hfversion.version_carve(carve)
+        try:
+            quiere = hfversion.version()
+        except hfversion.VersionError as e:
+            print(f"✗ carve falló: {e}")
+            return
+        v_core, v_carve = hfversion.version_core(core), hfversion.version_carve(carve)
         if v_core != quiere or v_carve not in (None, quiere):
             print(f"✗ carve falló: versiones distintas (hyperframes {quiere}, core {v_core}, carve {v_carve}). "
                   f"Actualiza HF_CORE (npm install --save-exact @hyperframes/core@{quiere}) y el checkout de carve.")
