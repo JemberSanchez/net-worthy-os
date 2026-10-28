@@ -2,8 +2,8 @@
 
 ```
 python video-v2/motor/construir.py video-v2/<proyecto> --validar   # ¿el storyboard es correcto? (<1 s)
-HF_CORE=<dir con @hyperframes/core@0.8.62> python video-v2/motor/construir.py video-v2/<proyecto>
-cd video-v2/<proyecto> && npx hyperframes@0.8.62 lint && npx hyperframes@0.8.62 render --quality high -o renders/x.mp4
+HF_CORE=<dir con @hyperframes/core de la misma versión> HF_CARVE=<carve.mjs del checkout de esa versión> python video-v2/motor/construir.py video-v2/<proyecto>
+cd video-v2/<proyecto> && npx hyperframes@latest lint && npx hyperframes@latest render --quality high -o renders/x.mp4
 ```
 Proyecto = `storyboard.json` + `assets/voice.mp3` + `assets/words.json` (tiempos medidos por
 `tools/alinear_voz.py`). Todo lo demás (imágenes con licencia, duotono, música, sfx, ducking,

@@ -39,6 +39,7 @@ sys.path.insert(0, str(MOTOR))
 sys.path.insert(0, str(RAIZ / "tools"))
 
 import anclas  # noqa: E402
+import hfversion
 
 CATALOGO = ("foto", "revelacion", "lista", "titulo", "tarjetas", "contador3d", "curva", "puntos", "anios", "cta")
 PRE = 0.14            # la escena entra un poco antes de que la voz empiece su frase
@@ -890,8 +891,8 @@ def _andamiaje(proy: Path) -> None:
         (proy / "package.json").write_text(json.dumps({
             "name": proy.name, "private": True, "type": "module",
             "scripts": {"build": f"python ../motor/construir.py .",
-                        "lint": "npx --yes hyperframes@0.8.62 lint",
-                        "render": f"npx --yes hyperframes@0.8.62 render --quality high --output renders/{proy.name}.mp4"}},
+                        "lint": "npx --yes hyperframes@latest lint",
+                        "render": f"npx --yes hyperframes@latest render --quality high --output renders/{proy.name}.mp4"}},
             indent=2) + "\n")
     gi = proy / ".gitignore"                     # lo regenerable no se versiona; se AÑADE lo que falte
     tiene = gi.read_text(encoding="utf-8").splitlines() if gi.exists() else []
@@ -949,11 +950,17 @@ def _carve(out: Path) -> None:
     carve = ruta_carve()
     core = os.environ.get("HF_CORE")
     if carve and Path(carve).exists() and core:
+        # carve and core must be the HyperFrames version this production renders with
+        quiere, v_core, v_carve = hfversion.version(), hfversion.version_core(core), hfversion.version_carve(carve)
+        if v_core != quiere or v_carve not in (None, quiere):
+            print(f"✗ carve falló: versiones distintas (hyperframes {quiere}, core {v_core}, carve {v_carve}). "
+                  f"Actualiza HF_CORE (npm install --save-exact @hyperframes/core@{quiere}) y el checkout de carve.")
+            return
         r = subprocess.run(["node", carve, "--comp", str(out), "--bed", "music-bed", "--voice", "vo", "--core", core],
                            capture_output=True, text=True)
         print("✓ carve (ducking)" if r.returncode == 0 else "✗ carve falló:\n" + r.stderr[-800:])
     else:
-        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core@0.8.62) y la skill media-use (audio/carve.mjs). "
+        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core de la misma versión que hyperframes) y la skill media-use (audio/carve.mjs). "
               "La música pisará la voz.")
 
 

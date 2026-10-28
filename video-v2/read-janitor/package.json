@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "python ../motor/construir.py .",
-    "dev": "npx --yes hyperframes@0.8.62 preview",
-    "lint": "npx --yes hyperframes@0.8.62 lint",
-    "check": "npx --yes hyperframes@0.8.62 check",
-    "render": "npx --yes hyperframes@0.8.62 render --quality high --output renders/read-janitor-v2.mp4"
+    "dev": "npx --yes hyperframes@latest preview",
+    "lint": "npx --yes hyperframes@latest lint",
+    "check": "npx --yes hyperframes@latest check",
+    "render": "npx --yes hyperframes@latest render --quality high --output renders/read-janitor-v2.mp4"
   }
 }

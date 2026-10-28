@@ -24,19 +24,22 @@ import subprocess
 import sys
 from pathlib import Path
 
+import hfversion
+
 MOTOR = Path(__file__).resolve().parent
 RAIZ = MOTOR.parents[1]
-HF = "hyperframes@0.8.62"
 PY = sys.executable
 
 
 def _run(cmd: list[str], cwd: Path | None = None, env: dict | None = None) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env={**os.environ, **(env or {})})
+    return subprocess.run(cmd, check=False, cwd=cwd, capture_output=True, text=True, env={**os.environ, **(env or {})})
 
 
 def _entorno() -> dict:
+    """Cloud defaults (HF_CORE, browser path). The user's own environment wins, and a default path
+    that does not exist here (the Linux container paths on the Windows PC) is dropped."""
     out = _run(["bash", str(RAIZ / "tools" / "setup_nube.sh"), "--env"]).stdout
-    return dict(re.findall(r"export (\w+)=(\S+)", out))
+    return {k: v for k, v in re.findall(r"export (\w+)=(\S+)", out) if k not in os.environ and Path(v).exists()}
 
 
 def descripcion(sb: dict, proy: Path) -> str:
@@ -329,8 +332,8 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     for i in range(0, len(ts), 5):
         # --timeout: con 10 s (defecto) el #7 (3D + 18 capas) no llegaba a cargar y la auditoría
         # devolvía 0 textos medidos SIN fallar (25-sep). Un instrumento que no mide no aprueba.
-        r = _run(["npx", "--yes", HF, "check", "--json", "--timeout", "60000",
-                  "--at", ",".join(map(str, ts[i:i + 5]))], cwd=proy, env=env)
+        r = _run(hfversion.npx("check", "--json", "--timeout", "60000",
+                              "--at", ",".join(map(str, ts[i:i + 5]))), cwd=proy, env=env)
         try:
             d = json.loads(r.stdout)
         except json.JSONDecodeError:
@@ -350,7 +353,12 @@ def producir(proy: Path) -> dict:
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     ref = sb.get("ref") or proy.name
     env = _entorno()
-    qa: dict = {"ref": ref, "puertas": []}
+    env["HF_VERSION"] = hfversion.version()      # one production, one version: children inherit it
+    todo = {**os.environ, **env}
+    qa: dict = {"ref": ref, "hyperframes": {"version": env["HF_VERSION"],
+                                            "core": hfversion.version_core(todo.get("HF_CORE")),
+                                            "carve": hfversion.version_carve(todo.get("HF_CARVE"))},
+                "puertas": []}
     renders = proy / "renders"
     renders.mkdir(exist_ok=True)
 
@@ -368,12 +376,12 @@ def producir(proy: Path) -> dict:
         puerta("voz", r.returncode == 0, r.stdout + r.stderr)
     r = _run([PY, str(MOTOR / "construir.py"), str(proy)], env=env)
     puerta("build", r.returncode == 0 and "carve (ducking)" in r.stdout, r.stdout + r.stderr)
-    r = _run(["npx", "--yes", HF, "lint"], cwd=proy, env=env)
+    r = _run(hfversion.npx("lint"), cwd=proy, env=env)
     m = re.search(r"(\d+) error\(s\)", r.stdout + r.stderr)
     puerta("lint", bool(m) and m.group(1) == "0", m.group(0) if m else r.stdout[-300:] + r.stderr[-300:])
     puerta("contraste", *auditar_contraste(proy, env))
     crudo, final, prev = renders / f"{ref}.mp4", renders / f"{ref}-final.mp4", renders / f"{ref}-preview.mp4"
-    r = _run(["npx", "--yes", HF, "render", "--quality", "high", "--output", str(crudo)], cwd=proy, env=env)
+    r = _run(hfversion.npx("render", "--quality", "high", "--output", str(crudo)), cwd=proy, env=env)
     puerta("render", r.returncode == 0 and crudo.exists(), (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0])
     ok_ln, det_ln = loudnorm_2pasos(crudo, final)
     if ok_ln:

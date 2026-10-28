@@ -38,7 +38,7 @@ MOTOR = Path(__file__).resolve().parent
 RAIZ = MOTOR.parents[1]
 sys.path.insert(0, str(MOTOR))
 sys.path.insert(0, str(RAIZ / "tools"))
-HF = "hyperframes@0.8.62"
+import hfversion
 W, H = 1080, 1350          # 4:5
 MAX_SLIDES = 10            # límite de Instagram
 
@@ -187,8 +187,8 @@ def _snapshot(dir_: Path, tiempos: list[float], env: dict) -> list[Path]:
     salida = dir_ / "snapshots"
     if salida.exists():
         shutil.rmtree(salida)
-    r = subprocess.run(["npx", "--yes", HF, "snapshot", "--at", ",".join(f"{t:g}" for t in tiempos), "--no-end",
-                        "--describe", "false", "--timeout", "60000", "-o", str(salida)],
+    r = subprocess.run(hfversion.npx("snapshot", "--at", ",".join(f"{t:g}" for t in tiempos), "--no-end",
+                                      "--describe", "false", "--timeout", "60000", "-o", str(salida)),
                        cwd=dir_, capture_output=True, text=True, env={**__import__("os").environ, **env})
     fotos = sorted(salida.glob("frame-*.png"))
     if len(fotos) != len(tiempos):

@@ -17,7 +17,7 @@ movimiento real, no subiendo el umbral.
 Todo sale de **`storyboard.json`** con el motor común (`video-v2/motor/`, ver su README):
 ```
 python video-v2/motor/voz.py video-v2/read-janitor --forzar        # voz + words.json (medidos)
-HF_CORE=<dir con @hyperframes/core@0.8.62> python video-v2/motor/construir.py video-v2/read-janitor
+HF_CORE=<dir con @hyperframes/core de la misma versión> HF_CARVE=<carve.mjs del checkout de esa versión> python video-v2/motor/construir.py video-v2/read-janitor
 cd video-v2/read-janitor && npm run lint && npm run render
 ffmpeg -i renders/read-janitor.mp4 -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:v copy -c:a aac -b:a 192k renders/final.mp4
 python ../../tools/medir_loudness.py renders/final.mp4 && python ../../tools/medir_ritmo.py renders/final.mp4 --max 2.5

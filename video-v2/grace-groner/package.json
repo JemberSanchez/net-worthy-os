@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "python ../motor/construir.py .",
-    "lint": "npx --yes hyperframes@0.8.62 lint",
-    "render": "npx --yes hyperframes@0.8.62 render --quality high --output renders/grace-groner.mp4"
+    "lint": "npx --yes hyperframes@latest lint",
+    "render": "npx --yes hyperframes@latest render --quality high --output renders/grace-groner.mp4"
   }
 }
