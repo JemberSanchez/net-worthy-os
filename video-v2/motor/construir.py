@@ -613,7 +613,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
         "golpes": sorted(golpes), "impactos": sorted(impactos),
         "oscuro": [anclas.t(words, oscuro[0], fr) - 0.25, anclas.t(words, oscuro[1], fr) - 0.1] if oscuro else None,
         "cta": cta, "serie": serie, "sonidos": sonidos(sb, words, fr, fotos, END),
-        "musica_volumen": volumen_musica(sb),
+        "musica_volumen": volumen_musica(sb), "vol_motor": volumen_motor(sb),
         "pruebas": [prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])],
     }
 
@@ -779,10 +779,12 @@ def _html(p: dict) -> str:
     fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
     audio = ['      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
              f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>']
-    sfx = [("whoosh.wav", t - 0.12, 0.38) for t in p["cortes"]]   # whoosh = transición visual (motor.js)
-    sfx += [("impact.wav", g - 0.02, 0.6) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
-    sfx += [("riser.wav", g - RISER_S, 0.3) for g in p["golpes"] if g - RISER_S >= 0.5]
-    sfx += [("impact.wav", t, 0.45) for t in p["impactos"]]
+    vm = p.get("vol_motor") or VOL_MOTOR
+    k_imp = vm["impacto"] / VOL_MOTOR["impacto"]       # los impactos de `impactos` escalan igual
+    sfx = [("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]]   # whoosh = transición visual (motor.js)
+    sfx += [("impact.wav", g - 0.02, vm["impacto"]) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
+    sfx += [("riser.wav", g - RISER_S, vm["riser"]) for g in p["golpes"] if g - RISER_S >= 0.5]
+    sfx += [("impact.wav", t, round(0.45 * k_imp, 3)) for t in p["impactos"]]
     sfx = [(f"assets/_motor/{f}", t, v) for f, t, v in sfx]
     if p.get("serie"):                            # logo sonoro: la firma de la serie, igual en cada episodio
         sfx.append(("assets/_motor/logo.wav", p["serie"]["t0"], 0.32))
@@ -910,6 +912,17 @@ def ruta_carve() -> str | None:
 
 
 VOL_MUSICA = 0.5
+
+
+VOL_MOTOR = {"whoosh": 0.38, "impacto": 0.6, "riser": 0.3}
+
+
+def volumen_motor(sb: dict) -> dict:
+    """`mezcla.whoosh|impacto|riser` (0-1): volumen de los efectos que pone el MOTOR (transición de
+    corte, golpe, subida). Por defecto los de siempre. Existe porque el crítico midió en el #7 que
+    el whoosh de corte y el riser tapaban la voz y no había perilla para corregirlo (28-oct)."""
+    m = sb.get("mezcla") or {}
+    return {k: round(min(1.0, max(0.0, float(m.get(k, v)))), 3) for k, v in VOL_MOTOR.items()}
 
 
 def volumen_musica(sb: dict) -> float:

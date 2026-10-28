@@ -92,11 +92,14 @@ class RevisionesTest(unittest.TestCase):
                   {"t0": 0.2, "t1": 1.2, "fuente": "fuerte", "archivo": f"{d}/fuerte.wav", "vol": 0.38}]
             self.assertEqual(C.culpable({"t": 0.5}, ev)["fuente"], "fuerte")
 
-    def test_efecto_del_motor_se_reporta_sin_parche(self):
+    def test_efecto_del_motor_se_parchea_con_su_perilla(self):
         rm = {"pct_tapada": 50.0, "n_ventanas": 2, "mediana_db": 8, "ventanas": [{"t": 0.0, "db": -5}, {"t": 0.5, "db": 20}]}
-        f = C.revisar_mezcla(rm, None, 0.5, VS, U, [{"t0": 0.0, "t1": 0.3, "fuente": "motor whoosh (corte)"}])
-        self.assertIsNone(f[0]["parche"])
-        self.assertIn("motor", f[0]["detalle"])
+        ev = [{"t0": 0.0, "t1": 0.3, "fuente": "motor whoosh (corte)", "motor": "whoosh", "vol": 0.38}]
+        p = C.revisar_mezcla(rm, None, 0.5, VS, U, ev)[0]["parche"]
+        self.assertEqual((p["op"], p["efecto"]), ("motor_vol", "whoosh"))
+        self.assertAlmostEqual(p["valor"], round(0.38 * 10 ** (-C.PASO_MAX_DB / 20), 3))
+        sb2, hechos = C.aplicar({}, [p])
+        self.assertEqual(sb2["mezcla"]["whoosh"], p["valor"])
 
     def test_loudness_y_pico(self):
         f = C.revisar_mezcla(None, {"lufs": -16.0, "pico": -0.5}, 0.5, VS, U)

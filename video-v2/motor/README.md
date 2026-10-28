@@ -42,6 +42,7 @@ el build con el motivo** (qué frase, qué palabra): esa es la puerta para story
 | `aviso.placa`, `aviso.tam` | placa oscura tras el aviso YMYL / tamaño en px (defecto: sin placa, 23 px). Las pone el crítico si el aviso no se lee |
 | `musica.volumen` | nivel de la cama antes del ducking (defecto 0.5). El crítico lo baja si la música tapa la voz |
 | `sonidos[].vol` | volumen de ese efecto (defecto: el del catálogo) |
+| `mezcla.whoosh`, `mezcla.impacto`, `mezcla.riser` | volumen de los efectos que pone el motor (defecto 0.38 / 0.6 / 0.3). El crítico los baja si tapan la voz |
 | escena `fondo_suave` | desenfoque fuerte del fondo de ESA escena (el remedio de los clips con mucho detalle) |
 
 Texto: `*así*` sale en dorado. Cada escena dura desde su `en` hasta el `en` de la siguiente.

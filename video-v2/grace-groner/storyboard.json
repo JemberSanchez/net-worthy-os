@@ -159,15 +159,15 @@
    "sfx": "maquina"
   },
   "bolsa": {
-   "pexels": 38431825,
+   "pexels": 7579561,
    "desde": 0
   },
   "monedas": {
-   "pexels": 3943961,
+   "pexels": 39597264,
    "desde": 0
   },
   "reloj": {
-   "pexels": 7034335,
+   "pexels": 35590093,
    "desde": 0
   }
  },
@@ -185,17 +185,17 @@
    "recorte": 0.02
   },
   "cert1": {
-   "commons": "File:Baltimore and Ohio Railroad stock certificate.jpg",
+   "commons": "File:Atchison & Pike's Peak Railroad Company stock certificate 1860s.jpg",
    "recorte": 0.01,
    "documento": true
   },
   "cert2": {
-   "commons": "File:Boston and Providence Railroad stock certificate.jpg",
+   "commons": "File:Nashua and Lowell Railroad stock certificate.jpg",
    "recorte": 0.01,
    "documento": true
   },
   "cert3": {
-   "commons": "File:Chicago, Burlington & Quincy Railroad Stock Certificate 1887.jpg",
+   "commons": "File:1871 - Allentown Railroad Line Stock Certificate Allentown PA.jpg",
    "recorte": 0.01,
    "documento": true
   }

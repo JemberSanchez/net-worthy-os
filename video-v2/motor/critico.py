@@ -246,13 +246,13 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
         ev.append({"t0": s["t"], "t1": s["t"] + d, "fuente": f"sonidos[{i}] {s['sfx']}" if i is not None else f"sfx {s['sfx']}",
                    "sonido": i, "vol": s.get("vol"), "archivo": str(proy / "assets" / "sfx" / s["archivo"])})
     m = MOTOR / "assets"
-    # volúmenes del motor: los de construir._html (whoosh 0.38, impacto 0.6, riser 0.3)
-    ev += [{"t0": t - 0.12, "t1": t - 0.12 + dur(m / "whoosh.wav"), "fuente": "motor whoosh (corte)",
-            "archivo": str(m / "whoosh.wav"), "vol": 0.38} for t in plan.get("cortes") or []]
-    ev += [{"t0": g - 0.02, "t1": g + dur(m / "impact.wav"), "fuente": "motor impacto (golpe)",
-            "archivo": str(m / "impact.wav"), "vol": 0.6} for g in plan.get("golpes") or []]
-    ev += [{"t0": g - 1.0, "t1": g, "fuente": "motor riser (golpe)", "archivo": str(m / "riser.wav"), "vol": 0.3}
-           for g in plan.get("golpes") or [] if g - 1.0 >= 0.5]
+    vm = {"whoosh": 0.38, "impacto": 0.6, "riser": 0.3, **(plan.get("vol_motor") or {})}   # = construir.VOL_MOTOR
+    ev += [{"t0": t - 0.12, "t1": t - 0.12 + dur(m / "whoosh.wav"), "fuente": "motor whoosh (corte)", "motor": "whoosh",
+            "archivo": str(m / "whoosh.wav"), "vol": vm["whoosh"]} for t in plan.get("cortes") or []]
+    ev += [{"t0": g - 0.02, "t1": g + dur(m / "impact.wav"), "fuente": "motor impacto (golpe)", "motor": "impacto",
+            "archivo": str(m / "impact.wav"), "vol": vm["impacto"]} for g in plan.get("golpes") or []]
+    ev += [{"t0": g - 1.0, "t1": g, "fuente": "motor riser (golpe)", "motor": "riser",
+            "archivo": str(m / "riser.wav"), "vol": vm["riser"]} for g in plan.get("golpes") or [] if g - 1.0 >= 0.5]
     if plan.get("serie"):
         t = float(plan["serie"]["t0"])
         ev.append({"t0": t, "t1": t + dur(proy / "assets" / "_motor" / "logo.wav", 1.5), "fuente": "motor logo de serie"})
@@ -312,6 +312,11 @@ def revisar_mezcla(rm: dict | None, loud: dict | None, vol_actual: float, vs, u:
                 deficit = min(PASO_MAX_DB, max(0.0, lim - float(np.percentile(solo_mus, u["tapada_max_pct"]))))
                 nuevo = round(max(0.05, vol_actual * 10 ** (-deficit / 20)), 3)
                 parche = {"op": "musica_volumen", "valor": nuevo} if nuevo < vol_actual else None
+            elif fuente.startswith("motor ") and any(e.get("motor") for e in eventos if e["fuente"] == fuente):
+                e = next(e for e in eventos if e["fuente"] == fuente)
+                bajar = min(PASO_MAX_DB, max(3.0, lim - peor["db"]))
+                parche = {"op": "motor_vol", "efecto": e["motor"],
+                          "valor": round(max(0.0, float(e["vol"]) * 10 ** (-bajar / 20)), 3)}
             elif fuente.startswith("sonidos["):
                 e = next(e for e in eventos if e["fuente"] == fuente)
                 bajar = min(PASO_MAX_DB, max(3.0, lim - peor["db"]))
@@ -385,7 +390,7 @@ def fallos_de_qa(qa: dict, vs) -> list[dict]:
 # ---------------------------------------------------------------------------------------------
 # parches
 
-OPS = ("golpe", "aviso_placa", "aviso_tam", "musica_volumen", "sfx_vol", "fondo_suave", "set")
+OPS = ("golpe", "aviso_placa", "aviso_tam", "musica_volumen", "sfx_vol", "motor_vol", "fondo_suave", "set")
 SET_PERMITIDO = re.compile(r"^(escenas\.\d+\.[a-z_.0-9]+|aviso\.[a-z_]+|musica\.volumen|golpes|calientes)$")
 
 
@@ -419,6 +424,12 @@ def aplicar(sb: dict, parches: list[dict]) -> tuple[dict, list[str]]:
             if v < float(x.get("vol", 1.0)):
                 x["vol"] = v
                 hechos.append(f"efecto sonidos[{p['indice']}] ({x.get('sfx')}) a volumen {v}")
+        elif op == "motor_vol" and p.get("efecto") in ("whoosh", "impacto", "riser"):
+            m = sb.setdefault("mezcla", {})
+            v = round(float(p["valor"]), 3)
+            if v < float(m.get(p["efecto"], {"whoosh": 0.38, "impacto": 0.6, "riser": 0.3}[p["efecto"]])):
+                m[p["efecto"]] = v
+                hechos.append(f"efecto del motor '{p['efecto']}' a volumen {v}")
         elif op == "fondo_suave" and isinstance(p.get("escena"), int):
             esc = (sb.get("escenas") or [])
             if p["escena"] < len(esc) and esc[p["escena"]].get("tipo") != "foto" and not esc[p["escena"]].get("fondo_suave"):
