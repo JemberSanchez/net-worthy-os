@@ -167,6 +167,11 @@ class ParchesTest(unittest.TestCase):
             self.assertEqual(sb["escenas"][0]["fondo_opacidad"], esperado)
         self.assertEqual(C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}])[1], [])
 
+    def test_parche_repetido_en_la_misma_ronda_escala_una_sola_vez(self):
+        sb = {"escenas": [{"tipo": "puntos", "fondo_suave": True}]}
+        sb2, _ = C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}] * 2)
+        self.assertEqual(sb2["escenas"][0]["fondo_opacidad"], 0.6)
+
     def test_puntuacion_por_severidad(self):
         self.assertEqual(C.puntuar([{"severidad": "alta"}, {"severidad": "media"}, {"severidad": "baja"}]), 6)
 

@@ -400,7 +400,15 @@ def aplicar(sb: dict, parches: list[dict]) -> tuple[dict, list[str]]:
     Un parche fuera del catálogo o que no cambia nada se ignora (y no cuenta como aplicado)."""
     sb = copy.deepcopy(sb)
     hechos: list[str] = []
+    # el mismo parche pedido por varios fallos (dos textos de una escena) se aplica UNA vez: si no,
+    # los que escalan (fondo_suave -> opacidad) bajaban dos escalones en una ronda (#7: 1 -> 0,36)
+    vistos, unicos = set(), []
     for p in parches:
+        k = json.dumps(p, sort_keys=True)
+        if k not in vistos:
+            vistos.add(k)
+            unicos.append(p)
+    for p in unicos:
         op = (p or {}).get("op")
         if op == "golpe" and p.get("ancla"):
             g = sb.setdefault("golpes", [])
