@@ -44,8 +44,10 @@ fi
 echo "kokoro OK"
 
 paso "HyperFrames (skill de audio para el ducking + @hyperframes/core fijado)"
-if [[ ! -f "$HOME/.claude/skills/hyperframes-audio/scripts/carve.mjs" ]]; then
-  npx --yes hyperframes@0.8.62 skills update hyperframes-audio >/dev/null 2>&1
+# The skill was renamed upstream (hyperframes-audio -> media-use, Oct-2026). Not version-pinned:
+# `skills update` always fetches the latest, so a rename breaks it silently.
+if [[ ! -f "$HOME/.claude/skills/media-use/audio/scripts/carve.mjs" && ! -f "$HOME/.claude/skills/hyperframes-audio/scripts/carve.mjs" ]]; then
+  (cd /tmp && npx --yes hyperframes@0.8.62 skills update media-use >/dev/null 2>&1)
 fi
 if [[ ! -d "$HF_CORE_DIR/node_modules/@hyperframes/core" ]]; then
   mkdir -p "$HF_CORE_DIR" && (cd "$HF_CORE_DIR" && npm init -y >/dev/null && npm i -s @hyperframes/core@0.8.62)

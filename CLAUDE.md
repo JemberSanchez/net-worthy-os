@@ -39,6 +39,16 @@ Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
   existía para el panel → la escena salía en blanco) y `reloj` (ya declarado → script abortado).
 Luego `tests-motor.html` en el navegador.
 
+## Crítico automático (Fase 1, 28-oct) — `video-v2/motor/critico.py`, rúbrica en `docs/RUBRICA.md`
+`python video-v2/motor/critico.py video-v2/<ref> [--mp4 <x>] [--solo-revisar] [--rondas 2]`: medidores
+sobre el MP4 final → fallos con segundo y escena → parches del storyboard (catálogo cerrado) →
+re-render sin subir, máx. 2 rondas, se queda la mejor ronda MEDIDA. Medidores (cada uno validado
+contra un caso conocido, ver RUBRICA): `tools/medir_texto.py` (OCR + contraste en el píxel, solo
+texto diseñado), `medir_voz.py` (ritmo/pausas/alineamiento), `medir_mezcla.py` (voz vs fondo por
+sustracción, con culpable: efecto o música), `medir_parecido.py` (vs vídeos de la misma marca).
+El juicio (J1-J6) lo escribe Claude en `renders/critica/rN/juicio.json` mirando UNA hoja de contactos.
+Rúbrica **PROVISIONAL** hasta ~10 notas a ciegas del usuario. Umbrales en `motor/rubrica.json`.
+
 ## Sincronía de subtítulos — RESUELTO, no volver a tocarlo a ojo
 Antes de renderizar un Short: **`python tools/alinear_voz.py <clave-del-short>`**. Pone el tiempo
 REAL de cada palabra (reconocimiento de voz local, gratis e ilimitado) en `data/<voz>.align.json`;
@@ -171,7 +181,7 @@ el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va 
   reutilización barata del gancho, no una apuesta de alcance.)
 
 ## Docs (leer al retomar)
-`docs/ESTADO.md` (traspaso — **empieza aquí**, trae las trampas conocidas) · `docs/V2-CALIDAD.md` (motor v2 en HyperFrames: decisión verificada + PoC en `video-v2/`) · `docs/POLITICA.md` ·
+`docs/PLAN.md` (**plan vigente**: calidad primero, autonomía solo cuando el usuario lo diga) · `docs/ESTADO.md` (traspaso, trae las trampas conocidas) · `docs/V2-CALIDAD.md` (motor v2 en HyperFrames: decisión verificada + PoC en `video-v2/`) · `docs/POLITICA.md` ·
 `docs/VISION.md` (arquitectura congelada) · `docs/guiones/` (guiones, motor, calibración) · `marca/`.
 
 ## CÓMO TRABAJAR (método — sale de errores medidos, no de teoría)

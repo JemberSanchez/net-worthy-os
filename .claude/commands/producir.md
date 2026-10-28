@@ -103,18 +103,33 @@ explícita del usuario en el chat (regla del proyecto).
 9. `python video-v2/motor/producir.py video-v2/<ref>` — voz, build, lint, render, loudness, ritmo.
    Si una puerta falla, arregla la CAUSA (máx. 2 rondas). Nunca subas un umbral para pasar.
 
+## 4b. Crítico (máx. 2 rondas, nunca publica)
+10. `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/<ref>-final.mp4 --solo-revisar`
+    → medidores sobre el MP4 (legibilidad por OCR, ritmo, voz, sincronía, mezcla, datos, parecido;
+    rúbrica PROVISIONAL en `docs/RUBRICA.md`). Deja `renders/critica/r0/juicio.md` + fotogramas.
+11. **Juicio:** mira UNA hoja de contactos de `renders/critica/r0/f_*.jpg` (no las imágenes sueltas)
+    y escribe `renders/critica/r0/juicio.json` con J1-J6 (lo que los medidores no ven: gancho,
+    imagen = palabra, exactitud contra la fuente, cierre). Parches solo del catálogo; sin perilla
+    segura -> `"parche": null` (se reporta, no se toca a ciegas).
+12. `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/critica/r0.mp4 --rondas 2`
+    → parchea el storyboard, re-renderiza (sin subir) y se queda con la mejor ronda MEDIDA. Entrega
+    `renders/critica/informe.md` (fallos con segundo y escena por ronda + parches) y `rN.mp4`.
+    Si quedó subido un borrador de la ronda 0 y ganó otra ronda: avisa, no re-subas solo.
+
 ## 5. Entregar y PARAR
-10. `python -m omega.cli estado-subir` y `python -m omega.cli produccion-guardar video-v2/<ref>`
+13. `python -m omega.cli estado-subir` y `python -m omega.cli produccion-guardar video-v2/<ref>`
     (el proyecto va al repo PRIVADO, no a una rama suelta del repo de código). `producir.py` ya lo
     habrá subido a YouTube como PRIVADO si hay token.
-11. Envía la preview con SendUserFile y un resumen corto: tema y por qué ganó, el guion, las
-    fuentes, la tabla de puertas de `renders/qa.json`, título y descripción propuestos.
-12. **PARA aquí.** No publiques nada. Espera la aprobación explícita del usuario en esta sesión.
+14. Envía la preview con SendUserFile y un resumen corto: tema y por qué ganó, el guion, las
+    fuentes, la tabla de puertas de `renders/qa.json`, la lista de fallos del crítico (informe.md:
+    qué arregló y qué queda) y título y descripción propuestos. Pide la nota a ciegas (1-10 +
+    queja con segundo): es lo que calibra la rúbrica.
+15. **PARA aquí.** No publiques nada. Espera la aprobación explícita del usuario en esta sesión.
 
 ## 6. Solo si el usuario aprueba
-13. YouTube: `python -m omega.cli programar <ref>` (lo publica a las 12:00 de Nueva York, hora
+16. YouTube: `python -m omega.cli programar <ref>` (lo publica a las 12:00 de Nueva York, hora
     pico de la audiencia; `--hora HH:MM` para otra) o `--ahora` si lo pide ya. Si no se subió como
     borrador (sin token), antes `python -m omega.cli publish <ref>`.
-14. Facebook/Instagram: **solo con confirmación explícita para Meta** (regla del proyecto):
+17. Facebook/Instagram: **solo con confirmación explícita para Meta** (regla del proyecto):
     `publish-fb <ref> --publicar` / `publish-ig <ref> --publicar`.
-15. `python -m omega.cli record-dna video-v2/<ref>/adn.json` y `estado-subir`.
+18. `python -m omega.cli record-dna video-v2/<ref>/adn.json` y `estado-subir`.

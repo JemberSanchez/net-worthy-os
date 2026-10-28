@@ -1,16 +1,5 @@
 [
  {
-  "archivo": "typing.src",
-  "origen": "wikimedia",
-  "titulo": "File:Typewriter Optima M12 - typing.webm",
-  "autor": "Sounds of Changes",
-  "licencia": "CC BY 3.0",
-  "clase": "cc-by",
-  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
-  "fuente": "https://commons.wikimedia.org/wiki/File:Typewriter_Optima_M12_-_typing.webm",
-  "desde": 0.0
- },
- {
   "archivo": "olivetti.src",
   "origen": "wikimedia",
   "titulo": "File:Olivetti Dora portable typewriter.webm",
@@ -19,29 +8,18 @@
   "clase": "cc-by",
   "url_licencia": "https://creativecommons.org/licenses/by/3.0",
   "fuente": "https://commons.wikimedia.org/wiki/File:Olivetti_Dora_portable_typewriter.webm",
-  "desde": 0.0
+  "desde": 2.0
  },
  {
-  "archivo": "bolsa.src",
-  "origen": "pexels",
-  "titulo": "pexels:38431825",
-  "autor": "Zulfugar Karimov",
-  "licencia": "Pexels License",
-  "clase": "pexels",
-  "url_licencia": "https://www.pexels.com/license/",
-  "fuente": "https://www.pexels.com/video/dynamic-financial-stock-market-display-animation-38431825/",
-  "desde": 0.0
- },
- {
-  "archivo": "monedas.src",
-  "origen": "pexels",
-  "titulo": "pexels:3943961",
-  "autor": "cottonbro studio",
-  "licencia": "Pexels License",
-  "clase": "pexels",
-  "url_licencia": "https://www.pexels.com/license/",
-  "fuente": "https://www.pexels.com/video/hand-rich-money-gold-3943961/",
-  "desde": 0.0
+  "archivo": "typing.src",
+  "origen": "wikimedia",
+  "titulo": "File:Typewriter Optima M12 - typing.webm",
+  "autor": "Sounds of Changes",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Typewriter_Optima_M12_-_typing.webm",
+  "desde": 4.0
  },
  {
   "archivo": "reloj.src",
@@ -52,6 +30,28 @@
   "clase": "pexels",
   "url_licencia": "https://www.pexels.com/license/",
   "fuente": "https://www.pexels.com/video/close-up-of-clock-hands-7034335/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "bolsa.src",
+  "origen": "pexels",
+  "titulo": "pexels:7579561",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/stock-market-exchanges-on-display-7579561/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "monedas.src",
+  "origen": "pexels",
+  "titulo": "pexels:39597264",
+  "autor": "Tolga deniz Aran",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/vintage-letters-and-stamps-close-up-39597264/",
   "desde": 0.0
  }
 ]

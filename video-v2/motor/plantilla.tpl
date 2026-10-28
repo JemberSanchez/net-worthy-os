@@ -160,7 +160,7 @@ __PRUEBAS__
       <div id="chrome" class="clip" data-start="0" data-duration="__END__" data-track-index="62">
         <div id="progress"></div>
         <div id="brand">NET WORTHY</div>
-        <div id="aviso">__AVISO__</div>
+        <div id="aviso"__AVISOESTILO__>__AVISO__</div>
         <div id="vignette"></div>
         <div id="grain"></div>
       </div>

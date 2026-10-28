@@ -553,7 +553,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
         if s.get("fondo"):
             f = s["fondo"] if isinstance(s["fondo"], dict) else {"img": s["fondo"]}
             fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
-                              f.get("opacidad", OPACIDAD_NITIDO if nitido else 0.4)))
+                              f.get("opacidad", s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else 0.4)),
+                              desenfoque="fuerte" if s.get("fondo_suave") else False))
             fotos[-1]["capa"] = "fondo"
             mi += 1
         elif (s["tipo"] in AUTO_FONDO and "fondo" not in s and sb.get("fondos_auto", True) and (pool or pool_clips)
@@ -566,14 +567,17 @@ def plan(sb: dict, words: list[dict]) -> dict:
             if pool_clips:
                 n = usos_clip.get(elegido, 0)
                 usos_clip[elegido] = n + 1
-                ruidoso = clips[elegido].get("_detalle", 0) > UMBRAL_DETALLE
+                # `fondo_suave` en la escena = el mismo remedio que un clip con mucho detalle: lo
+                # pone el crítico (critico.py) cuando el texto de ESA escena no se lee en el MP4
+                ruidoso = clips[elegido].get("_detalle", 0) > UMBRAL_DETALLE or bool(s.get("fondo_suave"))
                 fotos.append(capa(f"ph{k}a", {"clip": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_NITIDO if nitido else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP),
+                                  s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP)),
                                   desenfoque=("fuerte" if ruidoso else False) if nitido else True,
                                   desde_extra=TRAMO_FONDO * n))
             else:
                 fotos.append(capa(f"ph{k}a", {"img": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO, desenfoque=not nitido))
+                                  s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO),
+                                  desenfoque=("fuerte" if s.get("fondo_suave") else False) if nitido else True))
             fotos[-1]["capa"] = "fondo"
             ai += 1
         if s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"):
@@ -604,10 +608,12 @@ def plan(sb: dict, words: list[dict]) -> dict:
         "subtitulos": rango, "calientes": sb.get("calientes", []),
         "aviso": {"lineas": av.get("lineas", []),
                   "ventanas": [[av_a, av_b] for av_a, av_b in (av.get("ventanas_t") or [])],
-                  "final": fin_voz + 0.1 if av.get("final", True) and av.get("lineas") else None},
+                  "final": fin_voz + 0.1 if av.get("final", True) and av.get("lineas") else None,
+                  "placa": bool(av.get("placa")), "tam": av.get("tam")},
         "golpes": sorted(golpes), "impactos": sorted(impactos),
         "oscuro": [anclas.t(words, oscuro[0], fr) - 0.25, anclas.t(words, oscuro[1], fr) - 0.1] if oscuro else None,
         "cta": cta, "serie": serie, "sonidos": sonidos(sb, words, fr, fotos, END),
+        "musica_volumen": volumen_musica(sb), "vol_motor": volumen_motor(sb),
         "pruebas": [prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])],
     }
 
@@ -772,11 +778,13 @@ def _html(p: dict) -> str:
                         f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>')
     fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
     audio = ['      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
-             '      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="0.5"></audio>']
-    sfx = [("whoosh.wav", t - 0.12, 0.38) for t in p["cortes"]]   # whoosh = transición visual (motor.js)
-    sfx += [("impact.wav", g - 0.02, 0.6) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
-    sfx += [("riser.wav", g - RISER_S, 0.3) for g in p["golpes"] if g - RISER_S >= 0.5]
-    sfx += [("impact.wav", t, 0.45) for t in p["impactos"]]
+             f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>']
+    vm = p.get("vol_motor") or VOL_MOTOR
+    k_imp = vm["impacto"] / VOL_MOTOR["impacto"]       # los impactos de `impactos` escalan igual
+    sfx = [("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]]   # whoosh = transición visual (motor.js)
+    sfx += [("impact.wav", g - 0.02, vm["impacto"]) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
+    sfx += [("riser.wav", g - RISER_S, vm["riser"]) for g in p["golpes"] if g - RISER_S >= 0.5]
+    sfx += [("impact.wav", t, round(0.45 * k_imp, 3)) for t in p["impactos"]]
     sfx = [(f"assets/_motor/{f}", t, v) for f, t, v in sfx]
     if p.get("serie"):                            # logo sonoro: la firma de la serie, igual en cada episodio
         sfx.append(("assets/_motor/logo.wav", p["serie"]["t0"], 0.32))
@@ -800,6 +808,7 @@ def _html(p: dict) -> str:
         "__SERIE__": serie,
         "__END__": f'{p["D"]}', "__AUDIO__": "\n".join(audio), "__FOTOS__": fotos, "__ESCENAS__": "\n".join(esc_html),
         "__AVISO__": aviso if p["aviso"]["lineas"] else "",
+        "__AVISOESTILO__": estilo_aviso(p["aviso"]),
         "__PLAN__": json.dumps(p, ensure_ascii=False).replace("</", "<\\/"),
         "__MOTORJS__": (MOTOR / "motor.js").read_text(encoding="utf-8"),
         "__MOTOR3D__": ('    <script type="module">\n' + (MOTOR / "motor3d.js").read_text(encoding="utf-8") + "\n    </script>") if tiene3d else "",
@@ -891,15 +900,60 @@ def _andamiaje(proy: Path) -> None:
         gi.write_text("".join(x + "\n" for x in tiene + faltan), encoding="utf-8")
 
 
+# The upstream skill moved (Oct-2026): `hyperframes-audio/scripts` -> `media-use/audio/scripts`.
+# Both are tried so an older install keeps working.
+CARVE_RUTAS = ("media-use/audio/scripts/carve.mjs", "hyperframes-audio/scripts/carve.mjs")
+
+
+def ruta_carve() -> str | None:
+    if os.environ.get("HF_CARVE"):
+        return os.environ["HF_CARVE"]
+    return next((str(c) for r in CARVE_RUTAS if (c := Path.home() / ".claude/skills" / r).exists()), None)
+
+
+VOL_MUSICA = 0.5
+
+
+VOL_MOTOR = {"whoosh": 0.38, "impacto": 0.6, "riser": 0.3}
+
+
+def volumen_motor(sb: dict) -> dict:
+    """`mezcla.whoosh|impacto|riser` (0-1): volumen de los efectos que pone el MOTOR (transición de
+    corte, golpe, subida). Por defecto los de siempre. Existe porque el crítico midió en el #7 que
+    el whoosh de corte y el riser tapaban la voz y no había perilla para corregirlo (28-oct)."""
+    m = sb.get("mezcla") or {}
+    return {k: round(min(1.0, max(0.0, float(m.get(k, v)))), 3) for k, v in VOL_MOTOR.items()}
+
+
+def volumen_musica(sb: dict) -> float:
+    """`musica.volumen` (0.05-1, defecto 0.5): nivel de la cama ANTES del ducking de carve (que
+    escribe sus dips y su automatización aparte y no toca data-volume). Es la perilla con la que el
+    crítico baja la música cuando tapa la voz (tools/medir_mezcla.py)."""
+    v = (sb.get("musica") or {}).get("volumen", VOL_MUSICA)
+    return round(min(1.0, max(0.05, float(v))), 3)
+
+
+def estilo_aviso(av: dict) -> str:
+    """Estilo opcional del aviso YMYL. Por defecto (sin `placa` ni `tam`) no cambia nada.
+    `placa`: fondo oscuro tras el texto y color pleno -> legible sobre metraje nítido (el #7 falló
+    WCAG AA con 4,19:1 sobre el fondo nítido, 28-oct). `tam`: tamaño de letra en px (defecto 23)."""
+    css = []
+    if av.get("placa"):
+        css.append("background:rgba(10,26,20,0.86);padding:10px 18px;border-radius:12px;color:#f4f6f3")
+    if av.get("tam"):
+        css.append(f"font-size:{int(av['tam'])}px")
+    return f' style="{";".join(css)}"' if css else ""
+
+
 def _carve(out: Path) -> None:
-    carve = os.environ.get("HF_CARVE", str(Path.home() / ".claude/skills/hyperframes-audio/scripts/carve.mjs"))
+    carve = ruta_carve()
     core = os.environ.get("HF_CORE")
-    if Path(carve).exists() and core:
+    if carve and Path(carve).exists() and core:
         r = subprocess.run(["node", carve, "--comp", str(out), "--bed", "music-bed", "--voice", "vo", "--core", core],
                            capture_output=True, text=True)
         print("✓ carve (ducking)" if r.returncode == 0 else "✗ carve falló:\n" + r.stderr[-800:])
     else:
-        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core@0.8.62) y la skill hyperframes-audio. "
+        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core@0.8.62) y la skill media-use (audio/carve.mjs). "
               "La música pisará la voz.")
 
 

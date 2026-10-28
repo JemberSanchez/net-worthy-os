@@ -85,7 +85,9 @@
     "6"
    ]
   ],
-  "final": true
+  "final": true,
+  "placa": true,
+  "tam": 30
  },
  "subtitulos": [
   "1",
@@ -129,11 +131,13 @@
  "sonidos": [
   {
    "sfx": "caja",
-   "en": "0:dollars"
+   "en": "0:dollars",
+   "vol": 0.301
   },
   {
    "sfx": "pagina",
-   "en": "4:bought"
+   "en": "4:bought",
+   "vol": 0.425
   },
   {
    "sfx": "pagina",
@@ -146,7 +150,8 @@
   {
    "sfx": "reloj",
    "en": "5",
-   "dur": 1.6
+   "dur": 1.6,
+   "vol": 0.256
   },
   {
    "sfx": "monedas",
@@ -242,7 +247,7 @@
    },
    "titulo": {
     "texto": "$8 million",
-    "en": "0:eight"
+    "en": "0-0.4"
    }
   },
   {
@@ -312,7 +317,8 @@
     "texto": "Every dividend reinvested",
     "en": "4:reinvested",
     "hasta": "4:one$"
-   }
+   },
+   "fondo_suave": true
   },
   {
    "tipo": "contador3d",
@@ -325,7 +331,7 @@
     "en": "5"
    },
    "pill": {
-    "texto": "He put in: $122,400",
+    "texto": "Model: $122,400 put in",
     "en": "5:eight"
    }
   },
@@ -363,7 +369,8 @@
     "en": "7:sink",
     "hasta": "8",
     "texto": "One collapse can't sink him"
-   }
+   },
+   "fondo_suave": true
   },
   {
    "tipo": "titulo",
@@ -383,7 +390,9 @@
    "tachar": {
     "linea": 1,
     "en": "8:sell"
-   }
+   },
+   "fondo_suave": true,
+   "fondo_opacidad": 0.36
   },
   {
    "tipo": "titulo",
@@ -495,5 +504,9 @@
    "hasta": "1:life$",
    "cierre": "How a janitor made *$8M*"
   }
+ },
+ "mezcla": {
+  "whoosh": 0.095,
+  "riser": 0.076
  }
 }

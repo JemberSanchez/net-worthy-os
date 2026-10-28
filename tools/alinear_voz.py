@@ -237,7 +237,69 @@ def alinear(guion: list[str], oidas: list[dict], hay_voz=None, segmentos=None) -
         if salida[i]["t0"] < salida[i - 1]["t0"]:
             salida[i]["t0"] = salida[i - 1]["t0"]
         salida[i - 1]["t1"] = min(salida[i - 1]["t1"], salida[i]["t0"])
+    _dar_duracion(salida, segmentos or [])
     return salida
+
+
+DUR_MIN = 0.05      # s: ninguna palabra dicha dura menos; por debajo es un tiempo colapsado
+TOL_ARRANQUE = 0.05  # s: Whisper puede situar la palabra un pelo antes del arranque de energía
+
+
+def _peso(palabra: str) -> int:
+    """Duración relativa de una palabra al repartir un tramo: letras + 2. El +2 es el ataque/
+    caída que tiene toda palabra por corta que sea: solo con letras, "He" frente a "bought" en
+    0.16 s se quedaba en 0.04 s (read-janitor, 8.52 s)."""
+    return len(norm(palabra)) + 2
+
+
+def _dar_duracion(salida: list[dict], segmentos: list[tuple]) -> None:
+    """Da duración real a las palabras COLAPSADAS (t1 - t0 < DUR_MIN). In situ.
+
+    Dos orígenes, medidos el 28-oct en read-janitor y grace-groner (5 + 5 palabras de duración ~0):
+    1) Whisper mide la PRIMERA palabra de cada segmento suyo con start == end pegado al arranque
+       de la siguiente ("sixty" 12.86-12.86, "years" 12.86-13.14): su DTW reparte mal el ataque
+       tras una pausa. Con el audio sonando desde 12.70.
+    2) La primera palabra del audio: Whisper la pone en 0.0 (silencio), `hay_voz` la descarta con
+       razón, y la extrapolación del extremo le daba t0 = t1 = arranque de la siguiente. Igual para
+       una palabra del guion sin pareja metida entre dos medidas contiguas ("hundred" | "and" |
+       "eighty": el hueco entre ellas mide 0).
+
+    Si entre la palabra anterior y la colapsada ARRANCA un tramo de voz (= tras una pausa: casi
+    siempre inicio de frase), ese arranque es su t0 real; el tramo [arranque, fin de la siguiente]
+    se reparte entre las colapsadas y la siguiente por longitud. Si no hay arranque (voz continua),
+    se reparte [inicio de la anterior, fin de la siguiente]. La siguiente/anterior se tocan porque
+    su borde compartido viene del mismo DTW que colapsó a la vecina: no es más fiable que ella."""
+    n = len(salida)
+    i = 0
+    while i < n:
+        if salida[i]["t1"] - salida[i]["t0"] >= DUR_MIN:
+            i += 1
+            continue
+        j = i
+        while j + 1 < n and salida[j + 1]["t1"] - salida[j + 1]["t0"] < DUR_MIN:
+            j += 1
+        tope_izq = salida[i - 1]["t1"] if i > 0 else -1.0
+        arranques = [a for a, _ in segmentos if tope_izq < a <= salida[i]["t0"] + TOL_ARRANQUE]
+        ini, fin = i, j
+        if arranques:
+            t_ini = max(arranques)
+        elif i > 0:
+            ini, t_ini = i - 1, salida[i - 1]["t0"]
+        else:
+            t_ini = salida[i]["t0"]
+        if j + 1 < n:
+            fin = j + 1
+        t_fin = salida[fin]["t1"]
+        grupo = range(ini, fin + 1)
+        total = sum(_peso(salida[k]["w"]) for k in grupo)
+        if t_fin - t_ini >= DUR_MIN * (fin - ini + 1):   # si no cabe, mejor no inventar
+            t = t_ini
+            for k in grupo:
+                salida[k]["t0"] = round(t, 3)
+                t += (t_fin - t_ini) * _peso(salida[k]["w"]) / total
+                salida[k]["t1"] = round(t, 3)
+            salida[fin]["t1"] = round(t_fin, 3)
+        i = j + 1
 
 
 def envolvente_rms(ruta_audio: Path, ventana_s: float = 0.010) -> tuple:

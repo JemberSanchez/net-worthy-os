@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
 
-from alinear_voz import alinear  # noqa: E402
+from alinear_voz import DUR_MIN, alinear  # noqa: E402
 
 
 class AlinearTest(unittest.TestCase):
@@ -76,6 +76,62 @@ class AlinearTest(unittest.TestCase):
         con_segmentos = alinear(guion, oidas, segmentos=[(23.6, 26.0)])
         self.assertAlmostEqual(sin_segmentos[1]["t0"], con_segmentos[1]["t0"], places=6)
         self.assertAlmostEqual(sin_segmentos[2]["t0"], con_segmentos[2]["t0"], places=6)
+
+
+class PalabrasColapsadasTest(unittest.TestCase):
+    """Medido el 28-oct (tools/medir_voz.py): 5 palabras de duración ~0 en read-janitor y 5 en
+    grace-groner, casi todas INICIO de frase. Whisper mide la 1ª palabra tras una pausa con
+    start == end pegado a la siguiente, o la pone en 0.0 (silencio) y `hay_voz` la descarta. Tienen
+    que salir con duración real dentro del tramo con voz, sin pisar a la palabra anterior."""
+
+    def test_inicio_de_frase_colapsado_por_whisper(self):
+        # read-janitor: "one." | pausa | "Sixty"(12.86-12.86) "years"(12.86-13.14); la voz arranca en 12.70.
+        guion = ["one.", "Sixty", "years", "later,"]
+        oidas = [{"word": "one.", "start": 11.84, "end": 12.18},
+                 {"word": "sixty", "start": 12.86, "end": 12.86},
+                 {"word": "years", "start": 12.86, "end": 13.14},
+                 {"word": "later,", "start": 13.14, "end": 13.42}]
+        salida = alinear(guion, oidas, segmentos=[(11.8, 12.22), (12.70, 14.65)])
+        sixty, years = salida[1], salida[2]
+        self.assertAlmostEqual(sixty["t0"], 12.70, places=2)            # arranque real de la voz
+        self.assertGreaterEqual(sixty["t1"] - sixty["t0"], DUR_MIN)
+        self.assertGreaterEqual(years["t1"] - years["t0"], DUR_MIN)
+        self.assertEqual(years["t1"], 13.14)                             # el tramo total se conserva
+        self.assertEqual(salida[0]["t1"], 12.18)                         # la anterior no se toca
+        self.assertEqual(salida[3]["t0"], 13.14)
+
+    def test_primera_palabra_descartada_por_silencio(self):
+        # read-janitor: Whisper pone "This" en 0.0-0.42 (silencio hasta 0.37) -> hay_voz la
+        # descarta y la extrapolación le daba 0.42-0.42.
+        guion = ["This", "janitor", "died"]
+        oidas = [{"word": "This", "start": 0.0, "end": 0.42},
+                 {"word": "janitor", "start": 0.42, "end": 0.84},
+                 {"word": "died", "start": 0.84, "end": 1.12}]
+        salida = alinear(guion, oidas, hay_voz=lambda t: t >= 0.30, segmentos=[(0.37, 2.58)])
+        this, janitor = salida[0], salida[1]
+        self.assertFalse(this["medido"])
+        self.assertAlmostEqual(this["t0"], 0.37, places=2)
+        self.assertGreaterEqual(this["t1"] - this["t0"], DUR_MIN)
+        self.assertEqual(this["t1"], janitor["t0"])
+        self.assertEqual(janitor["t1"], 0.84)
+
+    def test_palabra_sin_pareja_entre_dos_contiguas(self):
+        # grace-groner: Whisper oye "180" -> "one hundred eighty"; el "and" del guion no tiene
+        # pareja y el hueco entre "hundred" y "eighty" mide 0. Voz continua: sin arranque nuevo.
+        guion = ["hundred", "and", "eighty"]
+        oidas = [{"word": "hundred", "start": 5.70, "end": 5.85},
+                 {"word": "eighty", "start": 5.85, "end": 5.97}]
+        salida = alinear(guion, oidas, segmentos=[(5.0, 7.0)])
+        self.assertTrue(all(x["t1"] - x["t0"] >= DUR_MIN for x in salida))
+        self.assertEqual((salida[0]["t0"], salida[2]["t1"]), (5.70, 5.97))
+        self.assertTrue(all(salida[k]["t1"] == salida[k + 1]["t0"] for k in range(2)))
+
+    def test_palabras_con_duracion_no_se_tocan(self):
+        salida = alinear(["says.", "He", "held"], [{"word": "says.", "start": 1.0, "end": 1.4},
+                                                     {"word": "He", "start": 1.9, "end": 2.1},
+                                                     {"word": "held", "start": 2.1, "end": 2.4}],
+                         segmentos=[(0.9, 1.45), (1.85, 2.5)])
+        self.assertEqual([(x["t0"], x["t1"]) for x in salida], [(1.0, 1.4), (1.9, 2.1), (2.1, 2.4)])
 
 
 if __name__ == "__main__":

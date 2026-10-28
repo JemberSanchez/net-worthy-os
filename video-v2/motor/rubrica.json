@@ -1,0 +1,20 @@
+{
+  "version": "0.1-provisional",
+  "estado": "PROVISIONAL: umbrales de partida, sin calibrar. Se calibran con ~10 calificaciones a ciegas del usuario (docs/RUBRICA.md).",
+  "criterios": {
+    "G1": {"nombre": "Gancho", "voz_arranca_max_s": 0.6, "texto_antes_de_s": 0.8, "cifra_en_frase": 0},
+    "G2": {"nombre": "Re-ganchos", "hueco_max_s": 12.0},
+    "L1": {"nombre": "Legibilidad", "leidos_min_pct": 100, "alto_min": 0.018, "conf_min": 0.80,
+           "contraste_min": 3.0, "zona_inferior": 0.84, "zona_derecha": 0.86, "zona_derecha_desde": 0.45},
+    "R1": {"nombre": "Ritmo visual", "quieto_max_s": 2.5},
+    "V1": {"nombre": "Ritmo de voz", "wpm_min": 150, "wpm_max": 200, "pausa_dentro_s": 0.45,
+           "pausa_entre_s": 0.9, "silencio_inicial_max_s": 0.6},
+    "S1": {"nombre": "Sincronía", "medidas_min_pct": 95},
+    "M1": {"nombre": "Mezcla voz/música", "voz_sobre_fondo_db": 10.0, "tapada_max_pct": 5.0,
+           "lufs": -14.0, "lufs_tol": 1.0, "pico_max_dbtp": -1.0},
+    "D1": {"nombre": "Datos y aviso YMYL"},
+    "P1": {"nombre": "Parecido con vídeos previos", "visual_max": 0.30, "guion_max": 0.20,
+           "estructura_max": 0.85, "recursos_max": 0.25}
+  },
+  "severidad_bloquea": ["alta"]
+}

@@ -3,6 +3,8 @@ que llevar SIEMPRE el aviso YMYL, las fuentes de las cifras y la atribución de 
 exige: publicar sin ella es incumplir la licencia)."""
 from __future__ import annotations
 import json
+import shutil
+import subprocess
 import os
 import sys
 import tempfile
@@ -23,6 +25,13 @@ class ContrasteTest(unittest.TestCase):
         h = ('<section id="s0" class="clip scene" data-start="0.000" data-duration="2.000">'
              '<section id="s1" class="clip scene" data-start="2.000" data-duration="0.100">')
         self.assertEqual(producir.instantes_escena(h), [1.2, 2.0])        # escena corta: nunca fuera de su ventana
+
+    def test_instante_tapado_por_una_prueba_se_mueve_a_la_parte_visible(self):
+        h = ('<section id="s0" class="clip scene" data-start="16.43" data-duration="3.23"'
+             '<script>window.PLAN = {"pruebas": [{"t0": 17.8, "t1": 18.98}]};</script>')
+        t = producir.instantes_escena(h)[0]
+        self.assertFalse(17.6 <= t <= 19.18, t)
+        self.assertTrue(16.43 < t < 19.66)
 
     def test_solo_cuenta_lo_que_no_llega_a_aa(self):
         inf = [{"contrast": {"findings": [
@@ -121,3 +130,21 @@ class LimiteDescripcionTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+@unittest.skipUnless(shutil.which("ffmpeg"), "sin ffmpeg")
+class LoudnessMedidoTest(unittest.TestCase):
+    """loudnorm_2pasos con audio real de respuesta conocida: una mezcla flojita (-24 LUFS) con
+    transitorios fuertes, el caso que hacía caer a loudnorm en modo dinámico."""
+
+    def test_sube_a_menos_14_con_el_pico_garantizado_en_el_archivo(self):
+        with tempfile.TemporaryDirectory() as d:
+            crudo, final = Path(d) / "c.mp4", Path(d) / "f.mp4"
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
+                            "aevalsrc='0.05*sin(2*PI*220*t)+0.9*lt(mod(t,1),0.01)*sin(2*PI*3000*t)':s=48000:d=8",
+                            "-c:a", "aac", "-b:a", "192k", str(crudo)], check=True)
+            ok, det = producir.loudnorm_2pasos(crudo, final)
+            lufs, tp = producir.lufs_y_pico(final)
+        self.assertTrue(ok, det)
+        self.assertLessEqual(abs(lufs - producir.LUFS_OBJ), 0.8)
+        self.assertLessEqual(tp, producir.TP_MAX)

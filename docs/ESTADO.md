@@ -1,5 +1,34 @@
 # ESTADO DEL PROYECTO — documento de traspaso
 
+> ## ▶▶▶▶▶▶▶▶▶▶ 2026-10-28 (cierre) · FASE 1 HECHA — RETOMAR AQUÍ
+>
+> **Siguiente sesión: leer `docs/PLAN.md` y empezar por el Bloque 1.1 (guion de nivel) SOLO
+> cuando el usuario diga "dale".** Regla del usuario: calidad primero; la autonomía al final y
+> solo cuando él lo pida.
+>
+> - **PR abierto:** https://github.com/JemberSanchez/net-worthy-os/pull/29 (rama
+>   `claude/compassionate-newton-y252cc`, sin mergear). Incluye los arreglos de otras dos sesiones
+>   (pin `av<19` y alineamiento sin palabras de duración 0), traídos con cherry-pick: las ramas
+>   `claude/inspiring-fermat-cm6bgx` y `claude/nice-bardeen-mu2irz` ya no hacen falta.
+> - **Crítico** (`video-v2/motor/critico.py`, `docs/RUBRICA.md` PROVISIONAL): 4 medidores validados
+>   + juicio por ronda. Resultado final: **#7 39 → 10** (0 fallos graves), **#8 25 → 20**; los dos
+>   pasan TODAS las puertas de `producir.py`. Los storyboards versionados son los de la ronda elegida.
+> - **1.ª nota a ciegas del usuario (#7):** prefiere la versión del crítico (coincide, n=1), pero "aún
+>   puede mejorar mucho en lo creativo, en lo que cuenta y cómo lo cuenta" → Bloque 1 del PLAN.
+> - **Arreglos del motor hoy:** ducking (la skill pasó a `media-use`), loudness por ganancia + limitador
+>   MEDIDO sobre el archivo (el limitador + AAC no es monótono), puerta WCAG que ya no audita
+>   escenas tapadas por una prueba, perillas nuevas (`aviso.placa/tam`, `musica.volumen`,
+>   `mezcla.whoosh/impacto/riser`, escena `fondo_suave`/`fondo_opacidad`; por defecto, igual que antes).
+> - **Entorno nube:** Pexels OK por proxy; Kokoro OK; **YouTube BLOQUEADO** (`www.youtube.com`,
+>   `youtube.com`, `www.googleapis.com`, `i.ytimg.com` + secreto `YOUTUBE_API_KEY`: los configura el
+>   usuario; los necesita el Bloque 3). El repo de estado se añadió en **solo lectura** →
+>   `estado-subir`/`produccion-guardar` no funcionan en esa sesión (la base no cambió: 0 filas nuevas).
+> - **No versionado (se pierde si el contenedor se recicla):** renders y MP4 de las rondas
+>   (`video-v2/*/renders/`). Se regeneran con `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`.
+> - **Trampas de hoy:** no hacer `pkill -f` con un patrón que aparezca en tu propio comando (mata
+>   tu shell); con `critico.py --mp4`, el `index.html` y el `qa.json` del proyecto deben ser los de ese
+>   vídeo (el crítico avisa si `index.html` es más nuevo).
+
 > ## ▶▶▶▶▶▶▶▶▶▶ 2026-09-26 · NIVEL VIRAL + PÁGINAS VIVAS
 >
 > - Análisis contra Shorts virales 2026: los nuestros eran largos (50-58 s vs 20-45 s), la cifra

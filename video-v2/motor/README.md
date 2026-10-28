@@ -39,6 +39,12 @@ el build con el motivo** (qué frase, qué palabra): esa es la puerta para story
 | `golpes` | anclas extra de impacto (los de `revelacion` y `contador3d` ya son automáticos). Úsalos como **re-ganchos** en las frases de giro: cada golpe trae riser 1 s antes, impacto y punch-in de cámara. El validador avisa si pasan >12 s sin ninguno |
 | `fondos_auto` | `true` por defecto: las escenas de texto sin `fondo` reciben una imagen del proyecto desenfocada al 30 % (nunca texto sobre verde vacío). `false` lo apaga; `"fondo": false` en una escena, solo en esa |
 | `cola_s` | segundos tras la última palabra (tarjeta final). Por defecto 3.0 |
+| `aviso.placa`, `aviso.tam` | placa oscura tras el aviso YMYL / tamaño en px (defecto: sin placa, 23 px). Las pone el crítico si el aviso no se lee |
+| `musica.volumen` | nivel de la cama antes del ducking (defecto 0.5). El crítico lo baja si la música tapa la voz |
+| `sonidos[].vol` | volumen de ese efecto (defecto: el del catálogo) |
+| `mezcla.whoosh`, `mezcla.impacto`, `mezcla.riser` | volumen de los efectos que pone el motor (defecto 0.38 / 0.6 / 0.3). El crítico los baja si tapan la voz |
+| escena `fondo_suave` | desenfoque fuerte del fondo de ESA escena (el remedio de los clips con mucho detalle) |
+| escena `fondo_opacidad` | opacidad del fondo de ESA escena (siguiente escalón del crítico si `fondo_suave` no basta) |
 
 Texto: `*así*` sale en dorado. Cada escena dura desde su `en` hasta el `en` de la siguiente.
 
@@ -65,7 +71,10 @@ Referencia completa y verificada: `video-v2/read-janitor/storyboard.json` (el #7
 2. `hyperframes lint` — 0 errores.
 3. **Contraste WCAG AA** (`hyperframes check`, un instante por escena en pasadas de 5): ningún texto
    ilegible. Solo contraste: su auditoría de maquetación da falsos positivos con capas decorativas.
-4. Render → `loudnorm` → `tools/medir_loudness.py` (-14 ±1 LUFS) → `tools/medir_ritmo.py --max 2.5`.
+4. Render → `loudnorm` + corrección de pico medida en el archivo (`asegurar_pico`) →
+   `tools/medir_loudness.py` (-14 ±1 LUFS, pico < -1) → `tools/medir_ritmo.py --max 2.5`.
+5. **Crítico** (`critico.py`, `docs/RUBRICA.md`): medidores sobre el MP4 final + juicio → fallos con
+   segundo y escena → parches del storyboard → re-render, máx. 2 rondas. No publica.
 
 Lenguaje de edición automático (sale del plan, nadie lo escribe): punch-in de cámara (zoom-cut)
 en golpes y palabras `calientes` con 1,8 s de separación mínima, riser→impacto en cada golpe,
