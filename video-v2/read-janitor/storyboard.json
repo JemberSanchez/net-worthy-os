@@ -150,7 +150,8 @@
   {
    "sfx": "reloj",
    "en": "5",
-   "dur": 1.6
+   "dur": 1.6,
+   "vol": 0.256
   },
   {
    "sfx": "monedas",
@@ -316,7 +317,8 @@
     "texto": "Every dividend reinvested",
     "en": "4:reinvested",
     "hasta": "4:one$"
-   }
+   },
+   "fondo_suave": true
   },
   {
    "tipo": "contador3d",
@@ -389,7 +391,8 @@
     "linea": 1,
     "en": "8:sell"
    },
-   "fondo_suave": true
+   "fondo_suave": true,
+   "fondo_opacidad": 0.36
   },
   {
    "tipo": "titulo",
@@ -501,5 +504,9 @@
    "hasta": "1:life$",
    "cierre": "How a janitor made *$8M*"
   }
+ },
+ "mezcla": {
+  "whoosh": 0.095,
+  "riser": 0.076
  }
 }
