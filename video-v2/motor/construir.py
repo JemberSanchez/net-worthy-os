@@ -553,7 +553,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
         if s.get("fondo"):
             f = s["fondo"] if isinstance(s["fondo"], dict) else {"img": s["fondo"]}
             fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
-                              f.get("opacidad", OPACIDAD_NITIDO if nitido else 0.4),
+                              f.get("opacidad", s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else 0.4)),
                               desenfoque="fuerte" if s.get("fondo_suave") else False))
             fotos[-1]["capa"] = "fondo"
             mi += 1
@@ -571,12 +571,12 @@ def plan(sb: dict, words: list[dict]) -> dict:
                 # pone el crítico (critico.py) cuando el texto de ESA escena no se lee en el MP4
                 ruidoso = clips[elegido].get("_detalle", 0) > UMBRAL_DETALLE or bool(s.get("fondo_suave"))
                 fotos.append(capa(f"ph{k}a", {"clip": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_NITIDO if nitido else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP),
+                                  s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP)),
                                   desenfoque=("fuerte" if ruidoso else False) if nitido else True,
                                   desde_extra=TRAMO_FONDO * n))
             else:
                 fotos.append(capa(f"ph{k}a", {"img": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO,
+                                  s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO),
                                   desenfoque=("fuerte" if s.get("fondo_suave") else False) if nitido else True))
             fotos[-1]["capa"] = "fondo"
             ai += 1

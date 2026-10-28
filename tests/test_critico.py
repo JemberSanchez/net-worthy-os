@@ -160,6 +160,13 @@ class ParchesTest(unittest.TestCase):
         v = C.revisar_mezcla(rm, None, 0.5, VS, U, ev)[0]["parche"]["valor"]
         self.assertAlmostEqual(v, round(0.6 * 10 ** (-C.PASO_MAX_DB / 20), 3))
 
+    def test_fondo_ya_suave_escala_a_mas_tenue_hasta_un_minimo(self):
+        sb = {"escenas": [{"tipo": "puntos", "fondo_suave": True}]}
+        for esperado in (0.6, 0.36, 0.3):
+            sb, hechos = C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}])
+            self.assertEqual(sb["escenas"][0]["fondo_opacidad"], esperado)
+        self.assertEqual(C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}])[1], [])
+
     def test_puntuacion_por_severidad(self):
         self.assertEqual(C.puntuar([{"severidad": "alta"}, {"severidad": "media"}, {"severidad": "baja"}]), 6)
 

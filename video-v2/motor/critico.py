@@ -43,6 +43,7 @@ SEV = {"alta": 3, "media": 2, "baja": 1}
 # Un parche de volumen nunca baja más de esto por ronda: la siguiente ronda vuelve a medir. Sin tope,
 # una ventana con poca voz y un efecto entero (-29,9 dB en el #7) mandaba la caja de 0,6 a 0,05.
 PASO_MAX_DB = 6.0
+OPACIDAD_MIN = 0.3      # escalón final de `fondo_suave`: por debajo, la escena queda vacía
 NUMEROS = re.compile(r"\$|\d|%|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
                      r"twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|"
                      r"billion|trillion)\b", re.I)
@@ -432,9 +433,16 @@ def aplicar(sb: dict, parches: list[dict]) -> tuple[dict, list[str]]:
                 hechos.append(f"efecto del motor '{p['efecto']}' a volumen {v}")
         elif op == "fondo_suave" and isinstance(p.get("escena"), int):
             esc = (sb.get("escenas") or [])
-            if p["escena"] < len(esc) and esc[p["escena"]].get("tipo") != "foto" and not esc[p["escena"]].get("fondo_suave"):
-                esc[p["escena"]]["fondo_suave"] = True
-                hechos.append(f"escena {p['escena']}: fondo suave tras el texto")
+            e = esc[p["escena"]] if p["escena"] < len(esc) else None
+            if e is not None and e.get("tipo") != "foto":
+                if not e.get("fondo_suave"):
+                    e["fondo_suave"] = True
+                    hechos.append(f"escena {p['escena']}: fondo suave tras el texto")
+                elif float(e.get("fondo_opacidad", 1.0)) > OPACIDAD_MIN:
+                    # ya suavizado y sigue sin leerse (#7 tras realinear la voz: "stocks" 2,95:1):
+                    # siguiente escalón, el fondo pesa menos
+                    e["fondo_opacidad"] = round(max(OPACIDAD_MIN, float(e.get("fondo_opacidad", 1.0)) * 0.6), 2)
+                    hechos.append(f"escena {p['escena']}: fondo más tenue (opacidad {e['fondo_opacidad']})")
         elif op == "set" and SET_PERMITIDO.match(str(p.get("ruta", ""))):
             obj, partes = sb, p["ruta"].split(".")
             try:

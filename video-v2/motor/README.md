@@ -44,6 +44,7 @@ el build con el motivo** (qué frase, qué palabra): esa es la puerta para story
 | `sonidos[].vol` | volumen de ese efecto (defecto: el del catálogo) |
 | `mezcla.whoosh`, `mezcla.impacto`, `mezcla.riser` | volumen de los efectos que pone el motor (defecto 0.38 / 0.6 / 0.3). El crítico los baja si tapan la voz |
 | escena `fondo_suave` | desenfoque fuerte del fondo de ESA escena (el remedio de los clips con mucho detalle) |
+| escena `fondo_opacidad` | opacidad del fondo de ESA escena (siguiente escalón del crítico si `fondo_suave` no basta) |
 
 Texto: `*así*` sale en dorado. Cada escena dura desde su `en` hasta el `en` de la siguiente.
 
