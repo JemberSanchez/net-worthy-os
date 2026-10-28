@@ -39,6 +39,16 @@ Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
   existía para el panel → la escena salía en blanco) y `reloj` (ya declarado → script abortado).
 Luego `tests-motor.html` en el navegador.
 
+## Crítico automático (Fase 1, 28-oct) — `video-v2/motor/critico.py`, rúbrica en `docs/RUBRICA.md`
+`python video-v2/motor/critico.py video-v2/<ref> [--mp4 <x>] [--solo-revisar] [--rondas 2]`: medidores
+sobre el MP4 final → fallos con segundo y escena → parches del storyboard (catálogo cerrado) →
+re-render sin subir, máx. 2 rondas, se queda la mejor ronda MEDIDA. Medidores (cada uno validado
+contra un caso conocido, ver RUBRICA): `tools/medir_texto.py` (OCR + contraste en el píxel, solo
+texto diseñado), `medir_voz.py` (ritmo/pausas/alineamiento), `medir_mezcla.py` (voz vs fondo por
+sustracción, con culpable: efecto o música), `medir_parecido.py` (vs vídeos de la misma marca).
+El juicio (J1-J6) lo escribe Claude en `renders/critica/rN/juicio.json` mirando UNA hoja de contactos.
+Rúbrica **PROVISIONAL** hasta ~10 notas a ciegas del usuario. Umbrales en `motor/rubrica.json`.
+
 ## Sincronía de subtítulos — RESUELTO, no volver a tocarlo a ojo
 Antes de renderizar un Short: **`python tools/alinear_voz.py <clave-del-short>`**. Pone el tiempo
 REAL de cada palabra (reconocimiento de voz local, gratis e ilimitado) en `data/<voz>.align.json`;
