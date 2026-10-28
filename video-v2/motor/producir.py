@@ -161,21 +161,53 @@ def subir_borrador(publish: dict, ref: str) -> str:
 LUFS_OBJ, TP_OBJ = -14.0, -2.0   # -2 (no -1.5): la codificación AAC posterior sube el pico ~0,5 dB
 
 
+LIMITES_DB = (-2.0, -2.5, -3.0, -3.5, -4.0, -5.0)   # techo del limitador, de menos a más agresivo
+
+
 def loudnorm_2pasos(crudo: Path, final: Path) -> tuple[bool, str]:
-    """loudnorm en DOS pasadas: medir y aplicar ganancia LINEAL con los valores medidos. La pasada
-    única es dinámica y no garantiza el pico real: el #7 salió con -0,20 dBTP (25-sep) aunque se
-    pedía -1,5; antes pasaba por margen, no por construcción."""
-    filtro = f"loudnorm=I={LUFS_OBJ}:TP={TP_OBJ}:LRA=11"
-    r = _run(["ffmpeg", "-hide_banner", "-i", str(crudo), "-af", filtro + ":print_format=json", "-f", "null", "-"])
+    """Volumen a -14 LUFS con el pico garantizado, MEDIDO sobre el archivo ya codificado.
+
+    1) loudnorm mide la entrada; 2) ganancia lineal hasta el objetivo; 3) limitador con 4x de
+    sobremuestreo para los picos; 4) AAC; 5) se mide el resultado y se acepta el primer techo que
+    cumpla pico <= TP_MAX y -14 ±0,8 LUFS. Por qué no loudnorm solo: si subir linealmente pasa el
+    techo, cae a modo DINÁMICO aunque se pida linear=true (#7: -17,71 LUFS / -1,66 dBTP de entrada)
+    y la corrección de pico posterior dejaba el #8 en -15,06 LUFS (28-oct). Y el limitador de
+    ffmpeg no es true-peak: el AAC rebota por encima del techo (-2,5 dB -> +0,37 dBTP medido), por
+    eso se prueba y se mide en vez de fijar un techo a ojo."""
+    r = _run(["ffmpeg", "-hide_banner", "-i", str(crudo), "-af",
+              f"loudnorm=I={LUFS_OBJ}:TP={TP_OBJ}:LRA=11:print_format=json", "-f", "null", "-"])
     m = re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", r.stderr)
     if not m:
         return False, "no se pudo medir el audio: " + r.stderr[-300:]
     med = json.loads(m.group(0))
-    af = (f"{filtro}:measured_I={med['input_i']}:measured_TP={med['input_tp']}:measured_LRA={med['input_lra']}"
-          f":measured_thresh={med['input_thresh']}:offset={med['target_offset']}:linear=true")
-    r = _run(["ffmpeg", "-v", "error", "-y", "-i", str(crudo), "-af", af + ",aresample=48000",
-              "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(final)])
-    return r.returncode == 0, (r.stderr or f"2 pasadas: medido {med['input_i']} LUFS / {med['input_tp']} dBTP")
+    ganancia = LUFS_OBJ - float(med["input_i"])
+    probado = []
+    for lim in LIMITES_DB:
+        g = ganancia
+        for _ in range(3):        # limitar picos BAJA el volumen medido: se suma lo que falta y se repite
+            af = (f"volume={g:.2f}dB,aresample=192000,"
+                  f"alimiter=limit={10 ** (lim / 20):.4f}:attack=0.5:release=40:level=false,aresample=48000")
+            r = _run(["ffmpeg", "-v", "error", "-y", "-i", str(crudo), "-af", af,
+                      "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(final)])
+            if r.returncode != 0:
+                return False, r.stderr[-300:]
+            lufs, tp = lufs_y_pico(final)
+            probado.append(f"{lim:g}dB/+{g:.1f}->{lufs}/{tp}")
+            if lufs is None or tp is None or tp > TP_MAX:
+                break                                # este techo no aguanta el pico: siguiente
+            if abs(lufs - LUFS_OBJ) <= 0.8:
+                return True, (f"entrada {med['input_i']} LUFS / {med['input_tp']} dBTP · +{g:.2f} dB, "
+                              f"techo {lim:g} dB -> {lufs} LUFS / {tp} dBTP")
+            g += LUFS_OBJ - lufs
+    return False, "ningún techo cumple pico y loudness a la vez: " + "; ".join(probado)
+
+
+def lufs_y_pico(mp4: Path) -> tuple[float | None, float | None]:
+    """(LUFS integrado, true peak dBTP) del audio de un archivo, con el ebur128 de ffmpeg."""
+    r = _run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(mp4), "-map", "0:a", "-af", "ebur128=peak=true", "-f", "null", "-"])
+    i = re.findall(r"I:\s*(-?[\d.]+) LUFS", r.stderr)
+    pk = re.findall(r"Peak:\s*(-?[\d.]+|-inf)\s*dBFS", r.stderr)
+    return (float(i[-1]) if i else None, float(pk[-1]) if pk and pk[-1] != "-inf" else None)
 
 
 TP_MAX = -1.2   # pico real máximo del archivo FINAL (la puerta exige < -1; 0,2 dB de margen)
