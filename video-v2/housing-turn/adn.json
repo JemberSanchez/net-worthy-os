@@ -1,0 +1,78 @@
+{
+  "production_ref": "housing-turn",
+  "hook_type": "contrast",
+  "story_type": "news_explainer",
+  "cta_type": "comment",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 43,
+  "blocks": [
+    {
+      "block": "h1",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "h2",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "sep",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "sit",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "should",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "instead",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "gains",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "nobody",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "rates",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "then",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "same",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "math",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "sellers",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "buyers",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "you",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "list",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "cta",
+      "technique": "v2-storyboard"
+    }
+  ]
+}

@@ -248,7 +248,7 @@
       }
     },
     {
-      "tipo": "contador3d",
+      "tipo": "contador3d", "prefijo": "",
       "en": "1",
       "valor": 1600000,
       "llega": "1:homes",
@@ -335,8 +335,7 @@
       "alarma": true,
       "kicker": {
         "texto": "Now",
-        "en": "5",
-        "color": "red"
+        "en": "5"
       },
       "lineas": [
         {

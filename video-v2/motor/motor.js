@@ -151,7 +151,7 @@
       const L = s.llega, t0 = s.t0 + 0.05, split = t0 + (L - t0) * 0.62;
       const P1 = [t0, split - t0, s.valor * 0.056], P2 = [split, L - split, s.valor];
       window.__P3D = { P1, P2, t0: s.t0, t1: s.t1, cols: s.columnas || 6, valor: s.valor };
-      const m = { v: 0 }, el = $(`${id}-money`), f = money(s.prefijo || "$");
+      const m = { v: 0 }, el = $(`${id}-money`), f = money(s.prefijo ?? "$");
       tl.fromTo(m, { v: 0 }, { v: P1[2], duration: P1[1], ease: "power1.in", onUpdate: () => { el.textContent = f(m.v); } }, P1[0]);
       tl.to(m, { v: P2[2], duration: P2[1], ease: "power3.in", onUpdate: () => { el.textContent = f(m.v); } }, P2[0]);
       tl.to(`#${id}-money`, { color: "#d8b25a", scale: 1.12, duration: 0.12, ease: "power4.out" }, L);

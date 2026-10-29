@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "levittown.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:LevittownPA.jpg",
+  "autor": "Unknown",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:LevittownPA.jpg"
+ },
+ {
+  "archivo": "cartel.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:House For Sale Sign in Eugene, Oregon.jpg",
+  "autor": "Rick Obst",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:House_For_Sale_Sign_in_Eugene,_Oregon.jpg"
+ },
+ {
+  "archivo": "openhouse.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Home for Sale and Open House signs.jpg",
+  "autor": "Rick Obst",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Home_for_Sale_and_Open_House_signs.jpg"
+ }
+]

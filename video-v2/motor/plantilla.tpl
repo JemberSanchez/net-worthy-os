@@ -36,6 +36,8 @@
                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
       #flash { position: absolute; inset: 0; background: var(--gold); opacity: 0; mix-blend-mode: screen; }
       #brand { position: absolute; top: 118px; width: 100%; text-align: center; font-weight: 800; letter-spacing: 0.42em; font-size: 26px; color: var(--gold); }
+      /* plate behind the brand: on a bright photo it read 2.05:1 (#9, cartel); a shadow alone gave 2.23:1 */
+      #brand span { display: inline-block; padding: 8px 6px 8px 22px; border-radius: 10px; background: rgba(10,26,20,0.78); }
       /* la PRUEBA: documento real a pantalla completa + subrayador (tools/ocr_doc.py) */
       .prueba { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
       .prueba .pcam { position: absolute; inset: 0; }
@@ -159,7 +161,7 @@ __PRUEBAS__
       <div id="captions" class="clip" data-start="0" data-duration="__END__" data-track-index="61"><div id="caps"></div></div>
       <div id="chrome" class="clip" data-start="0" data-duration="__END__" data-track-index="62">
         <div id="progress"></div>
-        <div id="brand">NET WORTHY</div>
+        <div id="brand"><span>NET WORTHY</span></div>
         <div id="aviso"__AVISOESTILO__>__AVISO__</div>
         <div id="vignette"></div>
         <div id="grain"></div>

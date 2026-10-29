@@ -1,0 +1,10 @@
+{
+  "name": "housing-turn",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python ../motor/construir.py .",
+    "lint": "npx --yes hyperframes@latest lint",
+    "render": "npx --yes hyperframes@latest render --quality high --output renders/housing-turn.mp4"
+  }
+}
