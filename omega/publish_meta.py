@@ -17,7 +17,9 @@ SEGURIDAD POR DEFECTO (mismo espíritu que privacy_status="private" en publish.p
   - upload_instagram_reel(..., publish=False)   -> sube y valida el contenedor pero NO llama a
     media_publish. Instagram no tiene borrador vía API: una vez publicado, es público al instante.
 """
+
 from __future__ import annotations
+
 import time
 from pathlib import Path
 from urllib.parse import urlencode
@@ -28,8 +30,14 @@ API_VERSION = "v25.0"
 GRAPH = f"https://graph.facebook.com/{API_VERSION}"
 TOKEN_PATH = config.DATA_DIR / "meta_token.json"
 
-SCOPES = ["pages_show_list", "pages_read_engagement", "pages_manage_posts",
-          "business_management", "instagram_business_basic", "instagram_business_content_publish"]
+SCOPES = [
+    "pages_show_list",
+    "pages_read_engagement",
+    "pages_manage_posts",
+    "business_management",
+    "instagram_business_basic",
+    "instagram_business_content_publish",
+]
 REDIRECT_URI = "https://localhost/"
 
 # Errores transitorios: vale la pena reintentar (caída momentánea de red/servidor).
@@ -37,6 +45,7 @@ _RETRIABLE_STATUS = {500, 502, 503, 504}
 _MAX_RETRIES = 5
 _POLL_INTERVAL_S = 3
 _POLL_TIMEOUT_S = 180
+_UPLOAD_ATTEMPTS = 4  # subida a rupload de IG (ver _ig_contenedor_subido)
 
 
 class PublishError(Exception):
@@ -45,11 +54,16 @@ class PublishError(Exception):
 
 def _app_credentials() -> tuple[str, str]:
     import os
-    app_id, app_secret = os.environ.get("META_APP_ID"), os.environ.get("META_APP_SECRET")
+
+    app_id, app_secret = (
+        os.environ.get("META_APP_ID"),
+        os.environ.get("META_APP_SECRET"),
+    )
     if not app_id or not app_secret:
         raise PublishError(
             "Faltan META_APP_ID/META_APP_SECRET en .env. Créalos en Meta for Developers "
-            "(developers.facebook.com) y agrégalos al .env del proyecto.")
+            "(developers.facebook.com) y agrégalos al .env del proyecto."
+        )
     return app_id, app_secret
 
 
@@ -62,49 +76,81 @@ def _request(method: str, url: str, *, retriable: bool = True, **kwargs) -> dict
         resp = requests.request(method, url, timeout=120, **kwargs)
         if resp.ok:
             return resp.json() if resp.content else {}
-        if retriable and resp.status_code in _RETRIABLE_STATUS and attempt < _MAX_RETRIES:
+        if (
+            retriable
+            and resp.status_code in _RETRIABLE_STATUS
+            and attempt < _MAX_RETRIES
+        ):
             attempt += 1
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
             continue
         try:
             detail = resp.json()
-        except Exception:
+        except (
+            ValueError
+        ):  # cuerpo no-JSON (requests.JSONDecodeError hereda de ValueError)
             detail = resp.text
-        raise PublishError(f"Meta rechazó la llamada (HTTP {resp.status_code}) a {url}: {detail}")
+        raise PublishError(
+            f"Meta rechazó la llamada (HTTP {resp.status_code}) a {url}: {detail}"
+        )
 
 
 def _authorize() -> dict:
     """Flujo de un solo uso, interactivo por terminal: Meta no tiene equivalente al
     run_local_server() de Google, así que el usuario pega a mano la URL de redirección."""
-    import requests
 
     app_id, app_secret = _app_credentials()
-    auth_url = "https://www.facebook.com/" + API_VERSION + "/dialog/oauth?" + urlencode({
-        "client_id": app_id, "redirect_uri": REDIRECT_URI,
-        "scope": ",".join(SCOPES), "response_type": "code",
-    })
+    auth_url = (
+        "https://www.facebook.com/"
+        + API_VERSION
+        + "/dialog/oauth?"
+        + urlencode(
+            {
+                "client_id": app_id,
+                "redirect_uri": REDIRECT_URI,
+                "scope": ",".join(SCOPES),
+                "response_type": "code",
+            }
+        )
+    )
     print("1. Abre esta URL, inicia sesión y aprueba los permisos:\n")
     print(f"   {auth_url}\n")
-    print("2. El navegador caerá en una página que NO carga (https://localhost/?code=...) "
-          "— es normal, no hay nada escuchando ahí. Copia la URL COMPLETA de la barra de "
-          "direcciones y pégala aquí.\n")
+    print(
+        "2. El navegador caerá en una página que NO carga (https://localhost/?code=...) "
+        "— es normal, no hay nada escuchando ahí. Copia la URL COMPLETA de la barra de "
+        "direcciones y pégala aquí.\n"
+    )
     pasted = input("URL pegada: ").strip()
 
     if "code=" not in pasted:
         raise PublishError("Esa URL no trae un parámetro 'code'. Repite el paso 1.")
     code = pasted.split("code=", 1)[1].split("&", 1)[0]
 
-    short = _request("GET", f"{GRAPH}/oauth/access_token", params={
-        "client_id": app_id, "redirect_uri": REDIRECT_URI,
-        "client_secret": app_secret, "code": code,
-    })
-    long_lived = _request("GET", f"{GRAPH}/oauth/access_token", params={
-        "grant_type": "fb_exchange_token", "client_id": app_id,
-        "client_secret": app_secret, "fb_exchange_token": short["access_token"],
-    })
+    short = _request(
+        "GET",
+        f"{GRAPH}/oauth/access_token",
+        params={
+            "client_id": app_id,
+            "redirect_uri": REDIRECT_URI,
+            "client_secret": app_secret,
+            "code": code,
+        },
+    )
+    long_lived = _request(
+        "GET",
+        f"{GRAPH}/oauth/access_token",
+        params={
+            "grant_type": "fb_exchange_token",
+            "client_id": app_id,
+            "client_secret": app_secret,
+            "fb_exchange_token": short["access_token"],
+        },
+    )
     user_token = long_lived["access_token"]
 
-    accounts = _request("GET", f"{GRAPH}/me/accounts", params={"access_token": user_token})
+    accounts = _request(
+        "GET", f"{GRAPH}/me/accounts", params={"access_token": user_token}
+    )
     pages = accounts.get("data", [])
     if not pages:
         raise PublishError("Tu usuario no administra ninguna Página de Facebook.")
@@ -118,33 +164,51 @@ def _authorize() -> dict:
         page = pages[idx]
 
     page_id, page_token = page["id"], page["access_token"]
-    ig = _request("GET", f"{GRAPH}/{page_id}", params={
-        "fields": "instagram_business_account", "access_token": page_token,
-    })
+    ig = _request(
+        "GET",
+        f"{GRAPH}/{page_id}",
+        params={
+            "fields": "instagram_business_account",
+            "access_token": page_token,
+        },
+    )
     ig_user_id = (ig.get("instagram_business_account") or {}).get("id")
     if not ig_user_id:
-        print(f"⚠ La Página '{page['name']}' no tiene una cuenta de Instagram Business vinculada "
-              "— publish-ig no funcionará hasta que la vincules desde Meta Business Suite.")
+        print(
+            f"⚠ La Página '{page['name']}' no tiene una cuenta de Instagram Business vinculada "
+            "— publish-ig no funcionará hasta que la vincules desde Meta Business Suite."
+        )
 
-    data = {"page_id": page_id, "page_name": page["name"],
-             "page_access_token": page_token, "ig_user_id": ig_user_id}
+    data = {
+        "page_id": page_id,
+        "page_name": page["name"],
+        "page_access_token": page_token,
+        "ig_user_id": ig_user_id,
+    }
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     import json
-    TOKEN_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\nListo: {TOKEN_PATH.name} guardado (Página '{page['name']}'"
-          f"{', IG vinculado' if ig_user_id else ', SIN Instagram vinculado'}).")
+
+    TOKEN_PATH.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(
+        f"\nListo: {TOKEN_PATH.name} guardado (Página '{page['name']}'"
+        f"{', IG vinculado' if ig_user_id else ', SIN Instagram vinculado'})."
+    )
     return data
 
 
 def _get_page_token() -> dict:
     import json
+
     if not TOKEN_PATH.exists():
         return _authorize()
     return json.loads(TOKEN_PATH.read_text(encoding="utf-8"))
 
 
-def upload_facebook_reel(video_path: Path, title: str, description: str, *,
-                          published: bool = False) -> dict:
+def upload_facebook_reel(
+    video_path: Path, title: str, description: str, *, published: bool = False
+) -> dict:
     """Sube video_path como Reel de la Página (endpoint /video_reels). Devuelve
     {"video_id": ..., "url": ...}.
 
@@ -163,26 +227,85 @@ def upload_facebook_reel(video_path: Path, title: str, description: str, *,
     page_id, page_token = creds["page_id"], creds["page_access_token"]
     size = video_path.stat().st_size
 
-    start = _request("POST", f"{GRAPH}/{page_id}/video_reels", data={
-        "upload_phase": "start", "access_token": page_token,
-    })
+    start = _request(
+        "POST",
+        f"{GRAPH}/{page_id}/video_reels",
+        data={
+            "upload_phase": "start",
+            "access_token": page_token,
+        },
+    )
     video_id, upload_url = start["video_id"], start["upload_url"]
 
     with video_path.open("rb") as f:
         binary = f.read()
-    _request("POST", upload_url, headers={
-        "Authorization": f"OAuth {page_token}", "offset": "0", "file_size": str(size),
-    }, data=binary, retriable=False)
+    _request(
+        "POST",
+        upload_url,
+        headers={
+            "Authorization": f"OAuth {page_token}",
+            "offset": "0",
+            "file_size": str(size),
+        },
+        data=binary,
+        retriable=False,
+    )
 
-    _request("POST", f"{GRAPH}/{page_id}/video_reels", data={
-        "video_id": video_id, "upload_phase": "finish",
-        "video_state": "PUBLISHED" if published else "DRAFT",
-        "title": title, "description": description, "access_token": page_token,
-    }, retriable=False)
+    _request(
+        "POST",
+        f"{GRAPH}/{page_id}/video_reels",
+        data={
+            "video_id": video_id,
+            "upload_phase": "finish",
+            "video_state": "PUBLISHED" if published else "DRAFT",
+            "title": title,
+            "description": description,
+            "access_token": page_token,
+        },
+        retriable=False,
+    )
     return {"video_id": video_id, "url": f"https://www.facebook.com/reel/{video_id}/"}
 
 
-def upload_instagram_reel(video_path: Path, caption: str, *, publish: bool = False) -> dict:
+def _ig_contenedor_subido(
+    ig_user_id: str, token: str, video_path: Path, campos: dict
+) -> str:
+    """Crea un contenedor reanudable y sube el MP4 a rupload. Devuelve el container_id.
+
+    rupload da 400 ProcessingFailedError "retriable": false de forma INTERMITENTE (medido
+    2026-10-29: el mismo MP4 falló y pasó con segundos de diferencia). Los docs de Meta piden
+    reintentar con una sesión nueva, así que cada intento crea su propio contenedor; los que
+    quedan a medias nunca se publican y Meta los descarta solo."""
+    binary = video_path.read_bytes()
+    for intento in range(1, _UPLOAD_ATTEMPTS + 1):
+        cid = _request(
+            "POST",
+            f"{GRAPH}/{ig_user_id}/media",
+            data={**campos, "access_token": token},
+        )["id"]
+        try:
+            _request(
+                "POST",
+                f"https://rupload.facebook.com/ig-api-upload/{API_VERSION}/{cid}",
+                headers={
+                    "Authorization": f"OAuth {token}",
+                    "offset": "0",
+                    "file_size": str(len(binary)),
+                },
+                data=binary,
+                retriable=False,
+            )
+            return cid
+        except PublishError as exc:
+            if "ProcessingFailedError" not in str(exc) or intento == _UPLOAD_ATTEMPTS:
+                raise
+            time.sleep(2**intento)
+    raise AssertionError("unreachable")
+
+
+def upload_instagram_reel(
+    video_path: Path, caption: str, *, publish: bool = False
+) -> dict:
     """Sube video_path como Reel de Instagram. Devuelve el estado del contenedor, o si
     publish=True, {"media_id": ..., "url": ...} tras publicarlo.
 
@@ -196,50 +319,63 @@ def upload_instagram_reel(video_path: Path, caption: str, *, publish: bool = Fal
     if not ig_user_id:
         raise PublishError(
             "No hay una cuenta de Instagram Business vinculada a la Página (meta_token.json "
-            "sin ig_user_id). Vincúlala en Meta Business Suite y corre 'meta-auth' de nuevo.")
-    size = video_path.stat().st_size
-
-    container = _request("POST", f"{GRAPH}/{ig_user_id}/media", data={
-        "media_type": "REELS", "upload_type": "resumable", "caption": caption,
-        "access_token": page_token,
-    })
-    container_id = container["id"]
-
-    with video_path.open("rb") as f:
-        binary = f.read()
-    _request("POST", f"https://rupload.facebook.com/ig-api-upload/{API_VERSION}/{container_id}",
-              headers={"Authorization": f"OAuth {page_token}", "offset": "0",
-                       "file_size": str(size)}, data=binary, retriable=False)
+            "sin ig_user_id). Vincúlala en Meta Business Suite y corre 'meta-auth' de nuevo."
+        )
+    container_id = _ig_contenedor_subido(
+        ig_user_id,
+        page_token,
+        video_path,
+        {"media_type": "REELS", "upload_type": "resumable", "caption": caption},
+    )
 
     deadline = time.time() + _POLL_TIMEOUT_S
     status = None
     while time.time() < deadline:
-        status_resp = _request("GET", f"{GRAPH}/{container_id}", params={
-            "fields": "status_code", "access_token": page_token,
-        })
+        status_resp = _request(
+            "GET",
+            f"{GRAPH}/{container_id}",
+            params={
+                "fields": "status_code",
+                "access_token": page_token,
+            },
+        )
         status = status_resp.get("status_code")
         if status == "FINISHED":
             break
         if status == "ERROR":
-            raise PublishError(f"Instagram rechazó el video subido (contenedor {container_id}).")
+            raise PublishError(
+                f"Instagram rechazó el video subido (contenedor {container_id})."
+            )
         time.sleep(_POLL_INTERVAL_S)
     else:
         raise PublishError(
             f"Timeout ({_POLL_TIMEOUT_S}s) esperando a que Instagram procese el video "
-            f"(contenedor {container_id}, último estado: {status}).")
+            f"(contenedor {container_id}, último estado: {status})."
+        )
 
     if not publish:
         return {"container_id": container_id, "status": "listo, sin publicar"}
 
-    published = _request("POST", f"{GRAPH}/{ig_user_id}/media_publish", data={
-        "creation_id": container_id, "access_token": page_token,
-    }, retriable=False)
+    published = _request(
+        "POST",
+        f"{GRAPH}/{ig_user_id}/media_publish",
+        data={
+            "creation_id": container_id,
+            "access_token": page_token,
+        },
+        retriable=False,
+    )
     media_id = published["id"]
     # El permalink real usa un shortcode (ej. /reel/DbdyTKJkoe2/), NO el media_id numérico --
     # armarlo a mano con el id da una URL rota (probado en real, 2026-07-31). Se pide a la API.
-    media = _request("GET", f"{GRAPH}/{media_id}", params={
-        "fields": "permalink", "access_token": page_token,
-    })
+    media = _request(
+        "GET",
+        f"{GRAPH}/{media_id}",
+        params={
+            "fields": "permalink",
+            "access_token": page_token,
+        },
+    )
     return {"media_id": media_id, "url": media["permalink"]}
 
 
@@ -248,30 +384,47 @@ def upload_instagram_reel(video_path: Path, caption: str, *, publish: bool = Fal
 # explícita en el chat antes de hacerlo (Meta nunca se automatiza en vivo). Sin publish=True no se
 # envía nada: `plan_social` solo describe lo que se haría.
 
+
 def _ig_user() -> tuple[str, str]:
     creds = _get_page_token()
     ig_user_id = creds.get("ig_user_id")
     if not ig_user_id:
-        raise PublishError("No hay cuenta de Instagram Business vinculada (meta_token.json sin ig_user_id).")
+        raise PublishError(
+            "No hay cuenta de Instagram Business vinculada (meta_token.json sin ig_user_id)."
+        )
     return ig_user_id, creds["page_access_token"]
 
 
 def _esperar_contenedor(container_id: str, token: str) -> None:
     deadline, status = time.time() + _POLL_TIMEOUT_S, None
     while time.time() < deadline:
-        status = _request("GET", f"{GRAPH}/{container_id}", params={"fields": "status_code", "access_token": token}).get("status_code")
+        status = _request(
+            "GET",
+            f"{GRAPH}/{container_id}",
+            params={"fields": "status_code", "access_token": token},
+        ).get("status_code")
         if status == "FINISHED":
             return
         if status == "ERROR":
             raise PublishError(f"Instagram rechazó el contenedor {container_id}.")
         time.sleep(_POLL_INTERVAL_S)
-    raise PublishError(f"Timeout esperando el contenedor {container_id} (último estado: {status}).")
+    raise PublishError(
+        f"Timeout esperando el contenedor {container_id} (último estado: {status})."
+    )
 
 
 def _ig_publicar(ig_user_id: str, container_id: str, token: str) -> dict:
-    media_id = _request("POST", f"{GRAPH}/{ig_user_id}/media_publish",
-                        data={"creation_id": container_id, "access_token": token}, retriable=False)["id"]
-    media = _request("GET", f"{GRAPH}/{media_id}", params={"fields": "permalink", "access_token": token})
+    media_id = _request(
+        "POST",
+        f"{GRAPH}/{ig_user_id}/media_publish",
+        data={"creation_id": container_id, "access_token": token},
+        retriable=False,
+    )["id"]
+    media = _request(
+        "GET",
+        f"{GRAPH}/{media_id}",
+        params={"fields": "permalink", "access_token": token},
+    )
     return {"media_id": media_id, "url": media.get("permalink")}
 
 
@@ -283,11 +436,12 @@ def upload_instagram_story(video_path: Path, *, publish: bool = False) -> dict:
     if not publish:
         return {"status": "sin enviar (publish=False)"}
     ig_user_id, token = _ig_user()
-    cid = _request("POST", f"{GRAPH}/{ig_user_id}/media", data={
-        "media_type": "STORIES", "upload_type": "resumable", "access_token": token})["id"]
-    _request("POST", f"https://rupload.facebook.com/ig-api-upload/{API_VERSION}/{cid}",
-             headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(video_path.stat().st_size)},
-             data=video_path.read_bytes(), retriable=False)
+    cid = _ig_contenedor_subido(
+        ig_user_id,
+        token,
+        video_path,
+        {"media_type": "STORIES", "upload_type": "resumable"},
+    )
     _esperar_contenedor(cid, token)
     return _ig_publicar(ig_user_id, cid, token)
 
@@ -301,12 +455,32 @@ def upload_facebook_story(video_path: Path, *, publish: bool = False) -> dict:
         return {"status": "sin enviar (publish=False)"}
     creds = _get_page_token()
     page_id, token = creds["page_id"], creds["page_access_token"]
-    start = _request("POST", f"{GRAPH}/{page_id}/video_stories", data={"upload_phase": "start", "access_token": token})
-    _request("POST", start["upload_url"], headers={
-        "Authorization": f"OAuth {token}", "offset": "0", "file_size": str(video_path.stat().st_size)},
-        data=video_path.read_bytes(), retriable=False)
-    fin = _request("POST", f"{GRAPH}/{page_id}/video_stories", data={
-        "upload_phase": "finish", "video_id": start["video_id"], "access_token": token}, retriable=False)
+    start = _request(
+        "POST",
+        f"{GRAPH}/{page_id}/video_stories",
+        data={"upload_phase": "start", "access_token": token},
+    )
+    _request(
+        "POST",
+        start["upload_url"],
+        headers={
+            "Authorization": f"OAuth {token}",
+            "offset": "0",
+            "file_size": str(video_path.stat().st_size),
+        },
+        data=video_path.read_bytes(),
+        retriable=False,
+    )
+    fin = _request(
+        "POST",
+        f"{GRAPH}/{page_id}/video_stories",
+        data={
+            "upload_phase": "finish",
+            "video_id": start["video_id"],
+            "access_token": token,
+        },
+        retriable=False,
+    )
     return {"post_id": fin.get("post_id"), "video_id": start["video_id"]}
 
 
@@ -314,11 +488,18 @@ def _foto_sin_publicar(page_id: str, token: str, img: Path) -> str:
     """Sube una imagen a la Página SIN publicarla (published=false) y devuelve su id. Es también
     la forma de tener una URL pública para Instagram, que no acepta imágenes locales."""
     with img.open("rb") as f:
-        return _request("POST", f"{GRAPH}/{page_id}/photos", data={"published": "false", "access_token": token},
-                        files={"source": (img.name, f, "image/jpeg")}, retriable=False)["id"]
+        return _request(
+            "POST",
+            f"{GRAPH}/{page_id}/photos",
+            data={"published": "false", "access_token": token},
+            files={"source": (img.name, f, "image/jpeg")},
+            retriable=False,
+        )["id"]
 
 
-def upload_facebook_carousel(images: list[Path], message: str, *, publish: bool = False) -> dict:
+def upload_facebook_carousel(
+    images: list[Path], message: str, *, publish: bool = False
+) -> dict:
     """Publicación de la Página con varias fotos (fotos sin publicar + /feed con attached_media)."""
     faltan = [str(p) for p in images if not p.exists()]
     if faltan:
@@ -329,13 +510,23 @@ def upload_facebook_carousel(images: list[Path], message: str, *, publish: bool 
     page_id, token = creds["page_id"], creds["page_access_token"]
     ids = [_foto_sin_publicar(page_id, token, p) for p in images]
     import json as _json
-    post = _request("POST", f"{GRAPH}/{page_id}/feed", data={
-        "message": message, "access_token": token,
-        "attached_media": _json.dumps([{"media_fbid": i} for i in ids])}, retriable=False)
+
+    post = _request(
+        "POST",
+        f"{GRAPH}/{page_id}/feed",
+        data={
+            "message": message,
+            "access_token": token,
+            "attached_media": _json.dumps([{"media_fbid": i} for i in ids]),
+        },
+        retriable=False,
+    )
     return {"post_id": post["id"], "url": f"https://www.facebook.com/{post['id']}"}
 
 
-def upload_instagram_carousel(images: list[Path], caption: str, *, publish: bool = False) -> dict:
+def upload_instagram_carousel(
+    images: list[Path], caption: str, *, publish: bool = False
+) -> dict:
     """Carrusel de Instagram (2-10 imágenes JPEG). Instagram solo acepta imágenes por URL pública:
     se suben a la Página sin publicar y se usa la URL de su CDN (campo `images`)."""
     if not 2 <= len(images) <= 10:
@@ -351,14 +542,38 @@ def upload_instagram_carousel(images: list[Path], caption: str, *, publish: bool
     hijos = []
     for p in images:
         fid = _foto_sin_publicar(page_id, token, p)
-        urls = _request("GET", f"{GRAPH}/{fid}", params={"fields": "images", "access_token": token}).get("images") or []
+        urls = (
+            _request(
+                "GET",
+                f"{GRAPH}/{fid}",
+                params={"fields": "images", "access_token": token},
+            ).get("images")
+            or []
+        )
         if not urls:
             raise PublishError(f"Facebook no devolvió URL para {p.name}")
         mayor = max(urls, key=lambda u: u.get("width", 0))["source"]
-        hijos.append(_request("POST", f"{GRAPH}/{ig_user_id}/media", data={
-            "image_url": mayor, "is_carousel_item": "true", "access_token": token})["id"])
-    cid = _request("POST", f"{GRAPH}/{ig_user_id}/media", data={
-        "media_type": "CAROUSEL", "children": ",".join(hijos), "caption": caption, "access_token": token})["id"]
+        hijos.append(
+            _request(
+                "POST",
+                f"{GRAPH}/{ig_user_id}/media",
+                data={
+                    "image_url": mayor,
+                    "is_carousel_item": "true",
+                    "access_token": token,
+                },
+            )["id"]
+        )
+    cid = _request(
+        "POST",
+        f"{GRAPH}/{ig_user_id}/media",
+        data={
+            "media_type": "CAROUSEL",
+            "children": ",".join(hijos),
+            "caption": caption,
+            "access_token": token,
+        },
+    )["id"]
     _esperar_contenedor(cid, token)
     return _ig_publicar(ig_user_id, cid, token)
 
@@ -366,8 +581,17 @@ def upload_instagram_carousel(images: list[Path], caption: str, *, publish: bool
 def plan_social(social_dir: Path) -> dict:
     """Qué se publicaría desde video-v2/<proyecto>/social (sin enviar nada). Función pura sobre disco."""
     import json as _json
+
     car = sorted((social_dir / "carrusel").glob("*.jpg"))
-    textos = _json.loads((social_dir / "textos.json").read_text(encoding="utf-8")) if (social_dir / "textos.json").exists() else {}
+    textos = (
+        _json.loads((social_dir / "textos.json").read_text(encoding="utf-8"))
+        if (social_dir / "textos.json").exists()
+        else {}
+    )
     hist = social_dir / "historia.mp4"
-    return {"carrusel": car, "historia": hist if hist.exists() else None,
-            "caption_ig": textos.get("caption_ig", ""), "caption_fb": textos.get("caption_fb", "")}
+    return {
+        "carrusel": car,
+        "historia": hist if hist.exists() else None,
+        "caption_ig": textos.get("caption_ig", ""),
+        "caption_fb": textos.get("caption_fb", ""),
+    }

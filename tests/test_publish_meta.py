@@ -2,7 +2,9 @@
 sin credenciales reales, sin publicar nada. Validan: construcción del resultado, que
 published/publish=False es el default REAL (nunca se llama a media_publish sin pedirlo), el
 polling de status_code (FINISHED/ERROR/timeout), y reintentos solo en 500-504."""
+
 from __future__ import annotations
+
 import os
 import sys
 import unittest
@@ -11,7 +13,7 @@ from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from omega import publish_meta  # noqa: E402
+from omega import publish_meta
 
 
 def _resp(status=200, data=None):
@@ -22,8 +24,12 @@ def _resp(status=200, data=None):
     return r
 
 
-FAKE_CREDS = {"page_id": "page1", "page_name": "Net Worthy",
-              "page_access_token": "PAGE_TOKEN", "ig_user_id": "ig1"}
+FAKE_CREDS = {
+    "page_id": "page1",
+    "page_name": "Net Worthy",
+    "page_access_token": "PAGE_TOKEN",
+    "ig_user_id": "ig1",
+}
 
 
 class UploadFacebookReelTest(unittest.TestCase):
@@ -34,12 +40,20 @@ class UploadFacebookReelTest(unittest.TestCase):
 
     def setUp(self):
         self.video_path = Path(__file__)
-        mock.patch.object(publish_meta, "_get_page_token", return_value=FAKE_CREDS).start()
+        mock.patch.object(
+            publish_meta, "_get_page_token", return_value=FAKE_CREDS
+        ).start()
         self.addCleanup(mock.patch.stopall)
 
     def _calls(self):
         return [
-            _resp(200, {"video_id": "999", "upload_url": "https://rupload.facebook.com/video-upload/999"}),
+            _resp(
+                200,
+                {
+                    "video_id": "999",
+                    "upload_url": "https://rupload.facebook.com/video-upload/999",
+                },
+            ),
             _resp(200, {"success": True}),
             _resp(200, {"success": True}),
         ]
@@ -50,8 +64,12 @@ class UploadFacebookReelTest(unittest.TestCase):
 
     def test_uploads_as_draft_by_default(self):
         with mock.patch("requests.request", side_effect=self._calls()) as req:
-            result = publish_meta.upload_facebook_reel(self.video_path, "Título", "Descripción")
-        self.assertEqual(result, {"video_id": "999", "url": "https://www.facebook.com/reel/999/"})
+            result = publish_meta.upload_facebook_reel(
+                self.video_path, "Título", "Descripción"
+            )
+        self.assertEqual(
+            result, {"video_id": "999", "url": "https://www.facebook.com/reel/999/"}
+        )
         # la fase "finish" (última llamada) NO pidió video_state=PUBLISHED por defecto
         last_kwargs = req.call_args_list[-1].kwargs
         self.assertEqual(last_kwargs["data"]["video_state"], "DRAFT")
@@ -59,19 +77,25 @@ class UploadFacebookReelTest(unittest.TestCase):
     def test_publicar_flag_marks_published_true(self):
         with mock.patch("requests.request", side_effect=self._calls()) as req:
             publish_meta.upload_facebook_reel(self.video_path, "t", "d", published=True)
-        self.assertEqual(req.call_args_list[-1].kwargs["data"]["video_state"], "PUBLISHED")
+        self.assertEqual(
+            req.call_args_list[-1].kwargs["data"]["video_state"], "PUBLISHED"
+        )
 
     def test_uploads_binary_to_the_upload_url_returned_by_start_phase(self):
         with mock.patch("requests.request", side_effect=self._calls()) as req:
             publish_meta.upload_facebook_reel(self.video_path, "t", "d")
         transfer_call = req.call_args_list[1]
-        self.assertEqual(transfer_call.args[1], "https://rupload.facebook.com/video-upload/999")
+        self.assertEqual(
+            transfer_call.args[1], "https://rupload.facebook.com/video-upload/999"
+        )
 
 
 class UploadInstagramReelTest(unittest.TestCase):
     def setUp(self):
         self.video_path = Path(__file__)
-        mock.patch.object(publish_meta, "_get_page_token", return_value=FAKE_CREDS).start()
+        mock.patch.object(
+            publish_meta, "_get_page_token", return_value=FAKE_CREDS
+        ).start()
         mock.patch("time.sleep").start()
         self.addCleanup(mock.patch.stopall)
 
@@ -81,22 +105,75 @@ class UploadInstagramReelTest(unittest.TestCase):
 
     def test_rejects_when_no_ig_account_linked(self):
         creds = {**FAKE_CREDS, "ig_user_id": None}
-        with mock.patch.object(publish_meta, "_get_page_token", return_value=creds):
-            with self.assertRaises(publish_meta.PublishError):
-                publish_meta.upload_instagram_reel(self.video_path, "cap")
+        with (
+            mock.patch.object(publish_meta, "_get_page_token", return_value=creds),
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta.upload_instagram_reel(self.video_path, "cap")
 
     def test_stops_before_media_publish_by_default(self):
         calls = [
-            _resp(200, {"id": "container1"}),                       # crear contenedor
-            _resp(200, {"success": True}),                          # subir binario a rupload
-            _resp(200, {"status_code": "FINISHED"}),                # polling
+            _resp(200, {"id": "container1"}),  # crear contenedor
+            _resp(200, {"success": True}),  # subir binario a rupload
+            _resp(200, {"status_code": "FINISHED"}),  # polling
         ]
         with mock.patch("requests.request", side_effect=calls) as req:
             result = publish_meta.upload_instagram_reel(self.video_path, "caption")
-        self.assertEqual(result, {"container_id": "container1", "status": "listo, sin publicar"})
+        self.assertEqual(
+            result, {"container_id": "container1", "status": "listo, sin publicar"}
+        )
         # NUNCA se llamó a media_publish: solo 3 requests, ninguna a esa URL
         urls = [c.args[1] for c in req.call_args_list]
         self.assertFalse(any("media_publish" in u for u in urls))
+
+    # Medido en real (2026-10-29): rupload devuelve 400 ProcessingFailedError "retriable": false
+    # de forma intermitente -- el MISMO MP4 falló y pasó con segundos de diferencia. Los docs de
+    # Meta: reintentar e iniciar una sesión nueva. Se reintenta con un contenedor nuevo.
+    def test_processing_failed_retries_with_new_container(self):
+        failed = _resp(
+            400,
+            {
+                "debug_info": {
+                    "retriable": False,
+                    "type": "ProcessingFailedError",
+                    "message": "Request processing failed",
+                }
+            },
+        )
+        calls = [
+            _resp(200, {"id": "container1"}),
+            failed,
+            _resp(200, {"id": "container2"}),
+            _resp(200, {"success": True}),
+            _resp(200, {"status_code": "FINISHED"}),
+        ]
+        with mock.patch("requests.request", side_effect=calls) as req:
+            result = publish_meta.upload_instagram_reel(self.video_path, "caption")
+        self.assertEqual(result["container_id"], "container2")
+        self.assertIn("container2", req.call_args_list[3].args[1])
+
+    def test_processing_failed_gives_up_after_max_attempts(self):
+        failed = _resp(400, {"debug_info": {"type": "ProcessingFailedError"}})
+        calls = []
+        for i in range(publish_meta._UPLOAD_ATTEMPTS):
+            calls += [_resp(200, {"id": f"c{i}"}), failed]
+        with (
+            mock.patch("requests.request", side_effect=calls),
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta.upload_instagram_reel(self.video_path, "caption")
+
+    def test_other_upload_errors_do_not_retry(self):
+        calls = [
+            _resp(200, {"id": "container1"}),
+            _resp(400, {"error": {"message": "unauthorized user request"}}),
+        ]
+        with (
+            mock.patch("requests.request", side_effect=calls) as req,
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta.upload_instagram_reel(self.video_path, "caption")
+        self.assertEqual(req.call_count, 2)
 
     def test_publish_true_calls_media_publish(self):
         calls = [
@@ -109,9 +186,16 @@ class UploadInstagramReelTest(unittest.TestCase):
             _resp(200, {"permalink": "https://www.instagram.com/reel/DbdyTKJkoe2/"}),
         ]
         with mock.patch("requests.request", side_effect=calls) as req:
-            result = publish_meta.upload_instagram_reel(self.video_path, "caption", publish=True)
-        self.assertEqual(result, {"media_id": "media1",
-                                   "url": "https://www.instagram.com/reel/DbdyTKJkoe2/"})
+            result = publish_meta.upload_instagram_reel(
+                self.video_path, "caption", publish=True
+            )
+        self.assertEqual(
+            result,
+            {
+                "media_id": "media1",
+                "url": "https://www.instagram.com/reel/DbdyTKJkoe2/",
+            },
+        )
         self.assertIn("media_publish", req.call_args_list[-2].args[1])
 
     def test_polling_retries_until_finished(self):
@@ -132,39 +216,56 @@ class UploadInstagramReelTest(unittest.TestCase):
             _resp(200, {"success": True}),
             _resp(200, {"status_code": "ERROR"}),
         ]
-        with mock.patch("requests.request", side_effect=calls):
-            with self.assertRaises(publish_meta.PublishError):
-                publish_meta.upload_instagram_reel(self.video_path, "caption")
+        with (
+            mock.patch("requests.request", side_effect=calls),
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta.upload_instagram_reel(self.video_path, "caption")
 
     def test_polling_timeout_raises(self):
         calls = [
             _resp(200, {"id": "container1"}),
             _resp(200, {"success": True}),
         ] + [_resp(200, {"status_code": "IN_PROGRESS"})] * 5
-        times = iter([0, 0, 0] + [i * 100 for i in range(1, 20)])  # supera _POLL_TIMEOUT_S rápido
-        with mock.patch("requests.request", side_effect=calls), \
-             mock.patch.object(publish_meta.time, "time", side_effect=lambda: next(times)):
-            with self.assertRaises(publish_meta.PublishError):
-                publish_meta.upload_instagram_reel(self.video_path, "caption")
+        times = iter(
+            [0, 0, 0] + [i * 100 for i in range(1, 20)]
+        )  # supera _POLL_TIMEOUT_S rápido
+        with (
+            mock.patch("requests.request", side_effect=calls),
+            mock.patch.object(
+                publish_meta.time, "time", side_effect=lambda: next(times)
+            ),
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta.upload_instagram_reel(self.video_path, "caption")
 
 
 class RequestHelperTest(unittest.TestCase):
     def test_retries_only_on_5xx(self):
         calls = [_resp(503), _resp(200, {"ok": True})]
-        with mock.patch("requests.request", side_effect=calls), mock.patch("time.sleep"):
+        with (
+            mock.patch("requests.request", side_effect=calls),
+            mock.patch("time.sleep"),
+        ):
             result = publish_meta._request("GET", "https://example.com")
         self.assertEqual(result, {"ok": True})
 
     def test_does_not_retry_4xx(self):
-        with mock.patch("requests.request", return_value=_resp(400, {"error": "bad"})) as req:
-            with self.assertRaises(publish_meta.PublishError):
-                publish_meta._request("GET", "https://example.com")
+        with (
+            mock.patch(
+                "requests.request", return_value=_resp(400, {"error": "bad"})
+            ) as req,
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta._request("GET", "https://example.com")
         self.assertEqual(req.call_count, 1)
 
     def test_retriable_false_never_retries_5xx(self):
-        with mock.patch("requests.request", return_value=_resp(503)) as req:
-            with self.assertRaises(publish_meta.PublishError):
-                publish_meta._request("GET", "https://example.com", retriable=False)
+        with (
+            mock.patch("requests.request", return_value=_resp(503)) as req,
+            self.assertRaises(publish_meta.PublishError),
+        ):
+            publish_meta._request("GET", "https://example.com", retriable=False)
         self.assertEqual(req.call_count, 1)
 
 
