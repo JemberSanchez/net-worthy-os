@@ -189,7 +189,10 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
 _CONTINUOS = {"foto", "contador3d", "anios", "curva", "puntos", "tarjetas"}
 
 
-COLA_S = 0.6          # s tras la voz: los virales cortan en seco (bucle); 3 s de cola restaban % visto
+# s tras la voz. 0.6 cortaba la tarjeta final: sus botones entran hasta fin+0.55 s, así que se veía
+# completa ~0.05 s (el usuario lo notó en varios vídeos, 28-oct). 1.5 = ~1 s de tarjeta asentada;
+# 3 s de cola restaban % visto.
+COLA_S = 1.5
 VOZ_MAX = 42.0        # s: la franja que más retiene es 20-45 s (media de un Short ~33 s, 2026)
 REGANCHO_MAX = 12.0   # s sin golpe/revelación dentro de la voz: la curva del canal cae entre 3 y 20 s
 
@@ -467,8 +470,11 @@ def m_cta(s, id_):
         out += f'<div id="{id_}-q" class="tag ink" style="top:860px;left:60px;right:60px;text-align:center;font-size:58px">{txt(s["pregunta"]["texto"])}</div>'
     bot = s.get("botones") or []
     if bot:
-        out += ('<div style="position:absolute;top:1040px;left:0;right:0;display:flex;justify-content:center;gap:30px">'
-                + "".join(f'<div class="pill {"gold" if k == len(bot) - 1 else "line"}" id="{id_}-p{k}">{txt(b["texto"])}</div>' for k, b in enumerate(bot))
+        # gap 70 + smaller type on long labels: the end-card pulse (scale 1.14) made
+        # "TEAM STALEMATE"/"TEAM CRACK" overlap with gap 30 (#9, 28-oct)
+        fs = ' style="font-size:36px"' if sum(len(b["texto"]) for b in bot) > 18 else ""
+        out += ('<div style="position:absolute;top:1040px;left:0;right:0;display:flex;justify-content:center;gap:70px">'
+                + "".join(f'<div class="pill {"gold" if k == len(bot) - 1 else "line"}" id="{id_}-p{k}"{fs}>{txt(b["texto"])}</div>' for k, b in enumerate(bot))
                 + "</div>")
     out += f'<div class="luz" id="{id_}-luz"></div>'
     out += f'<div id="{id_}-s" class="sub ink" style="position:absolute;top:1170px;left:0;right:0">{txt(s.get("sub", ""))}</div>'

@@ -38,7 +38,7 @@ el build con el motivo** (qué frase, qué palabra): esa es la puerta para story
 | `musica` | `{oscuro: [frase, frase]}` — tramo en que la música cae (p. ej. "the part nobody says") |
 | `golpes` | anclas extra de impacto (los de `revelacion` y `contador3d` ya son automáticos). Úsalos como **re-ganchos** en las frases de giro: cada golpe trae riser 1 s antes, impacto y punch-in de cámara. El validador avisa si pasan >12 s sin ninguno |
 | `fondos_auto` | `true` por defecto: las escenas de texto sin `fondo` reciben una imagen del proyecto desenfocada al 30 % (nunca texto sobre verde vacío). `false` lo apaga; `"fondo": false` en una escena, solo en esa |
-| `cola_s` | segundos tras la última palabra (tarjeta final). Por defecto 3.0 |
+| `cola_s` | segundos tras la última palabra (tarjeta final). Por defecto 1.5 (0.6 la cortaba) |
 | `aviso.placa`, `aviso.tam` | placa oscura tras el aviso YMYL / tamaño en px (defecto: sin placa, 23 px). Las pone el crítico si el aviso no se lee |
 | `musica.volumen` | nivel de la cama antes del ducking (defecto 0.5). El crítico lo baja si la música tapa la voz |
 | `sonidos[].vol` | volumen de ese efecto (defecto: el del catálogo) |

@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 
 import hfversion
+from construir import COLA_S
 
 MOTOR = Path(__file__).resolve().parent
 RAIZ = MOTOR.parents[1]
@@ -253,7 +254,7 @@ def bloques_adn(sb: dict, words: list[dict]) -> list[dict]:
     sys.path.insert(0, str(MOTOR))
     import anclas
     fr = anclas.frases(words)
-    fin = words[-1]["end"] + float(sb.get("cola_s", 0.6))
+    fin = words[-1]["end"] + float(sb.get("cola_s", COLA_S))
     n_frases = [max(1, len(re.findall(r"[.?!](?=\s|$)", g["texto"].strip()))) for g in sb.get("guion", [])]
     inicios, k = [], 0
     for n in n_frases:
@@ -408,7 +409,7 @@ def producir(proy: Path) -> dict:
     # genérico, y producir no debe destruir instrumentación (pasó en la 1ª prueba con el #7).
     if sb.get("adn") and not (proy / "adn.json").exists():
         W = json.loads((proy / "assets" / "words.json").read_text())
-        dur = round(W[-1]["end"] + float(sb.get("cola_s", 0.6)))
+        dur = round(W[-1]["end"] + float(sb.get("cola_s", COLA_S)))
         (proy / "adn.json").write_text(json.dumps({"production_ref": ref, **sb["adn"], "length_s": dur,
                                                    "blocks": bloques_adn(sb, W)},
                                                   ensure_ascii=False, indent=2), encoding="utf-8")
