@@ -326,6 +326,12 @@ def medicion_valida(d: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+def gpu_render(log: str) -> str | None:
+    """GPU Chrome rendered on, from HyperFrames' probe line (renderer vendor="Google Inc. (NVIDIA)")."""
+    m = re.search(r'renderer vendor="Google Inc\. \(([^)]+)\)', log)
+    return m.group(1) if m else None
+
+
 def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
     ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
@@ -384,6 +390,12 @@ def producir(proy: Path) -> dict:
     crudo, final, prev = renders / f"{ref}.mp4", renders / f"{ref}-final.mp4", renders / f"{ref}-preview.mp4"
     r = _run(hfversion.npx("render", "--quality", "high", "--output", str(crudo)), cwd=proy, env=env)
     puerta("render", r.returncode == 0 and crudo.exists(), (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0])
+    qa["hyperframes"]["gpu"] = gpu_render(r.stdout + r.stderr)
+    if qa["hyperframes"]["gpu"] and "NVIDIA" not in qa["hyperframes"]["gpu"]:
+        # the PC's per-app GPU preference is keyed to chrome-headless-shell.exe's path, which changes
+        # with each HyperFrames Chrome update: the render then silently drops to the iGPU (~2x slower)
+        print(f"⚠ render en {qa['hyperframes']['gpu']}, no en la NVIDIA: repetir Gráficos > Alto rendimiento "
+              "para el chrome-headless-shell.exe nuevo (~/.cache/hyperframes/chrome)")
     ok_ln, det_ln = loudnorm_2pasos(crudo, final)
     if ok_ln:
         ok_ln, det_pico = asegurar_pico(final)

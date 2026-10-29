@@ -128,6 +128,14 @@ class LimiteDescripcionTest(unittest.TestCase):
             producir.ajustar_limite(["x" * 3000], limite=2000)
 
 
+
+class GpuRenderTest(unittest.TestCase):
+    def test_vendor_from_hyperframes_probe_line(self):
+        linea = '[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA)" renderer="ANGLE (NVIDIA)")'
+        self.assertEqual(producir.gpu_render(linea), "NVIDIA")
+        self.assertEqual(producir.gpu_render(linea.replace("(NVIDIA)", "(Intel)")), "Intel")   # dropped to the iGPU
+        self.assertIsNone(producir.gpu_render("rendered in 1m 56s"))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

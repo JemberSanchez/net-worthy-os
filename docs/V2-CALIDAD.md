@@ -88,3 +88,17 @@ decide → guion (Claude API) → storyboard → assets → voz + alineamiento �
 
 ⚠ Guardar `renderer_version` en el ADN: los resultados de v1 (canvas) y v2 no son comparables
 (misma lógica que `score_version`).
+
+## Render en el PC Windows (medido 28-oct, #9, 43,7 s, hyperframes 0.8.214)
+| Config | Total | Captura | PSNR vs base |
+|---|---|---|---|
+| iGPU Intel, 4 workers (por defecto de Windows) | 3m53s | 3m27s | base |
+| iGPU Intel, 8 workers | 3m23s | 3m00s | 50,3 dB |
+| **RTX 5050, 4 workers (auto)** | **1m56s** | 1m14s | 48,8 dB |
+| RTX 5050, 8 workers | 2m10s | 1m25s | 48,8 dB |
+
+La GPU la elige Windows por app: Gráficos > Alto rendimiento sobre
+`~/.cache/hyperframes/chrome/.../chrome-headless-shell.exe`. Esa ruta cambia con cada Chrome que trae
+HyperFrames: `producir.py` guarda la GPU en `qa.json` (`hyperframes.gpu`) y avisa si no es NVIDIA.
+Workers: auto (4) gana. Descartado (investigado, sin medición a favor): BeginFrame (solo Linux),
+fast capture (exige quitar todo `blur(` y una API de Chrome Canary), cambiar de renderer.
