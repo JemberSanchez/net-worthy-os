@@ -1,0 +1,190 @@
+{
+  "ref": "fed-vs-card",
+  "nota": "Bloque 1.1. Tema de decide 30-oct: 'interest rates'. Cifras: FOMC 28-oct y 16-sep (federalreserve.gov), Bankrate 21-oct (APR media 19.70%, prima 7%, margen 12-13 pts, +0.12% tras la subida de septiembre).",
+  "estructuras": [
+    {
+      "id": "nadie",
+      "nombre": "lo que nadie dice",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Nineteen point seven percent. That's what the average credit card charges you today."
+        },
+        {
+          "id": "vote",
+          "texto": "This week the Fed held rates, but two officials voted to raise them again."
+        },
+        {
+          "id": "why",
+          "texto": "Inflation remains elevated. And in September, they already hiked."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you."
+        },
+        {
+          "id": "small",
+          "texto": "After that hike, the average card rate rose just zero point one two percent."
+        },
+        {
+          "id": "margin",
+          "texto": "Your rate is prime, seven percent, plus a markup your bank picks: about twelve points."
+        },
+        {
+          "id": "real",
+          "texto": "The Fed fights over a quarter point. Your bank charges twelve."
+        },
+        {
+          "id": "math",
+          "texto": "On a five thousand dollar balance, that's about nine hundred eighty-five dollars a year."
+        },
+        {
+          "id": "cta",
+          "texto": "So who really charges you that nineteen point seven: the Fed, or your bank?"
+        }
+      ]
+    },
+    {
+      "id": "contraste",
+      "nombre": "contraste (Fed contra banco)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Zero point two five percent. That's what the Fed is fighting about."
+        },
+        {
+          "id": "vote",
+          "texto": "This week it held at three point seven five to four percent, ten votes to two."
+        },
+        {
+          "id": "two",
+          "texto": "The two wanted another hike, after September's."
+        },
+        {
+          "id": "card",
+          "texto": "Now look at your credit card: nineteen point seven percent on average."
+        },
+        {
+          "id": "nobody",
+          "texto": "But here's the twist."
+        },
+        {
+          "id": "margin",
+          "texto": "Only seven of that is prime. The other twelve is your bank's markup."
+        },
+        {
+          "id": "small",
+          "texto": "September's hike moved card rates just zero point one two percent."
+        },
+        {
+          "id": "math",
+          "texto": "Five thousand dollars on a card costs about nine hundred eighty-five a year."
+        },
+        {
+          "id": "cta",
+          "texto": "So are you watching the Fed, or your card? Because a quarter point is not the problem."
+        }
+      ]
+    },
+    {
+      "id": "error",
+      "nombre": "error común",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Waiting for the Fed to cut so your card gets cheaper? Two officials just voted to raise."
+        },
+        {
+          "id": "held",
+          "texto": "The Fed held at three point seven five to four percent, after a hike in September."
+        },
+        {
+          "id": "myth",
+          "texto": "Most people think the Fed sets their card rate."
+        },
+        {
+          "id": "truth",
+          "texto": "It sets about seven points of it. Your bank adds about twelve more."
+        },
+        {
+          "id": "proof",
+          "texto": "September's hike moved the average card just zero point one two percent."
+        },
+        {
+          "id": "card",
+          "texto": "It now sits at nineteen point seven."
+        },
+        {
+          "id": "math",
+          "texto": "That's about nine hundred eighty-five dollars a year on a five thousand dollar balance."
+        },
+        {
+          "id": "cta",
+          "texto": "So are you still waiting for a cut, or paying it down?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Nineteen point seven percent. That's what your credit card charges, and the Fed may push it higher."
+    },
+    {
+      "id": "g2",
+      "texto": "Two Fed officials just voted to raise rates again."
+    },
+    {
+      "id": "g3",
+      "texto": "Your bank charges you twelve points. The Fed is fighting over a quarter."
+    },
+    {
+      "id": "g4",
+      "texto": "Nine hundred eighty-five dollars a year. That's the real cost of the Fed's fight on a normal card balance."
+    }
+  ],
+  "juicio": {
+    "nadie": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Una idea: tu tarjeta la pone el banco, no la Fed. Abre con la cifra personal (19.7%) y el giro (+0.12% tras la subida) desmonta lo esperado. Al límite de largo (110)."
+    },
+    "contraste": {
+      "una_idea": 5,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Imagen limpia (¼ contra 12), pero el gancho '0.25%' es abstracto y no le habla al espectador; la cifra personal llega a los 8 s."
+    },
+    "error": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Buen ángulo contra el mito, pero el CTA 'paying it down' roza consejo personalizado y mezcla espera del recorte con deuda."
+    },
+    "nadie+g1": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Adelanta 'la Fed puede subirla', pero alarga a 114 y pisa la frase 'vote'."
+    },
+    "nadie+g2": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Gancho de noticia, no personal: el espectador aún no sabe por qué le importa. Rompe el bucle."
+    },
+    "nadie+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Regala el giro (12 puntos) en el segundo 0 y la frase 'real' queda repetida."
+    },
+    "nadie+g4": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Cifra fuerte pero adelanta el cálculo final; 116 palabras."
+    }
+  }
+}

@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "terminal.src",
+  "origen": "pexels",
+  "titulo": "pexels:6406033",
+  "autor": "Pavel Danilyuk",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/person-with-a-pdq-machine-6406033/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "washington.src",
+  "origen": "pexels",
+  "titulo": "pexels:32160297",
+  "autor": "Josh Hild",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/seattle-ferris-wheel-and-downtown-skyline-32160297/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "calc.src",
+  "origen": "pexels",
+  "titulo": "pexels:6964001",
+  "autor": "Mikhail Nilov",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-computing-using-a-calculator-6964001/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "banco.src",
+  "origen": "pexels",
+  "titulo": "pexels:7065827",
+  "autor": "Laura Tancredi",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/video-of-buildings-7065827/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "online.src",
+  "origen": "pexels",
+  "titulo": "pexels:6633341",
+  "autor": "Cup of  Couple",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-close-up-video-of-a-person-typing-on-a-laptop-6633341/",
+  "desde": 0.0
+ }
+]

@@ -1,0 +1,521 @@
+{
+  "ref": "fed-vs-card",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "Nineteen point seven percent. That's what the average credit card charges you today."
+    },
+    {
+      "id": "vote",
+      "texto": "This week the Fed held rates, but two officials voted to raise them again."
+    },
+    {
+      "id": "why",
+      "texto": "Inflation remains elevated. And in September, they already hiked."
+    },
+    {
+      "id": "nobody",
+      "texto": "Here's the part nobody tells you."
+    },
+    {
+      "id": "small",
+      "texto": "After that hike, the average card rate rose just zero point one two percent."
+    },
+    {
+      "id": "margin",
+      "texto": "Your rate is prime, seven percent, plus a markup your bank picks: about twelve points."
+    },
+    {
+      "id": "real",
+      "texto": "The Fed fights over a quarter point. Your bank charges twelve."
+    },
+    {
+      "id": "math",
+      "texto": "On a five thousand dollar balance, that's about nine hundred eighty-five dollars a year."
+    },
+    {
+      "id": "cta",
+      "texto": "So who really charges you that nineteen point seven: the Fed, or your bank?"
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "cifras": [
+    {
+      "dato": "Average credit card APR 19.70% (Bankrate weekly, 2026-10-21); +0.12% in the month after the Sep 16 hike; prime rate 7%; issuer markup often 12-13 percentage points",
+      "fuente": "https://www.kctv5.com/bankrate-article/2026/10/14/current-credit-card-interest-rates/"
+    },
+    {
+      "dato": "Oct 28 2026: FOMC maintained target range at 3-3/4 to 4 percent, 10-2 vote; Cook and Hammack preferred to raise by 1/4 point; 'Inflation remains elevated'",
+      "fuente": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm"
+    },
+    {
+      "dato": "Sep 16 2026: FOMC raised target range by 1/4 point to 3-3/4 to 4 percent",
+      "fuente": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm"
+    },
+    {
+      "dato": "$5,000 x 19.7% APR = $985 a year in interest (own calculation, illustrative, before compounding)",
+      "fuente": "https://www.kctv5.com/bankrate-article/2026/10/14/current-credit-card-interest-rates/"
+    }
+  ],
+  "adn": {
+    "hook_type": "contrast",
+    "story_type": "news_explainer",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "publicacion": {
+    "titulo": "Your card charges 19.7%. Is that the Fed's fault?",
+    "descripcion": "The Fed held rates at 3.75%-4% on Oct 28, 2026, and two officials voted to hike again. But after September's hike, the average credit card rate rose just 0.12%. Your APR is the prime rate (7%) plus a markup your bank picks, often 12-13 points. Interest example illustrative (APR x balance, before compounding). Sources: Federal Reserve FOMC statements (Sep 16 and Oct 28, 2026), Bankrate credit card rates (Oct 21, 2026). Not financial advice.",
+    "tags": [
+      "interest rates",
+      "federal reserve",
+      "credit card interest",
+      "fed rate decision",
+      "personal finance"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#interestrates",
+      "#federalreserve",
+      "#creditcard",
+      "#personalfinance"
+    ]
+  },
+  "aviso": {
+    "lineas": [
+      "Card APR: Bankrate avg (10/21/2026) · interest illustrative: APR × balance",
+      "Sources: Federal Reserve FOMC (Sep 16 & Oct 28, 2026), Bankrate · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "10",
+        "10"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "2",
+    "10"
+  ],
+  "calientes": [
+    "fed",
+    "held",
+    "two",
+    "raise",
+    "elevated",
+    "september",
+    "nobody",
+    "zero",
+    "prime",
+    "markup",
+    "twelve",
+    "quarter",
+    "thousand",
+    "eighty-five"
+  ],
+  "musica": {
+    "oscuro": [
+      "5",
+      "5"
+    ],
+    "pista": {
+      "commons": "File:Kevin MacLeod - The Rule.ogg",
+      "desde": 0
+    }
+  },
+  "golpes": [
+    "0:percent",
+    "2:raise",
+    "5:nobody",
+    "6:percent",
+    "9:twelve",
+    "10:eighty-five"
+  ],
+  "sonidos": [
+    {
+      "sfx": "caja",
+      "en": "0:percent"
+    },
+    {
+      "sfx": "sello",
+      "en": "2:held"
+    },
+    {
+      "sfx": "pagina",
+      "en": "3"
+    },
+    {
+      "sfx": "ding",
+      "en": "6:percent"
+    },
+    {
+      "sfx": "monedas",
+      "en": "10:dollars"
+    }
+  ],
+  "clips": {
+    "terminal": {
+      "pexels": 6406033,
+      "desde": 0
+    },
+    "calc": {
+      "pexels": 6964001,
+      "desde": 0
+    },
+    "banco": {
+      "pexels": 7065827,
+      "desde": 0
+    },
+    "online": {
+      "pexels": 6633341,
+      "desde": 0
+    }
+  },
+  "imagenes": {
+    "eccles": {
+      "commons": "File:Eccles Building (26088200676).jpg",
+      "recorte": 0.03
+    },
+    "tarjetas": {
+      "commons": "File:Bunch of credit cards (49860171753).jpg",
+      "recorte": 0.03
+    },
+    "fed2": {
+      "commons": "File:EA 091807 EC 1268 (26114164095).jpg",
+      "recorte": 0.03
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "terminal",
+      "mov": "izq",
+      "kicker": {
+        "texto": "Average credit card rate",
+        "en": "0-0.4"
+      },
+      "titulo": {
+        "texto": "19.7%",
+        "en": "0:nineteen"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "1:average",
+      "img": "tarjetas",
+      "mov": "push",
+      "kicker": {
+        "texto": "What your card charges · today",
+        "en": "1:average"
+      },
+      "titulo": {
+        "texto": "19.7% APR",
+        "en": "1:charges"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "2",
+      "mov": "push",
+      "kicker": {
+        "texto": "This week · Oct 28",
+        "en": "2"
+      },
+      "titulo": {
+        "texto": "The Fed held",
+        "en": "2:held"
+      },
+      "img": "fed2"
+    },
+    {
+      "tipo": "titulo",
+      "en": "2:two",
+      "fondo": "eccles",
+      "lineas": [
+        {
+          "texto": "2 officials",
+          "en": "2:two",
+          "estilo": "big"
+        },
+        {
+          "texto": "voted to *raise*",
+          "en": "2:raise",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "fondo": "eccles",
+      "kicker": {
+        "texto": "FOMC statement",
+        "en": "3"
+      },
+      "lineas": [
+        {
+          "texto": "“Inflation remains",
+          "en": "3:inflation",
+          "estilo": "big"
+        },
+        {
+          "texto": "elevated.”",
+          "en": "3:elevated",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "4:and",
+      "kicker": {
+        "texto": "September 16",
+        "en": "4:september"
+      },
+      "lineas": [
+        {
+          "texto": "+0.25%",
+          "en": "4:september",
+          "estilo": "huge",
+          "color": "red"
+        },
+        {
+          "texto": "already hiked",
+          "en": "4:hiked",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "5",
+      "alarma": true,
+      "kicker": {
+        "texto": "Now",
+        "en": "5"
+      },
+      "lineas": [
+        {
+          "texto": "The part",
+          "en": "5:the"
+        },
+        {
+          "texto": "nobody tells you.",
+          "en": "5:nobody",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "6",
+      "clip": "calc",
+      "mov": "push",
+      "kicker": {
+        "texto": "After September's hike",
+        "en": "6:hike"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "6:just",
+      "kicker": {
+        "texto": "Avg card rate · next month",
+        "en": "6:just"
+      },
+      "lineas": [
+        {
+          "texto": "+0.12%",
+          "en": "6:zero",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "that's it",
+          "en": "6:percent",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "kicker": {
+        "texto": "Your card rate =",
+        "en": "7"
+      },
+      "lineas": [
+        {
+          "texto": "Prime 7%",
+          "en": "7:prime",
+          "estilo": "big"
+        },
+        {
+          "texto": "+ bank markup",
+          "en": "7:markup",
+          "estilo": "mid"
+        },
+        {
+          "texto": "~12 points",
+          "en": "7:twelve",
+          "estilo": "huge",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "8",
+      "kicker": {
+        "texto": "The Fed fights over",
+        "en": "8"
+      },
+      "lineas": [
+        {
+          "texto": "0.25",
+          "en": "8:quarter",
+          "estilo": "huge",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "9:your",
+      "clip": "banco",
+      "mov": "push",
+      "kicker": {
+        "texto": "Your bank charges",
+        "en": "9:your"
+      },
+      "titulo": {
+        "texto": "12 points",
+        "en": "9:twelve"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "online",
+      "mov": "der",
+      "kicker": {
+        "texto": "$5,000 balance at 19.7%",
+        "en": "10:five"
+      }
+    },
+    {
+      "tipo": "contador3d",
+      "prefijo": "$",
+      "en": "10:that's",
+      "valor": 985,
+      "llega": "10:eighty-five",
+      "kicker": {
+        "texto": "Interest per year · illustrative",
+        "en": "10:that's"
+      },
+      "pill": {
+        "texto": "≈ $82 a month",
+        "en": "10:year"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": "tarjetas",
+      "lineas": [
+        {
+          "texto": "So who",
+          "en": "11",
+          "estilo": "big"
+        },
+        {
+          "texto": "*really* charges you?",
+          "en": "11:charges",
+          "estilo": "big"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "11:nineteen",
+      "pregunta": {
+        "texto": "Who really charges you 19.7%?",
+        "en": "11:nineteen"
+      },
+      "a": {
+        "texto": "The Fed",
+        "en": "11:fed"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Your bank",
+        "en": "11:bank"
+      },
+      "botones": [
+        {
+          "texto": "Team Fed",
+          "en": "11:bank$"
+        },
+        {
+          "texto": "Team bank",
+          "en": "11:bank$+0.35"
+        }
+      ],
+      "sub": "drop your verdict ↓"
+    }
+  ],
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:terminal@1",
+        "kicker": "Average credit card rate",
+        "titulo": "*19.7%*",
+        "texto": "And two Fed officials just voted to raise rates again. Here's what actually sets your card's rate."
+      },
+      {
+        "fondo": "img:eccles",
+        "kicker": "Oct 28, 2026",
+        "titulo": "The Fed *held*",
+        "texto": "Target range 3.75%–4%. Vote 10–2: both dissenters wanted another quarter-point hike, after September's."
+      },
+      {
+        "fondo": "clip:calc@2",
+        "kicker": "After September's hike",
+        "titulo": "*+0.12%*",
+        "texto": "That's how much the average card rate rose the following month, per Bankrate."
+      },
+      {
+        "fondo": "img:tarjetas",
+        "kicker": "What's inside your APR",
+        "titulo": "7% + *~12 pts*",
+        "texto": "Prime rate (7%) plus a markup your bank picks, often 12–13 points. The Fed only moves the first part."
+      },
+      {
+        "fondo": "clip:online@2",
+        "kicker": "Illustrative",
+        "titulo": "*$985* a year",
+        "texto": "Interest on a $5,000 balance at 19.7% APR (APR × balance, before compounding)."
+      },
+      {
+        "fondo": "clip:banco@1",
+        "kicker": "Your call",
+        "titulo": "The Fed or *your bank*?",
+        "texto": "Who really charges you that 19.7%? Tell us in the comments."
+      }
+    ],
+    "caption": "The Fed fights over a quarter point. Your bank's markup on your card is about twelve. Here's what really sets your credit card rate.",
+    "historia": {
+      "hasta": "2:again$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}
