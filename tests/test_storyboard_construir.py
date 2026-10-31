@@ -3,18 +3,29 @@
 `validar` es la puerta que un storyboard escrito por un LLM tiene que pasar ANTES del render:
 cada regla aquí es un error que costaría 6 minutos de render (o un vídeo publicado mal).
 """
+
 from __future__ import annotations
+
 import copy
 import os
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video-v2", "motor"))
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video-v2", "motor"
+    ),
+)
 
-import construir as c  # noqa: E402
+import construir as c
 
-W = [{"text": x, "start": i * 0.5, "end": i * 0.5 + 0.4} for i, x in enumerate(
-    "He died with eight million dollars. No big salary. Team skill, or team time?".split())]
+W = [
+    {"text": x, "start": i * 0.5, "end": i * 0.5 + 0.4}
+    for i, x in enumerate(
+        ["He", "died", "with", "eight", "million", "dollars.", "No", "big", "salary.", "Team", "skill,", "or", "team", "time?"]
+    )
+]
 
 BASE = {
     "imagenes": {"foto1": {"commons": "File:X.jpg"}},
@@ -22,10 +33,28 @@ BASE = {
     "cifras": [{"dato": "$8M", "fuente": "https://example.org"}],
     "subtitulos": ["1", "1"],
     "escenas": [
-        {"tipo": "foto", "en": "0", "img": "foto1", "kicker": {"texto": "Eight million", "en": "0:eight"}},
-        {"tipo": "lista", "en": "1", "icono": "x", "items": [{"texto": "No big salary", "en": "1"}]},
-        {"tipo": "cta", "en": "2", "a": {"texto": "Skill", "en": "2:skill"}, "b": {"texto": "Time", "en": "2:time"},
-         "botones": [{"texto": "Team skill", "en": "2:team"}, {"texto": "Team time", "en": "2:team#2"}]},
+        {
+            "tipo": "foto",
+            "en": "0",
+            "img": "foto1",
+            "kicker": {"texto": "Eight million", "en": "0:eight"},
+        },
+        {
+            "tipo": "lista",
+            "en": "1",
+            "icono": "x",
+            "items": [{"texto": "No big salary", "en": "1"}],
+        },
+        {
+            "tipo": "cta",
+            "en": "2",
+            "a": {"texto": "Skill", "en": "2:skill"},
+            "b": {"texto": "Time", "en": "2:time"},
+            "botones": [
+                {"texto": "Team skill", "en": "2:team"},
+                {"texto": "Team time", "en": "2:team#2"},
+            ],
+        },
     ],
 }
 
@@ -41,15 +70,18 @@ class ValidarTest(unittest.TestCase):
         self.assertEqual(c.validar(sb(), W), [])
 
     def test_tipo_desconocido(self):
-        d = sb(); d["escenas"][1]["tipo"] = "carrusel"
+        d = sb()
+        d["escenas"][1]["tipo"] = "carrusel"
         self.assertTrue(any("no existe" in e for e in c.validar(d, W)))
 
     def test_imagen_no_declarada(self):
-        d = sb(); d["escenas"][0]["img"] = "otra"
+        d = sb()
+        d["escenas"][0]["img"] = "otra"
         self.assertTrue(any("'otra' no declarada" in e for e in c.validar(d, W)))
 
     def test_escenas_fuera_de_orden(self):
-        d = sb(); d["escenas"][1]["en"] = "0"          # empata con la escena 0
+        d = sb()
+        d["escenas"][1]["en"] = "0"  # empata con la escena 0
         self.assertTrue(any("antes o a la vez" in e for e in c.validar(d, W)))
 
     def test_cifra_sin_fuente_y_sin_aviso(self):
@@ -60,12 +92,20 @@ class ValidarTest(unittest.TestCase):
 
     def test_un_solo_contador3d(self):
         d = sb()
-        d["escenas"][1:1] = [{"tipo": "contador3d", "en": "0:million", "valor": 1, "llega": "0:dollars"},
-                             {"tipo": "contador3d", "en": "0:dollars", "valor": 1, "llega": "0:dollars$"}]
+        d["escenas"][1:1] = [
+            {"tipo": "contador3d", "en": "0:million", "valor": 1, "llega": "0:dollars"},
+            {
+                "tipo": "contador3d",
+                "en": "0:dollars",
+                "valor": 1,
+                "llega": "0:dollars$",
+            },
+        ]
         self.assertTrue(any("más de un `contador3d`" in e for e in c.validar(d, W)))
 
     def test_anclas_sueltas_tambien_se_validan(self):
-        d = sb(); d["aviso"]["ventanas"] = [["0", "9"]]
+        d = sb()
+        d["aviso"]["ventanas"] = [["0", "9"]]
         self.assertTrue(any("solo tiene 3 frases" in e for e in c.validar(d, W)))
 
 
@@ -74,30 +114,47 @@ class PlanTest(unittest.TestCase):
         p = c.plan(sb(), W)
         e = p["escenas"]
         self.assertEqual(e[0]["t0"], 0.0)
-        self.assertAlmostEqual(e[1]["t0"], 3.0 - c.PRE)                 # "No" arranca en 3.0
+        self.assertAlmostEqual(e[1]["t0"], 3.0 - c.PRE)  # "No" arranca en 3.0
         for a, b in zip(e, e[1:]):
-            self.assertAlmostEqual(a["t1"], b["t0"] + 0.02)             # solape mínimo, sin huecos
+            self.assertAlmostEqual(a["t1"], b["t0"] + 0.02)  # solape mínimo, sin huecos
         self.assertEqual(e[-1]["t1"], p["D"])
-        self.assertEqual(p["D"], round(W[-1]["end"] + c.COLA_S, 2))      # cola corta por defecto (bucle)
+        self.assertEqual(
+            p["D"], round(W[-1]["end"] + c.COLA_S, 2)
+        )  # cola corta por defecto (bucle)
 
     def test_fotos_subtitulos_y_texto_visible(self):
         p = c.plan(sb(), W)
-        self.assertEqual([f["img"] for f in p["fotos"] if not f["id"].endswith("a")], ["foto1"])
+        self.assertEqual(
+            [f["img"] for f in p["fotos"] if not f["id"].endswith("a")], ["foto1"]
+        )
         self.assertEqual(p["fotos"][0]["opacidad"], 1)
-        self.assertEqual(p["subtitulos"], [6, 8])                       # palabras de la frase 1
-        self.assertIn("salary", p["escenas"][1]["texto_visible"])       # para no duplicar subtítulo
+        self.assertEqual(p["subtitulos"], [6, 8])  # palabras de la frase 1
+        self.assertIn(
+            "salary", p["escenas"][1]["texto_visible"]
+        )  # para no duplicar subtítulo
 
     def test_aviso_de_hueco_estatico(self):
         # CTA con un solo elemento durante una frase larga (el fallo de Grace Groner): aviso
-        W2 = [{"text": f"w{i}", "start": i * 1.0, "end": i * 1.0 + 0.5} for i in range(8)]
+        W2 = [
+            {"text": f"w{i}", "start": i * 1.0, "end": i * 1.0 + 0.5} for i in range(8)
+        ]
         W2[3]["text"], W2[7]["text"] = "w3.", "w7?"
-        d = {"escenas": [{"tipo": "foto", "en": "0", "img": "f"},
-                         {"tipo": "cta", "en": "1", "a": {"texto": "Hold", "en": "1"}, "b": {"texto": "Sell", "en": "1:w7"}}],
-             "imagenes": {"f": {}}}
+        d = {
+            "escenas": [
+                {"tipo": "foto", "en": "0", "img": "f"},
+                {
+                    "tipo": "cta",
+                    "en": "1",
+                    "a": {"texto": "Hold", "en": "1"},
+                    "b": {"texto": "Sell", "en": "1:w7"},
+                },
+            ],
+            "imagenes": {"f": {}},
+        }
         avisos = c.huecos_estaticos(c.plan(d, W2))
         self.assertEqual(len(avisos), 1)
         self.assertIn("escena 1 (cta)", avisos[0])
-        self.assertEqual(c.huecos_estaticos(c.plan(sb(), W)), [])     # el bueno no avisa
+        self.assertEqual(c.huecos_estaticos(c.plan(sb(), W)), [])  # el bueno no avisa
 
     def test_enfasis_y_escape(self):
         self.assertEqual(c.txt("*3* <b>"), '<span class="gold">3</span> &lt;b&gt;')
@@ -107,8 +164,8 @@ class RetencionTest(unittest.TestCase):
     def test_gancho_y_regancho(self):
         p = c.plan(sb(), W)
         av = c.avisos_retencion(p)
-        self.assertTrue(any("foto fija" in a for a in av))                 # foto sin clip
-        self.assertFalse(any("re-gancho" in a for a in av))                # vídeo de 5 s
+        self.assertTrue(any("foto fija" in a for a in av))  # foto sin clip
+        self.assertFalse(any("re-gancho" in a for a in av))  # vídeo de 5 s
         p["fin_voz"] = 30.0
         self.assertTrue(any("sin re-gancho" in a for a in c.avisos_retencion(p)))
         p["escenas"][0]["tipo"] = "titulo"
@@ -119,28 +176,60 @@ class FondoAutoTest(unittest.TestCase):
     """Ninguna escena de texto sobre verde vacío: fondo automático desenfocado del propio proyecto."""
 
     def test_escenas_de_texto_reciben_fondo_desenfocado(self):
-        d = sb(imagenes={"foto1": {"commons": "File:X.jpg"}, "foto2": {"commons": "File:Y.jpg"}}, fondos_nitidos=False)
+        d = sb(
+            imagenes={
+                "foto1": {"commons": "File:X.jpg"},
+                "foto2": {"commons": "File:Y.jpg"},
+            },
+            fondos_nitidos=False,
+        )
         p = c.plan(d, W)
         auto = [f for f in p["fotos"] if f["id"].endswith("a")]
-        self.assertEqual([f["id"] for f in auto], ["ph1a", "ph2a"])          # lista y cta; la foto no
-        self.assertTrue(all(f["opacidad"] == c.OPACIDAD_AUTO and f["archivo"].endswith("-desenfoque") for f in auto))
-        self.assertEqual(auto[0]["img"], "foto2")                         # evita la imagen de la foto vecina
+        self.assertEqual(
+            [f["id"] for f in auto], ["ph1a", "ph2a"]
+        )  # lista y cta; la foto no
+        self.assertTrue(
+            all(
+                f["opacidad"] == c.OPACIDAD_AUTO
+                and f["archivo"].endswith("-desenfoque")
+                for f in auto
+            )
+        )
+        self.assertEqual(auto[0]["img"], "foto2")  # evita la imagen de la foto vecina
         self.assertIn('src="assets/t/foto2-desenfoque.jpg"', c._capa_html(auto[0], 0))
 
     def test_por_defecto_fondo_nitido_con_sombra_local(self):
         """1-oct: luma media 40-46/255 medida -> el fondo de texto es la imagen NÍTIDA a plena
         presencia y la legibilidad la da la sombra local (.scrim) detrás del texto."""
-        d = sb(imagenes={"foto1": {"commons": "File:X.jpg"}, "foto2": {"commons": "File:Y.jpg"}})
+        d = sb(
+            imagenes={
+                "foto1": {"commons": "File:X.jpg"},
+                "foto2": {"commons": "File:Y.jpg"},
+            }
+        )
         p = c.plan(d, W)
         auto = [f for f in p["fotos"] if f["id"].endswith("a")]
-        self.assertTrue(auto and all(f["opacidad"] == c.OPACIDAD_NITIDO and f["archivo"] == f["img"] for f in auto))
+        self.assertTrue(
+            auto
+            and all(
+                f["opacidad"] == c.OPACIDAD_NITIDO and f["archivo"] == f["img"]
+                for f in auto
+            )
+        )
         self.assertIn('class="shade fondo"', c._capa_html(auto[0], 0))
         h = c._html(p)
-        self.assertEqual(h.count('<div class="scrim"></div>'), 2)            # lista y cta; la foto no
+        self.assertEqual(
+            h.count('<div class="scrim"></div>'), 2
+        )  # lista y cta; la foto no
 
     def test_se_puede_desactivar(self):
-        self.assertFalse(any(f["id"].endswith("a") for f in c.plan(sb(fondos_auto=False), W)["fotos"]))
-        d = sb(); d["escenas"][1]["fondo"] = False
+        self.assertFalse(
+            any(
+                f["id"].endswith("a") for f in c.plan(sb(fondos_auto=False), W)["fotos"]
+            )
+        )
+        d = sb()
+        d["escenas"][1]["fondo"] = False
         self.assertNotIn("ph1a", [f["id"] for f in c.plan(d, W)["fotos"]])
 
     def test_no_altera_el_mov_de_las_fotos(self):
@@ -155,28 +244,55 @@ class RealNoGenericoTest(unittest.TestCase):
     def test_ejes_de_la_curva(self):
         self.assertEqual(c.ticks_anios(75, 1935)[0], (0, "1935"))
         self.assertEqual(c.ticks_anios(75, 1935)[-1], (75, "2010"))
-        self.assertEqual([t for _, t in c.ticks_anios(60, None)][:2], ["Yr 0", "Yr 15"])   # sin fecha verificada: relativo
-        self.assertEqual(c.ticks_anios(33, None)[-1], (33, "Yr 33"))                     # el último año siempre visible
-        self.assertEqual((c._compacto(7_200_000), c._compacto(72_000), c._compacto(400)), ("$7.2M", "$72K", "$400"))
+        self.assertEqual(
+            [t for _, t in c.ticks_anios(60, None)][:2], ["Yr 0", "Yr 15"]
+        )  # sin fecha verificada: relativo
+        self.assertEqual(
+            c.ticks_anios(33, None)[-1], (33, "Yr 33")
+        )  # el último año siempre visible
+        self.assertEqual(
+            (c._compacto(7_200_000), c._compacto(72_000), c._compacto(400)),
+            ("$7.2M", "$72K", "$400"),
+        )
 
     def test_curva_con_ejes_y_punto(self):
-        s = {"serie": {"inicial": 180, "tasa": 0.15, "anios": 75, "final": 7_200_000, "desde_anio": 1935}}
+        s = {
+            "serie": {
+                "inicial": 180,
+                "tasa": 0.15,
+                "anios": 75,
+                "final": 7_200_000,
+                "desde_anio": 1935,
+            }
+        }
         h = c.m_curva(s, "s9")
-        self.assertIn(">1935<", h); self.assertIn(">2010<", h); self.assertIn(">$7.2M<", h)
+        self.assertIn(">1935<", h)
+        self.assertIn(">2010<", h)
+        self.assertIn(">$7.2M<", h)
         self.assertIn('id="s9-ph" class="playhead"', h)
         self.assertEqual(s["curva_pts"][-1][2], 7_200_000)
         self.assertEqual(s["curva_pts"][-1][3], 2010)
-        s2 = {"serie": {"mensual": 170, "tasa": 0.1, "anios": 60}, "escalas": [{"texto": "$8M"}]}
+        s2 = {
+            "serie": {"mensual": 170, "tasa": 0.1, "anios": 60},
+            "escalas": [{"texto": "$8M"}],
+        }
         h2 = c.m_curva(s2, "s1")
-        self.assertNotIn('class="grid"', h2)                                   # escala cambiante: sin valores
+        self.assertNotIn('class="grid"', h2)  # escala cambiante: sin valores
         self.assertFalse(s2["curva_valores"])
 
     def test_sin_clip_art(self):
-        self.assertNotIn("burst", c.m_revelacion({"linea1": {"texto": "A"}, "linea2": {"texto": "B"}}, "s1"))
+        self.assertNotIn(
+            "burst",
+            c.m_revelacion({"linea1": {"texto": "A"}, "linea2": {"texto": "B"}}, "s1"),
+        )
         self.assertNotIn("three-layer", c.m_contador3d({"valor": 1}, "s2"))
-        self.assertIn("three-layer", c.m_contador3d({"valor": 1, "monedas3d": True}, "s2"))
-        self.assertNotIn("coins", c.m_tarjetas({"imgs": [], "flujo": {"texto": "x"}}, "s3"))
-        self.assertIn("contador3d", c.AUTO_FONDO)                              # el payoff sobre metraje real
+        self.assertIn(
+            "three-layer", c.m_contador3d({"valor": 1, "monedas3d": True}, "s2")
+        )
+        self.assertNotIn(
+            "coins", c.m_tarjetas({"imgs": [], "flujo": {"texto": "x"}}, "s3")
+        )
+        self.assertIn("contador3d", c.AUTO_FONDO)  # el payoff sobre metraje real
 
 
 class DocumentalTest(unittest.TestCase):
@@ -186,24 +302,48 @@ class DocumentalTest(unittest.TestCase):
         p = c.plan(sb(), W)
         f = p["fotos"][0]
         self.assertTrue(f.get("p25d") and f.get("video"))
-        self.assertEqual(f["src"], f"foto1-2p5d-{f['mov']}-{round((f['t1'] - f['t0']) * 100)}.mp4")
-        self.assertNotIn("clip", f)                                        # no pasa por broll/Pexels
-        self.assertFalse(any(x.get("p25d") for x in p["fotos"] if x["id"].endswith("a")))   # fondos no
+        self.assertEqual(
+            f["src"], f"foto1-2p5d-{f['mov']}-{round((f['t1'] - f['t0']) * 100)}.mp4"
+        )
+        self.assertNotIn("clip", f)  # no pasa por broll/Pexels
+        self.assertFalse(
+            any(x.get("p25d") for x in p["fotos"] if x["id"].endswith("a"))
+        )  # fondos no
 
     def test_documentos_y_desactivar(self):
-        d = sb(); d["imagenes"]["foto1"]["documento"] = True
+        d = sb()
+        d["imagenes"]["foto1"]["documento"] = True
         self.assertFalse(c.plan(d, W)["fotos"][0].get("p25d"))
-        d = sb(); d["escenas"][0]["parallax"] = False
+        d = sb()
+        d["escenas"][0]["parallax"] = False
         self.assertFalse(c.plan(d, W)["fotos"][0].get("p25d"))
         self.assertFalse(c.plan(sb(parallax=False), W)["fotos"][0].get("p25d"))
 
     def test_creditos_de_musica(self):
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        sys.path.insert(
+            0,
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"
+            ),
+        )
         import musica_libre
-        t = musica_libre.texto_creditos([{"titulo": "File:Kevin MacLeod - Hustle.ogg", "autor": "Kevin MacLeod",
-                                          "licencia": "CC BY 3.0", "url_licencia": "https://creativecommons.org/licenses/by/3.0",
-                                          "fuente": "https://commons.wikimedia.org/wiki/File:X"}])
-        self.assertTrue(t.startswith("Music:\n- Kevin MacLeod - Hustle — Kevin MacLeod (incompetech.com) — CC BY 3.0"))
+
+        t = musica_libre.texto_creditos(
+            [
+                {
+                    "titulo": "File:Kevin MacLeod - Hustle.ogg",
+                    "autor": "Kevin MacLeod",
+                    "licencia": "CC BY 3.0",
+                    "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+                    "fuente": "https://commons.wikimedia.org/wiki/File:X",
+                }
+            ]
+        )
+        self.assertTrue(
+            t.startswith(
+                "Music:\n- Kevin MacLeod - Hustle — Kevin MacLeod (incompetech.com) — CC BY 3.0"
+            )
+        )
 
 
 class BrollTest(unittest.TestCase):
@@ -218,11 +358,14 @@ class BrollTest(unittest.TestCase):
 
     def test_valida_clips(self):
         self.assertEqual(c.validar(self._sb(), W), [])
-        d = self._sb(); d["escenas"][0]["clip"] = "nada"
+        d = self._sb()
+        d["escenas"][0]["clip"] = "nada"
         self.assertTrue(any("clip 'nada' no declarado" in e for e in c.validar(d, W)))
-        d = self._sb(); d["escenas"][0]["img"] = "foto1"
+        d = self._sb()
+        d["escenas"][0]["img"] = "foto1"
         self.assertTrue(any("`img` O `clip`" in e for e in c.validar(d, W)))
-        d = self._sb(); d["clips"]["parque"] = {"desde": 1}
+        d = self._sb()
+        d["clips"]["parque"] = {"desde": 1}
         self.assertTrue(any("declara `commons`" in e for e in c.validar(d, W)))
 
     def test_plan_y_html(self):
@@ -231,57 +374,124 @@ class BrollTest(unittest.TestCase):
         self.assertEqual(len(v), 2)
         self.assertEqual(v[0]["desde"], 4.0)
         dur = round((v[0]["t1"] - v[0]["t0"]) * 100)
-        self.assertEqual(v[0]["src"], f"parque-4-{dur}-c.mp4")           # duración exacta + modo color
+        self.assertEqual(
+            v[0]["src"], f"parque-4-{dur}-c.mp4"
+        )  # duración exacta + modo color
         self.assertNotEqual(v[0]["src"], v[1]["src"])
         h = c._capa_html(v[0], 0)
         # el <video> lleva el tiempo; su contenedor NO (lint video_nested_in_timed_element)
         contenedor = h.split("<video")[0]
         self.assertNotIn("data-start", contenedor)
-        self.assertIn('muted playsinline', h)
+        self.assertIn("muted playsinline", h)
         self.assertNotIn("crossorigin", h)
-        self.assertIn(f'id="{v[0]["id"]}-sh" class="clip ph"', h)       # sombra con su propia ventana
+        self.assertIn(
+            f'id="{v[0]["id"]}-sh" class="clip ph"', h
+        )  # sombra con su propia ventana
 
     def test_fondos_automaticos_con_clips_en_movimiento(self):
         """Movimiento en todo el vídeo: con clips, los fondos de texto son clips desenfocados y cada
         reutilización avanza de tramo (nunca el mismo plano dos veces)."""
-        d = sb(clips={"a": {"pexels": 1, "desde": 1}, "b": {"pexels": 2}}, fondos_nitidos=False)
-        d["escenas"].insert(2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]})
+        d = sb(
+            clips={"a": {"pexels": 1, "desde": 1}, "b": {"pexels": 2}},
+            fondos_nitidos=False,
+        )
+        d["escenas"].insert(
+            2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]}
+        )
         p = c.plan(d, W)
         auto = [f for f in p["fotos"] if f["id"].endswith("a")]
-        self.assertTrue(auto and all(f.get("video") and f["fondo_vid"] and f["modo"] == "color" for f in auto))
-        self.assertTrue(all(f["src"].endswith("-cf2.mp4") and f["opacidad"] == c.OPACIDAD_AUTO_CLIP for f in auto))
+        self.assertTrue(
+            auto
+            and all(
+                f.get("video") and f["fondo_vid"] and f["modo"] == "color" for f in auto
+            )
+        )
+        self.assertTrue(
+            all(
+                f["src"].endswith("-cf2.mp4") and f["opacidad"] == c.OPACIDAD_AUTO_CLIP
+                for f in auto
+            )
+        )
         tramos = [(f["clip"], f["desde"]) for f in auto]
-        self.assertEqual(len(tramos), len(set(tramos)))                     # ningún plano repetido
+        self.assertEqual(len(tramos), len(set(tramos)))  # ningún plano repetido
         # sin clips, vuelve a las fotos desenfocadas
-        self.assertTrue(all(f.get("archivo", "").endswith("-desenfoque") for f in c.plan(sb(fondos_nitidos=False), W)["fotos"] if f["id"].endswith("a")))
+        self.assertTrue(
+            all(
+                f.get("archivo", "").endswith("-desenfoque")
+                for f in c.plan(sb(fondos_nitidos=False), W)["fotos"]
+                if f["id"].endswith("a")
+            )
+        )
 
     def test_nitidos_y_los_ruidosos_con_desenfoque_fuerte(self):
-        d = sb(clips={"calma": {"pexels": 1, "_detalle": 5.0}, "teletipo": {"pexels": 2, "_detalle": 18.1}})
-        d["escenas"].insert(2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]})
+        d = sb(
+            clips={
+                "calma": {"pexels": 1, "_detalle": 5.0},
+                "teletipo": {"pexels": 2, "_detalle": 18.1},
+            }
+        )
+        d["escenas"].insert(
+            2, {"tipo": "titulo", "en": "1:salary", "lineas": [{"texto": "Big"}]}
+        )
         auto = {f["clip"]: f for f in c.plan(d, W)["fotos"] if f["id"].endswith("a")}
         self.assertEqual(set(auto), {"calma", "teletipo"})
         self.assertFalse(auto["calma"]["fondo_vid"])
         self.assertTrue(auto["calma"]["src"].endswith("-c.mp4"))
-        self.assertEqual(auto["teletipo"]["fondo_vid"], "fuerte")             # el texto encima se lee
+        self.assertEqual(
+            auto["teletipo"]["fondo_vid"], "fuerte"
+        )  # el texto encima se lee
         self.assertTrue(auto["teletipo"]["src"].endswith("-cf11.mp4"))
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        sys.path.insert(
+            0,
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"
+            ),
+        )
         import broll
+
         self.assertIn("sigma=11", broll.filtro("color", "fuerte"))
         self.assertIn("sigma=3", broll.filtro("color", True))
         self.assertNotIn("gblur", broll.filtro("color", False))
 
+    def test_clip_hdr_se_pasa_a_sdr_antes_del_grado(self):
+        # 30-oct: un clip Pexels HLG (arib-std-b67/bt2020) llegó al render con su etiqueta HDR y
+        # hyperframes pasó TODO el vídeo a captura por screenshot: 0.55 fps, 33 min en vez de 2.
+        sys.path.insert(
+            0,
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"
+            ),
+        )
+        import broll
+
+        self.assertTrue(broll.es_hdr("arib-std-b67"))
+        self.assertTrue(broll.es_hdr("smpte2084"))
+        self.assertFalse(broll.es_hdr("bt709"))
+        self.assertFalse(broll.es_hdr(""))
+        hdr = broll.filtro("color", False, hdr=True)
+        self.assertLess(
+            hdr.index("tonemap"), hdr.index("colorbalance")
+        )  # a SDR antes del grado
+        self.assertNotIn("tonemap", broll.filtro("color", False))
+
     def test_cortes_con_transicion_separados_y_con_whoosh(self):
         p = c.plan(sb(), W)
         self.assertTrue(p["cortes"])
-        self.assertTrue(all(b - a >= c.SEP_CORTES for a, b in zip(p["cortes"], p["cortes"][1:])))
-        self.assertNotIn(0.0, p["cortes"])                                  # el gancho entra sin transición
+        self.assertTrue(
+            all(b - a >= c.SEP_CORTES for a, b in zip(p["cortes"], p["cortes"][1:]))
+        )
+        self.assertNotIn(0.0, p["cortes"])  # el gancho entra sin transición
         h = c._html(p)
-        self.assertEqual(h.count('src="assets/_motor/whoosh.wav"'), len(p["cortes"]))   # sonido = imagen
+        self.assertEqual(
+            h.count('src="assets/_motor/whoosh.wav"'), len(p["cortes"])
+        )  # sonido = imagen
         self.assertIn('<div id="trans"><div id="cam">', h)
 
     def test_duotono_opcional_por_clip_y_filtro(self):
         import broll
-        d = self._sb(); d["clips"]["parque"]["duotono"] = True
+
+        d = self._sb()
+        d["clips"]["parque"]["duotono"] = True
         v = [f for f in c.plan(d, W)["fotos"] if f.get("video")]
         self.assertTrue(all(f["modo"] == "duotono" and "-d" in f["src"] for f in v))
         self.assertIn("colorbalance", broll.filtro("color", False))
@@ -292,70 +502,153 @@ class BrollTest(unittest.TestCase):
 
     def test_lut_1d_es_la_rampa_de_marca(self):
         import numpy as np
-        from duotono import lut_1d, rampa, OSCURO, LUZ
+        from duotono import LUZ, OSCURO, lut_1d, rampa
+
         filas = lut_1d().splitlines()
         self.assertEqual(filas[0], "LUT_1D_SIZE 256")
         rgb = np.array([[float(x) for x in f.split()] for f in filas[3:]]) * 255
-        self.assertTrue(np.allclose(rgb[0], OSCURO, atol=0.01) and np.allclose(rgb[-1], LUZ, atol=0.01))
-        self.assertTrue(np.allclose(rgb[128], rampa(np.array([128 / 255], dtype=np.float32))[0], atol=0.01))
-        estirada = np.array([[float(x) for x in f.split()] for f in lut_1d(bajo=0.2, alto=0.8).splitlines()[3:]])
-        self.assertTrue(np.allclose(estirada[:51], estirada[0]))           # por debajo de `bajo` = negro de marca
+        self.assertTrue(
+            np.allclose(rgb[0], OSCURO, atol=0.01)
+            and np.allclose(rgb[-1], LUZ, atol=0.01)
+        )
+        self.assertTrue(
+            np.allclose(
+                rgb[128], rampa(np.array([128 / 255], dtype=np.float32))[0], atol=0.01
+            )
+        )
+        estirada = np.array(
+            [
+                [float(x) for x in f.split()]
+                for f in lut_1d(bajo=0.2, alto=0.8).splitlines()[3:]
+            ]
+        )
+        self.assertTrue(
+            np.allclose(estirada[:51], estirada[0])
+        )  # por debajo de `bajo` = negro de marca
         with self.assertRaises(ValueError):
             lut_1d(bajo=0.5, alto=0.5)
 
     def test_eleccion_de_archivo(self):
         import broll
-        self.assertEqual(broll.mejor_derivado([{"transcodekey": "480p.vp9.webm", "src": "a"},
-                                               {"transcodekey": "1080p.vp9.webm", "src": "b"}])["src"], "b")
-        self.assertIsNone(broll.mejor_derivado([{"transcodekey": "240p.vp9.webm", "src": "x"}]))
-        fs = [{"file_type": "video/mp4", "width": 2160, "height": 3840, "link": "4k"},
-              {"file_type": "video/mp4", "width": 1080, "height": 1920, "link": "hd"},
-              {"file_type": "video/mp4", "width": 720, "height": 1280, "link": "sd"}]
-        self.assertEqual(broll.mejor_archivo_pexels(fs)["link"], "hd")   # cubre 1920 sin pasarse
+
+        self.assertEqual(
+            broll.mejor_derivado(
+                [
+                    {"transcodekey": "480p.vp9.webm", "src": "a"},
+                    {"transcodekey": "1080p.vp9.webm", "src": "b"},
+                ]
+            )["src"],
+            "b",
+        )
+        self.assertIsNone(
+            broll.mejor_derivado([{"transcodekey": "240p.vp9.webm", "src": "x"}])
+        )
+        fs = [
+            {"file_type": "video/mp4", "width": 2160, "height": 3840, "link": "4k"},
+            {"file_type": "video/mp4", "width": 1080, "height": 1920, "link": "hd"},
+            {"file_type": "video/mp4", "width": 720, "height": 1280, "link": "sd"},
+        ]
+        self.assertEqual(
+            broll.mejor_archivo_pexels(fs)["link"], "hd"
+        )  # cubre 1920 sin pasarse
         self.assertEqual(broll.mejor_archivo_pexels(fs[2:])["link"], "sd")
         self.assertIsNone(broll.mejor_archivo_pexels([]))
 
     def test_ficha_pexels(self):
         """Forma documentada de GET /videos/videos/:id -> ficha de créditos con la licencia de Pexels."""
         import broll
-        v = {"id": 3843454, "width": 1080, "height": 1920, "duration": 12, "url": "https://www.pexels.com/video/x-3843454/",
-             "user": {"name": "Ana", "url": "https://www.pexels.com/@ana"},
-             "video_files": [{"quality": "hd", "file_type": "video/mp4", "width": 1080, "height": 1920,
-                              "link": "https://videos.pexels.com/video-files/3843454/hd.mp4"}]}
+
+        v = {
+            "id": 3843454,
+            "width": 1080,
+            "height": 1920,
+            "duration": 12,
+            "url": "https://www.pexels.com/video/x-3843454/",
+            "user": {"name": "Ana", "url": "https://www.pexels.com/@ana"},
+            "video_files": [
+                {
+                    "quality": "hd",
+                    "file_type": "video/mp4",
+                    "width": 1080,
+                    "height": 1920,
+                    "link": "https://videos.pexels.com/video-files/3843454/hd.mp4",
+                }
+            ],
+        }
         f = broll._ficha_pexels(v)
-        self.assertEqual((f["clase"], f["autor"], f["titulo"]), ("pexels", "Ana", "pexels:3843454"))
+        self.assertEqual(
+            (f["clase"], f["autor"], f["titulo"]), ("pexels", "Ana", "pexels:3843454")
+        )
         self.assertTrue(f["src"].endswith("hd.mp4"))
-        self.assertIn("Footage:\n- pexels:3843454 — Ana — Pexels License", broll.texto_creditos([f]))
+        self.assertIn(
+            "Footage:\n- pexels:3843454 — Ana — Pexels License",
+            broll.texto_creditos([f]),
+        )
 
 
 class SonidoYSerieTest(unittest.TestCase):
     """27-sep: efectos REALES sincronizados con lo que se ve + identidad de serie (sello + logo sonoro)."""
 
     def test_valida_nombres_y_forma(self):
-        self.assertEqual(c.validar(sb(sonidos=[{"sfx": "caja", "en": "0:dollars"}]), W), [])
-        self.assertTrue(any("no está en el catálogo" in e for e in c.validar(sb(clips={"x": {"pexels": 1, "sfx": "trompeta"}}), W)))
-        self.assertTrue(any("sonidos[0]" in e for e in c.validar(sb(sonidos=[{"sfx": "caja"}]), W)))
-        self.assertTrue(any("lleva `dur`" in e for e in c.validar(sb(sonidos=[{"sfx": "reloj", "en": "1"}]), W)))
-        self.assertTrue(any("inexistente" in e.lower() or "dollarz" in e for e in c.validar(sb(sonidos=[{"sfx": "caja", "en": "0:dollarz"}]), W)))
-        self.assertTrue(any("`serie`" in e for e in c.validar(sb(serie={"nombre": "Q"}), W)))
+        self.assertEqual(
+            c.validar(sb(sonidos=[{"sfx": "caja", "en": "0:dollars"}]), W), []
+        )
+        self.assertTrue(
+            any(
+                "no está en el catálogo" in e
+                for e in c.validar(sb(clips={"x": {"pexels": 1, "sfx": "trompeta"}}), W)
+            )
+        )
+        self.assertTrue(
+            any("sonidos[0]" in e for e in c.validar(sb(sonidos=[{"sfx": "caja"}]), W))
+        )
+        self.assertTrue(
+            any(
+                "lleva `dur`" in e
+                for e in c.validar(sb(sonidos=[{"sfx": "reloj", "en": "1"}]), W)
+            )
+        )
+        self.assertTrue(
+            any(
+                "inexistente" in e.lower() or "dollarz" in e
+                for e in c.validar(sb(sonidos=[{"sfx": "caja", "en": "0:dollarz"}]), W)
+            )
+        )
+        self.assertTrue(
+            any("`serie`" in e for e in c.validar(sb(serie={"nombre": "Q"}), W))
+        )
 
     def test_golpe_en_la_palabra_y_ambiente_bajo_el_clip(self):
-        d = sb(clips={"maq": {"pexels": 1, "sfx": "maquina"}, "fondo": {"pexels": 2, "sfx": "reloj"}},
-               sonidos=[{"sfx": "caja", "en": "0:dollars"}, {"sfx": "reloj", "en": "1", "dur": 1.2}])
-        d["escenas"][0].pop("img"); d["escenas"][0]["clip"] = "maq"
+        d = sb(
+            clips={
+                "maq": {"pexels": 1, "sfx": "maquina"},
+                "fondo": {"pexels": 2, "sfx": "reloj"},
+            },
+            sonidos=[
+                {"sfx": "caja", "en": "0:dollars"},
+                {"sfx": "reloj", "en": "1", "dur": 1.2},
+            ],
+        )
+        d["escenas"][0].pop("img")
+        d["escenas"][0]["clip"] = "maq"
         p = c.plan(d, W)
         f0 = p["fotos"][0]
         amb = [u for u in p["sonidos"] if u["sfx"] == "maquina"]
-        self.assertEqual(len(amb), 1)                                        # solo en primer plano, no en fondos
-        self.assertEqual((amb[0]["t"], amb[0]["dur"]), (round(f0["t0"], 3), round(f0["t1"] - f0["t0"], 2)))
+        self.assertEqual(len(amb), 1)  # solo en primer plano, no en fondos
+        self.assertEqual(
+            (amb[0]["t"], amb[0]["dur"]),
+            (round(f0["t0"], 3), round(f0["t1"] - f0["t0"], 2)),
+        )
         self.assertEqual(amb[0]["archivo"], f"maquina-{round(amb[0]['dur'] * 100)}.wav")
         caja = next(u for u in p["sonidos"] if u["sfx"] == "caja")
-        self.assertEqual(caja["t"], W[5]["start"])                           # el transitorio cae EN la palabra
+        self.assertEqual(caja["t"], W[5]["start"])  # el transitorio cae EN la palabra
         self.assertEqual(caja["archivo"], "caja.wav")
-        self.assertEqual(next(u for u in p["sonidos"] if u["sfx"] == "reloj")["dur"], 1.2)
+        self.assertEqual(
+            next(u for u in p["sonidos"] if u["sfx"] == "reloj")["dur"], 1.2
+        )
         h = c._html(p)
         self.assertIn('src="assets/sfx/caja.wav" data-start="2.500"', h)
-        self.assertNotIn("logo.wav", h)                                      # sin serie, sin logo
+        self.assertNotIn("logo.wav", h)  # sin serie, sin logo
 
     def test_sin_sonidos_no_toca_nada(self):
         self.assertEqual(c.plan(sb(), W)["sonidos"], [])
@@ -363,63 +656,140 @@ class SonidoYSerieTest(unittest.TestCase):
     def test_serie_sello_y_logo(self):
         p = c.plan(sb(serie={"nombre": "Quiet Millionaires", "ep": 3}), W)
         self.assertEqual(p["serie"]["texto"], "Quiet Millionaires · EP 3")
-        self.assertTrue(1.6 <= p["serie"]["t1"] <= 3.0)                     # solo el gancho
+        self.assertTrue(1.6 <= p["serie"]["t1"] <= 3.0)  # solo el gancho
         h = c._html(p)
         self.assertIn('id="serie">Quiet Millionaires · EP 3<', h)
         self.assertIn('assets/_motor/logo.wav" data-start="0.100"', h)
 
     def test_arranque_del_golpe(self):
         import numpy as np
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+
+        sys.path.insert(
+            0,
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"
+            ),
+        )
         import sfx_libre
+
         sr = 48000
         x = np.zeros(sr, dtype=np.float32)
-        x[: int(0.2 * sr)] = 0.01 * np.random.default_rng(1).standard_normal(int(0.2 * sr))   # ruido mecánico previo
-        x[int(0.3 * sr): int(0.35 * sr)] = 0.8                                                # el golpe
+        x[: int(0.2 * sr)] = 0.01 * np.random.default_rng(1).standard_normal(
+            int(0.2 * sr)
+        )  # ruido mecánico previo
+        x[int(0.3 * sr) : int(0.35 * sr)] = 0.8  # el golpe
         self.assertAlmostEqual(sfx_libre.arranque(x, sr), 0.29, places=2)
 
 
 class PruebaTest(unittest.TestCase):
     """1-oct: LA PRUEBA — documento real a pantalla completa con la frase (OCR) subrayada."""
-    LIN = [{"texto": "BILLIONS LOST AS STOCKS CRASH", "conf": 0.93, "caja": [35, 272, 1831, 367]},
-           {"texto": "Pantages In Jail Awaits", "conf": 0.95, "caja": [43, 399, 933, 468]}]
+
+    LIN = [
+        {
+            "texto": "BILLIONS LOST AS STOCKS CRASH",
+            "conf": 0.93,
+            "caja": [35, 272, 1831, 367],
+        },
+        {"texto": "Pantages In Jail Awaits", "conf": 0.95, "caja": [43, 399, 933, 468]},
+    ]
 
     def _ocr(self):
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+        sys.path.insert(
+            0,
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"
+            ),
+        )
         import ocr_doc
+
         return ocr_doc
 
     def test_ocr_frase_parcial_errata_y_ausente(self):
         o = self._ocr()
         r = o.buscar(None, "stocks crash", self.LIN)
         self.assertEqual(r["texto"], "BILLIONS LOST AS STOCKS CRASH")
-        self.assertGreater(r["caja"][0], 1000)                               # solo esas palabras, no la línea
+        self.assertGreater(r["caja"][0], 1000)  # solo esas palabras, no la línea
         self.assertEqual(r["caja"][2], 1831)
-        self.assertEqual(o.buscar(None, "Billions lost as stocks crash!", self.LIN)["caja"][0], 35)
-        self.assertGreaterEqual(o.buscar(None, "stocks crsh", self.LIN)["parecido"], 0.8)
+        self.assertEqual(
+            o.buscar(None, "Billions lost as stocks crash!", self.LIN)["caja"][0], 35
+        )
+        self.assertGreaterEqual(
+            o.buscar(None, "stocks crsh", self.LIN)["parecido"], 0.8
+        )
         self.assertIsNone(o.buscar(None, "bitcoin to the moon", self.LIN))
 
     def test_valida(self):
-        ok = sb(pruebas=[{"img": "foto1", "texto": "stocks crash", "en": "0", "marca": "0:dollars"}])
+        ok = sb(
+            pruebas=[
+                {
+                    "img": "foto1",
+                    "texto": "stocks crash",
+                    "en": "0",
+                    "marca": "0:dollars",
+                }
+            ]
+        )
         self.assertEqual(c.validar(ok, W), [])
-        self.assertTrue(any("pruebas[0]" in e for e in c.validar(sb(pruebas=[{"img": "nada", "texto": "x", "en": "0"}]), W)))
-        self.assertTrue(any("dollarz" in e for e in c.validar(sb(pruebas=[{"img": "foto1", "texto": "x", "en": "0", "marca": "0:dollarz"}]), W)))
+        self.assertTrue(
+            any(
+                "pruebas[0]" in e
+                for e in c.validar(
+                    sb(pruebas=[{"img": "nada", "texto": "x", "en": "0"}]), W
+                )
+            )
+        )
+        self.assertTrue(
+            any(
+                "dollarz" in e
+                for e in c.validar(
+                    sb(
+                        pruebas=[
+                            {
+                                "img": "foto1",
+                                "texto": "x",
+                                "en": "0",
+                                "marca": "0:dollarz",
+                            }
+                        ]
+                    ),
+                    W,
+                )
+            )
+        )
 
     def test_encuadre_frase_legible_y_html(self):
-        d = sb(pruebas=[{"img": "foto1", "texto": "stocks crash", "en": "0", "marca": "0:dollars", "hasta": "1",
-                         "_caja_n": [1088 / 1920, 272 / 2541, 1831 / 1920, 367 / 2541], "_aspecto": 2541 / 1920}])
+        d = sb(
+            pruebas=[
+                {
+                    "img": "foto1",
+                    "texto": "stocks crash",
+                    "en": "0",
+                    "marca": "0:dollars",
+                    "hasta": "1",
+                    "_caja_n": [1088 / 1920, 272 / 2541, 1831 / 1920, 367 / 2541],
+                    "_aspecto": 2541 / 1920,
+                }
+            ]
+        )
         pr = c.plan(d, W)["pruebas"][0]
         x, y, w, h = pr["caja"]
-        self.assertTrue(c.PRUEBA_ANCHO_FRASE <= w <= 1060)                   # la frase (+ margen) ocupa el ancho útil
-        self.assertTrue(0 <= x and x + w <= 1080)                            # entera dentro del cuadro
-        self.assertTrue(250 <= y and y + h <= 1150)                         # en la zona de texto (sobre subtítulos)
-        self.assertEqual(pr["marca"], W[5]["start"])                         # subraya EN la palabra
+        self.assertTrue(
+            c.PRUEBA_ANCHO_FRASE <= w <= 1060
+        )  # la frase (+ margen) ocupa el ancho útil
+        self.assertTrue(0 <= x and x + w <= 1080)  # entera dentro del cuadro
+        self.assertTrue(
+            250 <= y and y + h <= 1150
+        )  # en la zona de texto (sobre subtítulos)
+        self.assertEqual(pr["marca"], W[5]["start"])  # subraya EN la palabra
         izq, arr, wd, hd = pr["doc"]
-        self.assertTrue(izq <= 0 and izq + wd >= 1080)                       # sin bordes vacíos a los lados
+        self.assertTrue(izq <= 0 and izq + wd >= 1080)  # sin bordes vacíos a los lados
         html = c._html(c.plan(d, W))
         self.assertIn('class="clip prueba"', html)
         self.assertIn('src="assets/t/foto1.jpg"', html)
-        self.assertIn(f'id="pr0-m" class="marca" style="left:{x}px;top:{y}px;width:{w}px;height:{h}px"', html)
+        self.assertIn(
+            f'id="pr0-m" class="marca" style="left:{x}px;top:{y}px;width:{w}px;height:{h}px"',
+            html,
+        )
 
 
 if __name__ == "__main__":

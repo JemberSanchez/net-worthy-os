@@ -1,0 +1,46 @@
+[
+ {
+  "archivo": "billetes.src",
+  "origen": "pexels",
+  "titulo": "pexels:6326861",
+  "autor": "https://kaboompics.com/",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/man-counting-banknotes-6326861/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "hucha.src",
+  "origen": "pexels",
+  "titulo": "pexels:6282309",
+  "autor": "Monstera Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/video-of-an-ad-campaign-about-profit-6282309/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "carrito.src",
+  "origen": "pexels",
+  "titulo": "pexels:8799885",
+  "autor": "Gayan Prakash",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/time-lapse-video-of-a-person-doing-grocery-8799885/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "tpv.src",
+  "origen": "pexels",
+  "titulo": "pexels:5794444",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-holding-an-electronic-device-5794444/",
+  "desde": 0.0
+ }
+]

@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "hacker.src",
+  "origen": "pexels",
+  "titulo": "pexels:5377696",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/woman-typing-codes-on-a-computer-5377696/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "chart.src",
+  "origen": "pexels",
+  "titulo": "pexels:35417493",
+  "autor": "Jakub Zerdzicki",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/digital-trading-analysis-on-tablet-device-35417493/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "phone.src",
+  "origen": "pexels",
+  "titulo": "pexels:7580285",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/person-using-stock-market-app-7580285/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "padlock.src",
+  "origen": "pexels",
+  "titulo": "pexels:7830154",
+  "autor": "Monstera Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-hinge-attached-on-the-door-7830154/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "server.src",
+  "origen": "pexels",
+  "titulo": "pexels:6091131",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/footage-of-a-shooting-range-6091131/",
+  "desde": 0.0
+ }
+]

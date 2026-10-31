@@ -1,0 +1,46 @@
+[
+ {
+  "archivo": "almacen.src",
+  "origen": "pexels",
+  "titulo": "pexels:4822121",
+  "autor": "cottonbro studio",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-man-is-sitting-at-a-desk-with-a-laptop-4822121/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "servers.src",
+  "origen": "pexels",
+  "titulo": "pexels:6091131",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/footage-of-a-shooting-range-6091131/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "cajas.src",
+  "origen": "pexels",
+  "titulo": "pexels:6994935",
+  "autor": "Kindel Media",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/girl-checking-the-deliveries-and-mails-at-the-front-door-6994935/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "bolsa.src",
+  "origen": "pexels",
+  "titulo": "pexels:7579943",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/video-of-stock-exchange-7579943/",
+  "desde": 0.0
+ }
+]

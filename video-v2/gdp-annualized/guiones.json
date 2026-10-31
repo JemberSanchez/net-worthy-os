@@ -1,0 +1,144 @@
+{
+  "ref": "gdp-annualized",
+  "nota": "Bloque 1.1. Tema de decide 30-oct: 'economy' (score 0.85, 3.º; 'housing market' ya existe como housing-turn). Cifras: BEA GDP advance estimate Q3 2026 (29-oct): PIB real +3.4% a tasa anual, Q2 +2.2%, contribuyen inversión, consumo y gasto público; próxima estimación 25-nov. Tasa trimestral ≈ 1.034^(1/4)-1 = 0.84% (cálculo propio, ilustrativo).",
+  "estructuras": [
+    {
+      "id": "error",
+      "nombre": "error común (la cifra que todos leen mal)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Three point four percent. That's how fast America's economy grew last quarter."
+        },
+        {
+          "id": "up",
+          "texto": "Up from two point two the quarter before."
+        },
+        {
+          "id": "wrong",
+          "texto": "But most people read that number wrong.",
+          "giro": true
+        },
+        {
+          "id": "not",
+          "texto": "The economy did not grow three point four percent in three months."
+        },
+        {
+          "id": "annual",
+          "texto": "That's an annual rate: the pace if the whole year went like this quarter."
+        },
+        {
+          "id": "actual",
+          "texto": "The actual three-month growth? About zero point eight percent."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "first",
+          "texto": "This is only the first estimate. It gets revised on November twenty-fifth."
+        },
+        {
+          "id": "drove",
+          "texto": "What drove it: investment, consumer spending and government spending."
+        },
+        {
+          "id": "cta",
+          "texto": "So is three point four percent a boom, or just one good quarter?"
+        }
+      ]
+    },
+    {
+      "id": "nadie",
+      "nombre": "lo que nadie dice (el titular contra la cuenta)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Zero point eight percent. That's how much the economy really grew in three months."
+        },
+        {
+          "id": "headline",
+          "texto": "But the headline says three point four."
+        },
+        {
+          "id": "both",
+          "texto": "Both numbers are true.",
+          "giro": true
+        },
+        {
+          "id": "annual",
+          "texto": "The government reports growth as an annual rate."
+        },
+        {
+          "id": "pace",
+          "texto": "It takes one quarter and asks: what if the whole year went like this?"
+        },
+        {
+          "id": "q2",
+          "texto": "Last quarter that pace was two point two, so this is a real speed-up."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's what nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "first",
+          "texto": "It's only the first estimate, revised on November twenty-fifth."
+        },
+        {
+          "id": "cta",
+          "texto": "So zero point eight or three point four: which number would you put in the headline?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "The economy grew three point four percent, and almost everyone reads it wrong."
+    },
+    {
+      "id": "g2",
+      "texto": "Three point four percent growth did not happen in three months."
+    },
+    {
+      "id": "g3",
+      "texto": "America's economy just sped up to three point four percent. Or did it?"
+    }
+  ],
+  "juicio": {
+    "error": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Una idea (tasa anual vs. tres meses), titular primero y corrección después: el espectador aprende algo que usará cada trimestre."
+    },
+    "nadie": {
+      "una_idea": 4,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Abrir con 0.8% intriga, pero contradice el titular sin contexto y puede sonar a 'el gobierno miente'."
+    },
+    "error+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 5,
+      "nota": "Anuncia el error en el gancho: bucle abierto inmediato."
+    },
+    "error+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Adelanta la corrección y deja la frase 'not' repetida."
+    },
+    "error+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "'Or did it?' abre bucle pero suena a clickbait."
+    }
+  }
+}

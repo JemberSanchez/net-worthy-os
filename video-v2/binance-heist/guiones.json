@@ -1,0 +1,152 @@
+{
+  "ref": "binance-heist",
+  "nota": "Bloque 1.1. Tema de decide 30-oct: 'binance hack' (score 0.90, ganador). Cifras: TRM Labs 29-oct (USD 6.36B, preparación 36 h, 233.46M XRP entre 20:05 y 20:09 UTC, 18,270 BTC, TraderTraitor), Cointelegraph recap 30-oct (~$6.3B, mayor robo registrado, ~$3B congelados, hot wallets, reembolso total, retiros por etapas desde el domingo 1-nov).",
+  "estructuras": [
+    {
+      "id": "misterio",
+      "nombre": "misterio / revelación (el golpe)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Six point three billion dollars, gone in one night."
+        },
+        {
+          "id": "who",
+          "texto": "This week, hackers drained Binance, the world's biggest crypto exchange."
+        },
+        {
+          "id": "record",
+          "texto": "It's the largest crypto theft on record."
+        },
+        {
+          "id": "slow",
+          "texto": "And they didn't rush.",
+          "giro": true
+        },
+        {
+          "id": "prep",
+          "texto": "Investigators say they prepared for thirty-six hours and rehearsed first."
+        },
+        {
+          "id": "xrp",
+          "texto": "Then, in four minutes, two hundred thirty-three million XRP left."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "hot",
+          "texto": "They didn't crack a vault. They drained hot wallets, kept online for withdrawals."
+        },
+        {
+          "id": "frozen",
+          "texto": "About three billion is frozen, and Binance says it will cover users."
+        },
+        {
+          "id": "iou",
+          "texto": "Until withdrawals reopen, your balance there is an IOU."
+        },
+        {
+          "id": "cta",
+          "texto": "So where would you keep six point three billion: an exchange, or your own wallet?"
+        }
+      ]
+    },
+    {
+      "id": "cuenta",
+      "nombre": "cuenta atrás (minuto a minuto)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Four minutes. That's all it took to empty five Binance wallets."
+        },
+        {
+          "id": "time",
+          "texto": "Thursday, eight oh five p.m. UTC: two hundred thirty-three million XRP leave."
+        },
+        {
+          "id": "btc",
+          "texto": "Fifteen minutes later, eighteen thousand bitcoin follow."
+        },
+        {
+          "id": "total",
+          "texto": "By midnight, about six point three billion dollars is gone.",
+          "giro": true
+        },
+        {
+          "id": "record",
+          "texto": "The largest crypto theft on record."
+        },
+        {
+          "id": "nobody",
+          "texto": "But here's what nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "prep",
+          "texto": "The attackers had prepared for thirty-six hours, and rehearsed on test wallets."
+        },
+        {
+          "id": "hot",
+          "texto": "They hit hot wallets, the ones kept online to pay withdrawals."
+        },
+        {
+          "id": "frozen",
+          "texto": "About three billion is frozen. Binance says users will be covered."
+        },
+        {
+          "id": "cta",
+          "texto": "Four minutes: would you still leave your coins on an exchange, yes or no?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Six point three billion dollars vanished from Binance in one night."
+    },
+    {
+      "id": "g2",
+      "texto": "Investigators blame North Korea for the biggest crypto theft in history."
+    },
+    {
+      "id": "g3",
+      "texto": "Two hundred thirty-three million XRP left Binance in four minutes."
+    }
+  ],
+  "juicio": {
+    "misterio": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 5,
+      "nota": "Golpe en 1 s ($6.3B en una noche), bucle '¿cómo?' con 'they didn't rush', giro de las hot wallets y cierre personal (IOU) que vuelve a la cifra."
+    },
+    "cuenta": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Ritmo de reloj bueno, pero 8:05 p.m. UTC y 18,270 BTC saturan de cifras los primeros 8 s; CTA sí/no menos rico."
+    },
+    "misterio+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Igual de directo que el original y nombra a Binance en el segundo 1; 'vanished' suena a misterio."
+    },
+    "misterio+g2": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Atribución a Corea del Norte en el gancho: sin cifra y rompe el bucle."
+    },
+    "misterio+g3": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Repite la frase 'xrp' y regala la cuenta atrás."
+    }
+  }
+}

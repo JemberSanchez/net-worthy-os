@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "capitol.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Capitol Building Full View.jpg",
+  "autor": "Noclip",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Capitol_Building_Full_View.jpg"
+ },
+ {
+  "archivo": "obra.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Crane on Akihabara Center Place Building construction site (2006-08-19 18.21.29 by OiMax).jpg",
+  "autor": "OiMax",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Crane_on_Akihabara_Center_Place_Building_construction_site_(2006-08-19_18.21.29_by_OiMax).jpg"
+ },
+ {
+  "archivo": "super.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Supermarket (6187061040).jpg",
+  "autor": "Yuya Tamai",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Supermarket_(6187061040).jpg"
+ }
+]

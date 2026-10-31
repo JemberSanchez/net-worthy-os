@@ -1,0 +1,46 @@
+[
+ {
+  "archivo": "port.src",
+  "origen": "pexels",
+  "titulo": "pexels:37656181",
+  "autor": "TwoSix ZeroFive",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/industrial-forklift-moving-shipping-containers-37656181/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "crane.src",
+  "origen": "pexels",
+  "titulo": "pexels:7066709",
+  "autor": "Laura Tancredi",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/drone-footage-of-tower-cranes-7066709/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "grocery.src",
+  "origen": "pexels",
+  "titulo": "pexels:4398957",
+  "autor": "Peggy Anke",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/envelopes-on-a-shopping-cart-4398957/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "screen.src",
+  "origen": "pexels",
+  "titulo": "pexels:8348727",
+  "autor": "Kampus Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/businessman-pointing-at-a-screen-8348727/",
+  "desde": 0.0
+ }
+]

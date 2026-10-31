@@ -1,0 +1,60 @@
+{
+  "production_ref": "gdp-annualized",
+  "hook_type": "myth_bust",
+  "story_type": "common_mistake",
+  "cta_type": "comment",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 34,
+  "blocks": [
+    {
+      "block": "intro",
+      "technique": "foto+clip,titulo",
+      "length_s": 4.24
+    },
+    {
+      "block": "up",
+      "technique": "titulo",
+      "length_s": 2.12
+    },
+    {
+      "block": "wrong",
+      "technique": "foto+clip",
+      "length_s": 2.06
+    },
+    {
+      "block": "not",
+      "technique": "titulo",
+      "length_s": 3.16
+    },
+    {
+      "block": "annual",
+      "technique": "titulo",
+      "length_s": 3.3
+    },
+    {
+      "block": "actual",
+      "technique": "foto+clip,titulo",
+      "length_s": 3.24
+    },
+    {
+      "block": "nobody",
+      "technique": "titulo",
+      "length_s": 2.17
+    },
+    {
+      "block": "first",
+      "technique": "titulo",
+      "length_s": 4.86
+    },
+    {
+      "block": "drove",
+      "technique": "foto",
+      "length_s": 3.35
+    },
+    {
+      "block": "cta",
+      "technique": "titulo,cta",
+      "length_s": 5.28
+    }
+  ]
+}

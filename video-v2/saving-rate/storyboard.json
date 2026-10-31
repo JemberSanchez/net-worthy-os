@@ -1,0 +1,464 @@
+{
+  "ref": "saving-rate",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "Three dollars and eighty cents. That's what Americans saved from every hundred they took home in September."
+    },
+    {
+      "id": "rate",
+      "texto": "The official saving rate: three point eight percent."
+    },
+    {
+      "id": "why",
+      "texto": "So where did the rest go?"
+    },
+    {
+      "id": "spend",
+      "texto": "Spending jumped zero point five percent in one month."
+    },
+    {
+      "id": "income",
+      "texto": "Income? Up just zero point two."
+    },
+    {
+      "id": "gap",
+      "texto": "Spending grew more than twice as fast as paychecks."
+    },
+    {
+      "id": "nobody",
+      "texto": "Here's the part nobody tells you."
+    },
+    {
+      "id": "gdp",
+      "texto": "That spending is part of why the economy looks strong right now."
+    },
+    {
+      "id": "cushion",
+      "texto": "But a strong economy built on a thin cushion is fragile."
+    },
+    {
+      "id": "cta",
+      "texto": "So are you saving more than three dollars and eighty cents of every hundred, or less?"
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "cifras": [
+    {
+      "dato": "September 2026: personal saving rate (saving as % of disposable personal income) 3.8%; personal saving $911.1B; PCE (spending) +0.5% (+$113.1B); personal income +0.2% (+$54.5B); disposable personal income +0.2%",
+      "fuente": "https://www.bea.gov/news/2026/personal-income-and-outlays-september-2026"
+    },
+    {
+      "dato": "$100 x 3.8% = $3.80 saved per $100 of take-home (disposable) income (own illustration)",
+      "fuente": "https://www.bea.gov/news/2026/personal-income-and-outlays-september-2026"
+    },
+    {
+      "dato": "Consumer spending was one of the contributors to Q3 2026 real GDP growth",
+      "fuente": "https://www.bea.gov/news/2026/gdp-advance-estimate-3rd-quarter-2026"
+    }
+  ],
+  "adn": {
+    "hook_type": "personal_number",
+    "story_type": "data_question",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "publicacion": {
+    "titulo": "Americans saved $3.80 of every $100 in September. Where did the rest go?",
+    "descripcion": "The US personal saving rate was 3.8% of disposable income in September 2026: about $3.80 of every $100 people took home. Spending rose 0.5% in the month, while income rose just 0.2%. That spending is part of why the economy looks strong, but growth built on a thin savings cushion is fragile. Source: U.S. Bureau of Economic Analysis, Personal Income and Outlays, September 2026; GDP Q3 2026 advance estimate. $3.80 per $100 is our own illustration of the 3.8% rate. Not financial advice.",
+    "tags": [
+      "saving rate",
+      "personal finance",
+      "us economy",
+      "consumer spending",
+      "savings",
+      "money tips"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#savings",
+      "#personalfinance",
+      "#economy",
+      "#money"
+    ]
+  },
+  "aviso": {
+    "lineas": [
+      "Personal Income and Outlays, September 2026: BEA",
+      "$3.80 per $100 = 3.8% saving rate, own illustration · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "2",
+        "2"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "1",
+    "10"
+  ],
+  "calientes": [
+    "saved",
+    "hundred",
+    "official",
+    "rest",
+    "jumped",
+    "income",
+    "just",
+    "twice",
+    "paychecks",
+    "nobody",
+    "strong",
+    "thin",
+    "cushion",
+    "fragile"
+  ],
+  "musica": {
+    "oscuro": [
+      "8",
+      "8"
+    ],
+    "pista": {
+      "commons": "File:Kevin MacLeod - Winter Reflections.ogg",
+      "desde": 0
+    }
+  },
+  "golpes": [
+    "0:cents",
+    "3:rest",
+    "6:two",
+    "8:nobody",
+    "10:fragile"
+  ],
+  "sonidos": [
+    {
+      "sfx": "monedas",
+      "en": "0:cents"
+    },
+    {
+      "sfx": "pagina",
+      "en": "2"
+    },
+    {
+      "sfx": "caja",
+      "en": "4:jumped"
+    },
+    {
+      "sfx": "ding",
+      "en": "7:twice"
+    },
+    {
+      "sfx": "latido",
+      "en": "10:fragile",
+      "dur": 1.2
+    }
+  ],
+  "clips": {
+    "billetes": {
+      "pexels": 6326861,
+      "desde": 0
+    },
+    "hucha": {
+      "pexels": 6282309,
+      "desde": 0
+    },
+    "carrito": {
+      "pexels": 8799885,
+      "desde": 0
+    },
+    "tpv": {
+      "pexels": 5794444,
+      "desde": 0
+    }
+  },
+  "imagenes": {
+    "jar": {
+      "commons": "File:-finance -wealth -savings -security -coin.jpg",
+      "recorte": 0.03
+    },
+    "super70": {
+      "commons": "File:1970sgrocerystore.jpg",
+      "recorte": 0.03
+    },
+    "tokyo": {
+      "commons": "File:Shopping cart in Tokyo area - June 2020.jpeg",
+      "recorte": 0.03
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "billetes",
+      "mov": "izq",
+      "kicker": {
+        "texto": "Saved from every $100",
+        "en": "0-0.4"
+      },
+      "titulo": {
+        "texto": "$3.80",
+        "en": "0:three"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "1",
+      "clip": "hucha",
+      "mov": "push",
+      "kicker": {
+        "texto": "Americans · September",
+        "en": "1:americans"
+      },
+      "titulo": {
+        "texto": "of every *$100*",
+        "en": "1:hundred"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "fondo": "jar",
+      "kicker": {
+        "texto": "Official saving rate · BEA",
+        "en": "2"
+      },
+      "lineas": [
+        {
+          "texto": "3.8%",
+          "en": "2:three",
+          "estilo": "huge",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "fondo": "super70",
+      "lineas": [
+        {
+          "texto": "So where did",
+          "en": "3",
+          "estilo": "big"
+        },
+        {
+          "texto": "the *rest* go?",
+          "en": "3:rest",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "4",
+      "clip": "carrito",
+      "mov": "push",
+      "kicker": {
+        "texto": "Spending · one month",
+        "en": "4"
+      },
+      "titulo": {
+        "texto": "+0.5%",
+        "en": "4:zero"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "5",
+      "lineas": [
+        {
+          "texto": "Income",
+          "en": "5",
+          "estilo": "big"
+        },
+        {
+          "texto": "+0.2%",
+          "en": "6:zero",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "kicker": {
+        "texto": "Spending grew",
+        "en": "7"
+      },
+      "fondo": {
+        "clip": "tpv",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "2×+",
+          "en": "7:twice",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "as fast as paychecks",
+          "en": "7:paychecks",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "8",
+      "alarma": true,
+      "kicker": {
+        "texto": "Now",
+        "en": "8"
+      },
+      "lineas": [
+        {
+          "texto": "The part",
+          "en": "8:the"
+        },
+        {
+          "texto": "nobody tells you.",
+          "en": "8:nobody",
+          "color": "red"
+        }
+      ],
+      "fondo_opacidad": 0.35
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "img": "tokyo",
+      "mov": "der",
+      "kicker": {
+        "texto": "That spending is why",
+        "en": "9"
+      },
+      "titulo": {
+        "texto": "The economy *looks strong*",
+        "en": "9:looks"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "10",
+      "fondo": {
+        "clip": "hucha",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "Thin cushion",
+          "en": "10:thin",
+          "estilo": "big"
+        },
+        {
+          "texto": "= *fragile*",
+          "en": "10:fragile",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "billetes",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "Are you saving more than",
+          "en": "11:saving",
+          "estilo": "big"
+        },
+        {
+          "texto": "*$3.80* of every $100?",
+          "en": "11:three",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "11:every",
+      "pregunta": {
+        "texto": "More or less than $3.80 per $100?",
+        "en": "11:every"
+      },
+      "a": {
+        "texto": "More",
+        "en": "11:or"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Less",
+        "en": "11:less"
+      },
+      "botones": [
+        {
+          "texto": "Team more",
+          "en": "11:less$"
+        },
+        {
+          "texto": "Team less",
+          "en": "11:less$+0.35"
+        }
+      ],
+      "sub": "drop your answer ↓"
+    }
+  ],
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:billetes@1",
+        "kicker": "Saved from every $100",
+        "titulo": "*$3.80*",
+        "texto": "That's what Americans saved from every $100 they took home in September. Where did the rest go?"
+      },
+      {
+        "fondo": "img:jar",
+        "kicker": "Official saving rate · BEA",
+        "titulo": "*3.8%*",
+        "texto": "Personal saving as a share of disposable income, September 2026."
+      },
+      {
+        "fondo": "clip:carrito@2",
+        "kicker": "In one month",
+        "titulo": "Spending *+0.5%*",
+        "texto": "Consumer spending jumped 0.5% in September, while income rose just 0.2%."
+      },
+      {
+        "fondo": "img:tokyo",
+        "kicker": "The catch",
+        "titulo": "Why the economy *looks strong*",
+        "texto": "Consumer spending was one of the drivers of 3.4% annualized GDP growth in Q3."
+      },
+      {
+        "fondo": "clip:hucha@1",
+        "kicker": "The part nobody tells you",
+        "titulo": "Thin cushion = *fragile*",
+        "texto": "Growth that runs on spending faster than paychecks rise leaves little room for a shock."
+      },
+      {
+        "fondo": "clip:tpv@1",
+        "kicker": "Your call",
+        "titulo": "More or *less* than $3.80?",
+        "texto": "Are you saving more or less than $3.80 of every $100? Tell us in the comments."
+      }
+    ],
+    "caption": "Americans saved $3.80 of every $100 they took home in September, while spending grew more than twice as fast as income. Here's why that matters for the economy, and for you.",
+    "historia": {
+      "hasta": "1:september$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "btc.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:2014 Pure Gold Physical Bitcoin China Mint.jpg",
+  "autor": "Bits86",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:2014_Pure_Gold_Physical_Bitcoin_China_Mint.jpg"
+ },
+ {
+  "archivo": "coldcard.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Coldcard Hardware Cryptocurrency Wallet - Crypto.jpg",
+  "autor": "Tony Webster",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Coldcard_Hardware_Cryptocurrency_Wallet_-_Crypto.jpg"
+ },
+ {
+  "archivo": "rack.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Rear of rack at NERSC data center - closeup.jpg",
+  "autor": "Derrick Coetzee from Berkeley, CA, USA",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rear_of_rack_at_NERSC_data_center_-_closeup.jpg"
+ }
+]

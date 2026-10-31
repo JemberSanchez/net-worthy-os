@@ -1,0 +1,144 @@
+{
+  "ref": "saving-rate",
+  "nota": "Bloque 1.1. Tema de decide 30-oct: 'economy'/'quarter' (consumo = motor del PIB Q3). Cifras: BEA Personal Income and Outlays, September 2026: tasa de ahorro 3.8% de la renta disponible, ahorro $911.1B, gasto (PCE) +0.5% ($113.1B), renta personal +0.2% ($54.5B), renta disponible +0.2%. $100 x 3.8% = $3.80 (cálculo propio).",
+  "estructuras": [
+    {
+      "id": "pregunta",
+      "nombre": "cifra personal + pregunta abierta",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Three dollars and eighty cents. That's what Americans saved from every hundred they took home in September."
+        },
+        {
+          "id": "rate",
+          "texto": "The official saving rate: three point eight percent."
+        },
+        {
+          "id": "why",
+          "texto": "So where did the rest go?",
+          "giro": true
+        },
+        {
+          "id": "spend",
+          "texto": "Spending jumped zero point five percent in one month."
+        },
+        {
+          "id": "income",
+          "texto": "Income? Up just zero point two."
+        },
+        {
+          "id": "gap",
+          "texto": "Spending grew more than twice as fast as paychecks."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "gdp",
+          "texto": "That spending is part of why the economy looks strong right now."
+        },
+        {
+          "id": "cushion",
+          "texto": "But a strong economy built on a thin cushion is fragile."
+        },
+        {
+          "id": "cta",
+          "texto": "So are you saving more than three dollars and eighty cents of every hundred, or less?"
+        }
+      ]
+    },
+    {
+      "id": "contraste",
+      "nombre": "contraste (la economía va bien, el colchón no)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Three point eight percent. The economy is booming, but that's all Americans are saving."
+        },
+        {
+          "id": "rate",
+          "texto": "In September, that was the share of take-home pay they kept, according to official data."
+        },
+        {
+          "id": "spend",
+          "texto": "Spending rose zero point five percent in a month."
+        },
+        {
+          "id": "income",
+          "texto": "Income rose zero point two."
+        },
+        {
+          "id": "twist",
+          "texto": "That gap is the boom.",
+          "giro": true
+        },
+        {
+          "id": "math",
+          "texto": "On every hundred dollars, that's three dollars and eighty cents saved."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "fragile",
+          "texto": "Growth that runs on spending more than you earn can't run forever."
+        },
+        {
+          "id": "cta",
+          "texto": "So is America's economy strong, or just spending its cushion?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Americans saved three dollars and eighty cents of every hundred they took home in September."
+    },
+    {
+      "id": "g2",
+      "texto": "Three point eight percent. That's how much of their paycheck Americans actually save."
+    },
+    {
+      "id": "g3",
+      "texto": "Spending grew more than twice as fast as paychecks in September."
+    }
+  ],
+  "juicio": {
+    "pregunta": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Cifra personal ($3.80 de cada $100) + pregunta '¿a dónde fue el resto?' abre el bucle; CTA pide comparar con uno mismo y vuelve a la 1.ª frase."
+    },
+    "contraste": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "'That gap is the boom' es buen giro, pero el porcentaje abstracto no le habla al espectador y 'booming' exagera."
+    },
+    "pregunta+g1": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Igual al original sin el 'That's what': pierde el golpe de la cifra sola."
+    },
+    "pregunta+g2": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Relleno ('actually') y porcentaje abstracto."
+    },
+    "pregunta+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Regala el giro del gasto en el segundo 0."
+    }
+  }
+}

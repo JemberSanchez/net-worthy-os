@@ -24,6 +24,7 @@ las fotos (LUT 1D de duotono.lut_1d con autocontraste medido en el clip). Si
 el tramo útil es más corto que la escena se hace bucle (-stream_loop). Clave de fotogramas cada
 0,5 s: HyperFrames extrae fotogramas por posición y una GOP larga lo haría lento.
 """
+
 from __future__ import annotations
 
 import json
@@ -36,11 +37,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import omega.config  # noqa: E402,F401 -- loads .env (PEXELS_API_KEY) into os.environ
-import imagenes_libres as il  # noqa: E402
+import imagenes_libres as il
+
+import omega.config  # noqa: F401 -- loads .env (PEXELS_API_KEY) into os.environ
 
 API_PEXELS_V = "https://api.pexels.com/videos"
-DERIVADOS = ("1080p.vp9.webm", "720p.vp9.webm", "1080p.webm", "720p.webm", "480p.vp9.webm", "480p.webm")
+DERIVADOS = (
+    "1080p.vp9.webm",
+    "720p.vp9.webm",
+    "1080p.webm",
+    "720p.webm",
+    "480p.vp9.webm",
+    "480p.webm",
+)
 W, H, FPS = 1080, 1920, 30
 
 
@@ -54,17 +63,30 @@ def mejor_derivado(derivados: list[dict]) -> dict | None:
 def mejor_archivo_pexels(files: list[dict]) -> dict | None:
     """MP4 más pequeño que cubra 1920 de alto (vertical) o, si no hay, el más alto. Nunca 4K de
     más: se reescala igual y solo cuesta disco y tiempo."""
-    mp4 = [f for f in files or [] if f.get("file_type") == "video/mp4" and f.get("height") and f.get("link")]
+    mp4 = [
+        f
+        for f in files or []
+        if f.get("file_type") == "video/mp4" and f.get("height") and f.get("link")
+    ]
     if not mp4:
         return None
     cubren = [f for f in mp4 if min(f["height"], f["width"] * H / W) >= H]
-    return min(cubren, key=lambda f: f["height"]) if cubren else max(mp4, key=lambda f: f["height"])
+    return (
+        min(cubren, key=lambda f: f["height"])
+        if cubren
+        else max(mp4, key=lambda f: f["height"])
+    )
 
 
 # ── búsqueda ────────────────────────────────────────────────────────────────────────────────────
 def _info_videos(params: dict) -> list[dict]:
-    p = {"action": "query", "format": "json", "prop": "videoinfo",
-         "viprop": "url|size|extmetadata|mime|derivatives", **params}
+    p = {
+        "action": "query",
+        "format": "json",
+        "prop": "videoinfo",
+        "viprop": "url|size|extmetadata|mime|derivatives",
+        **params,
+    }
     d = json.loads(il._get(il.API_COMMONS + "?" + urllib.parse.urlencode(p)))
     out = []
     for pg in (d.get("query", {}).get("pages") or {}).values():
@@ -74,18 +96,33 @@ def _info_videos(params: dict) -> list[dict]:
         em = vi.get("extmetadata", {})
         lic = il._limpiar(em.get("LicenseShortName", {}).get("value", ""))
         der = mejor_derivado(vi.get("derivatives"))
-        out.append({"titulo": pg["title"], "ancho": vi.get("width"), "alto": vi.get("height"),
-                    "duracion": round(float(vi.get("duration") or 0), 1),
-                    "licencia": lic, "clase": il.licencia_ok(lic),
-                    "autor": il._limpiar(em.get("Artist", {}).get("value", "")).strip(" ;,") or "Unknown",
-                    "url_licencia": em.get("LicenseUrl", {}).get("value", ""),
-                    "fuente": vi.get("descriptionurl", ""), "src": der["src"] if der else None})
+        out.append(
+            {
+                "titulo": pg["title"],
+                "ancho": vi.get("width"),
+                "alto": vi.get("height"),
+                "duracion": round(float(vi.get("duration") or 0), 1),
+                "licencia": lic,
+                "clase": il.licencia_ok(lic),
+                "autor": il._limpiar(em.get("Artist", {}).get("value", "")).strip(" ;,")
+                or "Unknown",
+                "url_licencia": em.get("LicenseUrl", {}).get("value", ""),
+                "fuente": vi.get("descriptionurl", ""),
+                "src": der["src"] if der else None,
+            }
+        )
     return out
 
 
 def buscar_commons(q: str, n: int = 12) -> list[dict]:
-    res = _info_videos({"generator": "search", "gsrsearch": f"{q} filetype:video",
-                        "gsrnamespace": "6", "gsrlimit": str(n)})
+    res = _info_videos(
+        {
+            "generator": "search",
+            "gsrsearch": f"{q} filetype:video",
+            "gsrnamespace": "6",
+            "gsrlimit": str(n),
+        }
+    )
     return [r for r in res if r["clase"] and r["src"]]
 
 
@@ -94,36 +131,61 @@ def _pexels(ruta: str, params: dict | None = None) -> dict:
     la nube (la cabecera la añade el proxy y la clave nunca entra al contenedor — medido el 25-sep:
     sin variable, la API respondía 200). Sin ninguna de las dos, Pexels responde 401."""
     import urllib.error
+
     clave = os.environ.get("PEXELS_API_KEY")
     q = "?" + urllib.parse.urlencode(params) if params else ""
     try:
-        return json.loads(il._get(f"{API_PEXELS_V}/{ruta}{q}", {"Authorization": clave} if clave else None))
+        return json.loads(
+            il._get(
+                f"{API_PEXELS_V}/{ruta}{q}", {"Authorization": clave} if clave else None
+            )
+        )
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
-            raise SystemExit("Pexels rechaza la petición (sin clave): define PEXELS_API_KEY o el secreto "
-                             "del entorno para api.pexels.com (gratis en pexels.com/api).")
+            raise SystemExit(
+                "Pexels rechaza la petición (sin clave): define PEXELS_API_KEY o el secreto "
+                "del entorno para api.pexels.com (gratis en pexels.com/api)."
+            )
         raise
 
 
 def _ficha_pexels(v: dict) -> dict:
     f = mejor_archivo_pexels(v.get("video_files"))
-    return {"titulo": f"pexels:{v['id']}", "ancho": v.get("width"), "alto": v.get("height"),
-            "duracion": v.get("duration"), "licencia": "Pexels License", "clase": "pexels",
-            "autor": (v.get("user") or {}).get("name") or "Unknown",
-            "url_licencia": "https://www.pexels.com/license/", "fuente": v.get("url", ""),
-            "src": f["link"] if f else None}
+    return {
+        "titulo": f"pexels:{v['id']}",
+        "ancho": v.get("width"),
+        "alto": v.get("height"),
+        "duracion": v.get("duration"),
+        "licencia": "Pexels License",
+        "clase": "pexels",
+        "autor": (v.get("user") or {}).get("name") or "Unknown",
+        "url_licencia": "https://www.pexels.com/license/",
+        "fuente": v.get("url", ""),
+        "src": f["link"] if f else None,
+    }
 
 
 def buscar_pexels(q: str, n: int = 10) -> list[dict]:
-    d = _pexels("search", {"query": q, "per_page": n, "orientation": "portrait", "size": "medium"})
+    d = _pexels(
+        "search",
+        {"query": q, "per_page": n, "orientation": "portrait", "size": "medium"},
+    )
     return [x for x in map(_ficha_pexels, d.get("videos", [])) if x["src"]]
 
 
 # ── descarga + tratamiento ──────────────────────────────────────────────────────────────────────
 def _registrar(carpeta: Path, archivo: str, r: dict, desde: float) -> None:
-    ficha = {"archivo": archivo, "origen": "pexels" if r["clase"] == "pexels" else "wikimedia",
-             "titulo": r["titulo"], "autor": r["autor"], "licencia": r["licencia"], "clase": r["clase"],
-             "url_licencia": r["url_licencia"], "fuente": r["fuente"], "desde": desde}
+    ficha = {
+        "archivo": archivo,
+        "origen": "pexels" if r["clase"] == "pexels" else "wikimedia",
+        "titulo": r["titulo"],
+        "autor": r["autor"],
+        "licencia": r["licencia"],
+        "clase": r["clase"],
+        "url_licencia": r["url_licencia"],
+        "fuente": r["fuente"],
+        "desde": desde,
+    }
     il._registrar(carpeta, ficha)
 
 
@@ -138,11 +200,14 @@ def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
             out[k] = destino
         else:
             faltan[k] = v
-    com = {k: v["commons"] if v["commons"].startswith("File:") else "File:" + v["commons"]
-           for k, v in faltan.items() if v.get("commons")}
+    com = {
+        k: v["commons"] if v["commons"].startswith("File:") else "File:" + v["commons"]
+        for k, v in faltan.items()
+        if v.get("commons")
+    }
     info = {}
     for i in range(0, len(com), 50):
-        for r in _info_videos({"titles": "|".join(list(com.values())[i:i + 50])}):
+        for r in _info_videos({"titles": "|".join(list(com.values())[i : i + 50])}):
             info[il._clave(r["titulo"])] = r
     for k, v in faltan.items():
         if v.get("commons"):
@@ -154,9 +219,13 @@ def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
         else:
             raise SystemExit(f"✗ clip {k!r}: declara `commons` o `pexels`")
         if not r["clase"]:
-            raise SystemExit(f"✗ clip {k!r}: licencia NO admitida ({r['licencia']!r}): {r['titulo']}")
+            raise SystemExit(
+                f"✗ clip {k!r}: licencia NO admitida ({r['licencia']!r}): {r['titulo']}"
+            )
         if not r["src"]:
-            raise SystemExit(f"✗ clip {k!r}: sin archivo descargable (Commons sin transcode / Pexels sin MP4)")
+            raise SystemExit(
+                f"✗ clip {k!r}: sin archivo descargable (Commons sin transcode / Pexels sin MP4)"
+            )
         destino = carpeta / f"{k}.src"
         destino.write_bytes(il._get(r["src"]))
         _registrar(carpeta, destino.name, r, float(v.get("desde", 0)))
@@ -165,8 +234,21 @@ def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
 
 
 def _duracion(ruta: Path) -> float:
-    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(ruta)],
-                       capture_output=True, text=True, check=True)
+    r = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "csv=p=0",
+            str(ruta),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
     return float(r.stdout.strip())
 
 
@@ -177,9 +259,27 @@ def _geometria() -> str:
 def niveles(crudo: Path, desde: float, dur: float) -> tuple[float, float]:
     """Percentiles 1/99 % de luminancia en el tramo usado (autocontraste medido, como en las fotos)."""
     import numpy as np
-    r = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{desde:.3f}", "-t", f"{max(dur, 0.5):.3f}", "-i", str(crudo),
-                        "-vf", "fps=4,scale=180:320:force_original_aspect_ratio=increase,crop=180:320,format=gray",
-                        "-f", "rawvideo", "-"], capture_output=True, check=True)
+
+    r = subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-ss",
+            f"{desde:.3f}",
+            "-t",
+            f"{max(dur, 0.5):.3f}",
+            "-i",
+            str(crudo),
+            "-vf",
+            "fps=4,scale=180:320:force_original_aspect_ratio=increase,crop=180:320,format=gray",
+            "-f",
+            "rawvideo",
+            "-",
+        ],
+        capture_output=True,
+        check=True,
+    )
     y = np.frombuffer(r.stdout, dtype=np.uint8)
     if y.size == 0:
         return 0.0, 1.0
@@ -190,11 +290,13 @@ def niveles(crudo: Path, desde: float, dur: float) -> tuple[float, float]:
 # Grado de marca para metraje MODERNO en color (decisión del usuario 26-sep, comparativa A/B vista):
 # sombras hacia verde-azulado, altas luces hacia dorado, saturación contenida y viñeta. Las fotos de
 # archivo siguen en duotono (casi todas son B/N de 1900-1950: en color quedarían grises).
-GRADO_MARCA = ("eq=contrast=1.08:saturation=0.82:brightness=-0.03,"
-               "colorbalance=rs=-0.06:gs=0.02:bs=0.03:rh=0.06:gh=0.03:bh=-0.07,vignette=PI/4.5")
+GRADO_MARCA = (
+    "eq=contrast=1.08:saturation=0.82:brightness=-0.03,"
+    "colorbalance=rs=-0.06:gs=0.02:bs=0.03:rh=0.06:gh=0.03:bh=-0.07,vignette=PI/4.5"
+)
 # Fondo detrás de texto: desenfoque fuerte (reducir -> desenfocar -> ampliar: igual a la vista y
 # ~10x más rápido que un gblur a 1080x1920).
-DESENFOQUE_FONDO = "scale=540:960,gblur=sigma=3,scale=1080:1920"   # 26-sep: la mitad de desenfoque (más metraje real)
+DESENFOQUE_FONDO = "scale=540:960,gblur=sigma=3,scale=1080:1920"  # 26-sep: la mitad de desenfoque (más metraje real)
 MODOS = ("color", "duotono")
 
 
@@ -203,23 +305,75 @@ MODOS = ("color", "duotono")
 DESENFOQUE_FUERTE = "scale=540:960,gblur=sigma=11,scale=1080:1920"
 
 
-def filtro(modo: str, fondo: bool | str, cube: str | None = None) -> str:
+# HDR (HLG/PQ) -> SDR bt709. Un clip HDR que llega al render hace que hyperframes capture TODO el
+# vídeo por screenshot (30-oct: Pexels HLG, 0.55 fps, 33 min en vez de 2) y además se ve lavado.
+TRANSFER_HDR = ("arib-std-b67", "smpte2084")
+A_SDR = (
+    "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,"
+    "zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+)
+
+
+def es_hdr(transfer: str) -> bool:
+    return transfer in TRANSFER_HDR
+
+
+def _transfer(ruta: Path) -> str:
+    r = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=color_transfer",
+            "-of",
+            "csv=p=0",
+            str(ruta),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return r.stdout.strip()
+
+
+def filtro(
+    modo: str, fondo: bool | str, cube: str | None = None, hdr: bool = False
+) -> str:
     """Cadena -vf de ffmpeg para tratar un clip. Función pura (testeable sin ffmpeg)."""
     if modo not in MODOS:
         raise ValueError(f"modo {modo!r} no existe ({', '.join(MODOS)})")
-    color = GRADO_MARCA if modo == "color" else f"format=gray,format=rgb24,lut1d=file={cube}"
+    color = (
+        GRADO_MARCA
+        if modo == "color"
+        else f"format=gray,format=rgb24,lut1d=file={cube}"
+    )
     blur = DESENFOQUE_FUERTE if fondo == "fuerte" else DESENFOQUE_FONDO
-    return f"{_geometria()},{color}" + (f",{blur}" if fondo else "")
+    return (
+        (f"{A_SDR}," if hdr else "")
+        + f"{_geometria()},{color}"
+        + (f",{blur}" if fondo else "")
+    )
 
 
-def preparar(crudo: Path, destino: Path, desde: float, dur: float, contraste: float = 1.15,
-             modo: str = "color", fondo: bool | str = False) -> dict:
+def preparar(
+    crudo: Path,
+    destino: Path,
+    desde: float,
+    dur: float,
+    contraste: float = 1.15,
+    modo: str = "color",
+    fondo: bool | str = False,
+) -> dict:
     """Crudo -> MP4 1080x1920 sin audio, de `dur` segundos exactos. `modo`: "color" (grado de
     marca, por defecto para metraje moderno) o "duotono" (la misma rampa que las fotos, vía LUT 1D).
     `fondo=True`: además, desenfocado, para ir detrás de texto."""
     from duotono import lut_1d
+
     total = _duracion(crudo)
-    if desde >= total:            # fondos que reutilizan un clip avanzan de tramo: dar la vuelta
+    if desde >= total:  # fondos que reutilizan un clip avanzan de tramo: dar la vuelta
         desde = desde % max(total - 0.5, 0.5)
     util = total - desde
     destino.parent.mkdir(parents=True, exist_ok=True)
@@ -232,26 +386,65 @@ def preparar(crudo: Path, destino: Path, desde: float, dur: float, contraste: fl
             cube = f.name
     try:
         bucle = ["-stream_loop", "-1"] if util < dur else []
-        cmd = ["ffmpeg", "-v", "error", "-y", *bucle, "-ss", f"{desde:.3f}", "-i", str(crudo), "-t", f"{dur:.3f}",
-               "-an", "-vf", filtro(modo, fondo, cube),
-               "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-               "-g", str(FPS // 2), "-movflags", "+faststart", str(destino)]
+        cmd = [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            *bucle,
+            "-ss",
+            f"{desde:.3f}",
+            "-i",
+            str(crudo),
+            "-t",
+            f"{dur:.3f}",
+            "-an",
+            "-vf",
+            filtro(modo, fondo, cube, hdr=es_hdr(_transfer(crudo))),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "20",
+            "-pix_fmt",
+            "yuv420p",
+            "-color_primaries",
+            "bt709",
+            "-color_trc",
+            "bt709",
+            "-colorspace",
+            "bt709",
+            "-g",
+            str(FPS // 2),
+            "-movflags",
+            "+faststart",
+            str(destino),
+        ]
         subprocess.run(cmd, check=True)
     finally:
         if cube:
             os.unlink(cube)
-    return {"duracion": round(_duracion(destino), 2), "bucle": bool(bucle), "niveles": niveles_}
+    return {
+        "duracion": round(_duracion(destino), 2),
+        "bucle": bool(bucle),
+        "niveles": niveles_,
+    }
 
 
 def texto_creditos(fichas: list[dict]) -> str:
     lineas = []
     for f in fichas:
-        lic = f["licencia"] + (f" ({f['url_licencia']})" if f.get("url_licencia") else "")
-        lineas.append(f"- {f['titulo'].removeprefix('File:')} — {f['autor']} — {lic} — {f['fuente']}")
+        lic = f["licencia"] + (
+            f" ({f['url_licencia']})" if f.get("url_licencia") else ""
+        )
+        lineas.append(
+            f"- {f['titulo'].removeprefix('File:')} — {f['autor']} — {lic} — {f['fuente']}"
+        )
     return "Footage:\n" + "\n".join(lineas)
 
 
-BANDA_TEXTO = (250, 1150)   # px de 1920 donde viven los textos de escena (plantilla.tpl)
+BANDA_TEXTO = (250, 1150)  # px de 1920 donde viven los textos de escena (plantilla.tpl)
 
 
 def detalle(crudo: Path, desde: float = 0.0, segundos: float = 8.0) -> float:
@@ -259,13 +452,33 @@ def detalle(crudo: Path, desde: float = 0.0, segundos: float = 8.0) -> float:
     en 270x480. Medido (1-oct): teletipo de bolsa 18,1 (el texto encima no se lee), suelo de
     madera 13,6 y monedas 12,8 (se leen), gasolinera 7,9, reloj 3,1."""
     import numpy as np
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{desde:.2f}", "-i", str(crudo), "-t", f"{segundos:.2f}",
-                          "-vf", "fps=1,scale=270:480:force_original_aspect_ratio=increase,crop=270:480,format=gray",
-                          "-f", "rawvideo", "-"], capture_output=True, check=True).stdout
+
+    raw = subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-ss",
+            f"{desde:.2f}",
+            "-i",
+            str(crudo),
+            "-t",
+            f"{segundos:.2f}",
+            "-vf",
+            "fps=1,scale=270:480:force_original_aspect_ratio=increase,crop=270:480,format=gray",
+            "-f",
+            "rawvideo",
+            "-",
+        ],
+        capture_output=True,
+        check=True,
+    ).stdout
     f = np.frombuffer(raw, np.uint8).reshape(-1, 480, 270).astype(np.float32)
     a, b = (round(x / 4) for x in BANDA_TEXTO)
     f = f[:, a:b, :]
-    return round(float(np.abs(np.diff(f, axis=2)).mean() + np.abs(np.diff(f, axis=1)).mean()), 1)
+    return round(
+        float(np.abs(np.diff(f, axis=2)).mean() + np.abs(np.diff(f, axis=1)).mean()), 1
+    )
 
 
 def main() -> None:
@@ -274,12 +487,19 @@ def main() -> None:
         n = int(a[a.index("--n") + 1]) if "--n" in a else 10
         res = buscar_commons(a[2], n) if a[1] == "commons" else buscar_pexels(a[2], n)
         for r in res:
-            print(f"{r['titulo'][:70]:70} {r['duracion']:>6}s {r['ancho']}x{r['alto']}  {r['licencia']}  {r['autor'][:30]}")
+            print(
+                f"{r['titulo'][:70]:70} {r['duracion']:>6}s {r['ancho']}x{r['alto']}  {r['licencia']}  {r['autor'][:30]}"
+            )
         if not res:
             print("(nada con licencia admitida)")
     elif len(a) == 2 and a[0] == "lote":
         proy = Path(a[1])
-        decl = json.loads((proy / "storyboard.json").read_text(encoding="utf-8")).get("clips") or {}
+        decl = (
+            json.loads((proy / "storyboard.json").read_text(encoding="utf-8")).get(
+                "clips"
+            )
+            or {}
+        )
         for k, p in bajar(decl, proy / "assets" / "clips").items():
             print(f"✓ {k}: {p} ({_duracion(p):.1f}s)")
     else:

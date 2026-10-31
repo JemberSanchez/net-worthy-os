@@ -1,0 +1,145 @@
+{
+  "ref": "aws-profit",
+  "nota": "Bloque 1.1. Tema de decide 30-oct: 'earnings' (alza 1->48; Reddit/Roblox descartados: la caída de Q3 no se pudo verificar). Cifras: Amazon 8-K ex. 99.1 Q3 2026 (29-oct, sec.gov): ventas $201.9B (+12%), AWS $46.0B (+39%, crecimiento más rápido en casi 5 años), beneficio operativo $28.1B, AWS $17.8B, Norteamérica $8.7B, Internacional $1.6B, margen 13.9% récord. 46.0/201.9 = 23%; 17.8/28.1 = 63% (cálculo propio).",
+  "estructuras": [
+    {
+      "id": "contraste",
+      "nombre": "contraste (la tienda contra la nube)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Twenty-three percent of Amazon's sales. Sixty-three percent of its profit."
+        },
+        {
+          "id": "what",
+          "texto": "That's not the store. That's AWS, Amazon's cloud business.",
+          "giro": true
+        },
+        {
+          "id": "q3",
+          "texto": "This quarter Amazon sold two hundred one point nine billion dollars."
+        },
+        {
+          "id": "aws",
+          "texto": "AWS brought in forty-six billion, up thirty-nine percent."
+        },
+        {
+          "id": "fast",
+          "texto": "Its fastest growth in nearly five years.",
+          "giro": true
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "profit",
+          "texto": "Of twenty-eight billion in operating profit, AWS made seventeen point eight."
+        },
+        {
+          "id": "store",
+          "texto": "The whole North American store made eight point seven."
+        },
+        {
+          "id": "rent",
+          "texto": "Amazon is quietly a company that rents out computers."
+        },
+        {
+          "id": "cta",
+          "texto": "So sixty-three percent of the profit: are you buying a store, or a cloud?"
+        }
+      ]
+    },
+    {
+      "id": "error",
+      "nombre": "error común (crees que es una tienda)",
+      "frases": [
+        {
+          "id": "intro",
+          "texto": "Two hundred one point nine billion dollars in sales. That's not where Amazon makes its money."
+        },
+        {
+          "id": "sales",
+          "texto": "That's what it sold last quarter, of everything."
+        },
+        {
+          "id": "profit",
+          "texto": "Operating profit: twenty-eight point one billion, its best margin ever."
+        },
+        {
+          "id": "twist",
+          "texto": "But look where that profit came from.",
+          "giro": true
+        },
+        {
+          "id": "aws",
+          "texto": "Seventeen point eight billion came from AWS, its cloud."
+        },
+        {
+          "id": "share",
+          "texto": "That's sixty-three percent of the profit from twenty-three percent of the sales."
+        },
+        {
+          "id": "nobody",
+          "texto": "Here's the part nobody tells you.",
+          "giro": true
+        },
+        {
+          "id": "growth",
+          "texto": "AWS grew thirty-nine percent, its fastest in nearly five years."
+        },
+        {
+          "id": "cta",
+          "texto": "So is Amazon a store, or a cloud company that also sells you stuff?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Amazon's most profitable product isn't anything you can put in a cart."
+    },
+    {
+      "id": "g2",
+      "texto": "Sixty-three percent of Amazon's profit came from something you never see."
+    },
+    {
+      "id": "g3",
+      "texto": "Seventeen point eight billion dollars of Amazon's profit didn't come from the store."
+    }
+  ],
+  "juicio": {
+    "contraste": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Una idea (la nube paga, la tienda vende) con la paradoja 23% vs 63% en el segundo 0; 'nobody' revela la cifra en dólares."
+    },
+    "error": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Mito claro, pero el gancho con $201.9B es una cifra grande sin contraste; la paradoja llega a los 15 s."
+    },
+    "contraste+g1": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Intriga sin cifra; la paradoja se pierde."
+    },
+    "contraste+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Buen misterio, pero esconde el 23% que hace el contraste."
+    },
+    "contraste+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Cifra en dólares sin escala: menos clara que 23/63."
+    }
+  }
+}

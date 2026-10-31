@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "jar.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:-finance -wealth -savings -security -coin.jpg",
+  "autor": "Free Images",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:-finance_-wealth_-savings_-security_-coin.jpg"
+ },
+ {
+  "archivo": "super70.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:1970sgrocerystore.jpg",
+  "autor": "Debbie Mc",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:1970sgrocerystore.jpg"
+ },
+ {
+  "archivo": "tokyo.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Shopping cart in Tokyo area - June 2020.jpeg",
+  "autor": "Nesnad",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Shopping_cart_in_Tokyo_area_-_June_2020.jpeg"
+ }
+]

@@ -1,0 +1,547 @@
+{
+  "ref": "gdp-annualized",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "The economy grew three point four percent, and almost everyone reads it wrong."
+    },
+    {
+      "id": "up",
+      "texto": "Up from two point two the quarter before."
+    },
+    {
+      "id": "wrong",
+      "texto": "But most people read that number wrong."
+    },
+    {
+      "id": "not",
+      "texto": "The economy did not grow three point four percent in three months."
+    },
+    {
+      "id": "annual",
+      "texto": "That's an annual rate: the pace if the whole year went like this quarter."
+    },
+    {
+      "id": "actual",
+      "texto": "The actual three-month growth? About zero point eight percent."
+    },
+    {
+      "id": "nobody",
+      "texto": "Here's the part nobody tells you."
+    },
+    {
+      "id": "first",
+      "texto": "This is only the first estimate. It gets revised on November twenty-fifth."
+    },
+    {
+      "id": "drove",
+      "texto": "What drove it: investment, consumer spending and government spending."
+    },
+    {
+      "id": "cta",
+      "texto": "So is three point four percent a boom, or just one good quarter?"
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "cifras": [
+    {
+      "dato": "Real GDP increased at an annual rate of 3.4% in Q3 2026 (July-September), advance estimate released Oct 29, 2026; Q2 2026: 2.2%; contributors: investment, consumer spending and government spending, partly offset by lower exports",
+      "fuente": "https://www.bea.gov/news/2026/gdp-advance-estimate-3rd-quarter-2026"
+    },
+    {
+      "dato": "Next GDP release (second estimate): November 25, 2026",
+      "fuente": "https://www.bea.gov/data/gdp/gross-domestic-product"
+    },
+    {
+      "dato": "Quarterly growth implied by a 3.4% annual rate: (1.034)^(1/4) - 1 = 0.84% (own calculation, illustrative)",
+      "fuente": "https://www.bea.gov/news/2026/gdp-advance-estimate-3rd-quarter-2026"
+    }
+  ],
+  "adn": {
+    "hook_type": "myth_bust",
+    "story_type": "common_mistake",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "publicacion": {
+    "titulo": "The economy grew 3.4%... but not in the way you think",
+    "descripcion": "US real GDP grew at a 3.4% annual rate in Q3 2026, up from 2.2% in Q2 (BEA advance estimate, Oct 29, 2026). But that's an annualized pace: the actual three-month growth is about 0.8% (own calculation: 1.034^(1/4) - 1, illustrative). It's also the first estimate; the next one comes Nov 25. Growth came from investment, consumer spending and government spending. Source: U.S. Bureau of Economic Analysis. Not financial advice.",
+    "tags": [
+      "gdp",
+      "us economy",
+      "economic growth",
+      "gdp explained",
+      "annualized rate",
+      "economy news"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#economy",
+      "#gdp",
+      "#finance",
+      "#economics"
+    ]
+  },
+  "aviso": {
+    "lineas": [
+      "Real GDP Q3 2026, advance estimate: BEA (10/29/2026)",
+      "≈0.8% = (1.034)^(1/4) − 1, own calculation · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "6",
+        "6"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "1",
+    "10"
+  ],
+  "calientes": [
+    "wrong",
+    "not",
+    "annual",
+    "whole",
+    "actual",
+    "zero",
+    "eight",
+    "nobody",
+    "first",
+    "revised",
+    "november",
+    "investment",
+    "consumer",
+    "government"
+  ],
+  "musica": {
+    "oscuro": [
+      "7",
+      "7"
+    ],
+    "pista": {
+      "commons": "File:Kevin MacLeod - The Endless.ogg",
+      "desde": 0
+    }
+  },
+  "golpes": [
+    "0:percent",
+    "2:wrong",
+    "3:not",
+    "6:eight",
+    "7:nobody",
+    "9:november"
+  ],
+  "sonidos": [
+    {
+      "sfx": "pagina",
+      "en": "4"
+    },
+    {
+      "sfx": "reloj",
+      "en": "3:three#2",
+      "dur": 1.2,
+      "vol": 0.25
+    },
+    {
+      "sfx": "ding",
+      "en": "6:eight"
+    },
+    {
+      "sfx": "sello",
+      "en": "8:first"
+    },
+    {
+      "sfx": "caja",
+      "en": "10:consumer"
+    }
+  ],
+  "clips": {
+    "port": {
+      "pexels": 37656181,
+      "desde": 0
+    },
+    "crane": {
+      "pexels": 7066709,
+      "desde": 0
+    },
+    "grocery": {
+      "pexels": 4398957,
+      "desde": 0
+    },
+    "screen": {
+      "pexels": 8348727,
+      "desde": 0
+    }
+  },
+  "imagenes": {
+    "capitol": {
+      "commons": "File:Capitol Building Full View.jpg",
+      "recorte": 0.03
+    },
+    "obra": {
+      "commons": "File:Crane on Akihabara Center Place Building construction site (2006-08-19 18.21.29 by OiMax).jpg",
+      "recorte": 0.03
+    },
+    "super": {
+      "commons": "File:Supermarket (6187061040).jpg",
+      "recorte": 0.03
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "port",
+      "mov": "izq",
+      "kicker": {
+        "texto": "US economy · Q3 2026",
+        "en": "0-0.4"
+      },
+      "titulo": {
+        "texto": "+3.4%",
+        "en": "0:three"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "0:almost",
+      "fondo": "super",
+      "lineas": [
+        {
+          "texto": "Almost everyone",
+          "en": "0:almost",
+          "estilo": "big"
+        },
+        {
+          "texto": "reads it *wrong*",
+          "en": "0:wrong",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "1",
+      "kicker": {
+        "texto": "Last quarter",
+        "en": "1"
+      },
+      "lineas": [
+        {
+          "texto": "2.2%",
+          "en": "1:two",
+          "estilo": "big"
+        },
+        {
+          "texto": "→ *3.4%*",
+          "en": "1:quarter",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "2",
+      "clip": "grocery",
+      "mov": "push",
+      "kicker": {
+        "texto": "The common mistake",
+        "en": "2"
+      },
+      "titulo": {
+        "texto": "Most people *misread* it",
+        "en": "2:read"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "kicker": {
+        "texto": "The economy did",
+        "en": "3"
+      },
+      "lineas": [
+        {
+          "texto": "NOT grow 3.4%",
+          "en": "3:not",
+          "estilo": "huge",
+          "color": "red"
+        },
+        {
+          "texto": "in 3 months",
+          "en": "3:months",
+          "estilo": "big"
+        }
+      ],
+      "fondo_opacidad": 0.35
+    },
+    {
+      "tipo": "titulo",
+      "en": "4",
+      "kicker": {
+        "texto": "How BEA reports it",
+        "en": "4"
+      },
+      "lineas": [
+        {
+          "texto": "An *annual* rate",
+          "en": "4:annual",
+          "estilo": "big"
+        },
+        {
+          "texto": "if the whole year",
+          "en": "4:whole",
+          "estilo": "mid"
+        },
+        {
+          "texto": "went like this quarter",
+          "en": "4:quarter",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "5",
+      "clip": "screen",
+      "mov": "push",
+      "kicker": {
+        "texto": "Actual growth in",
+        "en": "5"
+      },
+      "titulo": {
+        "texto": "3 months",
+        "en": "5:three-month"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "kicker": {
+        "texto": "Own calculation · illustrative",
+        "en": "6"
+      },
+      "lineas": [
+        {
+          "texto": "≈ *0.8%*",
+          "en": "6:zero",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "in one quarter",
+          "en": "6:percent",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "alarma": true,
+      "kicker": {
+        "texto": "Now",
+        "en": "7"
+      },
+      "lineas": [
+        {
+          "texto": "The part",
+          "en": "7:the"
+        },
+        {
+          "texto": "nobody tells you.",
+          "en": "7:nobody",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "8",
+      "fondo": {
+        "clip": "crane",
+        "opacidad": 0.5
+      },
+      "kicker": {
+        "texto": "This is only the",
+        "en": "8"
+      },
+      "lineas": [
+        {
+          "texto": "*First* estimate",
+          "en": "8:first",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "9",
+      "kicker": {
+        "texto": "Next revision",
+        "en": "9:revised"
+      },
+      "fondo": {
+        "clip": "screen",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "Nov 25",
+          "en": "9:november",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "second estimate",
+          "en": "9:twenty-fifth",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "img": "obra",
+      "mov": "sube",
+      "kicker": {
+        "texto": "What drove it",
+        "en": "10"
+      },
+      "titulo": {
+        "texto": "Investment",
+        "en": "10:investment"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10:consumer",
+      "img": "super",
+      "mov": "push",
+      "kicker": {
+        "texto": "What drove it",
+        "en": "10:consumer"
+      },
+      "titulo": {
+        "texto": "Consumer spending",
+        "en": "10:consumer"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10:government",
+      "mov": "pull",
+      "kicker": {
+        "texto": "What drove it",
+        "en": "10:government"
+      },
+      "titulo": {
+        "texto": "Government spending",
+        "en": "10:government"
+      },
+      "img": "capitol"
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "port",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "3.4%",
+          "en": "11:three",
+          "estilo": "huge"
+        },
+        {
+          "texto": "a *boom*?",
+          "en": "11:boom",
+          "estilo": "big"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "11:or",
+      "pregunta": {
+        "texto": "Is 3.4% a boom?",
+        "en": "11:or"
+      },
+      "a": {
+        "texto": "A boom",
+        "en": "11:or"
+      },
+      "o": "or",
+      "b": {
+        "texto": "One good quarter",
+        "en": "11:good"
+      },
+      "botones": [
+        {
+          "texto": "Team boom",
+          "en": "11:quarter$"
+        },
+        {
+          "texto": "Team one quarter",
+          "en": "11:quarter$+0.35"
+        }
+      ],
+      "sub": "drop your verdict ↓",
+      "fondo_opacidad": 0.35
+    }
+  ],
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:port@1",
+        "kicker": "US economy · Q3 2026",
+        "titulo": "*+3.4%*",
+        "texto": "That's the headline GDP number from the Bureau of Economic Analysis. Almost everyone reads it wrong."
+      },
+      {
+        "fondo": "img:super",
+        "kicker": "The common mistake",
+        "titulo": "Not in *3 months*",
+        "texto": "3.4% is an annual rate: the pace if the whole year went like this one quarter."
+      },
+      {
+        "fondo": "clip:screen@2",
+        "kicker": "Own calculation · illustrative",
+        "titulo": "*≈0.8%*",
+        "texto": "That's the actual three-month growth implied by a 3.4% annual rate: (1.034)^¼ − 1."
+      },
+      {
+        "fondo": "img:capitol",
+        "kicker": "Only the first estimate",
+        "titulo": "Revised *Nov 25*",
+        "texto": "This was the advance estimate. BEA publishes the second estimate on November 25."
+      },
+      {
+        "fondo": "img:obra",
+        "kicker": "What drove it",
+        "titulo": "*Investment*, spending",
+        "texto": "Investment, consumer spending and government spending, partly offset by lower exports. Q2 was 2.2%."
+      },
+      {
+        "fondo": "clip:grocery@1",
+        "kicker": "Your call",
+        "titulo": "A boom or *one good quarter*?",
+        "texto": "Is 3.4% a boom, or just one good quarter? Tell us in the comments."
+      }
+    ],
+    "caption": "The US economy grew 3.4% last quarter, but not in three months. Here's what an annual rate really means, and why this number will change on November 25.",
+    "historia": {
+      "hasta": "1:before$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}

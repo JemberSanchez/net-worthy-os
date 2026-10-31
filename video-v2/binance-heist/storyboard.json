@@ -1,0 +1,590 @@
+{
+  "ref": "binance-heist",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "Six point three billion dollars, gone in one night."
+    },
+    {
+      "id": "who",
+      "texto": "This week, hackers drained Binance, the world's biggest crypto exchange."
+    },
+    {
+      "id": "record",
+      "texto": "It's the largest crypto theft on record."
+    },
+    {
+      "id": "slow",
+      "texto": "And they didn't rush."
+    },
+    {
+      "id": "prep",
+      "texto": "Investigators say they prepared for thirty-six hours and rehearsed first."
+    },
+    {
+      "id": "xrp",
+      "texto": "Then, in four minutes, two hundred thirty-three million XRP left."
+    },
+    {
+      "id": "nobody",
+      "texto": "Here's the part nobody tells you."
+    },
+    {
+      "id": "hot",
+      "texto": "They didn't crack a vault. They drained hot wallets, kept online for withdrawals."
+    },
+    {
+      "id": "frozen",
+      "texto": "About three billion is frozen, and Binance says it will cover users."
+    },
+    {
+      "id": "iou",
+      "texto": "Until withdrawals reopen, your balance there is an IOU."
+    },
+    {
+      "id": "cta",
+      "texto": "So where would you keep six point three billion: an exchange, or your own wallet?"
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "cifras": [
+    {
+      "dato": "Oct 29 2026: USD 6.36 billion stolen from Binance (TRM onchain count), largest hack in history; preparation began at least 36 hours before; attacker rehearsed the code on test wallets; 233.46 million XRP left five Binance wallets between 20:05 and 20:09 UTC; 18,270 BTC from a hot wallet; attributed to North Korea (TraderTraitor)",
+      "fuente": "https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history"
+    },
+    {
+      "dato": "About $6.3 billion stolen, largest cryptocurrency theft on record; roughly $3 billion frozen by industry partners; attackers targeted hot wallets kept online to process withdrawals; Binance pledged full reimbursement; withdrawals to reopen in stages from Sunday Nov 1",
+      "fuente": "https://cointelegraph.com/news/recap-binances-record-63b-hack-unfolded"
+    }
+  ],
+  "adn": {
+    "hook_type": "number_shock",
+    "story_type": "news_heist",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "publicacion": {
+    "titulo": "$6.3 billion vanished from Binance in one night. Here's how.",
+    "descripcion": "Hackers drained about $6.3 billion from Binance on Oct 29, 2026, the largest crypto theft on record. Investigators at TRM Labs say the attackers prepared for at least 36 hours, rehearsed on test wallets, then moved 233 million XRP in four minutes. They hit hot wallets, the ones kept online to pay withdrawals. About $3 billion is frozen and Binance says users will be covered. Story still developing; figures as of Oct 30, 2026. Sources: TRM Labs (Oct 29, 2026), Cointelegraph (Oct 30, 2026). Not financial advice.",
+    "tags": [
+      "binance hack",
+      "crypto hack",
+      "binance",
+      "crypto exchange",
+      "hot wallet",
+      "bitcoin news"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#binance",
+      "#crypto",
+      "#bitcoin",
+      "#cryptonews"
+    ]
+  },
+  "aviso": {
+    "lineas": [
+      "Figures: TRM Labs (10/29/2026), Cointelegraph (10/30/2026) · story still developing",
+      "Attribution per TRM Labs · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "9",
+        "9"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "1",
+    "10"
+  ],
+  "calientes": [
+    "binance",
+    "largest",
+    "record",
+    "rush",
+    "thirty-six",
+    "four",
+    "minutes",
+    "nobody",
+    "vault",
+    "hot",
+    "online",
+    "frozen",
+    "cover",
+    "iou"
+  ],
+  "musica": {
+    "oscuro": [
+      "6",
+      "6"
+    ],
+    "pista": {
+      "commons": "File:Ghost Dance (MacLeod, Kevin) (ISRC USUAN1100573).oga",
+      "desde": 0
+    }
+  },
+  "golpes": [
+    "0:billion",
+    "2:record",
+    "3:rush",
+    "6:nobody",
+    "8:hot",
+    "10:iou"
+  ],
+  "sonidos": [
+    {
+      "sfx": "latido",
+      "en": "3:rush",
+      "dur": 1.2
+    },
+    {
+      "sfx": "reloj",
+      "en": "5:four",
+      "dur": 1.6,
+      "vol": 0.25
+    },
+    {
+      "sfx": "sello",
+      "en": "9:frozen"
+    },
+    {
+      "sfx": "monedas",
+      "en": "9:cover"
+    },
+    {
+      "sfx": "ding",
+      "en": "10:iou"
+    }
+  ],
+  "clips": {
+    "hacker": {
+      "pexels": 5377696,
+      "desde": 0
+    },
+    "chart": {
+      "pexels": 35417493,
+      "desde": 0
+    },
+    "server": {
+      "pexels": 6091131,
+      "desde": 0
+    },
+    "phone": {
+      "pexels": 7580285,
+      "desde": 0
+    },
+    "padlock": {
+      "pexels": 7830154,
+      "desde": 0
+    }
+  },
+  "imagenes": {
+    "btc": {
+      "commons": "File:2014 Pure Gold Physical Bitcoin China Mint.jpg",
+      "recorte": 0.03
+    },
+    "coldcard": {
+      "commons": "File:Coldcard Hardware Cryptocurrency Wallet - Crypto.jpg",
+      "recorte": 0.03
+    },
+    "rack": {
+      "commons": "File:Rear of rack at NERSC data center - closeup.jpg",
+      "recorte": 0.03
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "hacker",
+      "mov": "izq",
+      "kicker": {
+        "texto": "In one night",
+        "en": "0-0.4"
+      },
+      "titulo": {
+        "texto": "$6.3B",
+        "en": "0:gone"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "1",
+      "clip": "chart",
+      "mov": "push",
+      "kicker": {
+        "texto": "This week · Oct 29",
+        "en": "1"
+      },
+      "titulo": {
+        "texto": "Binance *drained*",
+        "en": "1:drained"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "1:world's",
+      "fondo": "btc",
+      "lineas": [
+        {
+          "texto": "World's biggest",
+          "en": "1:world's",
+          "estilo": "big"
+        },
+        {
+          "texto": "crypto exchange",
+          "en": "1:exchange",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "kicker": {
+        "texto": "TRM Labs · Cointelegraph",
+        "en": "2"
+      },
+      "lineas": [
+        {
+          "texto": "Largest crypto *theft*",
+          "en": "2:largest",
+          "estilo": "big"
+        },
+        {
+          "texto": "on record",
+          "en": "2:record",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "alarma": true,
+      "fondo": {
+        "clip": "server",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "They didn't",
+          "en": "3",
+          "estilo": "big"
+        },
+        {
+          "texto": "*rush.*",
+          "en": "3:rush",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "4",
+      "kicker": {
+        "texto": "Investigators say",
+        "en": "4"
+      },
+      "contador": {
+        "linea": 0,
+        "valor": 36,
+        "en": "4:prepared"
+      },
+      "lineas": [
+        {
+          "texto": "{n} hours",
+          "en": "4:prepared",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "of preparation",
+          "en": "4:hours",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "4:rehearsed",
+      "img": "rack",
+      "mov": "push",
+      "kicker": {
+        "texto": "Then a rehearsal",
+        "en": "4:rehearsed"
+      },
+      "titulo": {
+        "texto": "On test wallets",
+        "en": "4:first"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "5",
+      "kicker": {
+        "texto": "Oct 29 · 20:05 UTC",
+        "en": "5"
+      },
+      "lineas": [
+        {
+          "texto": "4 minutes",
+          "en": "5:four",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "contador3d",
+      "en": "5:two",
+      "valor": 233,
+      "llega": "5:million",
+      "kicker": {
+        "texto": "Million XRP drained",
+        "en": "5:two"
+      },
+      "pill": {
+        "texto": "from five Binance wallets",
+        "en": "5:xrp"
+      },
+      "fondo_opacidad": 0.35
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "alarma": true,
+      "kicker": {
+        "texto": "Now",
+        "en": "6"
+      },
+      "lineas": [
+        {
+          "texto": "The part",
+          "en": "6:the"
+        },
+        {
+          "texto": "nobody tells you.",
+          "en": "6:nobody",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "7",
+      "img": "coldcard",
+      "mov": "push",
+      "kicker": {
+        "texto": "They didn't",
+        "en": "7"
+      },
+      "titulo": {
+        "texto": "Crack a vault",
+        "en": "7:crack"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "clip": "server",
+      "mov": "der",
+      "kicker": {
+        "texto": "They drained",
+        "en": "8"
+      },
+      "titulo": {
+        "texto": "*Hot* wallets",
+        "en": "8:hot"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "8:kept",
+      "fondo": {
+        "clip": "phone",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "Kept online",
+          "en": "8:online",
+          "estilo": "big"
+        },
+        {
+          "texto": "to pay withdrawals",
+          "en": "8:withdrawals",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "9",
+      "kicker": {
+        "texto": "Frozen by industry partners",
+        "en": "9"
+      },
+      "lineas": [
+        {
+          "texto": "~$3B",
+          "en": "9:three",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "frozen",
+          "en": "9:frozen",
+          "estilo": "big"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "9:binance",
+      "img": "btc",
+      "mov": "pull",
+      "kicker": {
+        "texto": "Binance says",
+        "en": "9:binance"
+      },
+      "titulo": {
+        "texto": "Users *covered*",
+        "en": "9:cover"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "padlock",
+      "mov": "push",
+      "kicker": {
+        "texto": "Withdrawals paused",
+        "en": "10"
+      },
+      "titulo": {
+        "texto": "Until they reopen",
+        "en": "10:reopen"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "10:your",
+      "lineas": [
+        {
+          "texto": "Your balance",
+          "en": "10:your",
+          "estilo": "big"
+        },
+        {
+          "texto": "= an *IOU*",
+          "en": "10:iou",
+          "estilo": "huge",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "hacker",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "Where would you keep",
+          "en": "11:where",
+          "estilo": "big"
+        },
+        {
+          "texto": "*$6.3B?*",
+          "en": "11:six",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "11:an",
+      "pregunta": {
+        "texto": "Where would you keep $6.3B?",
+        "en": "11:an"
+      },
+      "a": {
+        "texto": "An exchange",
+        "en": "11:exchange"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Your own wallet",
+        "en": "11:wallet"
+      },
+      "botones": [
+        {
+          "texto": "Team exchange",
+          "en": "11:wallet$"
+        },
+        {
+          "texto": "Team own wallet",
+          "en": "11:wallet$+0.35"
+        }
+      ],
+      "sub": "drop your pick ↓"
+    }
+  ],
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:hacker@1",
+        "kicker": "In one night",
+        "titulo": "*$6.3B* gone",
+        "texto": "Hackers drained Binance, the world's biggest crypto exchange. It's the largest crypto theft on record."
+      },
+      {
+        "fondo": "img:rack",
+        "kicker": "They didn't rush",
+        "titulo": "*36 hours* of prep",
+        "texto": "Investigators at TRM Labs say the attackers prepared for at least 36 hours and rehearsed on test wallets first."
+      },
+      {
+        "fondo": "clip:chart@2",
+        "kicker": "Oct 29 · 20:05–20:09 UTC",
+        "titulo": "*233M XRP* in 4 min",
+        "texto": "Five Binance wallets on the XRP Ledger emptied in four minutes. Bitcoin, Tron, Solana and more followed."
+      },
+      {
+        "fondo": "clip:server@1",
+        "kicker": "Not a vault",
+        "titulo": "*Hot* wallets",
+        "texto": "The attackers hit hot wallets: the ones exchanges keep online to pay withdrawals."
+      },
+      {
+        "fondo": "img:btc",
+        "kicker": "Where it stands",
+        "titulo": "*~$3B* frozen",
+        "texto": "Industry partners froze about $3 billion. Binance says it will cover users and plans to reopen withdrawals in stages."
+      },
+      {
+        "fondo": "clip:padlock@1",
+        "kicker": "Your call",
+        "titulo": "Exchange or *your own wallet*?",
+        "texto": "Where would you keep $6.3 billion? Tell us in the comments."
+      }
+    ],
+    "caption": "$6.3 billion left Binance in one night, after at least 36 hours of preparation. Here's how the largest crypto theft on record happened, and what it means for a balance sitting on an exchange.",
+    "historia": {
+      "hasta": "1:exchange$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}

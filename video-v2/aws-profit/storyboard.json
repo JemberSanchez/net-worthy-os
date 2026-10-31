@@ -1,0 +1,470 @@
+{
+  "ref": "aws-profit",
+  "guion": [
+    {
+      "id": "intro",
+      "texto": "Twenty-three percent of Amazon's sales. Sixty-three percent of its profit."
+    },
+    {
+      "id": "what",
+      "texto": "That's not the store. That's AWS, Amazon's cloud business."
+    },
+    {
+      "id": "q3",
+      "texto": "This quarter Amazon sold two hundred one point nine billion dollars."
+    },
+    {
+      "id": "aws",
+      "texto": "AWS brought in forty-six billion, up thirty-nine percent."
+    },
+    {
+      "id": "fast",
+      "texto": "Its fastest growth in nearly five years."
+    },
+    {
+      "id": "nobody",
+      "texto": "Here's the part nobody tells you."
+    },
+    {
+      "id": "profit",
+      "texto": "Of twenty-eight billion in operating profit, AWS made seventeen point eight."
+    },
+    {
+      "id": "store",
+      "texto": "The whole North American store made eight point seven."
+    },
+    {
+      "id": "rent",
+      "texto": "Amazon is quietly a company that rents out computers."
+    },
+    {
+      "id": "cta",
+      "texto": "So sixty-three percent of the profit: are you buying a store, or a cloud?"
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "cifras": [
+    {
+      "dato": "Amazon Q3 2026 (Oct 29, 2026): net sales up 12% to $201.9B; AWS segment sales up 39% to $46.0B, fastest growth in nearly five years; operating income $28.1B, operating margin 13.9% (highest ever); AWS operating income $17.8B; North America $8.7B; International $1.6B",
+      "fuente": "https://www.sec.gov/Archives/edgar/data/0001018724/000101872426000038/amzn-20260930xex991.htm"
+    },
+    {
+      "dato": "AWS share: 46.0 / 201.9 = 23% of sales; 17.8 / 28.1 = 63% of operating income (own calculation)",
+      "fuente": "https://www.sec.gov/Archives/edgar/data/0001018724/000101872426000038/amzn-20260930xex991.htm"
+    }
+  ],
+  "adn": {
+    "hook_type": "contrast",
+    "story_type": "earnings_explainer",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "publicacion": {
+    "titulo": "23% of Amazon's sales. 63% of its profit. It's not the store.",
+    "descripcion": "Amazon sold $201.9 billion in Q3 2026. AWS, its cloud business, brought in $46.0 billion (+39%, its fastest growth in nearly five years) but made $17.8 billion of the $28.1 billion in operating profit. The whole North American store made $8.7 billion. Shares of sales and profit are our own calculation from the company's figures. Source: Amazon Q3 2026 results, Form 8-K Exhibit 99.1 (Oct 29, 2026). Not financial advice.",
+    "tags": [
+      "amazon earnings",
+      "aws",
+      "amazon stock",
+      "cloud computing",
+      "earnings season",
+      "big tech"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#amazon",
+      "#aws",
+      "#stocks",
+      "#investing"
+    ]
+  },
+  "aviso": {
+    "lineas": [
+      "Amazon Q3 2026 results, Form 8-K Ex. 99.1 (10/29/2026)",
+      "23% and 63% = own calculation (AWS ÷ total) · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "8",
+        "8"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "2",
+    "10"
+  ],
+  "calientes": [
+    "store",
+    "aws",
+    "cloud",
+    "forty-six",
+    "thirty-nine",
+    "fastest",
+    "nobody",
+    "twenty-eight",
+    "seventeen",
+    "eight",
+    "quietly",
+    "rents",
+    "computers"
+  ],
+  "musica": {
+    "oscuro": [
+      "7",
+      "7"
+    ],
+    "pista": {
+      "commons": "File:Kevin MacLeod - Unity.ogg",
+      "desde": 0
+    }
+  },
+  "golpes": [
+    "1:sixty-three",
+    "2:not",
+    "5:thirty-nine",
+    "7:nobody",
+    "8:seventeen",
+    "10:rents"
+  ],
+  "sonidos": [
+    {
+      "sfx": "caja",
+      "en": "4:two"
+    },
+    {
+      "sfx": "ding",
+      "en": "5:thirty-nine"
+    },
+    {
+      "sfx": "pagina",
+      "en": "8"
+    },
+    {
+      "sfx": "monedas",
+      "en": "8:seventeen"
+    },
+    {
+      "sfx": "sello",
+      "en": "9:eight"
+    }
+  ],
+  "clips": {
+    "almacen": {
+      "pexels": 4822121,
+      "desde": 0
+    },
+    "servers": {
+      "pexels": 6091131,
+      "desde": 0
+    },
+    "cajas": {
+      "pexels": 6994935,
+      "desde": 0
+    },
+    "bolsa": {
+      "pexels": 7579943,
+      "desde": 0
+    }
+  },
+  "imagenes": {
+    "fulfill": {
+      "commons": "File:Amazon Fulfillment Center, Ocala.jpg",
+      "recorte": 0.03
+    },
+    "spheres": {
+      "commons": "File:Amazon Spheres 2018.jpg",
+      "recorte": 0.03
+    },
+    "racks": {
+      "commons": "File:Datacenter Server Racks (22370909788).jpg",
+      "recorte": 0.03
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "almacen",
+      "mov": "izq",
+      "kicker": {
+        "texto": "Share of Amazon's sales",
+        "en": "0-0.4"
+      },
+      "titulo": {
+        "texto": "23%",
+        "en": "0:twenty-three"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "1",
+      "clip": "servers",
+      "mov": "push",
+      "kicker": {
+        "texto": "Share of its operating profit",
+        "en": "1"
+      },
+      "titulo": {
+        "texto": "*63%*",
+        "en": "1:sixty-three"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "fondo": "fulfill",
+      "lineas": [
+        {
+          "texto": "Not the *store*",
+          "en": "2:not",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "3",
+      "img": "racks",
+      "mov": "push",
+      "kicker": {
+        "texto": "It's AWS",
+        "en": "3:aws"
+      },
+      "titulo": {
+        "texto": "Amazon's *cloud*",
+        "en": "3:cloud"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "4",
+      "clip": "cajas",
+      "mov": "der",
+      "kicker": {
+        "texto": "Q3 2026 · total sales",
+        "en": "4"
+      },
+      "titulo": {
+        "texto": "$201.9B",
+        "en": "4:two"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "5",
+      "kicker": {
+        "texto": "AWS sales",
+        "en": "5"
+      },
+      "lineas": [
+        {
+          "texto": "$46.0B",
+          "en": "5:forty-six",
+          "estilo": "huge",
+          "color": "gold"
+        },
+        {
+          "texto": "+39%",
+          "en": "5:thirty-nine",
+          "estilo": "big"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "6",
+      "img": "spheres",
+      "mov": "sube",
+      "kicker": {
+        "texto": "Fastest growth in",
+        "en": "6:fastest"
+      },
+      "titulo": {
+        "texto": "Nearly 5 years",
+        "en": "6:five"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "alarma": true,
+      "kicker": {
+        "texto": "Now",
+        "en": "7"
+      },
+      "lineas": [
+        {
+          "texto": "The part",
+          "en": "7:the"
+        },
+        {
+          "texto": "nobody tells you.",
+          "en": "7:nobody",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "8",
+      "kicker": {
+        "texto": "Operating profit · Q3",
+        "en": "8"
+      },
+      "fondo": {
+        "clip": "bolsa",
+        "opacidad": 0.6
+      },
+      "lineas": [
+        {
+          "texto": "$28.1B",
+          "en": "8:twenty-eight",
+          "estilo": "huge"
+        },
+        {
+          "texto": "in total",
+          "en": "8:operating",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "8:aws",
+      "kicker": {
+        "texto": "AWS alone made",
+        "en": "8:aws"
+      },
+      "fondo": "racks",
+      "lineas": [
+        {
+          "texto": "$17.8B",
+          "en": "8:seventeen",
+          "estilo": "huge",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "clip": "almacen",
+      "mov": "pull",
+      "kicker": {
+        "texto": "The whole North American store",
+        "en": "9:north"
+      },
+      "titulo": {
+        "texto": "$8.7B",
+        "en": "9:eight"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "servers",
+      "mov": "der",
+      "kicker": {
+        "texto": "Quietly",
+        "en": "10:quietly"
+      },
+      "titulo": {
+        "texto": "A company that *rents computers*",
+        "en": "10:rents"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": "spheres",
+      "lineas": [
+        {
+          "texto": "63% of the profit",
+          "en": "11:sixty-three",
+          "estilo": "big"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "11:are",
+      "pregunta": {
+        "texto": "Buying Amazon = buying a…?",
+        "en": "11:are"
+      },
+      "a": {
+        "texto": "A store",
+        "en": "11:store"
+      },
+      "o": "or",
+      "b": {
+        "texto": "A cloud",
+        "en": "11:cloud"
+      },
+      "botones": [
+        {
+          "texto": "Team store",
+          "en": "11:cloud$"
+        },
+        {
+          "texto": "Team cloud",
+          "en": "11:cloud$+0.35"
+        }
+      ],
+      "sub": "drop your verdict ↓"
+    }
+  ],
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:almacen@1",
+        "kicker": "Amazon · Q3 2026",
+        "titulo": "23% vs *63%*",
+        "texto": "AWS was 23% of Amazon's sales, but 63% of its operating profit. It's not the store."
+      },
+      {
+        "fondo": "clip:cajas@2",
+        "kicker": "Total sales",
+        "titulo": "*$201.9B*",
+        "texto": "Up 12% from a year earlier. Operating margin hit 13.9%, Amazon's highest ever."
+      },
+      {
+        "fondo": "img:racks",
+        "kicker": "AWS · the cloud",
+        "titulo": "*$46.0B*, +39%",
+        "texto": "Amazon Web Services grew 39%, its fastest growth in nearly five years."
+      },
+      {
+        "fondo": "img:spheres",
+        "kicker": "Operating profit",
+        "titulo": "*$17.8B* of $28.1B",
+        "texto": "That's what AWS made. The whole North American store made $8.7B; International, $1.6B."
+      },
+      {
+        "fondo": "clip:servers@1",
+        "kicker": "Quietly",
+        "titulo": "It *rents computers*",
+        "texto": "Most of Amazon's profit now comes from renting computing power to other companies."
+      },
+      {
+        "fondo": "img:fulfill",
+        "kicker": "Your call",
+        "titulo": "A store or *a cloud*?",
+        "texto": "When you buy Amazon, are you buying a store or a cloud? Tell us in the comments."
+      }
+    ],
+    "caption": "AWS was 23% of Amazon's sales last quarter, and 63% of its operating profit. Here's where the money really comes from, straight from the company's Q3 results.",
+    "historia": {
+      "hasta": "1:profit$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "fulfill.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Amazon Fulfillment Center, Ocala.jpg",
+  "autor": "Michael Rivera",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Amazon_Fulfillment_Center,_Ocala.jpg"
+ },
+ {
+  "archivo": "spheres.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Amazon Spheres 2018.jpg",
+  "autor": "Andy Li",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Amazon_Spheres_2018.jpg"
+ },
+ {
+  "archivo": "racks.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Datacenter Server Racks (22370909788).jpg",
+  "autor": "Carl Lender from Sunrise, USA",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Datacenter_Server_Racks_(22370909788).jpg"
+ }
+]

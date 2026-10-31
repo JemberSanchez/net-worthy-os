@@ -1,0 +1,65 @@
+{
+  "production_ref": "binance-heist",
+  "hook_type": "number_shock",
+  "story_type": "news_heist",
+  "cta_type": "comment",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 37,
+  "blocks": [
+    {
+      "block": "intro",
+      "technique": "foto+clip",
+      "length_s": 3.08
+    },
+    {
+      "block": "who",
+      "technique": "foto+clip,titulo",
+      "length_s": 3.88
+    },
+    {
+      "block": "record",
+      "technique": "titulo",
+      "length_s": 2.02
+    },
+    {
+      "block": "slow",
+      "technique": "titulo",
+      "length_s": 1.26
+    },
+    {
+      "block": "prep",
+      "technique": "titulo,foto",
+      "length_s": 3.7
+    },
+    {
+      "block": "xrp",
+      "technique": "titulo,contador3d",
+      "length_s": 3.56
+    },
+    {
+      "block": "nobody",
+      "technique": "titulo",
+      "length_s": 1.58
+    },
+    {
+      "block": "hot",
+      "technique": "foto,foto+clip,titulo",
+      "length_s": 5.09
+    },
+    {
+      "block": "frozen",
+      "technique": "titulo,foto",
+      "length_s": 3.91
+    },
+    {
+      "block": "iou",
+      "technique": "foto+clip,titulo",
+      "length_s": 3.39
+    },
+    {
+      "block": "cta",
+      "technique": "titulo,cta",
+      "length_s": 5.42
+    }
+  ]
+}
