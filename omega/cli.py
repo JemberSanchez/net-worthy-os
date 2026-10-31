@@ -723,7 +723,7 @@ def cmd_publish_ig() -> None:
     d = _load_publish_json(ref)
     if not d:
         return
-    caption = str(d.get("ig_caption") or d["description"])
+    caption = str(d.get("ig_caption") or publish_meta.caption_ig(d["description"]))
     live = "--publicar" in sys.argv
     ref = d.get("production_ref", ref)
     if live and _ya_publicado(ref, "instagram"):

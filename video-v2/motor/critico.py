@@ -767,4 +767,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # redirected output on Windows is cp1252 (no ✓/✗)
     main()

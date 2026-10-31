@@ -40,7 +40,10 @@ def _entorno() -> dict:
     """Cloud defaults (HF_CORE, browser path). The user's own environment wins, and a default path
     that does not exist here (the Linux container paths on the Windows PC) is dropped."""
     out = _run(["bash", str(RAIZ / "tools" / "setup_nube.sh"), "--env"]).stdout
-    return {k: v for k, v in re.findall(r"export (\w+)=(\S+)", out) if k not in os.environ and Path(v).exists()}
+    pares = re.findall(r"export (\w+)=(\S+)", out)
+    if os.name == "nt":                          # Git Bash prints MSYS paths: /c/Users/... -> C:/Users/...
+        pares = [(k, re.sub(r"^/([a-zA-Z])/", r"\1:/", v)) for k, v in pares]
+    return {k: v for k, v in pares if k not in os.environ and Path(v).exists()}
 
 
 def descripcion(sb: dict, proy: Path) -> str:
@@ -441,6 +444,7 @@ def producir(proy: Path) -> dict:
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # redirected output on Windows is cp1252 (no ✓/✗)
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
     producir(Path(sys.argv[1]))

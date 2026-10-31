@@ -35,6 +35,8 @@ import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import omega.config  # noqa: E402,F401 -- loads .env (PEXELS_API_KEY) into os.environ
 import imagenes_libres as il  # noqa: E402
 
 API_PEXELS_V = "https://api.pexels.com/videos"

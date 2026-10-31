@@ -20,6 +20,7 @@ SEGURIDAD POR DEFECTO (mismo espíritu que privacy_status="private" en publish.p
 
 from __future__ import annotations
 
+import re
 import time
 from pathlib import Path
 from urllib.parse import urlencode
@@ -595,3 +596,34 @@ def plan_social(social_dir: Path) -> dict:
         "caption_ig": textos.get("caption_ig", ""),
         "caption_fb": textos.get("caption_fb", ""),
     }
+
+
+IG_CAPTION_MAX = 2200  # Instagram rejects longer captions (error 2207010)
+
+
+def caption_ig(desc: str, limite: int = IG_CAPTION_MAX) -> str:
+    """YouTube description -> Instagram caption. Keeps text, disclaimer, hashtags and sources; the
+    credit lists ("Images:\n- file · author · license (url) · url") collapse to one line of
+    "author (license)" — CC BY still needs the author and license, not the URLs."""
+    if len(desc) <= limite:
+        return desc
+    bloques = re.findall(
+        r"\n(Images|Footage|Music|Sound effects):\n((?:- .*(?:\n|$))+)", desc
+    )
+    cuerpo = re.sub(
+        r"\n(Images|Footage|Music|Sound effects):\n(?:- .*(?:\n|$))+", "\n", desc
+    ).strip()
+    partes = []
+    for nombre, lista in bloques:
+        items = []
+        for linea in lista.strip().splitlines():
+            campos = [c.strip() for c in re.split(r"\s[·—–]\s", linea[2:])]
+            lic = (
+                re.sub(r"\s*\(https?://[^)]*\)", "", campos[2])
+                if len(campos) > 2
+                else ""
+            )
+            items.append(f"{campos[1]} ({lic})" if len(campos) > 2 else linea[2:])
+        partes.append(f"{nombre}: " + "; ".join(dict.fromkeys(items)))
+    cap = cuerpo + ("\n\nCredits — " + " | ".join(partes) if partes else "")
+    return cap if len(cap) <= limite else cap[: limite - 1].rstrip() + "…"
