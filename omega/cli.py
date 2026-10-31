@@ -33,10 +33,12 @@ Comandos:
   python -m omega.cli backup     # zip fechado del moat (SQLite+voces+JSONs) -> copiar a nube/USB
   python -m omega.cli status     # estado de la base + predicciones vencidas sin resolver
 """
+
 from __future__ import annotations
+
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Forzar UTF-8 en la consola de Windows (evita los caracteres '?').
 try:
@@ -50,7 +52,7 @@ from .sources import rss
 
 
 def _fmt(epoch: int) -> str:
-    return datetime.fromtimestamp(epoch, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return datetime.fromtimestamp(epoch, tz=UTC).strftime("%Y-%m-%d %H:%M UTC")
 
 
 def _theme_instrument_version() -> str:
@@ -58,6 +60,7 @@ def _theme_instrument_version() -> str:
     predicciones de demanda ('momentum de presencia'). Vive aquí, en el dominio: el kernel no
     puede importar extractores (test de pureza), así que se la pasamos nosotros."""
     from .extractors.theme import ThemeExtractor
+
     return f"{ThemeExtractor.name}@{ThemeExtractor.version}"
 
 
@@ -67,8 +70,10 @@ def cmd_ingest() -> None:
     print(f"Ingesta de {len(feeds)} fuentes RSS...")
     items, errors = rss.fetch_all(feeds)
     inserted = db.upsert_items(items)
-    print(f"\n{len(items)} items recibidos | {inserted} NUEVOS guardados | "
-          f"{len(items) - inserted} duplicados ignorados")
+    print(
+        f"\n{len(items)} items recibidos | {inserted} NUEVOS guardados | "
+        f"{len(items) - inserted} duplicados ignorados"
+    )
     if errors:
         print(f"{len(errors)} fuentes con error (ignoradas).")
     print(f"Total acumulado en la base: {db.count_total()}")
@@ -79,8 +84,10 @@ def cmd_trends() -> None:
     r = momentum.compute()
     print("=" * 64)
     print(f"REPORTE DE MOMENTUM  ({_fmt(r['now'])})")
-    print(f"Ventana reciente: {config.RECENT_WINDOW_DAYS}d ({r['recent_docs']} docs) | "
-          f"baseline previo: {config.PRIOR_WINDOW_DAYS}d ({r['prior_docs']} docs)")
+    print(
+        f"Ventana reciente: {config.RECENT_WINDOW_DAYS}d ({r['recent_docs']} docs) | "
+        f"baseline previo: {config.PRIOR_WINDOW_DAYS}d ({r['prior_docs']} docs)"
+    )
     print("=" * 64)
     if r["recent_docs"] < 5:
         print("\n[!] Pocos documentos. Corre 'ingest' a diario unos días para que el")
@@ -89,13 +96,17 @@ def cmd_trends() -> None:
     if not r["rising"]:
         print("  (sin señal todavía)")
     for x in r["rising"]:
-        print(f"  +{x['momentum']:>5}  {x['term']:<22} (docs: {x['prior_df']}->{x['recent_df']})")
+        print(
+            f"  +{x['momentum']:>5}  {x['term']:<22} (docs: {x['prior_df']}->{x['recent_df']})"
+        )
         print(f"            ej: {x['examples'][0][:70] if x['examples'] else ''}")
     print("\n--- TEMAS EN CAÍDA ---")
     if not r["declining"]:
         print("  (sin señal todavía)")
     for x in r["declining"]:
-        print(f"  {x['momentum']:>6}  {x['term']:<22} (docs: {x['prior_df']}->{x['recent_df']})")
+        print(
+            f"  {x['momentum']:>6}  {x['term']:<22} (docs: {x['prior_df']}->{x['recent_df']})"
+        )
 
 
 def cmd_youtube() -> None:
@@ -103,16 +114,20 @@ def cmd_youtube() -> None:
 
     A diferencia de 'trends' (presencia en artículos), esto usa las VISTAS reales de YouTube:
     el detector de temas serio. Necesita YOUTUBE_API_KEY en .env (cuota gratuita)."""
-    from .sources import youtube
     from .analyze import demand
+    from .sources import youtube
 
     query = " ".join(sys.argv[2:]).strip() or "stock market investing"
-    print(f"YouTube — demanda real para: '{query}'  (últimos 30 días, orden por vistas)\n")
+    print(
+        f"YouTube — demanda real para: '{query}'  (últimos 30 días, orden por vistas)\n"
+    )
     try:
         videos = youtube.fetch_recent(query, days=30, max_results=25)
     except youtube.YouTubeError as exc:
         print(f"Error de YouTube API: {exc}")
-        print("Revisa que YOUTUBE_API_KEY esté en .env y que la API esté habilitada en el proyecto.")
+        print(
+            "Revisa que YOUTUBE_API_KEY esté en .env y que la API esté habilitada en el proyecto."
+        )
         return
     if not videos:
         print("Sin resultados para esa búsqueda.")
@@ -128,9 +143,13 @@ def cmd_youtube() -> None:
     if not ranked:
         print("  (pocos títulos para agregar; sube max_results o prueba otra query)")
     for r in ranked[:15]:
-        print(f"  {r['total_views']:>12,}  {r['term']:<24} "
-              f"(en {r['videos']} videos, media {r['avg_views']:,})")
-    print("\nEsto es DEMANDA (vistas reales), no volumen editorial. El detector de temas serio.")
+        print(
+            f"  {r['total_views']:>12,}  {r['term']:<24} "
+            f"(en {r['videos']} videos, media {r['avg_views']:,})"
+        )
+    print(
+        "\nEsto es DEMANDA (vistas reales), no volumen editorial. El detector de temas serio."
+    )
 
 
 def cmd_youtube_scan() -> None:
@@ -138,8 +157,8 @@ def cmd_youtube_scan() -> None:
 
     A partir de aquí 'decide' pondera por demanda real (feature 'demand'), no solo por presencia
     en titulares. Corre esto como el 'ingest' de YouTube: cada cierto tiempo, no en cada decide."""
-    from .sources import youtube
     from .analyze import demand
+    from .sources import youtube
 
     db.init()
     queries = config.YOUTUBE_NICHE_QUERIES
@@ -156,13 +175,21 @@ def cmd_youtube_scan() -> None:
     scanned_at = int(time.time())
     db.clear_theme_demand()  # snapshot del presente: fuera los términos del basket anterior
     saved = db.upsert_theme_demand(rows, scanned_at)
-    db.append_theme_demand_history(rows, scanned_at)  # acumula para el momentum de demanda
-    db.replace_scanned_videos(videos, scanned_at)     # videos crudos para la adyacencia (related)
-    print(f"\n{len(videos)} videos únicos analizados | {saved} temas con demanda cacheados.")
+    db.append_theme_demand_history(
+        rows, scanned_at
+    )  # acumula para el momentum de demanda
+    db.replace_scanned_videos(
+        videos, scanned_at
+    )  # videos crudos para la adyacencia (related)
+    print(
+        f"\n{len(videos)} videos únicos analizados | {saved} temas con demanda cacheados."
+    )
     print("\nTop temas por vistas reales (lo que 'decide' ahora premia):")
     for r in rows[:12]:
         print(f"  {r['total_views']:>12,}  {r['term']:<24} (en {r['videos']} videos)")
-    print("\nListo. Corre 'python -m omega.cli decide' para decidir ponderando esta demanda.")
+    print(
+        "\nListo. Corre 'python -m omega.cli decide' para decidir ponderando esta demanda."
+    )
 
 
 def cmd_youtube_evergreen() -> None:
@@ -174,13 +201,17 @@ def cmd_youtube_evergreen() -> None:
     noticia es justo lo que peor le fue al canal (el FED hizo 10 espectadores).
 
     Pondera por vistas/DÍA, no por total: con catálogo antiguo el total premia la edad."""
-    from .sources import youtube
     from .analyze import demand
+    from .sources import youtube
 
     db.init()
     queries = config.YOUTUBE_NICHE_QUERIES
-    print(f"Barrido EVERGREEN del nicho ({len(queries)} búsquedas, catálogo de >=90 días)")
-    print("Filtros de VIRALIDAD.md §1: canales de 1.000-100.000 subs y likes/vista >=1%.")
+    print(
+        f"Barrido EVERGREEN del nicho ({len(queries)} búsquedas, catálogo de >=90 días)"
+    )
+    print(
+        "Filtros de VIRALIDAD.md §1: canales de 1.000-100.000 subs y likes/vista >=1%."
+    )
     try:
         rows, videos = demand.scan_evergreen(queries, max_results=25)
     except youtube.YouTubeError as exc:
@@ -197,17 +228,29 @@ def cmd_youtube_evergreen() -> None:
 
     print("\nTop temas por VISTAS/DÍA (catálogo que sigue vivo):")
     for r in rows[:12]:
-        print(f"  {r['views_per_day']:>10,.0f}/día  {r['term']:<24} (en {r['videos']} videos)")
+        print(
+            f"  {r['views_per_day']:>10,.0f}/día  {r['term']:<24} (en {r['videos']} videos)"
+        )
 
     print("\nLos 8 evergreen más rápidos DE TU LIGA (el formato que aguanta meses):")
     for v in sorted(videos, key=lambda x: x.get("views_per_day", 0), reverse=True)[:8]:
-        edad = (time.time() - datetime.fromisoformat(
-            v["published_at"].replace("Z", "+00:00")).timestamp()) / 86400
+        edad = (
+            time.time()
+            - datetime.fromisoformat(
+                v["published_at"].replace("Z", "+00:00")
+            ).timestamp()
+        ) / 86400
         like = v.get("likes", 0) / max(v.get("views", 1), 1)
-        print(f"  {v['views_per_day']:>8,.0f}/día {int(edad):>4}d "
-              f"{v.get('subs', 0):>7,} subs {like:>5.1%} like  {v['title'][:50]}")
-    print("\n⚠ vistas/día es un PROMEDIO de toda la vida del video: no distingue 'explotó y murió'")
-    print("  de 'acumula constante'. Repite el barrido en unos días y compara para saberlo.")
+        print(
+            f"  {v['views_per_day']:>8,.0f}/día {int(edad):>4}d "
+            f"{v.get('subs', 0):>7,} subs {like:>5.1%} like  {v['title'][:50]}"
+        )
+    print(
+        "\n⚠ vistas/día es un PROMEDIO de toda la vida del video: no distingue 'explotó y murió'"
+    )
+    print(
+        "  de 'acumula constante'. Repite el barrido en unos días y compara para saberlo."
+    )
 
 
 def cmd_related() -> None:
@@ -219,7 +262,7 @@ def cmd_related() -> None:
     db.init()
     root = " ".join(sys.argv[2:]).strip()
     if not root:
-        print("Uso: related <tema>   (ej: related \"build wealth\")")
+        print('Uso: related <tema>   (ej: related "build wealth")')
         return
     videos = db.fetch_scanned_videos()
     if not videos:
@@ -228,12 +271,18 @@ def cmd_related() -> None:
     rows = demand.related(root, videos)
     print(f"Temas ADYACENTES a '{root}' — lo que TAMBIÉN ve esa audiencia:\n")
     if not rows:
-        print("  (sin co-ocurrencias suficientes; usa un tema presente en el último escaneo)")
+        print(
+            "  (sin co-ocurrencias suficientes; usa un tema presente en el último escaneo)"
+        )
         return
     for r in rows:
-        print(f"  {r['views']:>12,}  {r['term']:<24} (juntos en {r['together']} videos)")
+        print(
+            f"  {r['views']:>12,}  {r['term']:<24} (juntos en {r['together']} videos)"
+        )
     print("\nInput a la reflexión creativa: si ven el tema, también les interesa esto.")
-    print("Adelantarse = servir esta adyacencia DESATENDIDA con un ángulo inesperado (think).")
+    print(
+        "Adelantarse = servir esta adyacencia DESATENDIDA con un ángulo inesperado (think)."
+    )
 
 
 def cmd_hypotheses() -> None:
@@ -257,8 +306,10 @@ def cmd_hypotheses() -> None:
         "=== EVIDENCIA: TEMAS EN ALZA ===",
     ]
     for x in r["rising"][:10]:
-        lines.append(f"- '{x['term']}' (presencia {x['prior_df']}->{x['recent_df']}, "
-                     f"momentum {x['momentum']}). Ej: {x['examples'][0] if x['examples'] else ''}")
+        lines.append(
+            f"- '{x['term']}' (presencia {x['prior_df']}->{x['recent_df']}, "
+            f"momentum {x['momentum']}). Ej: {x['examples'][0] if x['examples'] else ''}"
+        )
     lines.append("\n=== EVIDENCIA: TEMAS EN CAÍDA (evitar / contrarian) ===")
     for x in r["declining"][:5]:
         lines.append(f"- '{x['term']}' (momentum {x['momentum']})")
@@ -267,7 +318,9 @@ def cmd_hypotheses() -> None:
     out.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))
     print(f"\n[Guardado en {out}]")
-    print(">> Pega este texto en Claude para obtener las 3 propuestas (cero coste de API).")
+    print(
+        ">> Pega este texto en Claude para obtener las 3 propuestas (cero coste de API)."
+    )
 
 
 def cmd_signals() -> None:
@@ -277,7 +330,8 @@ def cmd_signals() -> None:
     pares (name, value) opacos.
     """
     from .extractors import load_extractors
-    from .reasoning import store as kstore, signals as sigstore
+    from .reasoning import signals as sigstore
+    from .reasoning import store as kstore
 
     db.init()
     con = kstore.connect(str(config.DB_PATH))
@@ -290,8 +344,12 @@ def cmd_signals() -> None:
 
     inserted = 0
     for r in rows:
-        asset = {"external_id": r["external_id"], "title": r["title"],
-                 "summary": r["summary"], "source": r["source"]}
+        asset = {
+            "external_id": r["external_id"],
+            "title": r["title"],
+            "summary": r["summary"],
+            "source": r["source"],
+        }
         for ext in extractors:
             try:
                 sigs = ext.extract(asset)
@@ -300,9 +358,15 @@ def cmd_signals() -> None:
                 continue
             for s in sigs:
                 inserted += sigstore.add_signal(
-                    con, domain="content", asset_ref=r["external_id"], source=r["source"],
-                    observed_at=r["published_at"], extractor=ext.name,
-                    extractor_version=getattr(ext, "version", None), **s)
+                    con,
+                    domain="content",
+                    asset_ref=r["external_id"],
+                    source=r["source"],
+                    observed_at=r["published_at"],
+                    extractor=ext.name,
+                    extractor_version=getattr(ext, "version", None),
+                    **s,
+                )
 
     print(f"\n{inserted} señales nuevas | total: {sigstore.count_total(con)}")
     print("Señales por tipo:")
@@ -316,9 +380,23 @@ def cmd_decide() -> None:
 
     datos reales -> Decision Record con razonamiento reconstruible. Sin API key.
     """
-    from .reasoning import (store as kstore, signals as sigstore, hypotheses as hyp,
-                            opportunities as opp, decisions, decision_engine)
     from .analyze import hypothesis_engine
+    from .reasoning import (
+        decision_engine,
+        decisions,
+    )
+    from .reasoning import (
+        hypotheses as hyp,
+    )
+    from .reasoning import (
+        opportunities as opp,
+    )
+    from .reasoning import (
+        signals as sigstore,
+    )
+    from .reasoning import (
+        store as kstore,
+    )
 
     db.init()
     con = kstore.connect(str(config.DB_PATH))
@@ -326,17 +404,22 @@ def cmd_decide() -> None:
         mod.init(con)
 
     # idempotencia del demo: descartar candidatas previas para no duplicar
-    con.execute("UPDATE hypothesis SET status='discarded' WHERE status='candidate' AND domain='content'")
+    con.execute(
+        "UPDATE hypothesis SET status='discarded' WHERE status='candidate' AND domain='content'"
+    )
     con.commit()
 
     created = hypothesis_engine.generate(con, domain="content")
     print(f"Hypothesis Engine v0: {len(created)} hipótesis candidatas generadas.\n")
 
     result = decision_engine.decide(
-        con, domain="content", weights=config.DECISION_WEIGHTS,
+        con,
+        domain="content",
+        weights=config.DECISION_WEIGHTS,
         abstain_threshold=config.ABSTAIN_THRESHOLD,
         horizon_days=config.PREDICTION_HORIZON_DAYS,
-        instrument_version=_theme_instrument_version())
+        instrument_version=_theme_instrument_version(),
+    )
 
     print("=" * 64)
     print(decisions.render_explanation(decisions.explain(con, result["decision_id"])))
@@ -347,9 +430,9 @@ def cmd_decide() -> None:
 def cmd_think() -> None:
     """Pone al director creativo a PENSAR un sujeto. Con ANTHROPIC_API_KEY usa el LLM real;
     sin key, corre en modo $0 (export-prompt) y muestra qué pasos necesitarían un modelo."""
-    from .reasoning import store as kstore
     from .creative import thinking
     from .llm import get_llm, make_think_fn
+    from .reasoning import store as kstore
 
     subject = " ".join(sys.argv[2:]).strip() or "tiburones"
     llm = get_llm()
@@ -363,28 +446,42 @@ def cmd_think() -> None:
         # Modo $0: el sistema no piensa solo, pero TÚ tienes Claude. Exporta el paquete a pegar.
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
         pack_path = config.DATA_DIR / "think_pack.txt"
-        lines = [f"# Paquete de pensamiento — sujeto: '{subject}'",
-                 "# Pega esto en tu Claude (claude.ai o Claude Code) y responde cada paso en orden.",
-                 "# Eso ES el pensamiento del sistema, hecho con tu cuenta, a coste $0.", ""]
+        lines = [
+            f"# Paquete de pensamiento — sujeto: '{subject}'",
+            "# Pega esto en tu Claude (claude.ai o Claude Code) y responde cada paso en orden.",
+            "# Eso ES el pensamiento del sistema, hecho con tu cuenta, a coste $0.",
+            "",
+        ]
         for i, p in enumerate(session.pending, 1):
             lines.append(f"--- PASO {i} ---\n{p}\n")
         pack_path.write_text("\n".join(lines), encoding="utf-8")
         # plantilla para devolver el resultado al sistema (puente de vuelta)
         import json
-        tpl = {"subject": subject, "production_ref": "<id-unico-del-video>",
-               "decision_type": "angle",
-               "angle": "<pega aquí el ángulo elegido que te dio Claude>",
-               "pattern_tags": ["curiosity_gap", "novel_combination", "pattern_break"]}
+
+        tpl = {
+            "subject": subject,
+            "production_ref": "<id-unico-del-video>",
+            "decision_type": "angle",
+            "angle": "<pega aquí el ángulo elegido que te dio Claude>",
+            "pattern_tags": ["curiosity_gap", "novel_combination", "pattern_break"],
+        }
         (config.DATA_DIR / "think_result.template.json").write_text(
-            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8")
-        print("Modo $0 (sin API key): el sistema NO puede pensar solo — pero tu Claude sí.")
+            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(
+            "Modo $0 (sin API key): el sistema NO puede pensar solo — pero tu Claude sí."
+        )
         print(f"Paquete listo para pegar guardado en: {pack_path}\n")
         for i, p in enumerate(session.pending, 1):
             print(f"[PASO {i}] {p}\n")
-        print("Cuando Claude responda: copia data/think_result.template.json a "
-              "data/think_result.json, rellénalo y corre 'record-think'.")
+        print(
+            "Cuando Claude responda: copia data/think_result.template.json a "
+            "data/think_result.json, rellénalo y corre 'record-think'."
+        )
     else:
-        print(f"Pensó en {r['executed_think_steps']} pasos. Mejor ángulo:\n  {r['best']}\n")
+        print(
+            f"Pensó en {r['executed_think_steps']} pasos. Mejor ángulo:\n  {r['best']}\n"
+        )
         print("Traza:")
         for t in r["trace"]:
             if t.get("status") == "done" and t["kind"] != "diverge" and t.get("output"):
@@ -394,8 +491,8 @@ def cmd_think() -> None:
 
 def cmd_combine() -> None:
     """Operador de divergencia: k encuadres distintos de un sujeto, rankeados por novedad."""
-    from .reasoning import store as kstore
     from .creative import combinator
+    from .reasoning import store as kstore
 
     subject = " ".join(sys.argv[2:]).strip() or "historia romana"
     con = kstore.connect(str(config.DB_PATH))
@@ -411,8 +508,8 @@ def cmd_combine() -> None:
 
 def cmd_patterns() -> None:
     """Muestra el Creative Knowledge Base: el vocabulario controlado de patrones de craft."""
-    from .reasoning import store as kstore
     from .creative import patterns
+    from .reasoning import store as kstore
 
     con = kstore.connect(str(config.DB_PATH))
     patterns.init(con)
@@ -438,20 +535,29 @@ def cmd_record_think() -> None:
     """
     import json
     from pathlib import Path
-    from .reasoning import store as kstore
-    from .creative import patterns, decisions
 
-    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "think_result.json")
+    from .creative import decisions, patterns
+    from .reasoning import store as kstore
+
+    path = (
+        Path(sys.argv[2])
+        if len(sys.argv) > 2
+        else (config.DATA_DIR / "think_result.json")
+    )
     if not path.exists():
-        print(f"No existe {path}. Corre 'think <sujeto>', copia la plantilla "
-              "data/think_result.template.json a data/think_result.json y rellénala.")
+        print(
+            f"No existe {path}. Corre 'think <sujeto>', copia la plantilla "
+            "data/think_result.template.json a data/think_result.json y rellénala."
+        )
         return
     data = json.loads(path.read_text(encoding="utf-8"))
     angle = (data.get("angle") or "").strip()
     tags = data.get("pattern_tags") or []
     ref = data.get("production_ref") or f"manual-{int(time.time())}"
     if not angle or "<" in angle or not tags:
-        print("Faltan 'angle' o 'pattern_tags' (o quedó el placeholder). Rellena el JSON primero.")
+        print(
+            "Faltan 'angle' o 'pattern_tags' (o quedó el placeholder). Rellena el JSON primero."
+        )
         return
 
     con = kstore.connect(str(config.DB_PATH))
@@ -459,8 +565,13 @@ def cmd_record_think() -> None:
         mod.init(con)
     patterns.seed(con)
     try:
-        decisions.record_decision(con, production_ref=ref, decision_type=data.get("decision_type", "angle"),
-                                  choice=angle, pattern_tags=tags)
+        decisions.record_decision(
+            con,
+            production_ref=ref,
+            decision_type=data.get("decision_type", "angle"),
+            choice=angle,
+            pattern_tags=tags,
+        )
     except ValueError as exc:
         print(f"Rechazado: {exc}")
         print("Tags válidos del CKB:", ", ".join(sorted(patterns.vocabulary(con))))
@@ -468,7 +579,7 @@ def cmd_record_think() -> None:
         return
     print(f"Registrado. produccion='{ref}', tags={tags}")
     print(f"  Ángulo: {angle[:120]}")
-    print(f"\nCuando publiques el video, mide su rendimiento y corre:")
+    print("\nCuando publiques el video, mide su rendimiento y corre:")
     print(f"  python -m omega.cli record-outcome {ref} <0..1>")
     con.close()
 
@@ -478,39 +589,60 @@ def cmd_record_dna() -> None:
     primer video ya entra instrumentado al dataset — no se pierde la señal por bloque."""
     import json
     from pathlib import Path
-    from .reasoning import store as kstore
-    from .creative import production_dna
 
-    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "production_dna.json")
+    from .creative import production_dna
+    from .reasoning import store as kstore
+
+    path = (
+        Path(sys.argv[2])
+        if len(sys.argv) > 2
+        else (config.DATA_DIR / "production_dna.json")
+    )
     if not path.exists():
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-        tpl = {"production_ref": "<id-del-video>",
-               "hook_type": "story|question|contrarian|stat|shock",
-               "story_type": "personal|character|case_study|none",
-               "cta_type": "session|subscribe|comment|none",
-               "length_s": 450,
-               "renderer_version": "v1-canvas|v2-hyperframes",
-               "blocks": [{"block": "hook", "technique": "two_men_story", "length_s": 35},
-                          {"block": "proof", "technique": "compound_curve", "length_s": 135}]}
+        tpl = {
+            "production_ref": "<id-del-video>",
+            "hook_type": "story|question|contrarian|stat|shock",
+            "story_type": "personal|character|case_study|none",
+            "cta_type": "session|subscribe|comment|none",
+            "length_s": 450,
+            "renderer_version": "v1-canvas|v2-hyperframes",
+            "blocks": [
+                {"block": "hook", "technique": "two_men_story", "length_s": 35},
+                {"block": "proof", "technique": "compound_curve", "length_s": 135},
+            ],
+        }
         (config.DATA_DIR / "production_dna.template.json").write_text(
-            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"No existe {path}. Plantilla escrita en production_dna.template.json — "
-              "rellénala, renómbrala a production_dna.json y reintenta.")
+            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(
+            f"No existe {path}. Plantilla escrita en production_dna.template.json — "
+            "rellénala, renómbrala a production_dna.json y reintenta."
+        )
         return
     data = json.loads(path.read_text(encoding="utf-8"))
     con = kstore.connect(str(config.DB_PATH))
     production_dna.init(con)
     production_dna.record_dna(
-        con, production_ref=data["production_ref"], blocks=data.get("blocks", []),
-        hook_type=data.get("hook_type"), story_type=data.get("story_type"),
-        cta_type=data.get("cta_type"), length_s=data.get("length_s"),
-        renderer_version=data.get("renderer_version"))
-    print(f"ADN registrado: {data['production_ref']} — {len(data.get('blocks', []))} bloques "
-          f"(hook={data.get('hook_type')}, story={data.get('story_type')}, cta={data.get('cta_type')}, "
-          f"renderer={data.get('renderer_version')}).")
+        con,
+        production_ref=data["production_ref"],
+        blocks=data.get("blocks", []),
+        hook_type=data.get("hook_type"),
+        story_type=data.get("story_type"),
+        cta_type=data.get("cta_type"),
+        length_s=data.get("length_s"),
+        renderer_version=data.get("renderer_version"),
+    )
+    print(
+        f"ADN registrado: {data['production_ref']} — {len(data.get('blocks', []))} bloques "
+        f"(hook={data.get('hook_type')}, story={data.get('story_type')}, cta={data.get('cta_type')}, "
+        f"renderer={data.get('renderer_version')})."
+    )
     if not data.get("renderer_version"):
-        print("  ⚠ Sin renderer_version: este video no se podrá separar por motor (v1 vs v2 no son "
-              "comparables). Añádelo al JSON y vuelve a registrar.")
+        print(
+            "  ⚠ Sin renderer_version: este video no se podrá separar por motor (v1 vs v2 no son "
+            "comparables). Añádelo al JSON y vuelve a registrar."
+        )
     print("Tras publicar y medir: record-analytics + record-outcome, y luego 'dna'.")
     con.close()
 
@@ -519,13 +651,20 @@ def cmd_record_analytics() -> None:
     """Registra las analíticas MEDIDAS tras publicar (CTR/AVD/retención/fuente). El 'qué pasó'."""
     import json
     from pathlib import Path
-    from .reasoning import store as kstore
-    from .creative import production_dna
 
-    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "production_analytics.json")
+    from .creative import production_dna
+    from .reasoning import store as kstore
+
+    path = (
+        Path(sys.argv[2])
+        if len(sys.argv) > 2
+        else (config.DATA_DIR / "production_analytics.json")
+    )
     if not path.exists():
-        print(f"No existe {path}. Crea un JSON con: production_ref, ctr, avd_pct, retention_avg, "
-              "traffic_source, retention_by_block.")
+        print(
+            f"No existe {path}. Crea un JSON con: production_ref, ctr, avd_pct, retention_avg, "
+            "traffic_source, retention_by_block."
+        )
         return
     d = json.loads(path.read_text(encoding="utf-8"))
     if not d.get("production_ref") or str(d["production_ref"]).startswith("<"):
@@ -535,9 +674,15 @@ def cmd_record_analytics() -> None:
     production_dna.init(con)
     try:
         production_dna.record_analytics(
-            con, production_ref=d["production_ref"], ctr=d.get("ctr"), avd_pct=d.get("avd_pct"),
-            retention_avg=d.get("retention_avg"), views=d.get("views"),
-            traffic_source=d.get("traffic_source"), retention_by_block=d.get("retention_by_block"))
+            con,
+            production_ref=d["production_ref"],
+            ctr=d.get("ctr"),
+            avd_pct=d.get("avd_pct"),
+            retention_avg=d.get("retention_avg"),
+            views=d.get("views"),
+            traffic_source=d.get("traffic_source"),
+            retention_by_block=d.get("retention_by_block"),
+        )
     except ValueError as exc:
         print(f"Rechazado: {exc}")
         con.close()
@@ -551,21 +696,33 @@ def cmd_record_cost() -> None:
     data/production_cost.json. Habilita 'rendimiento por hora de trabajo' en 'dna'."""
     import json
     from pathlib import Path
-    from .reasoning import store as kstore
-    from .creative import production_dna
 
-    path = Path(sys.argv[2]) if len(sys.argv) > 2 else (config.DATA_DIR / "production_cost.json")
+    from .creative import production_dna
+    from .reasoning import store as kstore
+
+    path = (
+        Path(sys.argv[2])
+        if len(sys.argv) > 2
+        else (config.DATA_DIR / "production_cost.json")
+    )
     if not path.exists():
-        print(f"No existe {path}. Crea un JSON con: production_ref, research_hours, script_hours, "
-              "edit_hours, ai_cost_usd, time_to_publish_h.")
+        print(
+            f"No existe {path}. Crea un JSON con: production_ref, research_hours, script_hours, "
+            "edit_hours, ai_cost_usd, time_to_publish_h."
+        )
         return
     d = json.loads(path.read_text(encoding="utf-8"))
     con = kstore.connect(str(config.DB_PATH))
     production_dna.init(con)
     production_dna.record_cost(
-        con, production_ref=d["production_ref"], research_hours=d.get("research_hours"),
-        script_hours=d.get("script_hours"), edit_hours=d.get("edit_hours"),
-        ai_cost_usd=d.get("ai_cost_usd"), time_to_publish_h=d.get("time_to_publish_h"))
+        con,
+        production_ref=d["production_ref"],
+        research_hours=d.get("research_hours"),
+        script_hours=d.get("script_hours"),
+        edit_hours=d.get("edit_hours"),
+        ai_cost_usd=d.get("ai_cost_usd"),
+        time_to_publish_h=d.get("time_to_publish_h"),
+    )
     print(f"Coste registrado: {d['production_ref']}.")
     con.close()
 
@@ -575,6 +732,7 @@ def cmd_publish() -> None:
     import json
     import time
     from pathlib import Path
+
     from . import publish
 
     args = [a for a in sys.argv if not a.startswith("--")]
@@ -585,14 +743,24 @@ def cmd_publish() -> None:
     path = Path(args[3]) if len(args) > 3 else (config.DATA_DIR / f"publish_{ref}.json")
     if not path.exists():
         config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-        tpl = {"production_ref": ref, "video_path": "<ruta-al-mp4-exportado>",
-               "title": "<titulo, <=100 chars>", "description": "<descripcion, <=5000 chars>",
-               "tags": [], "category_id": "27", "privacy_status": "private",
-               "made_for_kids": False}
+        tpl = {
+            "production_ref": ref,
+            "video_path": "<ruta-al-mp4-exportado>",
+            "title": "<titulo, <=100 chars>",
+            "description": "<descripcion, <=5000 chars>",
+            "tags": [],
+            "category_id": "27",
+            "privacy_status": "private",
+            "made_for_kids": False,
+        }
         tpl_path = config.DATA_DIR / f"publish_{ref}.template.json"
-        tpl_path.write_text(json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"No existe {path}. Plantilla escrita en {tpl_path.name} — "
-              f"rellénala, renómbrala a publish_{ref}.json y reintenta.")
+        tpl_path.write_text(
+            json.dumps(tpl, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(
+            f"No existe {path}. Plantilla escrita en {tpl_path.name} — "
+            f"rellénala, renómbrala a publish_{ref}.json y reintenta."
+        )
         return
 
     d = json.loads(path.read_text(encoding="utf-8"))
@@ -613,26 +781,42 @@ def cmd_publish() -> None:
 
     try:
         result = publish.upload_video(
-            video_path, title, description, tags=d.get("tags"),
+            video_path,
+            title,
+            description,
+            tags=d.get("tags"),
             category_id=d.get("category_id", "27"),
             privacy_status=d.get("privacy_status", "private"),
-            made_for_kids=d.get("made_for_kids", False))
+            made_for_kids=d.get("made_for_kids", False),
+        )
     except publish.PublishError as exc:
         print(f"Rechazado: {exc}")
         return
 
-    print(f"Subido: {result['url']}  (video_id={result['video_id']}, "
-          f"privacy={d.get('privacy_status', 'private')})")
-    d["video_id"] = result["video_id"]          # lo necesita `programar` para aprobar sin re-subir
+    print(
+        f"Subido: {result['url']}  (video_id={result['video_id']}, "
+        f"privacy={d.get('privacy_status', 'private')})"
+    )
+    d["video_id"] = result[
+        "video_id"
+    ]  # lo necesita `programar` para aprobar sin re-subir
     path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
     _registrar_video(d.get("production_ref", ref), result["video_id"])
     log_path = config.DATA_DIR / "publish_log.jsonl"
     with log_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"production_ref": d.get("production_ref", ref),
-                             "video_id": result["video_id"], "timestamp": int(time.time()),
-                             "privacy_status": d.get("privacy_status", "private")},
-                            ensure_ascii=False) + "\n")
-    print(f"Siguiente paso: python -m omega.cli record-dna")
+        f.write(
+            json.dumps(
+                {
+                    "production_ref": d.get("production_ref", ref),
+                    "video_id": result["video_id"],
+                    "timestamp": int(time.time()),
+                    "privacy_status": d.get("privacy_status", "private"),
+                },
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
+    print("Siguiente paso: python -m omega.cli record-dna")
 
 
 def _load_publish_json(ref: str) -> dict:
@@ -644,8 +828,10 @@ def _load_publish_json(ref: str) -> dict:
 
     path = config.DATA_DIR / f"publish_{ref}.json"
     if not path.exists():
-        print(f"No existe {path}. Corré primero 'python -m omega.cli publish {ref}' "
-              "(aunque sea para generar la plantilla) y rellenala.")
+        print(
+            f"No existe {path}. Corré primero 'python -m omega.cli publish {ref}' "
+            "(aunque sea para generar la plantilla) y rellenala."
+        )
         return {}
     d = json.loads(path.read_text(encoding="utf-8"))
     title = str(d.get("title", ""))
@@ -668,13 +854,25 @@ def _log_publish(platform: str, ref: str, result: dict, live: bool) -> None:
 
     log_path = config.DATA_DIR / "publish_log.jsonl"
     with log_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"production_ref": ref, "platform": platform, "timestamp": int(time.time()),
-                             "live": live, **result}, ensure_ascii=False) + "\n")
+        f.write(
+            json.dumps(
+                {
+                    "production_ref": ref,
+                    "platform": platform,
+                    "timestamp": int(time.time()),
+                    "live": live,
+                    **result,
+                },
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
 
 
 def cmd_meta_auth() -> None:
     """Setup de una sola vez: autoriza la app de Meta contra tu Página/Instagram y guarda el token."""
     from . import publish_meta
+
     try:
         publish_meta._authorize()
     except publish_meta.PublishError as exc:
@@ -684,6 +882,7 @@ def cmd_meta_auth() -> None:
 def cmd_publish_fb() -> None:
     """Sube un Short a la Página de Facebook (borrador por defecto; --publicar lo deja público)."""
     from pathlib import Path
+
     from . import publish_meta
 
     if len(sys.argv) < 3:
@@ -693,19 +892,46 @@ def cmd_publish_fb() -> None:
     d = _load_publish_json(ref)
     if not d:
         return
-    live = "--publicar" in sys.argv
+    from datetime import datetime
+
+    # --programar: misma hora que el publishAt de YouTube; cuenta como publicado (sale solo)
+    programar = (
+        int(datetime.fromisoformat(d["publish_at"]).timestamp())
+        if "--programar" in sys.argv and d.get("publish_at")
+        else None
+    )
+    if "--programar" in sys.argv and not programar:
+        print(
+            "Rechazado: publish_<ref>.json no tiene publish_at (programa YouTube primero)"
+        )
+        return
+    live = "--publicar" in sys.argv or bool(programar)
     ref = d.get("production_ref", ref)
-    if live and _ya_publicado(ref, "facebook"):      # un borrador es invisible: solo cuenta lo público
+    if live and _ya_publicado(
+        ref, "facebook"
+    ):  # un borrador es invisible: solo cuenta lo público
         return
 
     try:
         result = publish_meta.upload_facebook_reel(
-            Path(d["video_path"]), d["title"], d["description"], published=live)
+            Path(d["video_path"]),
+            d["title"],
+            d["description"],
+            published=live,
+            programar=programar,
+        )
     except publish_meta.PublishError as exc:
         print(f"Rechazado: {exc}")
         return
 
-    print(f"Subido a Facebook: {result['url']}  ({'PÚBLICO' if live else 'borrador, sin publicar'})")
+    estado = (
+        f"PROGRAMADO {d['publish_at']}"
+        if programar
+        else "PÚBLICO"
+        if live
+        else "borrador, sin publicar"
+    )
+    print(f"Subido a Facebook: {result['url']}  ({estado})")
     _log_publish("facebook", ref, result, live)
     if live:
         _registrar_publicacion(ref, "facebook", result)
@@ -714,6 +940,7 @@ def cmd_publish_fb() -> None:
 def cmd_publish_ig() -> None:
     """Sube un Short como Reel de Instagram (solo contenedor por defecto; --publicar lo publica)."""
     from pathlib import Path
+
     from . import publish_meta
 
     if len(sys.argv) < 3:
@@ -730,7 +957,9 @@ def cmd_publish_ig() -> None:
         return
 
     try:
-        result = publish_meta.upload_instagram_reel(Path(d["video_path"]), caption, publish=live)
+        result = publish_meta.upload_instagram_reel(
+            Path(d["video_path"]), caption, publish=live
+        )
     except publish_meta.PublishError as exc:
         print(f"Rechazado: {exc}")
         return
@@ -739,15 +968,17 @@ def cmd_publish_ig() -> None:
         print(f"Publicado en Instagram: {result['url']}")
         _registrar_publicacion(ref, "instagram", result)
     else:
-        print(f"Subido a Instagram, {result['status']} (contenedor {result['container_id']}). "
-              "Corré con --publicar para hacerlo público.")
+        print(
+            f"Subido a Instagram, {result['status']} (contenedor {result['container_id']}). "
+            "Corré con --publicar para hacerlo público."
+        )
     _log_publish("instagram", ref, result, live)
 
 
 def cmd_dna() -> None:
     """Muestra el dataset de ADN de producción + calibración por dimensión (con guard de rigor)."""
+    from .creative import decisions, production_dna
     from .reasoning import store as kstore
-    from .creative import production_dna, decisions
 
     con = kstore.connect(str(config.DB_PATH))
     for mod in (production_dna, decisions):
@@ -756,8 +987,10 @@ def cmd_dna() -> None:
     print(f"Dataset de ADN de producción: {len(rows)} videos instrumentados\n")
     for r in rows:
         print(f"  {r['production_ref']}")
-        print(f"    hook={r['hook_type']} | story={r['story_type']} | cta={r['cta_type']} | "
-              f"{r['block_count']} bloques | {r['length_s']}s | renderer={r['renderer_version'] or '¿?'}")
+        print(
+            f"    hook={r['hook_type']} | story={r['story_type']} | cta={r['cta_type']} | "
+            f"{r['block_count']} bloques | {r['length_s']}s | renderer={r['renderer_version'] or '¿?'}"
+        )
 
     print("\n--- Calibración por dimensión (solo con resultado medido) ---")
     any_data = False
@@ -779,19 +1012,31 @@ def cmd_dna() -> None:
     if eff:
         print("\n--- Rendimiento por esfuerzo (éxito por hora de trabajo, CRUDO) ---")
         for e in eff:
-            sph = f"{e['success_per_hour']}" if e["success_per_hour"] is not None else "s/h?"
-            print(f"    {e['production_ref']:<42} {e['success']:.2f} éxito / {e['total_hours']}h = {sph}")
+            sph = (
+                f"{e['success_per_hour']}"
+                if e["success_per_hour"] is not None
+                else "s/h?"
+            )
+            print(
+                f"    {e['production_ref']:<42} {e['success']:.2f} éxito / {e['total_hours']}h = {sph}"
+            )
 
-    print("\n[!] La gráfica dice DÓNDE, no POR QUÉ. Con pocos videos cada dimensión co-varía con")
-    print("    b-roll/voz/música (confounding). Aísla la variable (experiments) antes de concluir.")
-    print(f"    Hito: 10 videos instrumentados antes de tratar un patrón como hipótesis. Vas por {len(rows)}.")
+    print(
+        "\n[!] La gráfica dice DÓNDE, no POR QUÉ. Con pocos videos cada dimensión co-varía con"
+    )
+    print(
+        "    b-roll/voz/música (confounding). Aísla la variable (experiments) antes de concluir."
+    )
+    print(
+        f"    Hito: 10 videos instrumentados antes de tratar un patrón como hipótesis. Vas por {len(rows)}."
+    )
     con.close()
 
 
 def cmd_record_outcome() -> None:
     """Tras publicar: registra el resultado MEDIDO (0..1) de una producción. Alimenta la calibración."""
+    from .creative import decisions, patterns
     from .reasoning import store as kstore
-    from .creative import patterns, decisions
 
     if len(sys.argv) < 4:
         print("Uso: record-outcome <production_ref> <success 0..1>")
@@ -800,7 +1045,9 @@ def cmd_record_outcome() -> None:
     try:
         success = float(sys.argv[3])
     except ValueError:
-        print(f"Rechazado: '{sys.argv[3]}' no es un número. success va en [0,1] (ej. 0.35).")
+        print(
+            f"Rechazado: '{sys.argv[3]}' no es un número. success va en [0,1] (ej. 0.35)."
+        )
         return
     con = kstore.connect(str(config.DB_PATH))
     for mod in (patterns, decisions):
@@ -811,7 +1058,9 @@ def cmd_record_outcome() -> None:
         print(f"Rechazado: {exc}")
         con.close()
         return
-    print(f"Resultado registrado: {ref} -> {success}. Corre 'learnings' para ver la calibración.")
+    print(
+        f"Resultado registrado: {ref} -> {success}. Corre 'learnings' para ver la calibración."
+    )
     con.close()
 
 
@@ -821,59 +1070,80 @@ def cmd_rescore() -> None:
     El `success` se tecleaba a mano con una regla que vivía en los docs. Eso significaba que la
     definición de éxito podía cambiar sin que el dataset se enterara. Ahora sale del código, queda
     sellada con su versión y se puede volver a calcular entera cuando la fórmula cambie."""
+    from .creative import decisions, patterns, production_dna, scoring
     from .reasoning import store as kstore
-    from .creative import patterns, decisions, production_dna, scoring
 
     con = kstore.connect(str(config.DB_PATH))
     for mod in (patterns, decisions, production_dna):
         mod.init(con)
 
-    refs = [r["production_ref"] for r in
-            con.execute("SELECT production_ref FROM production_analytics ORDER BY production_ref")]
+    refs = [
+        r["production_ref"]
+        for r in con.execute(
+            "SELECT production_ref FROM production_analytics ORDER BY production_ref"
+        )
+    ]
     if not refs:
         print("No hay analíticas registradas. Corre antes 'record-analytics'.")
         con.close()
         return
 
-    print(f"Fórmula: {scoring.SCORE_VERSION}  "
-          f"({scoring.PESO_RETENCION:.0%} retención/{scoring.UMBRAL_RETENCION:.0%} + "
-          f"{scoring.PESO_ALCANCE:.0%} alcance/{scoring.ALCANCE_REF})\n")
+    print(
+        f"Fórmula: {scoring.SCORE_VERSION}  "
+        f"({scoring.PESO_RETENCION:.0%} retención/{scoring.UMBRAL_RETENCION:.0%} + "
+        f"{scoring.PESO_ALCANCE:.0%} alcance/{scoring.ALCANCE_REF})\n"
+    )
     seco = "--dry-run" in sys.argv
     for ref in refs:
-        antes = con.execute("SELECT success, score_version FROM production_outcome WHERE production_ref=?",
-                            (ref,)).fetchone()
+        antes = con.execute(
+            "SELECT success, score_version FROM production_outcome WHERE production_ref=?",
+            (ref,),
+        ).fetchone()
         try:
             nuevo, partes = scoring.desde_analytics(con, ref)
         except ValueError as exc:
             print(f"  {ref}: {exc}")
             continue
-        viejo = f"{antes['success']:.3f} ({antes['score_version'] or 'v1-alcance'})" if antes else "—"
+        viejo = (
+            f"{antes['success']:.3f} ({antes['score_version'] or 'v1-alcance'})"
+            if antes
+            else "—"
+        )
         marca = " ⚠ parcial" if partes.get("parcial") else ""
-        print(f"  {ref}\n      {viejo}  ->  {nuevo:.3f} ({scoring.SCORE_VERSION}){marca}")
+        print(
+            f"  {ref}\n      {viejo}  ->  {nuevo:.3f} ({scoring.SCORE_VERSION}){marca}"
+        )
         if not seco:
-            decisions.record_outcome(con, ref, nuevo, score_version=scoring.SCORE_VERSION,
-                                     score_parts=partes)
+            decisions.record_outcome(
+                con, ref, nuevo, score_version=scoring.SCORE_VERSION, score_parts=partes
+            )
     if seco:
         print("\n(--dry-run: no se ha escrito nada)")
     else:
-        print(f"\n{len(refs)} outcomes recalculados y sellados. 'learnings' y 'dna' ya usan el nuevo.")
+        print(
+            f"\n{len(refs)} outcomes recalculados y sellados. 'learnings' y 'dna' ya usan el nuevo."
+        )
     con.close()
 
 
 def cmd_learnings() -> None:
     """El moat visible: qué patrones de craft funcionan según resultados REALES (no opinión)."""
+    from .creative import decisions, patterns
     from .reasoning import store as kstore
-    from .creative import patterns, decisions
 
     con = kstore.connect(str(config.DB_PATH))
     for mod in (patterns, decisions):
         mod.init(con)
     cal = decisions.pattern_calibration(con)
     if not cal:
-        print("Aún no hay aprendizaje calibrado. Registra decisiones (record-think) y, tras "
-              "publicar, resultados (record-outcome). Con suficientes datos aparecerán aquí.")
+        print(
+            "Aún no hay aprendizaje calibrado. Registra decisiones (record-think) y, tras "
+            "publicar, resultados (record-outcome). Con suficientes datos aparecerán aquí."
+        )
     else:
-        print("Aprendizaje creativo (patrón -> tasa de éxito real, nº de producciones):\n")
+        print(
+            "Aprendizaje creativo (patrón -> tasa de éxito real, nº de producciones):\n"
+        )
         for c in cal:
             print(f"  {c['pattern']:<18} {c['success_rate']:.0%}   (n={c['n']})")
     con.close()
@@ -893,11 +1163,17 @@ def cmd_status() -> None:
     kstore.init(con)
     due = kstore.due_predictions(con)
     if due:
-        print(f"\n⚠ {len(due)} predicción(es) VENCIDAS sin resolver (deuda epistémica):")
+        print(
+            f"\n⚠ {len(due)} predicción(es) VENCIDAS sin resolver (deuda epistémica):"
+        )
         for p in due:
             print(f"  #{p['id']}  {p['statement'][:70]}")
-            print(f"        vencía {_fmt(p['expected_verification_at'])} | criterio: {p['refutation_criterion'][:60]}")
-        print("Resuélvelas: python -m omega.cli resolve-prediction <id> <confirmed|refuted|inconclusive> [nota]")
+            print(
+                f"        vencía {_fmt(p['expected_verification_at'])} | criterio: {p['refutation_criterion'][:60]}"
+            )
+        print(
+            "Resuélvelas: python -m omega.cli resolve-prediction <id> <confirmed|refuted|inconclusive> [nota]"
+        )
     else:
         print("Sin predicciones vencidas pendientes.")
     con.close()
@@ -927,9 +1203,14 @@ def cmd_resolve_prediction() -> None:
     con = kstore.connect(str(config.DB_PATH))
     kstore.init(con)
     try:
-        kstore.resolve_prediction(con, pid, outcome=outcome, note=note,
-                                  current_instrument_version=_theme_instrument_version(),
-                                  force=force)
+        kstore.resolve_prediction(
+            con,
+            pid,
+            outcome=outcome,
+            note=note,
+            current_instrument_version=_theme_instrument_version(),
+            force=force,
+        )
     except ValueError as exc:
         print(f"Rechazado: {exc}")
         con.close()
@@ -949,23 +1230,31 @@ def cmd_backup() -> None:
     out = db.backup_snapshot()
     size_mb = out.stat().st_size / (1024 * 1024)
     print(f"Backup creado: {out}  ({size_mb:.1f} MB)")
-    print("⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados.")
+    print(
+        "⚠ Está en el MISMO disco: cópialo a nube/USB. Un backup local solo protege de borrados."
+    )
 
 
-def _registrar_video(ref: str, video_id: str, publish_at: str | None = None, plataforma: str = "youtube") -> None:
+def _registrar_video(
+    ref: str, video_id: str, publish_at: str | None = None, plataforma: str = "youtube"
+) -> None:
     """El video_id va a la BASE (viaja al repo de estado), no solo a data/publish_<ref>.json: una
     sesión nueva en la nube tiene que poder aprobar y medir un video que subió otra sesión."""
-    from .reasoning import store as kstore
     from .creative import production_dna
+    from .reasoning import store as kstore
+
     con = kstore.connect(str(config.DB_PATH))
     production_dna.init(con)
-    production_dna.record_video(con, ref, video_id, platform=plataforma, publish_at=publish_at)
+    production_dna.record_video(
+        con, ref, video_id, platform=plataforma, publish_at=publish_at
+    )
     con.close()
 
 
 def _video_id(ref: str, plataforma: str = "youtube") -> str | None:
-    from .reasoning import store as kstore
     from .creative import production_dna
+    from .reasoning import store as kstore
+
     if not config.DB_PATH.exists():
         return None
     con = kstore.connect(str(config.DB_PATH))
@@ -981,7 +1270,9 @@ def _ya_publicado(ref: str, plataforma: str) -> bool:
     estado 'subiendo'); `subir_borrador` avisa con el `vincular` a mano. Ampliar si se ve en real."""
     vid = _video_id(ref, plataforma)
     if vid and "--forzar" not in sys.argv:
-        print(f"Ya subido a {plataforma}: {vid}. No subo otra vez (--forzar si lo borraste a mano).")
+        print(
+            f"Ya subido a {plataforma}: {vid}. No subo otra vez (--forzar si lo borraste a mano)."
+        )
         return True
     return False
 
@@ -991,16 +1282,22 @@ def _registrar_publicacion(ref: str, plataforma: str, result: dict) -> None:
     if rid:
         _registrar_video(ref, str(rid), plataforma=plataforma)
     else:
-        print(f"⚠ {plataforma} no devolvió id: no quedó en la base, un reintento podría duplicar")
+        print(
+            f"⚠ {plataforma} no devolvió id: no quedó en la base, un reintento podría duplicar"
+        )
 
 
 def _proyecto_de(ref: str):
     """video-v2/<proyecto> cuyo storyboard tiene ese `ref` (o cuyo nombre de carpeta es ref)."""
     import json
     from pathlib import Path
+
     raiz = Path(__file__).resolve().parents[1] / "video-v2"
     for sb in raiz.glob("*/storyboard.json"):
-        if sb.parent.name == ref or json.loads(sb.read_text(encoding="utf-8")).get("ref") == ref:
+        if (
+            sb.parent.name == ref
+            or json.loads(sb.read_text(encoding="utf-8")).get("ref") == ref
+        ):
             return sb.parent
     raise SystemExit(f"✗ no hay proyecto en video-v2/ con ref {ref!r}")
 
@@ -1011,17 +1308,29 @@ def cmd_publish_social() -> None:
     proyecto exige confirmación explícita del usuario en el chat antes de usarlo.
       publish-social <ref> [--publicar] [--solo carrusel|historia] [--red ig|fb]"""
     from . import publish_meta as pm
+
     if len(sys.argv) < 3:
-        raise SystemExit("Uso: python -m omega.cli publish-social <ref> [--publicar] [--solo carrusel|historia] [--red ig|fb]")
+        raise SystemExit(
+            "Uso: python -m omega.cli publish-social <ref> [--publicar] [--solo carrusel|historia] [--red ig|fb]"
+        )
     proy = _proyecto_de(sys.argv[2])
     plan = pm.plan_social(proy / "social")
     solo = sys.argv[sys.argv.index("--solo") + 1] if "--solo" in sys.argv else None
     red = sys.argv[sys.argv.index("--red") + 1] if "--red" in sys.argv else None
     publicar = "--publicar" in sys.argv
     if not plan["carrusel"] and not plan["historia"]:
-        raise SystemExit(f"✗ {proy.name}/social está vacío: genera antes con `python video-v2/motor/social.py video-v2/{proy.name}`")
-    tareas = [(n, r) for n in ("carrusel", "historia") for r in ("ig", "fb") if (not solo or solo == n) and (not red or red == r)]
-    print(f"{'PUBLICANDO EN VIVO' if publicar else 'PLAN (no se envía nada; --publicar para publicar)'} · {proy.name}")
+        raise SystemExit(
+            f"✗ {proy.name}/social está vacío: genera antes con `python video-v2/motor/social.py video-v2/{proy.name}`"
+        )
+    tareas = [
+        (n, r)
+        for n in ("carrusel", "historia")
+        for r in ("ig", "fb")
+        if (not solo or solo == n) and (not red or red == r)
+    ]
+    print(
+        f"{'PUBLICANDO EN VIVO' if publicar else 'PLAN (no se envía nada; --publicar para publicar)'} · {proy.name}"
+    )
     for n, r in tareas:
         destino = {"ig": "Instagram", "fb": "Facebook"}[r]
         plataforma = f"{'instagram' if r == 'ig' else 'facebook'}_{n}"
@@ -1030,8 +1339,16 @@ def cmd_publish_social() -> None:
                 continue
             print(f"  carrusel → {destino}: {len(plan['carrusel'])} imágenes")
             if publicar and not _ya_publicado(proy.name, plataforma):
-                fn = pm.upload_instagram_carousel if r == "ig" else pm.upload_facebook_carousel
-                res = fn(plan["carrusel"], plan["caption_ig"] if r == "ig" else plan["caption_fb"], publish=True)
+                fn = (
+                    pm.upload_instagram_carousel
+                    if r == "ig"
+                    else pm.upload_facebook_carousel
+                )
+                res = fn(
+                    plan["carrusel"],
+                    plan["caption_ig"] if r == "ig" else plan["caption_fb"],
+                    publish=True,
+                )
                 print("    ✓", res)
                 _registrar_publicacion(proy.name, plataforma, res)
         else:
@@ -1039,7 +1356,9 @@ def cmd_publish_social() -> None:
                 continue
             print(f"  historia → {destino}: {plan['historia'].name}")
             if publicar and not _ya_publicado(proy.name, plataforma):
-                fn = pm.upload_instagram_story if r == "ig" else pm.upload_facebook_story
+                fn = (
+                    pm.upload_instagram_story if r == "ig" else pm.upload_facebook_story
+                )
                 res = fn(plan["historia"], publish=True)
                 print("    ✓", res)
                 _registrar_publicacion(proy.name, plataforma, res)
@@ -1048,7 +1367,9 @@ def cmd_publish_social() -> None:
 def cmd_vincular() -> None:
     """Asocia un video YA subido a su ref (los #1-#6 se subieron a mano). Así analytics-sync lo mide."""
     if len(sys.argv) < 4:
-        raise SystemExit("Uso: python -m omega.cli vincular <ref> <video_id>   (el id de youtu.be/<id>)")
+        raise SystemExit(
+            "Uso: python -m omega.cli vincular <ref> <video_id>   (el id de youtu.be/<id>)"
+        )
     ref, vid = sys.argv[2], sys.argv[3].rstrip("/").split("/")[-1].split("?v=")[-1]
     _registrar_video(ref, vid)
     print(f"✓ {ref} -> https://youtu.be/{vid}")
@@ -1057,9 +1378,9 @@ def cmd_vincular() -> None:
 def cmd_analytics_sync() -> None:
     """Analytics AUTOMÁTICO: por cada video publicado trae retención (curva entera), vistas, fuente
     de tráfico y términos de búsqueda de YouTube Analytics, lo guarda y recalcula el outcome."""
-    from .reasoning import store as kstore
-    from .creative import patterns, decisions, production_dna, scoring
     from . import analytics_yt as ay
+    from .creative import decisions, patterns, production_dna, scoring
+    from .reasoning import store as kstore
 
     seco = "--dry-run" in sys.argv
     args = [a for a in sys.argv[2:] if not a.startswith("--")]
@@ -1068,7 +1389,9 @@ def cmd_analytics_sync() -> None:
         mod.init(con)
     refs = args or ay.refs_publicados(con)
     if not refs:
-        print("No hay videos publicados vinculados. Usa `vincular <ref> <video_id>` para los antiguos.")
+        print(
+            "No hay videos publicados vinculados. Usa `vincular <ref> <video_id>` para los antiguos."
+        )
         con.close()
         return
     try:
@@ -1088,38 +1411,54 @@ def cmd_analytics_sync() -> None:
                 production_dna.record_video(con, ref, vid)
         try:
             datos = ay.consultar(vid, yt, yta)
-        except Exception as e:                                         # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
             msg = str(e)
             if "insufficient" in msg.lower() or "403" in msg:
                 msg += "  -> ¿token sin permiso de Analytics? repetir `youtube-auth`"
             print(f"  {ref}: ✗ {msg[:300]}")
             continue
         if datos["estado"] == "privado":
-            cuando = f" (programado {datos['publish_at']})" if datos.get("publish_at") else ""
+            cuando = (
+                f" (programado {datos['publish_at']})"
+                if datos.get("publish_at")
+                else ""
+            )
             print(f"  {ref}: aún privado{cuando}")
             continue
-        if not seco:                               # ya es público: su comentario aprobado, si falta
+        if not seco:  # ya es público: su comentario aprobado, si falta
             _comentar_pendiente(ref)
         if datos["estado"] == "sin_datos":
             print(f"  {ref}: sin datos aún (Analytics va con ~2-3 días de retraso)")
             continue
         b = datos["basicas"]
         if seco:
-            print(f"  {ref}: {int(b['views'])} vistas, {b.get('averageViewPercentage')} % visto (dry-run)")
+            print(
+                f"  {ref}: {int(b['views'])} vistas, {b.get('averageViewPercentage')} % visto (dry-run)"
+            )
             continue
         r = ay.guardar(con, ref, datos)
         score, partes = scoring.desde_analytics(con, ref)
-        decisions.record_outcome(con, ref, score, score_version=scoring.SCORE_VERSION, score_parts=partes)
+        decisions.record_outcome(
+            con, ref, score, score_version=scoring.SCORE_VERSION, score_parts=partes
+        )
         medidos += 1
         pc = " → ".join(f"{k} {v:.0%}" for k, v in r["puntos_control"].items())
-        eng = f" ({r['engaged_views']} comprometidas)" if r.get("engaged_views") is not None else ""
+        eng = (
+            f" ({r['engaged_views']} comprometidas)"
+            if r.get("engaged_views") is not None
+            else ""
+        )
         bus = ", ".join(f"'{t}' {n}" for t, n in r["busquedas"]) or "—"
-        print(f"  {ref}: {r['views']} vistas{eng} · visto {r['avg_view_pct_raw']:.0%} · {pc}\n"
-              f"      tráfico: {r['traffic_source']} · búsquedas: {bus} · score {score:.3f} ({scoring.SCORE_VERSION})")
+        print(
+            f"  {ref}: {r['views']} vistas{eng} · visto {r['avg_view_pct_raw']:.0%} · {pc}\n"
+            f"      tráfico: {r['traffic_source']} · búsquedas: {bus} · score {score:.3f} ({scoring.SCORE_VERSION})"
+        )
     con.close()
     if medidos:
-        print(f"\n{medidos} medidos y re-puntuados. Curvas en production_retention; búsquedas en "
-              "production_search_terms (demanda real: úsala al elegir el próximo tema).")
+        print(
+            f"\n{medidos} medidos y re-puntuados. Curvas en production_retention; búsquedas en "
+            "production_search_terms (demanda real: úsala al elegir el próximo tema)."
+        )
 
 
 def cmd_programar() -> None:
@@ -1127,50 +1466,73 @@ def cmd_programar() -> None:
     York por defecto, --hora HH:MM) o lo hace público ya (--ahora). Lee el video_id de
     data/publish_<ref>.json (lo deja ahí `publish` / producir.py). Nunca re-sube el vídeo."""
     import json
-    from datetime import datetime, timezone
+    from datetime import datetime
     from zoneinfo import ZoneInfo
+
     from . import publish
 
     if len(sys.argv) < 3:
-        raise SystemExit("Uso: python -m omega.cli programar <ref> [--hora 12:00] [--dias N] [--ahora]")
+        raise SystemExit(
+            "Uso: python -m omega.cli programar <ref> [--hora 12:00] [--dias N] [--ahora]"
+        )
     ref = sys.argv[2]
     path = config.DATA_DIR / f"publish_{ref}.json"
     d = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     vid = _video_id(ref) or d.get("video_id")
     if not vid:
-        raise SystemExit(f"✗ {ref} no tiene video_id (ni en la base ni en {path.name}): súbelo primero "
-                         f"como privado (`publish {ref}`) o vincúlalo (`vincular {ref} <video_id>`).")
+        raise SystemExit(
+            f"✗ {ref} no tiene video_id (ni en la base ni en {path.name}): súbelo primero "
+            f"como privado (`publish {ref}`) o vincúlalo (`vincular {ref} <video_id>`)."
+        )
     try:
         if "--ahora" in sys.argv:
             publish.hacer_publico(vid)
             print(f"✓ PÚBLICO ya: https://youtu.be/{vid}")
             d["privacy_status"] = "public"
         else:
-            hora = sys.argv[sys.argv.index("--hora") + 1] if "--hora" in sys.argv else publish.HORA_PICO
-            dias = int(sys.argv[sys.argv.index("--dias") + 1]) if "--dias" in sys.argv else 0
-            t = publish.proximo_slot(datetime.now(timezone.utc), hora, dias=dias)
+            hora = (
+                sys.argv[sys.argv.index("--hora") + 1]
+                if "--hora" in sys.argv
+                else publish.HORA_PICO
+            )
+            dias = (
+                int(sys.argv[sys.argv.index("--dias") + 1])
+                if "--dias" in sys.argv
+                else 0
+            )
+            t = publish.proximo_slot(datetime.now(UTC), hora, dias=dias)
             publish.programar(vid, t)
-            ny = t.astimezone(ZoneInfo(publish.ZONA_AUDIENCIA)).strftime("%a %d %b %H:%M")
+            ny = t.astimezone(ZoneInfo(publish.ZONA_AUDIENCIA)).strftime(
+                "%a %d %b %H:%M"
+            )
             co = t.astimezone(ZoneInfo("America/Bogota")).strftime("%H:%M")
-            print(f"✓ programado: {ny} Nueva York ({co} Colombia) · https://youtu.be/{vid}")
+            print(
+                f"✓ programado: {ny} Nueva York ({co} Colombia) · https://youtu.be/{vid}"
+            )
             d["publish_at"] = t.strftime("%Y-%m-%dT%H:%M:%SZ")
     except publish.PublishError as e:
         raise SystemExit(f"✗ {e}")
     _registrar_video(ref, vid, publish_at=d.get("publish_at"))
     sr = d.get("serie")
-    if sr:                                        # la serie como LISTA: el espectador encadena episodios
+    if sr:  # la serie como LISTA: el espectador encadena episodios
         try:
-            pl = publish.asegurar_playlist(sr["nombre"], f'{sr["nombre"]} — a Net Worthy series.')
+            pl = publish.asegurar_playlist(
+                sr["nombre"], f"{sr['nombre']} — a Net Worthy series."
+            )
             nuevo = publish.agregar_a_playlist(vid, pl)
-            print(f"✓ lista '{sr['nombre']}': {'añadido' if nuevo else 'ya estaba'} (https://youtube.com/playlist?list={pl})")
-        except Exception as e:                    # noqa: BLE001 - la lista no bloquea la aprobación
+            print(
+                f"✓ lista '{sr['nombre']}': {'añadido' if nuevo else 'ya estaba'} (https://youtube.com/playlist?list={pl})"
+            )
+        except Exception as e:  # noqa: BLE001 - la lista no bloquea la aprobación
             print(f"⚠ no se pudo añadir a la lista de la serie: {e}")
     if d.get("comentario_fijado"):
         # Aprobar el Short aprueba su comentario (se muestra aquí). Se publica cuando el vídeo ya es
         # público: `comentar <ref>` o solo en `analytics-sync`. Fijarlo es a mano (la API no fija).
         d["comentario_aprobado"] = True
-        print("✓ comentario aprobado (se publica cuando el vídeo sea público; fíjalo a mano en Studio):\n  "
-              + d["comentario_fijado"].replace("\n", "\n  "))
+        print(
+            "✓ comentario aprobado (se publica cuando el vídeo sea público; fíjalo a mano en Studio):\n  "
+            + d["comentario_fijado"].replace("\n", "\n  ")
+        )
         if d.get("privacy_status") == "public":
             _comentar(ref, d)
     if path.exists():
@@ -1180,6 +1542,7 @@ def cmd_programar() -> None:
 def _comentar(ref: str, d: dict) -> str:
     """Publica el comentario aprobado si el vídeo ya es público. Idempotente (guarda comment_id)."""
     from . import publish
+
     if d.get("comment_id"):
         return "ya publicado"
     if not (d.get("comentario_aprobado") and d.get("comentario_fijado")):
@@ -1193,6 +1556,7 @@ def _comentar(ref: str, d: dict) -> str:
 
 def _comentar_pendiente(ref: str) -> None:
     import json
+
     path = config.DATA_DIR / f"publish_{ref}.json"
     if not path.exists():
         return
@@ -1202,14 +1566,16 @@ def _comentar_pendiente(ref: str) -> None:
     try:
         print(f"  {ref}: comentario {_comentar(ref, d)}")
         path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
-    except Exception as e:                         # noqa: BLE001 - el comentario no frena la medición
+    except Exception as e:  # noqa: BLE001 - el comentario no frena la medición
         print(f"  {ref}: ⚠ comentario sin publicar: {str(e)[:200]}")
 
 
 def cmd_comentar() -> None:
     """Publica el comentario preparado (y aprobado con `programar`) de un Short ya público."""
     import json
+
     from . import publish
+
     if len(sys.argv) < 3:
         raise SystemExit("Uso: python -m omega.cli comentar <ref>")
     ref = sys.argv[2]
@@ -1229,23 +1595,28 @@ def cmd_youtube_auth() -> None:
     qué canal quedó conectado. Sin subir nada. Para la nube: copiar el contenido de ese archivo a
     la variable de entorno YOUTUBE_TOKEN_JSON (tools/setup_nube.sh lo vuelve a escribir allí)."""
     from . import publish
+
     try:
         creds = publish._get_credentials()
     except publish.PublishError as e:
         raise SystemExit(f"✗ {e}")
     from googleapiclient.discovery import build
+
     yt = build("youtube", "v3", credentials=creds, cache_discovery=False)
     items = yt.channels().list(part="snippet", mine=True).execute().get("items", [])
     canal = items[0]["snippet"]["title"] if items else "(sin canal)"
     print(f"✓ token guardado en {publish.TOKEN_PATH} · canal: {canal}")
     print(f"  scopes: {', '.join(publish.SCOPES)}")
     if not creds.refresh_token:
-        print("  ⚠ sin refresh_token: la nube no podrá renovarlo. Revoca el acceso en tu cuenta Google y repite.")
+        print(
+            "  ⚠ sin refresh_token: la nube no podrá renovarlo. Revoca el acceso en tu cuenta Google y repite."
+        )
 
 
 def cmd_estado_bajar() -> None:
     """Repo PRIVADO de estado -> data/omega.sqlite (no pisa una base local sin --forzar)."""
     from . import estado
+
     try:
         print(estado.bajar(forzar="--forzar" in sys.argv))
     except estado.EstadoError as e:
@@ -1255,9 +1626,13 @@ def cmd_estado_bajar() -> None:
 def cmd_produccion_guardar() -> None:
     """Guarda un proyecto v2 (sin MP4 ni assets regenerables) en el repo PRIVADO de estado."""
     from pathlib import Path
+
     from . import estado
+
     if len(sys.argv) < 3:
-        raise SystemExit("Uso: python -m omega.cli produccion-guardar video-v2/<proyecto>")
+        raise SystemExit(
+            "Uso: python -m omega.cli produccion-guardar video-v2/<proyecto>"
+        )
     try:
         print(estado.guardar_produccion(Path(sys.argv[2])))
     except estado.EstadoError as e:
@@ -1267,6 +1642,7 @@ def cmd_produccion_guardar() -> None:
 def cmd_estado_subir() -> None:
     """data/omega.sqlite -> repo PRIVADO de estado (commit + push; no sube una base recortada)."""
     from . import estado
+
     try:
         print(estado.subir(forzar="--forzar" in sys.argv))
     except estado.EstadoError as e:

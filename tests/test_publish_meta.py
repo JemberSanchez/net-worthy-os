@@ -81,6 +81,15 @@ class UploadFacebookReelTest(unittest.TestCase):
             req.call_args_list[-1].kwargs["data"]["video_state"], "PUBLISHED"
         )
 
+    def test_programar_schedules_at_unix_time(self):
+        with mock.patch("requests.request", side_effect=self._calls()) as req:
+            publish_meta.upload_facebook_reel(
+                self.video_path, "t", "d", programar=1793462400
+            )
+        data = req.call_args_list[-1].kwargs["data"]
+        self.assertEqual(data["video_state"], "SCHEDULED")
+        self.assertEqual(data["scheduled_publish_time"], 1793462400)
+
     def test_uploads_binary_to_the_upload_url_returned_by_start_phase(self):
         with mock.patch("requests.request", side_effect=self._calls()) as req:
             publish_meta.upload_facebook_reel(self.video_path, "t", "d")

@@ -208,13 +208,18 @@ def _get_page_token() -> dict:
 
 
 def upload_facebook_reel(
-    video_path: Path, title: str, description: str, *, published: bool = False
+    video_path: Path,
+    title: str,
+    description: str,
+    *,
+    published: bool = False,
+    programar: int | None = None,
 ) -> dict:
     """Sube video_path como Reel de la Página (endpoint /video_reels). Devuelve
     {"video_id": ..., "url": ...}.
 
     published=False por defecto (video_state=DRAFT): nunca público sin que alguien lo pida
-    explícitamente.
+    explícitamente. programar=<unix> lo deja SCHEDULED: Facebook lo publica solo a esa hora.
 
     ⚠ NO usar el endpoint genérico /{page-id}/videos para contenido vertical (probado en real,
     2026-07-31): la subida y el "published:true" se aceptan (HTTP 200, devuelve un id), pero el
@@ -252,19 +257,17 @@ def upload_facebook_reel(
         retriable=False,
     )
 
-    _request(
-        "POST",
-        f"{GRAPH}/{page_id}/video_reels",
-        data={
-            "video_id": video_id,
-            "upload_phase": "finish",
-            "video_state": "PUBLISHED" if published else "DRAFT",
-            "title": title,
-            "description": description,
-            "access_token": page_token,
-        },
-        retriable=False,
-    )
+    finish = {
+        "video_id": video_id,
+        "upload_phase": "finish",
+        "video_state": "PUBLISHED" if published else "DRAFT",
+        "title": title,
+        "description": description,
+        "access_token": page_token,
+    }
+    if programar:
+        finish |= {"video_state": "SCHEDULED", "scheduled_publish_time": programar}
+    _request("POST", f"{GRAPH}/{page_id}/video_reels", data=finish, retriable=False)
     return {"video_id": video_id, "url": f"https://www.facebook.com/reel/{video_id}/"}
 
 
