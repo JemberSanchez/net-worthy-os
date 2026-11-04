@@ -22,6 +22,7 @@ Qué hace, en orden (y por qué en este orden):
 
 El catálogo (10 tipos) salió del #7 v2 hecho a mano: cada tipo ya se vio funcionar en un vídeo real.
 """
+
 from __future__ import annotations
 
 import html
@@ -41,25 +42,50 @@ sys.path.insert(0, str(RAIZ / "tools"))
 import anclas  # noqa: E402
 import hfversion
 
-CATALOGO = ("foto", "revelacion", "lista", "titulo", "tarjetas", "contador3d", "curva", "puntos", "anios", "cta")
-PRE = 0.14            # la escena entra un poco antes de que la voz empiece su frase
+CATALOGO = (
+    "foto",
+    "revelacion",
+    "lista",
+    "titulo",
+    "tarjetas",
+    "contador3d",
+    "curva",
+    "puntos",
+    "anios",
+    "cta",
+)
+PRE = 0.14  # la escena entra un poco antes de que la voz empiece su frase
 # Escenas de TEXTO que, sin `fondo` propio, reciben uno automático: una imagen del propio proyecto
 # desenfocada al 30 %. Motivo medido (Grace Groner, 25-sep): 4 de cada 8 fotogramas eran texto
 # sobre verde liso = aspecto de diapositiva. Un canal profesional nunca deja el cuadro vacío.
 # `contador3d` no (tiene su escena 3D) ni `foto` (ya es imagen). `"fondo": false` lo desactiva.
-AUTO_FONDO = {"revelacion", "lista", "titulo", "tarjetas", "anios", "curva", "puntos", "cta", "contador3d"}
-OPACIDAD_TIPO = {"contador3d": 0.55}   # el payoff: metraje real con más presencia detrás del número
+AUTO_FONDO = {
+    "revelacion",
+    "lista",
+    "titulo",
+    "tarjetas",
+    "anios",
+    "curva",
+    "puntos",
+    "cta",
+    "contador3d",
+}
+OPACIDAD_TIPO = {
+    "contador3d": 0.55
+}  # el payoff: metraje real con más presencia detrás del número
 OPACIDAD_AUTO = 0.3
-OPACIDAD_AUTO_CLIP = 0.46   # el metraje desenfocado pesa menos que una foto: algo más de presencia
+OPACIDAD_AUTO_CLIP = (
+    0.46  # el metraje desenfocado pesa menos que una foto: algo más de presencia
+)
 # Imagen protagonista (1-oct): medido en #7/#8, luma media 40-46/255 y el 79-87 % del tiempo era texto
 # sobre metraje desenfocado al 46 % = diapositivas oscuras. Ahora el fondo de una escena de texto es
 # el metraje NÍTIDO a plena presencia; la legibilidad la da una sombra LOCAL detrás del texto
 # (.scrim) y la puerta WCAG, no oscurecer toda la pantalla. `"fondos_nitidos": false` = lo anterior.
 OPACIDAD_NITIDO = 1.0
 UMBRAL_DETALLE = 16.0  # broll.detalle(): por encima, el fondo nítido se come el texto -> desenfoque suave
-TRAMO_FONDO = 2.5     # s: cada reutilización de un clip como fondo arranca más adelante (nunca el mismo plano)
-SEP_CORTES = 1.2      # s mínimos entre cortes con whoosh + transición (más seguido marea)
-RISER_S = 1.0         # el riser (assets/riser.wav) termina justo en el golpe
+TRAMO_FONDO = 2.5  # s: cada reutilización de un clip como fondo arranca más adelante (nunca el mismo plano)
+SEP_CORTES = 1.2  # s mínimos entre cortes con whoosh + transición (más seguido marea)
+RISER_S = 1.0  # el riser (assets/riser.wav) termina justo en el golpe
 MOVS = ("push", "izq", "sube", "der", "pull")
 
 
@@ -96,6 +122,7 @@ def palabras_de(obj) -> set[str]:
 # ───────────────────────────── validación ─────────────────────────────
 def catalogo_sfx() -> dict:
     import sfx_libre
+
     return sfx_libre.catalogo()
 
 
@@ -103,13 +130,17 @@ def _validar_sonidos(sb: dict) -> list[str]:
     """Efectos reales (tools/sfx_libre.py): nombres del catálogo curado y forma de `sonidos`."""
     cat, err = catalogo_sfx(), []
     decl = [(f"clip {k!r}", c.get("sfx")) for k, c in (sb.get("clips") or {}).items()]
-    decl += [(f"imagen {k!r}", i.get("sfx")) for k, i in (sb.get("imagenes") or {}).items()]
+    decl += [
+        (f"imagen {k!r}", i.get("sfx")) for k, i in (sb.get("imagenes") or {}).items()
+    ]
     for d, n in decl:
         if n is not None and n not in cat:
             err.append(f"{d}: sfx {n!r} no está en el catálogo ({', '.join(cat)})")
     for j, x in enumerate(sb.get("sonidos") or []):
         if not isinstance(x, dict) or x.get("sfx") not in cat or not x.get("en"):
-            err.append(f"sonidos[{j}]: {{\"sfx\": <{'|'.join(cat)}>, \"en\": \"frase:palabra\"}}")
+            err.append(
+                f'sonidos[{j}]: {{"sfx": <{"|".join(cat)}>, "en": "frase:palabra"}}'
+            )
         elif cat[x["sfx"]]["tipo"] == "ambiente" and not float(x.get("dur", 0)) > 0:
             err.append(f"sonidos[{j}]: {x['sfx']!r} es ambiente: lleva `dur` (s)")
     return err
@@ -124,44 +155,73 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     clips = sb.get("clips") or {}
     for nombre, c in clips.items():
         if not (c.get("commons") or c.get("pexels")):
-            errores.append(f"clip {nombre!r}: declara `commons` (File:...webm) o `pexels` (id)")
+            errores.append(
+                f"clip {nombre!r}: declara `commons` (File:...webm) o `pexels` (id)"
+            )
         if float(c.get("desde", 0)) < 0:
             errores.append(f"clip {nombre!r}: `desde` negativo")
     n3d = 0
     for k, s in enumerate(esc):
         tipo = s.get("tipo")
         if tipo not in CATALOGO:
-            errores.append(f"escena {k}: tipo {tipo!r} no existe (catálogo: {', '.join(CATALOGO)})")
+            errores.append(
+                f"escena {k}: tipo {tipo!r} no existe (catálogo: {', '.join(CATALOGO)})"
+            )
             continue
         if "en" not in s:
             errores.append(f"escena {k} ({tipo}): falta `en`")
         n3d += tipo == "contador3d"
         for ref in _imagenes_usadas(s):
             if ref not in imgs:
-                errores.append(f"escena {k} ({tipo}): imagen {ref!r} no declarada en `imagenes`")
+                errores.append(
+                    f"escena {k} ({tipo}): imagen {ref!r} no declarada en `imagenes`"
+                )
         for ref in _clips_usados(s):
             if ref not in clips:
-                errores.append(f"escena {k} ({tipo}): clip {ref!r} no declarado en `clips`")
+                errores.append(
+                    f"escena {k} ({tipo}): clip {ref!r} no declarado en `clips`"
+                )
         if tipo == "foto" and bool(s.get("img")) == bool(s.get("clip")):
             errores.append(f"escena {k} (foto): lleva `img` O `clip` (uno de los dos)")
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
     errores += _validar_sonidos(sb)
     for j, x in enumerate(sb.get("pruebas") or []):
-        if not isinstance(x, dict) or x.get("img") not in imgs or not str(x.get("texto", "")).strip() or not x.get("en"):
-            errores.append(f"pruebas[{j}]: {{\"img\": <declarada en imagenes>, \"texto\": \"frase del documento\", \"en\": ancla, [\"marca\"], [\"hasta\"]}}")
+        if (
+            not isinstance(x, dict)
+            or x.get("img") not in imgs
+            or not str(x.get("texto", "")).strip()
+            or not x.get("en")
+        ):
+            errores.append(
+                f'pruebas[{j}]: {{"img": <declarada en imagenes>, "texto": "frase del documento", "en": ancla, ["marca"], ["hasta"]}}'
+            )
     sr = sb.get("serie")
-    if sr is not None and not (isinstance(sr, dict) and str(sr.get("nombre", "")).strip() and isinstance(sr.get("ep"), int)):
-        errores.append("`serie` = {\"nombre\": \"...\", \"ep\": <entero>}")
+    if sr is not None and not (
+        isinstance(sr, dict)
+        and str(sr.get("nombre", "")).strip()
+        and isinstance(sr.get("ep"), int)
+    ):
+        errores.append('`serie` = {"nombre": "...", "ep": <entero>}')
     try:
         anclas.resolver(sb, words)
     except anclas.AnclaError as e:
         errores.append(str(e))
     sueltas = [a for par in (sb.get("aviso") or {}).get("ventanas") or [] for a in par]
-    sueltas += list(sb.get("golpes") or []) + list((sb.get("musica") or {}).get("oscuro") or [])
+    sueltas += list(sb.get("golpes") or []) + list(
+        (sb.get("musica") or {}).get("oscuro") or []
+    )
     sueltas += [str(x) for x in (sb.get("subtitulos") or [])]
-    sueltas += [x["en"] for x in sb.get("sonidos") or [] if isinstance(x, dict) and x.get("en")]
-    sueltas += [x[k] for x in sb.get("pruebas") or [] if isinstance(x, dict) for k in ("en", "marca", "hasta") if x.get(k)]
+    sueltas += [
+        x["en"] for x in sb.get("sonidos") or [] if isinstance(x, dict) and x.get("en")
+    ]
+    sueltas += [
+        x[k]
+        for x in sb.get("pruebas") or []
+        if isinstance(x, dict)
+        for k in ("en", "marca", "hasta")
+        if x.get(k)
+    ]
     for a in sueltas:
         try:
             anclas.t(words, a)
@@ -174,12 +234,22 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
         except anclas.AnclaError:
             tiempos.append(None)
     for k in range(1, len(tiempos)):
-        if tiempos[k] is not None and tiempos[k - 1] is not None and tiempos[k] <= tiempos[k - 1]:
-            errores.append(f"escena {k}: empieza ({tiempos[k]:.2f}s) antes o a la vez que la {k - 1} ({tiempos[k - 1]:.2f}s)")
+        if (
+            tiempos[k] is not None
+            and tiempos[k - 1] is not None
+            and tiempos[k] <= tiempos[k - 1]
+        ):
+            errores.append(
+                f"escena {k}: empieza ({tiempos[k]:.2f}s) antes o a la vez que la {k - 1} ({tiempos[k - 1]:.2f}s)"
+            )
     for c in sb.get("cifras") or []:
         if not str(c.get("fuente", "")).startswith("http"):
-            errores.append(f"cifra {c.get('dato')!r} sin `fuente` (URL): en un canal YMYL cada número lleva su fuente")
-    if (sb.get("cifras") or sb.get("aviso")) and not (sb.get("aviso") or {}).get("lineas"):
+            errores.append(
+                f"cifra {c.get('dato')!r} sin `fuente` (URL): en un canal YMYL cada número lleva su fuente"
+            )
+    if (sb.get("cifras") or sb.get("aviso")) and not (sb.get("aviso") or {}).get(
+        "lineas"
+    ):
         errores.append("hay cifras pero no `aviso.lineas` (aviso YMYL obligatorio)")
     return errores
 
@@ -193,8 +263,10 @@ _CONTINUOS = {"foto", "contador3d", "anios", "curva", "puntos", "tarjetas"}
 # completa ~0.05 s (el usuario lo notó en varios vídeos, 28-oct). 1.5 = ~1 s de tarjeta asentada;
 # 3 s de cola restaban % visto.
 COLA_S = 1.5
-VOZ_MAX = 42.0        # s: la franja que más retiene es 20-45 s (media de un Short ~33 s, 2026)
-REGANCHO_MAX = 12.0   # s sin golpe/revelación dentro de la voz: la curva del canal cae entre 3 y 20 s
+VOZ_MAX = (
+    42.0  # s: la franja que más retiene es 20-45 s (media de un Short ~33 s, 2026)
+)
+REGANCHO_MAX = 12.0  # s sin golpe/revelación dentro de la voz: la curva del canal cae entre 3 y 20 s
 
 
 def avisos_retencion(p: dict) -> list[str]:
@@ -203,22 +275,44 @@ def avisos_retencion(p: dict) -> list[str]:
     (golpe, impacto o revelación) al menos cada REGANCHO_MAX s."""
     avisos, e0 = [], p["escenas"][0]
     if e0["tipo"] != "foto":
-        avisos.append("gancho sin imagen: la escena 0 debería ser `foto` (mejor con `clip`) — el primer segundo decide el scroll")
+        avisos.append(
+            "gancho sin imagen: la escena 0 debería ser `foto` (mejor con `clip`) — el primer segundo decide el scroll"
+        )
     elif not e0.get("clip"):
-        avisos.append("gancho con foto fija: un `clip` (b-roll en movimiento) frena mejor el scroll")
-    textos = [e0[k]["en"] for k in ("kicker", "titulo", "sub") if isinstance(e0.get(k), dict) and "en" in e0[k]]
+        avisos.append(
+            "gancho con foto fija: un `clip` (b-roll en movimiento) frena mejor el scroll"
+        )
+    textos = [
+        e0[k]["en"]
+        for k in ("kicker", "titulo", "sub")
+        if isinstance(e0.get(k), dict) and "en" in e0[k]
+    ]
     if not textos or min(textos) > 0.3:
-        avisos.append(f"el gancho no pone texto desde el primer fotograma ({min(textos):.2f}s): ancla con \"0-0.4\" — "
-                      "lo que ve quien hace scroll es el fotograma 0" if textos
-                      else "el gancho no tiene texto en pantalla (kicker/titulo)")
+        avisos.append(
+            f'el gancho no pone texto desde el primer fotograma ({min(textos):.2f}s): ancla con "0-0.4" — '
+            "lo que ve quien hace scroll es el fotograma 0"
+            if textos
+            else "el gancho no tiene texto en pantalla (kicker/titulo)"
+        )
     if p["fin_voz"] > VOZ_MAX:
-        avisos.append(f"voz de {p['fin_voz']:.0f}s (> {VOZ_MAX:.0f}s): recorta el guion a ~85-110 palabras (20-45 s es lo que más retiene)")
-    marcas = sorted({0.0, p["fin_voz"], *p["golpes"], *p["impactos"],
-                     *(s["t0"] for s in p["escenas"] if s["tipo"] == "revelacion")})
+        avisos.append(
+            f"voz de {p['fin_voz']:.0f}s (> {VOZ_MAX:.0f}s): recorta el guion a ~85-110 palabras (20-45 s es lo que más retiene)"
+        )
+    marcas = sorted(
+        {
+            0.0,
+            p["fin_voz"],
+            *p["golpes"],
+            *p["impactos"],
+            *(s["t0"] for s in p["escenas"] if s["tipo"] == "revelacion"),
+        }
+    )
     marcas = [t for t in marcas if 0 <= t <= p["fin_voz"]]
     for a_, b_ in zip(marcas, marcas[1:]):
         if b_ - a_ > REGANCHO_MAX:
-            avisos.append(f"{b_ - a_:.0f}s sin re-gancho ({a_:.1f}-{b_:.1f}s): mete un giro, una cifra nueva o una `revelacion`")
+            avisos.append(
+                f"{b_ - a_:.0f}s sin re-gancho ({a_:.1f}-{b_:.1f}s): mete un giro, una cifra nueva o una `revelacion`"
+            )
     return avisos
 
 
@@ -231,12 +325,16 @@ def huecos_estaticos(p: dict, maximo: float = 2.5) -> list[str]:
     for k, s in enumerate(p["escenas"]):
         if s["tipo"] in _CONTINUOS or s.get("fondo"):
             continue
-        fin = min(s["t1"], p["fin_voz"])            # tras la voz, la tarjeta final tiene su propio movimiento
+        fin = min(
+            s["t1"], p["fin_voz"]
+        )  # tras la voz, la tarjeta final tiene su propio movimiento
         t = sorted({s["t0"], fin} | {x for x in _tiempos(s) if s["t0"] <= x <= fin})
         for a, b in zip(t, t[1:]):
             if b - a > maximo:
-                avisos.append(f"escena {k} ({s['tipo']}): {b - a:.1f}s sin nada nuevo ({a:.1f}-{b:.1f}s) — "
-                              "añade un elemento anclado o parte la frase en otra escena")
+                avisos.append(
+                    f"escena {k} ({s['tipo']}): {b - a:.1f}s sin nada nuevo ({a:.1f}-{b:.1f}s) — "
+                    "añade un elemento anclado o parte la frase en otra escena"
+                )
     return avisos
 
 
@@ -278,18 +376,34 @@ def _clips_usados(s: dict) -> list[str]:
 
 # ───────────────────────────── markup por tipo ─────────────────────────────
 def m_foto(s, id_):
-    k = f'<div id="{id_}-kicker" class="kicker plate" style="font-size:44px">{txt(s["kicker"]["texto"])}</div>' if s.get("kicker") else ""
-    sub = f'<div id="{id_}-sub" class="sub plate" style="color:var(--ink);margin-top:14px">{txt(s["sub"]["texto"])}</div>' if s.get("sub") else ""
-    t = f'<div class="stack"><div id="{id_}-titulo" class="huge shadow">{txt(s["titulo"]["texto"])}</div></div>' if s.get("titulo") else ""
+    k = (
+        f'<div id="{id_}-kicker" class="kicker plate" style="font-size:44px">{txt(s["kicker"]["texto"])}</div>'
+        if s.get("kicker")
+        else ""
+    )
+    sub = (
+        f'<div id="{id_}-sub" class="sub plate" style="color:var(--ink);margin-top:14px">{txt(s["sub"]["texto"])}</div>'
+        if s.get("sub")
+        else ""
+    )
+    t = (
+        f'<div class="stack"><div id="{id_}-titulo" class="huge shadow">{txt(s["titulo"]["texto"])}</div></div>'
+        if s.get("titulo")
+        else ""
+    )
     return t + (f'<div class="stack abajo">{k}{sub}</div>' if k or sub else "")
 
 
 def m_revelacion(s, id_):
-    return (f'<div class="stack"><div id="{id_}-l1" class="mid mute" style="margin-bottom:50px">{txt(s["linea1"]["texto"])}</div>'
-            f'<div id="{id_}-l2" class="huge gold shadow">{txt(s["linea2"]["texto"])}</div></div>')
+    return (
+        f'<div class="stack"><div id="{id_}-l1" class="mid mute" style="margin-bottom:50px">{txt(s["linea1"]["texto"])}</div>'
+        f'<div id="{id_}-l2" class="huge gold shadow">{txt(s["linea2"]["texto"])}</div></div>'
+    )
 
 
-_X = '<path pathLength="1" d="M18 18 L82 82" /><path pathLength="1" d="M82 18 L18 82" />'
+_X = (
+    '<path pathLength="1" d="M18 18 L82 82" /><path pathLength="1" d="M82 18 L18 82" />'
+)
 _CHECK = '<path pathLength="1" d="M20 52 L42 74 L80 28" />'
 
 
@@ -297,34 +411,46 @@ def m_lista(s, id_):
     ic = s.get("icono", "check")
     filas = "".join(
         f'<div class="row {ic}" id="{id_}-i{k}"><svg class="mk" viewBox="0 0 100 100">{_X if ic == "x" else _CHECK}</svg>'
-        f'<div class="tx {it.get("color", "")}">{txt(it["texto"])}</div></div>' for k, it in enumerate(s["items"]))
+        f'<div class="tx {it.get("color", "")}">{txt(it["texto"])}</div></div>'
+        for k, it in enumerate(s["items"])
+    )
     return f'<div class="stack">{filas}</div>'
 
 
-_GEAR = ('<circle cx="50" cy="50" r="17" /><path d="M50 8 L50 22 M50 78 L50 92 M8 50 L22 50 M78 50 L92 50 '
-         'M20 20 L30 30 M70 70 L80 80 M80 20 L70 30 M30 70 L20 80" /><circle cx="50" cy="50" r="31" />')
+_GEAR = (
+    '<circle cx="50" cy="50" r="17" /><path d="M50 8 L50 22 M50 78 L50 92 M8 50 L22 50 M78 50 L92 50 '
+    'M20 20 L30 30 M70 70 L80 80 M80 20 L70 30 M30 70 L20 80" /><circle cx="50" cy="50" r="31" />'
+)
 
 
 def m_titulo(s, id_):
     partes = []
     if s.get("icono"):
-        partes.append(f'<svg class="gear" id="{id_}-ico" viewBox="0 0 100 100">{_GEAR}</svg>')
+        partes.append(
+            f'<svg class="gear" id="{id_}-ico" viewBox="0 0 100 100">{_GEAR}</svg>'
+        )
     if s.get("kicker"):
-        partes.append(f'<div id="{id_}-k" class="kicker {s["kicker"].get("color", "")}">{txt(s["kicker"]["texto"])}</div>')
+        partes.append(
+            f'<div id="{id_}-k" class="kicker {s["kicker"].get("color", "")}">{txt(s["kicker"]["texto"])}</div>'
+        )
     tachar = (s.get("tachar") or {}).get("linea")
     for k, l in enumerate(s.get("lineas") or []):
         estilo = l.get("estilo", "big")
         t = txt(l["texto"])
         if s.get("contador") and s["contador"].get("linea") == k:
             t = t.replace("{n}", f'<span id="{id_}-n">0</span>')
-        cls = "boton" if estilo == "boton" else f'{estilo} {l.get("color", "")} shadow'
+        cls = "boton" if estilo == "boton" else f"{estilo} {l.get('color', '')} shadow"
         tam = f' style="font-size:{int(l["tam"])}px"' if l.get("tam") else ""
         strike = f'<div class="strike" id="{id_}-t{k}"></div>' if tachar == k else ""
-        partes.append(f'<div class="linea" id="{id_}-l{k}"><div class="{cls}"{tam}>{t}</div>{strike}</div>')
+        partes.append(
+            f'<div class="linea" id="{id_}-l{k}"><div class="{cls}"{tam}>{t}</div>{strike}</div>'
+        )
     if s.get("cheque"):
         c = s["cheque"]
-        partes.append(f'<div class="cheque" id="{id_}-cheque"><div class="r"><span>{txt(c.get("etiqueta", "PAYCHECK"))}</span>'
-                      f'<span>WEEKLY</span></div><div class="amt">{txt(c["monto"])}</div><div class="strike"></div></div>')
+        partes.append(
+            f'<div class="cheque" id="{id_}-cheque"><div class="r"><span>{txt(c.get("etiqueta", "PAYCHECK"))}</span>'
+            f'<span>WEEKLY</span></div><div class="amt">{txt(c["monto"])}</div><div class="strike"></div></div>'
+        )
     scan = f'<div class="scan" id="{id_}-scan"></div>' if s.get("alarma") else ""
     pos = {"arriba": " arriba", "abajo": " abajo"}.get(s.get("posicion", ""), "")
     return f'<div class="stack{pos}">{"".join(partes)}</div>{scan}'
@@ -334,23 +460,44 @@ def m_tarjetas(s, id_):
     out = ""
     if s.get("titulo"):
         out += f'<div id="{id_}-tit" class="tag gold" style="top:220px;left:0;right:0;text-align:center">{txt(s["titulo"]["texto"])}</div>'
-    out += "".join(f'<div class="cert" id="{id_}-c{k}"><img src="assets/t/{c["img"]}.jpg" alt="" /></div>' for k, c in enumerate(s["imgs"]))
+    out += "".join(
+        f'<div class="cert" id="{id_}-c{k}"><img src="assets/t/{c["img"]}.jpg" alt="" /></div>'
+        for k, c in enumerate(s["imgs"])
+    )
     if s.get("flujo"):
         f = s["flujo"]
         out += f'<div id="{id_}-flujo" class="tag green" style="top:880px;left:0;right:0;text-align:center">{txt(f["texto"])}</div>'
-        if f.get("contador"):     # opcional: sin un número real verificable, no se inventa uno
-            out += (f'<div class="cnt" id="{id_}-cnt"><div class="n"><span id="{id_}-cntn">{f["contador"]["desde"]}</span></div>'
-                    f'<div class="sub" style="margin-top:0">{txt(f["contador"].get("etiqueta", ""))}</div></div>')
+        if f.get(
+            "contador"
+        ):  # opcional: sin un número real verificable, no se inventa uno
+            out += (
+                f'<div class="cnt" id="{id_}-cnt"><div class="n"><span id="{id_}-cntn">{f["contador"]["desde"]}</span></div>'
+                f'<div class="sub" style="margin-top:0">{txt(f["contador"].get("etiqueta", ""))}</div></div>'
+            )
     return out
 
 
 def m_contador3d(s, id_):
-    k = f'<div id="{id_}-k" class="kicker" style="position:absolute;top:250px;width:100%">{txt(s["kicker"]["texto"])}</div>' if s.get("kicker") else ""
-    p = (f'<div style="position:absolute;top:560px;width:100%;text-align:center"><span class="pill line" id="{id_}-pill">'
-         f'{txt(s["pill"]["texto"])}</span></div>') if s.get("pill") else ""
+    k = (
+        f'<div id="{id_}-k" class="kicker" style="position:absolute;top:250px;width:100%">{txt(s["kicker"]["texto"])}</div>'
+        if s.get("kicker")
+        else ""
+    )
+    p = (
+        (
+            f'<div style="position:absolute;top:560px;width:100%;text-align:center"><span class="pill line" id="{id_}-pill">'
+            f"{txt(s['pill']['texto'])}</span></div>"
+        )
+        if s.get("pill")
+        else ""
+    )
     # Sin monedas 3D por defecto (26-sep, "todo real"): el número va sobre metraje real (fondo
     # automático). `"monedas3d": true` recupera la capa Three.js.
-    capa3d = '<canvas id="three-layer" width="1080" height="1920"></canvas>' if s.get("monedas3d") else ""
+    capa3d = (
+        '<canvas id="three-layer" width="1080" height="1920"></canvas>'
+        if s.get("monedas3d")
+        else ""
+    )
     return f'{capa3d}{k}<div class="money" id="{id_}-money">{s.get("prefijo", "$")}0</div>{p}'
 
 
@@ -372,7 +519,11 @@ def _compacto(v: float) -> str:
     for d, suf in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
         if v >= d:
             x = v / d
-            return f"${x:.1f}{suf}".replace(".0" + suf, suf) if x < 100 else f"${x:.0f}{suf}"
+            return (
+                f"${x:.1f}{suf}".replace(".0" + suf, suf)
+                if x < 100
+                else f"${x:.0f}{suf}"
+            )
     return f"${v:.0f}"
 
 
@@ -382,9 +533,11 @@ def ticks_anios(anios: float, desde: int | None) -> list[tuple[float, str]]:
     paso = 10 if anios <= 40 else 15 if anios <= 90 else 20
     out, a = [], 0
     while a <= anios + 1e-9:
-        out.append((a, str(desde + a) if desde else ("Yr 0" if a == 0 else f"Yr {a:g}")))
+        out.append(
+            (a, str(desde + a) if desde else ("Yr 0" if a == 0 else f"Yr {a:g}"))
+        )
         a += paso
-    if out[-1][0] < anios - paso * 0.4:                 # el último año real siempre visible
+    if out[-1][0] < anios - paso * 0.4:  # el último año real siempre visible
         out.append((anios, str(desde + int(anios)) if desde else f"Yr {anios:g}"))
     elif out[-1][0] != anios:
         out[-1] = (anios, str(desde + int(anios)) if desde else f"Yr {anios:g}")
@@ -405,25 +558,40 @@ def m_curva(s, id_):
     aport = sr.get("mensual", 0) * 12 * sr["anios"] + sr.get("inicial", 0)
     py = H - aport / top * H
     desde = sr.get("desde_anio")
-    ejes = "".join(f'<line class="tickl" x1="{a / sr["anios"] * W:.1f}" y1="{H}" x2="{a / sr["anios"] * W:.1f}" y2="{H + 14}" />'
-                   f'<text class="tick" x="{a / sr["anios"] * W:.1f}" y="{H + 52}" text-anchor="middle">{lab}</text>'
-                   for a, lab in ticks_anios(sr["anios"], desde))
-    con_valores = not s.get("escalas")               # "Same engine. Any size." cambia la escala a propósito
+    ejes = "".join(
+        f'<line class="tickl" x1="{a / sr["anios"] * W:.1f}" y1="{H}" x2="{a / sr["anios"] * W:.1f}" y2="{H + 14}" />'
+        f'<text class="tick" x="{a / sr["anios"] * W:.1f}" y="{H + 52}" text-anchor="middle">{lab}</text>'
+        for a, lab in ticks_anios(sr["anios"], desde)
+    )
+    con_valores = not s.get(
+        "escalas"
+    )  # "Same engine. Any size." cambia la escala a propósito
     if con_valores:
-        ejes += "".join(f'<line class="grid" x1="0" y1="{H - f * H:.1f}" x2="{W}" y2="{H - f * H:.1f}" />'
-                        f'<text class="tick" x="{W - 6}" y="{H - f * H - 12:.1f}" text-anchor="end">{_compacto(top * f)}</text>'
-                        for f in ((0.5,) if s.get("etiqueta_max") else (0.5, 1.0)))   # sin duplicar la etiqueta grande
+        ejes += "".join(
+            f'<line class="grid" x1="0" y1="{H - f * H:.1f}" x2="{W}" y2="{H - f * H:.1f}" />'
+            f'<text class="tick" x="{W - 6}" y="{H - f * H - 12:.1f}" text-anchor="end">{_compacto(top * f)}</text>'
+            for f in ((0.5,) if s.get("etiqueta_max") else (0.5, 1.0))
+        )  # sin duplicar la etiqueta grande
     # punto que recorre la línea: posiciones y valores muestreados para el runtime (seek-safe)
-    s["curva_pts"] = [[round(x, 1), round(y, 1), round(v), round((desde or 0) + a, 2)] for (x, y), (a, v) in zip(xy, pts)]
+    s["curva_pts"] = [
+        [round(x, 1), round(y, 1), round(v), round((desde or 0) + a, 2)]
+        for (x, y), (a, v) in zip(xy, pts)
+    ]
     s["curva_desde"] = desde
     s["curva_valores"] = con_valores
-    out = (f'<svg class="chart" id="{id_}-svg" viewBox="0 0 {W} {H}"><defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">'
-           f'<stop offset="0" stop-color="#d8b25a" stop-opacity="0.75" /><stop offset="1" stop-color="#d8b25a" stop-opacity="0.05" /></linearGradient></defs>'
-           f'{ejes}<line class="axis" x1="0" y1="{H}" x2="{W}" y2="{H}" /><path class="area" id="{id_}-area" d="{area}" />'
-           f'<path class="curve" id="{id_}-curve" pathLength="1" d="{linea}" />'
-           + (f'<line class="paid" id="{id_}-paid" x1="0" y1="{H}" x2="{W}" y2="{py:.1f}" />' if s.get("aportado") else "")
-           + f'<g id="{id_}-ph" class="playhead"><circle r="16" class="halo" /><circle r="9" class="dot" /></g>'
-           + f'<text id="{id_}-phl" class="phl" text-anchor="middle"></text></svg>')
+    out = (
+        f'<svg class="chart" id="{id_}-svg" viewBox="0 0 {W} {H}"><defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0" stop-color="#d8b25a" stop-opacity="0.75" /><stop offset="1" stop-color="#d8b25a" stop-opacity="0.05" /></linearGradient></defs>'
+        f'{ejes}<line class="axis" x1="0" y1="{H}" x2="{W}" y2="{H}" /><path class="area" id="{id_}-area" d="{area}" />'
+        f'<path class="curve" id="{id_}-curve" pathLength="1" d="{linea}" />'
+        + (
+            f'<line class="paid" id="{id_}-paid" x1="0" y1="{H}" x2="{W}" y2="{py:.1f}" />'
+            if s.get("aportado")
+            else ""
+        )
+        + f'<g id="{id_}-ph" class="playhead"><circle r="16" class="halo" /><circle r="9" class="dot" /></g>'
+        + f'<text id="{id_}-phl" class="phl" text-anchor="middle"></text></svg>'
+    )
     if s.get("ilustrativo"):
         out += f'<div class="tag mute" id="{id_}-ill" style="top:250px;right:90px;font-size:26px">Illustrative</div>'
     if s.get("aportado"):
@@ -432,17 +600,23 @@ def m_curva(s, id_):
         out += f'<div class="tag ink" id="{id_}-ar" style="top:600px;left:150px;right:150px;text-align:center;font-size:52px">{txt(s["area"]["texto"])}</div>'
     if s.get("titulo"):
         out += f'<div class="tag gold" id="{id_}-tit" style="top:250px;left:0;right:0;text-align:center;font-size:52px">{txt(s["titulo"]["texto"])}</div>'
-    escalas = s.get("escalas") or ([{"texto": s["etiqueta_max"]}] if s.get("etiqueta_max") else [])
+    escalas = s.get("escalas") or (
+        [{"texto": s["etiqueta_max"]}] if s.get("etiqueta_max") else []
+    )
     top_css = 330 if s.get("titulo") else 320
-    out += "".join(f'<div class="tag gold" id="{id_}-e{k}" style="top:{top_css}px;right:100px;font-size:48px">{txt(e["texto"])}</div>'
-                   for k, e in enumerate(escalas))
+    out += "".join(
+        f'<div class="tag gold" id="{id_}-e{k}" style="top:{top_css}px;right:100px;font-size:48px">{txt(e["texto"])}</div>'
+        for k, e in enumerate(escalas)
+    )
     s["escalas"] = escalas
     return out
 
 
 def m_puntos(s, id_):
-    out = (f'<div id="{id_}-num" style="position:absolute;top:280px;width:100%;text-align:center"><div class="huge" style="font-size:190px">'
-           f'<span id="{id_}-n">0</span> <span class="gold">{txt(s.get("etiqueta", ""))}</span></div></div><div class="dots" id="{id_}-dots"></div>')
+    out = (
+        f'<div id="{id_}-num" style="position:absolute;top:280px;width:100%;text-align:center"><div class="huge" style="font-size:190px">'
+        f'<span id="{id_}-n">0</span> <span class="gold">{txt(s.get("etiqueta", ""))}</span></div></div><div class="dots" id="{id_}-dots"></div>'
+    )
     c = s.get("cae") or {}
     if c.get("img"):
         out += f'<div class="card" id="{id_}-card"><img src="assets/t/{c["img"]}.jpg" alt="" /></div>'
@@ -455,17 +629,32 @@ def m_puntos(s, id_):
 
 
 def m_anios(s, id_):
-    k = f'<div id="{id_}-k" class="kicker">{txt(s["kicker"])}</div>' if s.get("kicker") else ""
-    hitos = "".join(f'<div class="hito" id="{id_}-h{j}">{y} · {txt(t)}</div>' for j, (y, t) in enumerate(s.get("hitos") or []))
-    e = f'<div class="tag gold" id="{id_}-l" style="top:1060px;left:0;right:0;text-align:center">{txt(s["etiqueta"]["texto"])}</div>' if s.get("etiqueta") else ""
-    return (f'<div class="stack arriba">{k}<div class="yr" id="{id_}-yr">{s["desde"]}</div></div>{hitos}'
-            f'<div class="track"><div class="fill" id="{id_}-fill"></div></div>{e}')
+    k = (
+        f'<div id="{id_}-k" class="kicker">{txt(s["kicker"])}</div>'
+        if s.get("kicker")
+        else ""
+    )
+    hitos = "".join(
+        f'<div class="hito" id="{id_}-h{j}">{y} · {txt(t)}</div>'
+        for j, (y, t) in enumerate(s.get("hitos") or [])
+    )
+    e = (
+        f'<div class="tag gold" id="{id_}-l" style="top:1060px;left:0;right:0;text-align:center">{txt(s["etiqueta"]["texto"])}</div>'
+        if s.get("etiqueta")
+        else ""
+    )
+    return (
+        f'<div class="stack arriba">{k}<div class="yr" id="{id_}-yr">{s["desde"]}</div></div>{hitos}'
+        f'<div class="track"><div class="fill" id="{id_}-fill"></div></div>{e}'
+    )
 
 
 def m_cta(s, id_):
-    out = (f'<div class="vs" id="{id_}-vs"><div class="half" id="{id_}-a"><div class="huge" style="font-size:170px">{txt(s["a"]["texto"])}</div></div>'
-           f'<div class="o" id="{id_}-o">{txt(s.get("o", "or"))}</div>'
-           f'<div class="half" id="{id_}-b"><div class="huge gold" style="font-size:170px">{txt(s["b"]["texto"])}</div></div></div>')
+    out = (
+        f'<div class="vs" id="{id_}-vs"><div class="half" id="{id_}-a"><div class="huge" style="font-size:170px">{txt(s["a"]["texto"])}</div></div>'
+        f'<div class="o" id="{id_}-o">{txt(s.get("o", "or"))}</div>'
+        f'<div class="half" id="{id_}-b"><div class="huge gold" style="font-size:170px">{txt(s["b"]["texto"])}</div></div></div>'
+    )
     if s.get("pregunta"):
         out += f'<div id="{id_}-q" class="tag ink" style="top:860px;left:60px;right:60px;text-align:center;font-size:58px">{txt(s["pregunta"]["texto"])}</div>'
     bot = s.get("botones") or []
@@ -473,37 +662,63 @@ def m_cta(s, id_):
         # gap 70 + smaller type on long labels: the end-card pulse (scale 1.14) made
         # "TEAM STALEMATE"/"TEAM CRACK" overlap with gap 30 (#9, 28-oct)
         fs = ' style="font-size:36px"' if sum(len(b["texto"]) for b in bot) > 18 else ""
-        out += ('<div style="position:absolute;top:1040px;left:0;right:0;display:flex;justify-content:center;gap:70px">'
-                + "".join(f'<div class="pill {"gold" if k == len(bot) - 1 else "line"}" id="{id_}-p{k}"{fs}>{txt(b["texto"])}</div>' for k, b in enumerate(bot))
-                + "</div>")
+        out += (
+            '<div style="position:absolute;top:1040px;left:0;right:0;display:flex;justify-content:center;gap:70px">'
+            + "".join(
+                f'<div class="pill {"gold" if k == len(bot) - 1 else "line"}" id="{id_}-p{k}"{fs}>{txt(b["texto"])}</div>'
+                for k, b in enumerate(bot)
+            )
+            + "</div>"
+        )
     out += f'<div class="luz" id="{id_}-luz"></div>'
     out += f'<div id="{id_}-s" class="sub ink" style="position:absolute;top:1170px;left:0;right:0">{txt(s.get("sub", ""))}</div>'
     return out
 
 
-MARKUP = {"foto": m_foto, "revelacion": m_revelacion, "lista": m_lista, "titulo": m_titulo, "tarjetas": m_tarjetas,
-          "contador3d": m_contador3d, "curva": m_curva, "puntos": m_puntos, "anios": m_anios, "cta": m_cta}
+MARKUP = {
+    "foto": m_foto,
+    "revelacion": m_revelacion,
+    "lista": m_lista,
+    "titulo": m_titulo,
+    "tarjetas": m_tarjetas,
+    "contador3d": m_contador3d,
+    "curva": m_curva,
+    "puntos": m_puntos,
+    "anios": m_anios,
+    "cta": m_cta,
+}
 
 
 # ───────────────────────────── imágenes ─────────────────────────────
 def asegurar_imagenes(proy: Path, imagenes: dict) -> None:
-    faltan = {k: v for k, v in imagenes.items() if not (proy / "assets" / "t" / f"{k}.jpg").exists()}
+    faltan = {
+        k: v
+        for k, v in imagenes.items()
+        if not (proy / "assets" / "t" / f"{k}.jpg").exists()
+    }
     if not faltan:
         return
     import imagenes_libres as il
     from duotono import duotono
     from PIL import Image
-    crudos = [(v["commons"], proy / "assets" / "img" / f"{k}.jpg") for k, v in faltan.items()
-              if not (proy / "assets" / "img" / f"{k}.jpg").exists()]
+
+    crudos = [
+        (v["commons"], proy / "assets" / "img" / f"{k}.jpg")
+        for k, v in faltan.items()
+        if not (proy / "assets" / "img" / f"{k}.jpg").exists()
+    ]
     if crudos:
         il.bajar_commons(crudos)
     (proy / "assets" / "t").mkdir(parents=True, exist_ok=True)
     for k, v in faltan.items():
         crudo = proy / "assets" / "img" / f"{k}.jpg"
         if not crudo.exists():
-            raise StoryboardError(f"imagen {k!r}: no se pudo bajar {v.get('commons')!r} (¿licencia no admitida o 429?)")
-        duotono(Image.open(crudo), v.get("recorte", 0.02), v.get("contraste", 1.15), 1600).save(
-            proy / "assets" / "t" / f"{k}.jpg", quality=82)
+            raise StoryboardError(
+                f"imagen {k!r}: no se pudo bajar {v.get('commons')!r} (¿licencia no admitida o 429?)"
+            )
+        duotono(
+            Image.open(crudo), v.get("recorte", 0.02), v.get("contraste", 1.15), 1600
+        ).save(proy / "assets" / "t" / f"{k}.jpg", quality=82)
 
 
 # ───────────────────────────── construcción ─────────────────────────────
@@ -525,23 +740,40 @@ def plan(sb: dict, words: list[dict]) -> dict:
 
     def capa(id_, src: dict, t0, t1, mov, opacidad, desenfoque=False, desde_extra=0.0):
         f = {"id": id_, "t0": t0, "t1": t1, "mov": mov, "opacidad": opacidad}
-        if src.get("clip"):                      # b-roll: archivo propio de la duración exacta
+        if src.get("clip"):  # b-roll: archivo propio de la duración exacta
             c = src["clip"]
-            modo = "duotono" if clips[c].get("duotono") else "color"   # color híbrido (26-sep)
+            modo = (
+                "duotono" if clips[c].get("duotono") else "color"
+            )  # color híbrido (26-sep)
             desde = float(clips[c].get("desde", 0)) + desde_extra
             # el nombre lleva modo y si es fondo: un tratado viejo nunca se reutiliza por error
             sufijo = {True: "f2", "fuerte": "f11"}.get(desenfoque, "")
-            f.update(video=True, clip=c, desde=desde, modo=modo, fondo_vid=desenfoque,
-                     src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{sufijo}.mp4")
+            f.update(
+                video=True,
+                clip=c,
+                desde=desde,
+                modo=modo,
+                fondo_vid=desenfoque,
+                src=f"{c}-{desde:g}-{round((t1 - t0) * 100)}-{modo[0]}{sufijo}.mp4",
+            )
         else:
             f["img"] = src["img"]
-            f["archivo"] = f'{src["img"]}-desenfoque' if desenfoque else src["img"]
+            f["archivo"] = f"{src['img']}-desenfoque" if desenfoque else src["img"]
             # Parallax 2.5D (26-sep): la foto de una escena `foto` se convierte en un clip donde cada
             # píxel se mueve según su profundidad. Fuera: fondos, documentos y quien lo desactive.
             decl = (sb.get("imagenes") or {}).get(src["img"]) or {}
-            if (src.get("tipo") == "foto" and not desenfoque and sb.get("parallax", True)
-                    and src.get("parallax", True) and not decl.get("documento")):
-                f.update(video=True, p25d=True, src=f'{src["img"]}-2p5d-{mov}-{round((t1 - t0) * 100)}.mp4')
+            if (
+                src.get("tipo") == "foto"
+                and not desenfoque
+                and sb.get("parallax", True)
+                and src.get("parallax", True)
+                and not decl.get("documento")
+            ):
+                f.update(
+                    video=True,
+                    p25d=True,
+                    src=f"{src['img']}-2p5d-{mov}-{round((t1 - t0) * 100)}.mp4",
+                )
         return f
 
     nitido = sb.get("fondos_nitidos", True)
@@ -549,23 +781,54 @@ def plan(sb: dict, words: list[dict]) -> dict:
     # Movimiento en todo el vídeo (26-sep): si el proyecto tiene clips, los fondos automáticos son
     # CLIPS desenfocados (rotando clip y tramo); las fotos desenfocadas solo si no hay metraje.
     pool_clips = list(clips)
-    usadas_foto = {k: s.get("img") or s.get("clip") for k, s in enumerate(esc) if s["tipo"] == "foto"}
+    usadas_foto = {
+        k: s.get("img") or s.get("clip")
+        for k, s in enumerate(esc)
+        if s["tipo"] == "foto"
+    }
     ai, usos_clip = 0, {}
 
     for k, s in enumerate(esc):
         if s["tipo"] == "foto":
-            fotos.append(capa(f"ph{k}", s, s["t0"], min(END, s["t1"] + 0.3), s.get("mov", MOVS[mi % len(MOVS)]), 1))
-            fotos[-1]["primer_plano"] = True     # lo que se VE a pantalla completa: aquí suena su sfx
+            fotos.append(
+                capa(
+                    f"ph{k}",
+                    s,
+                    s["t0"],
+                    min(END, s["t1"] + 0.3),
+                    s.get("mov", MOVS[mi % len(MOVS)]),
+                    1,
+                )
+            )
+            fotos[-1]["primer_plano"] = (
+                True  # lo que se VE a pantalla completa: aquí suena su sfx
+            )
             mi += 1
         if s.get("fondo"):
             f = s["fondo"] if isinstance(s["fondo"], dict) else {"img": s["fondo"]}
-            fotos.append(capa(f"ph{k}b", f, s["t0"], s["t1"] + 0.04, f.get("mov", MOVS[mi % len(MOVS)]),
-                              f.get("opacidad", s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else 0.4)),
-                              desenfoque="fuerte" if s.get("fondo_suave") else False))
+            fotos.append(
+                capa(
+                    f"ph{k}b",
+                    f,
+                    s["t0"],
+                    s["t1"] + 0.04,
+                    f.get("mov", MOVS[mi % len(MOVS)]),
+                    f.get(
+                        "opacidad",
+                        s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else 0.4),
+                    ),
+                    desenfoque="fuerte" if s.get("fondo_suave") else False,
+                )
+            )
             fotos[-1]["capa"] = "fondo"
             mi += 1
-        elif (s["tipo"] in AUTO_FONDO and "fondo" not in s and sb.get("fondos_auto", True) and (pool or pool_clips)
-              and not (s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"))):
+        elif (
+            s["tipo"] in AUTO_FONDO
+            and "fondo" not in s
+            and sb.get("fondos_auto", True)
+            and (pool or pool_clips)
+            and not (s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"))
+        ):
             vecinas = {usadas_foto.get(k - 1), usadas_foto.get(k + 1)}
             fuente = pool_clips or pool
             cand = [x for x in fuente if x not in vecinas] or fuente
@@ -576,57 +839,134 @@ def plan(sb: dict, words: list[dict]) -> dict:
                 usos_clip[elegido] = n + 1
                 # `fondo_suave` en la escena = el mismo remedio que un clip con mucho detalle: lo
                 # pone el crítico (critico.py) cuando el texto de ESA escena no se lee en el MP4
-                ruidoso = clips[elegido].get("_detalle", 0) > UMBRAL_DETALLE or bool(s.get("fondo_suave"))
-                fotos.append(capa(f"ph{k}a", {"clip": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP)),
-                                  desenfoque=("fuerte" if ruidoso else False) if nitido else True,
-                                  desde_extra=TRAMO_FONDO * n))
+                ruidoso = clips[elegido].get("_detalle", 0) > UMBRAL_DETALLE or bool(
+                    s.get("fondo_suave")
+                )
+                fotos.append(
+                    capa(
+                        f"ph{k}a",
+                        {"clip": elegido},
+                        s["t0"],
+                        s["t1"] + 0.04,
+                        MOVS[(ai + 2) % len(MOVS)],
+                        s.get(
+                            "fondo_opacidad",
+                            OPACIDAD_NITIDO
+                            if nitido
+                            else OPACIDAD_TIPO.get(s["tipo"], OPACIDAD_AUTO_CLIP),
+                        ),
+                        desenfoque=("fuerte" if ruidoso else False) if nitido else True,
+                        desde_extra=TRAMO_FONDO * n,
+                    )
+                )
             else:
-                fotos.append(capa(f"ph{k}a", {"img": elegido}, s["t0"], s["t1"] + 0.04, MOVS[(ai + 2) % len(MOVS)],
-                                  s.get("fondo_opacidad", OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO),
-                                  desenfoque=("fuerte" if s.get("fondo_suave") else False) if nitido else True))
+                fotos.append(
+                    capa(
+                        f"ph{k}a",
+                        {"img": elegido},
+                        s["t0"],
+                        s["t1"] + 0.04,
+                        MOVS[(ai + 2) % len(MOVS)],
+                        s.get(
+                            "fondo_opacidad",
+                            OPACIDAD_NITIDO if nitido else OPACIDAD_AUTO,
+                        ),
+                        desenfoque=("fuerte" if s.get("fondo_suave") else False)
+                        if nitido
+                        else True,
+                    )
+                )
             fotos[-1]["capa"] = "fondo"
             ai += 1
         if s["tipo"] == "cta" and (s.get("pregunta") or {}).get("fondo"):
-            fotos.append({"id": f"ph{k}q", "img": s["pregunta"]["fondo"], "t0": s["pregunta"]["en"] - 0.3, "t1": END,
-                          "mov": "final", "opacidad": 0.55, "aparece": s["pregunta"]["en"] - 0.29})
+            fotos.append(
+                {
+                    "id": f"ph{k}q",
+                    "img": s["pregunta"]["fondo"],
+                    "t0": s["pregunta"]["en"] - 0.3,
+                    "t1": END,
+                    "mov": "final",
+                    "opacidad": 0.55,
+                    "aparece": s["pregunta"]["en"] - 0.29,
+                }
+            )
     cortes, ult = [], -9.0
-    for s in esc[1:]:                                # sin ametrallar: >= SEP_CORTES entre cortes
+    for s in esc[1:]:  # sin ametrallar: >= SEP_CORTES entre cortes
         if s["t0"] - ult >= SEP_CORTES:
-            cortes.append(round(s["t0"], 3)); ult = s["t0"]
+            cortes.append(round(s["t0"], 3))
+            ult = s["t0"]
     sub = sb.get("subtitulos")
     rango = [fr[int(sub[0])][0], fr[int(sub[1])][-1]] if sub else [0, len(words) - 1]
     av = r.get("aviso") or {}
-    golpes = [s["golpe"] for s in esc if s["tipo"] == "revelacion" and s.get("golpe") is not None]
+    golpes = [
+        s["golpe"]
+        for s in esc
+        if s["tipo"] == "revelacion" and s.get("golpe") is not None
+    ]
     golpes += [s["llega"] for s in esc if s["tipo"] == "contador3d"]
     golpes += [anclas.t(words, g, fr) for g in sb.get("golpes", [])]
-    impactos = [s["tachar"]["en"] for s in esc if s["tipo"] == "titulo" and s.get("tachar")
-                and (s.get("lineas") or [{}])[s["tachar"]["linea"]].get("estilo") == "boton"]
+    impactos = [
+        s["tachar"]["en"]
+        for s in esc
+        if s["tipo"] == "titulo"
+        and s.get("tachar")
+        and (s.get("lineas") or [{}])[s["tachar"]["linea"]].get("estilo") == "boton"
+    ]
     impactos += [s["cae"]["en"] for s in esc if s["tipo"] == "puntos" and s.get("cae")]
     oscuro = (sb.get("musica") or {}).get("oscuro")
     cta = next((s["t0"] for s in esc if s["tipo"] == "cta"), None)
     sr = sb.get("serie")
     serie = None
-    if sr:                    # sello de serie en el gancho: hasta el final de la 1ª frase (máx. 3 s)
+    if sr:  # sello de serie en el gancho: hasta el final de la 1ª frase (máx. 3 s)
         fin0 = words[fr[0][-1]]["end"]
-        serie = {"texto": f'{sr["nombre"]} · EP {sr["ep"]}', "t0": 0.1, "t1": round(min(3.0, max(1.6, fin0 + 0.3)), 3)}
+        serie = {
+            "texto": f"{sr['nombre']} · EP {sr['ep']}",
+            "t0": 0.1,
+            "t1": round(min(3.0, max(1.6, fin0 + 0.3)), 3),
+        }
     return {
-        "D": END, "fin_voz": fin_voz, "words": words, "escenas": esc, "fotos": fotos, "cortes": cortes,
-        "subtitulos": rango, "calientes": sb.get("calientes", []),
-        "aviso": {"lineas": av.get("lineas", []),
-                  "ventanas": [[av_a, av_b] for av_a, av_b in (av.get("ventanas_t") or [])],
-                  "final": fin_voz + 0.1 if av.get("final", True) and av.get("lineas") else None,
-                  "placa": bool(av.get("placa")), "tam": av.get("tam")},
-        "golpes": sorted(golpes), "impactos": sorted(impactos),
-        "oscuro": [anclas.t(words, oscuro[0], fr) - 0.25, anclas.t(words, oscuro[1], fr) - 0.1] if oscuro else None,
-        "cta": cta, "serie": serie, "sonidos": sonidos(sb, words, fr, fotos, END),
-        "musica_volumen": volumen_musica(sb), "vol_motor": volumen_motor(sb),
-        "pruebas": [prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])],
+        "D": END,
+        "fin_voz": fin_voz,
+        "words": words,
+        "escenas": esc,
+        "fotos": fotos,
+        "cortes": cortes,
+        "subtitulos": rango,
+        "calientes": sb.get("calientes", []),
+        "aviso": {
+            "lineas": av.get("lineas", []),
+            "ventanas": [[av_a, av_b] for av_a, av_b in (av.get("ventanas_t") or [])],
+            "final": fin_voz + 0.1
+            if av.get("final", True) and av.get("lineas")
+            else None,
+            "placa": bool(av.get("placa")),
+            "tam": av.get("tam"),
+        },
+        "golpes": sorted(golpes),
+        "impactos": sorted(impactos),
+        "oscuro": [
+            anclas.t(words, oscuro[0], fr) - 0.25,
+            anclas.t(words, oscuro[1], fr) - 0.1,
+        ]
+        if oscuro
+        else None,
+        "cta": cta,
+        "serie": serie,
+        "sonidos": sonidos(sb, words, fr, fotos, END),
+        "musica_volumen": volumen_musica(sb),
+        "vol_motor": volumen_motor(sb),
+        "pruebas": [
+            prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])
+        ],
     }
 
 
-PRUEBA_ANCHO_FRASE = 940   # px que ocupa la frase subrayada al final del empuje (de 1080)
-PRUEBA_Y = 700             # px: altura del cuadro donde queda la frase (zona de texto, sobre subtítulos)
+PRUEBA_ANCHO_FRASE = (
+    940  # px que ocupa la frase subrayada al final del empuje (de 1080)
+)
+PRUEBA_Y = (
+    700  # px: altura del cuadro donde queda la frase (zona de texto, sobre subtítulos)
+)
 
 
 def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
@@ -634,38 +974,78 @@ def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
     localizada por OCR (tools/ocr_doc.py -> `_caja_n`, `_aspecto`) quede legible en la zona de
     texto; empuje de cámara hacia ella y subrayador en `marca`. Geometría pura, en px del cuadro."""
     t0 = anclas.t(words, x["en"], fr)
-    t1 = min(END, anclas.t(words, x["hasta"], fr)) if x.get("hasta") else min(END, t0 + 1.5)
+    t1 = (
+        min(END, anclas.t(words, x["hasta"], fr))
+        if x.get("hasta")
+        else min(END, t0 + 1.5)
+    )
     marca = anclas.t(words, x["marca"], fr) if x.get("marca") else t0 + 0.3
-    x0, y0, x1, y1 = x.get("_caja_n") or [0.1, 0.45, 0.9, 0.52]      # sin OCR (solo validar): centro
+    x0, y0, x1, y1 = x.get("_caja_n") or [
+        0.1,
+        0.45,
+        0.9,
+        0.52,
+    ]  # sin OCR (solo validar): centro
     asp = float(x.get("_aspecto") or 1.3)
     wd = min(3240.0, max(1080.0, PRUEBA_ANCHO_FRASE / max(0.05, x1 - x0)))
     hd = wd * asp
     izq = min(0.0, max(1080 - wd, 540 - (x0 + x1) / 2 * wd))
     arr = PRUEBA_Y - (y0 + y1) / 2 * hd
-    arr = min(max(arr, 1920 - hd), 0.0) if hd >= 1920 else arr       # cubre el cuadro si el documento da
+    arr = (
+        min(max(arr, 1920 - hd), 0.0) if hd >= 1920 else arr
+    )  # cubre el cuadro si el documento da
     pad_x, pad_y = 0.012 * wd, 0.25 * (y1 - y0) * hd
-    caja = [round(izq + x0 * wd - pad_x), round(arr + y0 * hd - pad_y), round((x1 - x0) * wd + 2 * pad_x),
-            round((y1 - y0) * hd + 2 * pad_y)]
-    return {"id": f"pr{j}", "img": x["img"], "t0": round(t0, 3), "t1": round(max(t1, t0 + 0.6), 3),
-            "marca": round(max(t0 + 0.12, marca), 3), "doc": [round(izq), round(arr), round(wd), round(hd)],
-            "caja": caja, "foco": [caja[0] + caja[2] / 2, caja[1] + caja[3] / 2]}
+    caja = [
+        round(izq + x0 * wd - pad_x),
+        round(arr + y0 * hd - pad_y),
+        round((x1 - x0) * wd + 2 * pad_x),
+        round((y1 - y0) * hd + 2 * pad_y),
+    ]
+    return {
+        "id": f"pr{j}",
+        "img": x["img"],
+        "t0": round(t0, 3),
+        "t1": round(max(t1, t0 + 0.6), 3),
+        "marca": round(max(t0 + 0.12, marca), 3),
+        "doc": [round(izq), round(arr), round(wd), round(hd)],
+        "caja": caja,
+        "foco": [caja[0] + caja[2] / 2, caja[1] + caja[3] / 2],
+    }
 
 
-def sonidos(sb: dict, words: list[dict], fr, fotos: list[dict], END: float) -> list[dict]:
+def sonidos(
+    sb: dict, words: list[dict], fr, fotos: list[dict], END: float
+) -> list[dict]:
     """Efectos REALES sincronizados con lo que se ve (tools/sfx_libre.py):
     - clip con `sfx` en primer plano -> su sonido mientras está en pantalla (ambiente) o al entrar (golpe)
     - imagen con `sfx` en primer plano -> igual
     - `sonidos` -> golpe anclado a una palabra (el transitorio cae en la palabra)."""
-    cat = catalogo_sfx() if (sb.get("sonidos") or any(
-        c.get("sfx") for c in list((sb.get("clips") or {}).values()) + list((sb.get("imagenes") or {}).values()))) else {}
+    cat = (
+        catalogo_sfx()
+        if (
+            sb.get("sonidos")
+            or any(
+                c.get("sfx")
+                for c in list((sb.get("clips") or {}).values())
+                + list((sb.get("imagenes") or {}).values())
+            )
+        )
+        else {}
+    )
     if not cat:
         return []
     import sfx_libre
+
     out = []
 
     def uso(n, t, dur=None, vol=None):
         c = cat[n]
-        u = {"sfx": n, "tipo": c["tipo"], "t": round(max(0.0, t), 3), "vol": float(vol if vol is not None else c.get("vol", 0.5))}
+        u = {
+            "sfx": n,
+            "tipo": c["tipo"],
+            "t": round(max(0.0, t), 3),
+            "vol": float(vol if vol is not None else c.get("vol", 0.5)),
+        }
         if c["tipo"] == "ambiente":
             u["dur"] = round(min(float(dur), END - u["t"]), 2)
         u["archivo"] = sfx_libre.archivo(n, u["tipo"], u.get("dur"))
@@ -674,9 +1054,17 @@ def sonidos(sb: dict, words: list[dict], fr, fotos: list[dict], END: float) -> l
     for f in fotos:
         if not f.get("primer_plano"):
             continue
-        decl = (sb.get("clips") or {}).get(f["clip"], {}) if f.get("clip") else (sb.get("imagenes") or {}).get(f.get("img"), {})
+        decl = (
+            (sb.get("clips") or {}).get(f["clip"], {})
+            if f.get("clip")
+            else (sb.get("imagenes") or {}).get(f.get("img"), {})
+        )
         if decl.get("sfx"):
-            uso(decl["sfx"], f["t0"] + (0.0 if cat[decl["sfx"]]["tipo"] == "ambiente" else 0.04), f["t1"] - f["t0"])
+            uso(
+                decl["sfx"],
+                f["t0"] + (0.0 if cat[decl["sfx"]]["tipo"] == "ambiente" else 0.04),
+                f["t1"] - f["t0"],
+            )
     for x in sb.get("sonidos") or []:
         uso(x["sfx"], anclas.t(words, x["en"], fr), x.get("dur"), x.get("vol"))
     return sorted(out, key=lambda u: u["t"])
@@ -684,42 +1072,62 @@ def sonidos(sb: dict, words: list[dict], fr, fotos: list[dict], END: float) -> l
 
 def _sombra(f: dict) -> str:
     """Fondo de una escena de texto: sombra general ligera (la legibilidad va en .scrim, local)."""
-    return "shade fondo" if f.get("capa") == "fondo" and f.get("opacidad", 0) >= 0.9 else "shade"
+    return (
+        "shade fondo"
+        if f.get("capa") == "fondo" and f.get("opacidad", 0) >= 0.9
+        else "shade"
+    )
 
 
 def _capa_html(f: dict, j: int) -> str:
     tiempo = f'data-start="{f["t0"]:.3f}" data-duration="{f["t1"] - f["t0"]:.3f}"'
     if not f.get("video"):
-        return (f'      <div id="{f["id"]}" class="clip ph" {tiempo} data-track-index="{2 + j}">'
-                f'<img id="{f["id"]}-img" src="assets/t/{f.get("archivo", f["img"])}.jpg" alt="" /><div class="{_sombra(f)}"></div></div>')
+        return (
+            f'      <div id="{f["id"]}" class="clip ph" {tiempo} data-track-index="{2 + j}">'
+            f'<img id="{f["id"]}-img" src="assets/t/{f.get("archivo", f["img"])}.jpg" alt="" /><div class="{_sombra(f)}"></div></div>'
+        )
     # Vídeo: el tiempo va en el <video> y NO en su contenedor (lint `video_nested_in_timed_element`:
     # con los dos, el extractor saca fotogramas desplazados). El contenedor, sin tiempo, es el que
     # se anima (zoom lento); la sombra es su propio clip con la misma ventana.
-    return (f'      <div id="{f["id"]}" class="ph phv"><video id="{f["id"]}-img" class="clip" src="assets/v/{f["src"]}" '
-            f'{tiempo} data-track-index="{2 + j}" muted playsinline></video></div>\n'
-            f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{80 + j}"><div class="{_sombra(f)}"></div></div>')
+    return (
+        f'      <div id="{f["id"]}" class="ph phv"><video id="{f["id"]}-img" class="clip" src="assets/v/{f["src"]}" '
+        f'{tiempo} data-track-index="{2 + j}" muted playsinline></video></div>\n'
+        f'      <div id="{f["id"]}-sh" class="clip ph" {tiempo} data-track-index="{80 + j}"><div class="{_sombra(f)}"></div></div>'
+    )
 
 
 def asegurar_desenfoques(proy: Path, p: dict, radio: float = 14) -> None:
     """Versión desenfocada (horneada, no filtro CSS por fotograma) de las imágenes usadas como
     fondo automático: separa el texto de la imagen como una profundidad de campo corta."""
     from PIL import Image, ImageFilter
+
     for f in p["fotos"]:
         if f.get("archivo", "").endswith("-desenfoque"):
-            dst = proy / "assets" / "t" / f'{f["archivo"]}.jpg'
+            dst = proy / "assets" / "t" / f"{f['archivo']}.jpg"
             if not dst.exists():
-                Image.open(proy / "assets" / "t" / f'{f["img"]}.jpg').filter(ImageFilter.GaussianBlur(radio)).save(dst, quality=80)
+                Image.open(proy / "assets" / "t" / f"{f['img']}.jpg").filter(
+                    ImageFilter.GaussianBlur(radio)
+                ).save(dst, quality=80)
 
 
 def asegurar_parallax(proy: Path, p: dict) -> None:
     """Renderiza (una vez, cacheado por nombre) los clips 2.5D de las fotos: tools/profundidad.py."""
-    usos = [f for f in p["fotos"] if f.get("p25d") and not (proy / "assets" / "v" / f["src"]).exists()]
+    usos = [
+        f
+        for f in p["fotos"]
+        if f.get("p25d") and not (proy / "assets" / "v" / f["src"]).exists()
+    ]
     if not usos:
         return
     import profundidad
+
     for f in usos:
-        info = profundidad.video_2p5d(proy / "assets" / "t" / f'{f["img"]}.jpg', proy / "assets" / "v" / f["src"],
-                                      f["t1"] - f["t0"], f["mov"])
+        info = profundidad.video_2p5d(
+            proy / "assets" / "t" / f"{f['img']}.jpg",
+            proy / "assets" / "v" / f["src"],
+            f["t1"] - f["t0"],
+            f["mov"],
+        )
         print(f"✓ 2.5D {f['img']} -> {f['src']} ({info['frames']} fotogramas)")
 
 
@@ -728,22 +1136,28 @@ def localizar_pruebas(proy: Path, sb: dict) -> None:
     píxel. Frase no encontrada = error: nunca se subraya a ciegas."""
     import ocr_doc
     from PIL import Image
+
     for x in sb["pruebas"]:
-        img = proy / "assets" / "t" / f'{x["img"]}.jpg'
+        img = proy / "assets" / "t" / f"{x['img']}.jpg"
         r = ocr_doc.buscar(img, x["texto"])
         if not r:
-            raise StoryboardError(f'prueba {x["texto"]!r}: el OCR no la encuentra en {x["img"]} '
-                                  f'(mira {img.with_suffix(".ocr.json").name} y usa el texto tal cual sale)')
+            raise StoryboardError(
+                f"prueba {x['texto']!r}: el OCR no la encuentra en {x['img']} "
+                f"(mira {img.with_suffix('.ocr.json').name} y usa el texto tal cual sale)"
+            )
         W, H = Image.open(img).size
         a, b, c, d = r["caja"]
         x["_caja_n"], x["_aspecto"] = [a / W, b / H, c / W, d / H], H / W
-        print(f'✓ prueba: "{r["texto"]}" en {x["img"]} (OCR {r["conf"]:.2f}, parecido {r["parecido"]:.2f})')
+        print(
+            f'✓ prueba: "{r["texto"]}" en {x["img"]} (OCR {r["conf"]:.2f}, parecido {r["parecido"]:.2f})'
+        )
 
 
 def medir_detalle(proy: Path, sb: dict) -> None:
     """Antes del plan: cuánto detalle tiene cada clip (cacheado en assets/clips/detalle.json) para
     decidir qué fondos van nítidos y cuáles suaves. Medido, no a ojo."""
     import broll
+
     decl = sb["clips"]
     carpeta = proy / "assets" / "clips"
     cache_p = carpeta / "detalle.json"
@@ -752,8 +1166,12 @@ def medir_detalle(proy: Path, sb: dict) -> None:
     if faltan:
         crudos = broll.bajar({c: decl[c] for c in faltan}, carpeta)
         for c in faltan:
-            cache[f"{c}@{float(decl[c].get('desde', 0)):g}"] = broll.detalle(crudos[c], float(decl[c].get("desde", 0)))
-        cache_p.write_text(json.dumps(cache, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+            cache[f"{c}@{float(decl[c].get('desde', 0)):g}"] = broll.detalle(
+                crudos[c], float(decl[c].get("desde", 0))
+            )
+        cache_p.write_text(
+            json.dumps(cache, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+        )
     for c, d in decl.items():
         d["_detalle"] = cache[f"{c}@{float(d.get('desde', 0)):g}"]
     suaves = [c for c, d in decl.items() if d["_detalle"] > UMBRAL_DETALLE]
@@ -763,16 +1181,32 @@ def medir_detalle(proy: Path, sb: dict) -> None:
 
 def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
     """Baja (tools/broll.py, licencia filtrada + créditos) y trata los clips de vídeo que falten."""
-    usos = [f for f in p["fotos"] if f.get("clip") and not (proy / "assets" / "v" / f["src"]).exists()]
+    usos = [
+        f
+        for f in p["fotos"]
+        if f.get("clip") and not (proy / "assets" / "v" / f["src"]).exists()
+    ]
     if not usos:
         return
     import broll
+
     decl = sb.get("clips") or {}
-    crudos = broll.bajar({f["clip"]: decl[f["clip"]] for f in usos}, proy / "assets" / "clips")
+    crudos = broll.bajar(
+        {f["clip"]: decl[f["clip"]] for f in usos}, proy / "assets" / "clips"
+    )
     for f in usos:
-        info = broll.preparar(crudos[f["clip"]], proy / "assets" / "v" / f["src"], f["desde"], f["t1"] - f["t0"],
-                              float(decl[f["clip"]].get("contraste", 1.15)), modo=f["modo"], fondo=f["fondo_vid"])
-        print(f"✓ clip {f['clip']} -> {f['src']} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})")
+        info = broll.preparar(
+            crudos[f["clip"]],
+            proy / "assets" / "v" / f["src"],
+            f["desde"],
+            f["t1"] - f["t0"],
+            float(decl[f["clip"]].get("contraste", 1.15)),
+            modo=f["modo"],
+            fondo=f["fondo_vid"],
+        )
+        print(
+            f"✓ clip {f['clip']} -> {f['src']} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})"
+        )
 
 
 def _html(p: dict) -> str:
@@ -780,52 +1214,103 @@ def _html(p: dict) -> str:
     esc_html = []
     for k, s in enumerate(p["escenas"]):
         a, b = s["t0"], s["t1"]
-        scrim = '<div class="scrim"></div>' if s["tipo"] != "foto" else ""   # sombra local tras el texto
-        esc_html.append(f'      <section id="s{k}" class="clip scene" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
-                        f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>')
+        scrim = (
+            '<div class="scrim"></div>' if s["tipo"] != "foto" else ""
+        )  # sombra local tras el texto
+        esc_html.append(
+            f'      <section id="s{k}" class="clip scene" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
+            f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>'
+        )
     fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
-    audio = ['      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
-             f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>']
+    audio = [
+        '      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
+        f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>',
+    ]
     vm = p.get("vol_motor") or VOL_MOTOR
-    k_imp = vm["impacto"] / VOL_MOTOR["impacto"]       # los impactos de `impactos` escalan igual
-    sfx = [("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]]   # whoosh = transición visual (motor.js)
-    sfx += [("impact.wav", g - 0.02, vm["impacto"]) for g in p["golpes"]] + [("ding.wav", g, 0.5) for g in p["golpes"][1:2]]
-    sfx += [("riser.wav", g - RISER_S, vm["riser"]) for g in p["golpes"] if g - RISER_S >= 0.5]
+    k_imp = (
+        vm["impacto"] / VOL_MOTOR["impacto"]
+    )  # los impactos de `impactos` escalan igual
+    sfx = [
+        ("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]
+    ]  # whoosh = transición visual (motor.js)
+    sfx += [("impact.wav", g - 0.02, vm["impacto"]) for g in p["golpes"]] + [
+        ("ding.wav", g, 0.5) for g in p["golpes"][1:2]
+    ]
+    sfx += [
+        ("riser.wav", g - RISER_S, vm["riser"])
+        for g in p["golpes"]
+        if g - RISER_S >= 0.5
+    ]
     sfx += [("impact.wav", t, round(0.45 * k_imp, 3)) for t in p["impactos"]]
     sfx = [(f"assets/_motor/{f}", t, v) for f, t, v in sfx]
-    if p.get("serie"):                            # logo sonoro: la firma de la serie, igual en cada episodio
+    if p.get("serie"):  # logo sonoro: la firma de la serie, igual en cada episodio
         sfx.append(("assets/_motor/logo.wav", p["serie"]["t0"], 0.32))
-    sfx += [(f"assets/sfx/{u['archivo']}", u["t"], u["vol"]) for u in p.get("sonidos") or []]
-    audio += [f'      <audio id="sfx{j}" src="{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
-              for j, (f, t, v) in enumerate(sfx)]
-    aviso = '<span style="display:block">' + '</span><span style="display:block">'.join(html.escape(x) for x in p["aviso"]["lineas"]) + "</span>"
-    tiene3d = any(s["tipo"] == "contador3d" and s.get("monedas3d") for s in p["escenas"])
+    sfx += [
+        (f"assets/sfx/{u['archivo']}", u["t"], u["vol"]) for u in p.get("sonidos") or []
+    ]
+    audio += [
+        f'      <audio id="sfx{j}" src="{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
+        for j, (f, t, v) in enumerate(sfx)
+    ]
+    aviso = (
+        '<span style="display:block">'
+        + '</span><span style="display:block">'.join(
+            html.escape(x) for x in p["aviso"]["lineas"]
+        )
+        + "</span>"
+    )
+    tiene3d = any(
+        s["tipo"] == "contador3d" and s.get("monedas3d") for s in p["escenas"]
+    )
     sr = p.get("serie")
-    serie = (f'      <div id="serieclip" class="clip" data-start="{sr["t0"]:.3f}" data-duration="{sr["t1"] - sr["t0"]:.3f}" '
-             f'data-track-index="63"><div id="serie">{html.escape(sr["texto"])}</div></div>') if sr else ""
+    serie = (
+        (
+            f'      <div id="serieclip" class="clip" data-start="{sr["t0"]:.3f}" data-duration="{sr["t1"] - sr["t0"]:.3f}" '
+            f'data-track-index="63"><div id="serie">{html.escape(sr["texto"])}</div></div>'
+        )
+        if sr
+        else ""
+    )
     pruebas = "\n".join(
         f'      <div id="{pr["id"]}" class="clip prueba" data-start="{pr["t0"]:.3f}" data-duration="{pr["t1"] - pr["t0"]:.3f}" '
         f'data-track-index="{64 + j}"><div id="{pr["id"]}-cam" class="pcam" style="transform-origin:{pr["foco"][0]:.0f}px {pr["foco"][1]:.0f}px">'
         f'<img src="assets/t/{pr["img"]}.jpg" alt="" style="left:{pr["doc"][0]}px;top:{pr["doc"][1]}px;width:{pr["doc"][2]}px;height:{pr["doc"][3]}px" />'
         f'<div id="{pr["id"]}-f" class="foco" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
         f'<div id="{pr["id"]}-m" class="marca" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
-        f'</div></div>' for j, pr in enumerate(p.get("pruebas") or []))
+        f"</div></div>"
+        for j, pr in enumerate(p.get("pruebas") or [])
+    )
     rep = {
         "__PRUEBAS__": pruebas,
         "__SERIE__": serie,
-        "__END__": f'{p["D"]}', "__AUDIO__": "\n".join(audio), "__FOTOS__": fotos, "__ESCENAS__": "\n".join(esc_html),
+        "__END__": f"{p['D']}",
+        "__AUDIO__": "\n".join(audio),
+        "__FOTOS__": fotos,
+        "__ESCENAS__": "\n".join(esc_html),
         "__AVISO__": aviso if p["aviso"]["lineas"] else "",
         "__AVISOESTILO__": estilo_aviso(p["aviso"]),
         "__PLAN__": json.dumps(p, ensure_ascii=False).replace("</", "<\\/"),
         "__MOTORJS__": (MOTOR / "motor.js").read_text(encoding="utf-8"),
-        "__MOTOR3D__": ('    <script type="module">\n' + (MOTOR / "motor3d.js").read_text(encoding="utf-8") + "\n    </script>") if tiene3d else "",
+        "__MOTOR3D__": (
+            '    <script type="module">\n'
+            + (MOTOR / "motor3d.js").read_text(encoding="utf-8")
+            + "\n    </script>"
+        )
+        if tiene3d
+        else "",
     }
     for k, v in rep.items():
         tpl = tpl.replace(k, v)
     return tpl
 
 
-def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True, con_carve: bool = True) -> Path:
+def construir(
+    proy: Path,
+    *,
+    solo_validar: bool = False,
+    con_musica: bool = True,
+    con_carve: bool = True,
+) -> Path:
     proy = Path(proy).resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
@@ -835,7 +1320,9 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     # ventanas del aviso: anclas -> segundos (van aparte porque son pares, no claves `en`)
     av = sb.get("aviso") or {}
     if av.get("ventanas"):
-        av["ventanas_t"] = [[anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]]
+        av["ventanas_t"] = [
+            [anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]
+        ]
     if sb.get("fondos_nitidos", True) and sb.get("clips") and not solo_validar:
         medir_detalle(proy, sb)
     if sb.get("pruebas") and not solo_validar:
@@ -847,7 +1334,9 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     for aviso in avisos_retencion(p):
         print(f"⚠ retención: {aviso}")
     if solo_validar:
-        print(f"✓ storyboard válido: {len(p['escenas'])} escenas, {len(p['fotos'])} fotos, {p['D']}s")
+        print(
+            f"✓ storyboard válido: {len(p['escenas'])} escenas, {len(p['fotos'])} fotos, {p['D']}s"
+        )
         return proy / "storyboard.json"
     asegurar_imagenes(proy, sb.get("imagenes") or {})
     asegurar_desenfoques(proy, p)
@@ -855,52 +1344,108 @@ def construir(proy: Path, *, solo_validar: bool = False, con_musica: bool = True
     asegurar_parallax(proy, p)
     if p["sonidos"]:
         import sfx_libre
+
         sfx_libre.asegurar(p["sonidos"], proy / "assets" / "sfx")
-        print(f"✓ sonidos reales: {', '.join(sorted({u['sfx'] for u in p['sonidos']}))} ({len(p['sonidos'])} usos)")
+        print(
+            f"✓ sonidos reales: {', '.join(sorted({u['sfx'] for u in p['sonidos']}))} ({len(p['sonidos'])} usos)"
+        )
     dst = proy / "assets" / "_motor"
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(MOTOR / "assets", dst)
     pista = (sb.get("musica") or {}).get("pista")
-    if con_musica and pista:                     # música REAL con licencia (tools/musica_libre.py)
+    if con_musica and pista:  # música REAL con licencia (tools/musica_libre.py)
         import musica_libre
-        crudo = musica_libre.bajar({"pista": pista["commons"]}, proy / "assets" / "musica")["pista"]
-        info = musica_libre.cama(crudo, proy / "assets" / "music-bed.wav", p["D"], float(pista.get("desde", 0)))
-        print(f"✓ música: {pista['commons'][5:]} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})")
+
+        crudo = musica_libre.bajar(
+            {"pista": pista["commons"]}, proy / "assets" / "musica"
+        )["pista"]
+        info = musica_libre.cama(
+            crudo,
+            proy / "assets" / "music-bed.wav",
+            p["D"],
+            float(pista.get("desde", 0)),
+        )
+        print(
+            f"✓ música: {pista['commons'][5:]} ({info['duracion']}s{', en bucle' if info['bucle'] else ''})"
+        )
     elif con_musica:
         import musica
-        musica.generar(proy / "assets" / "music-bed.wav", p["D"], p["golpes"],
-                       tuple(p["oscuro"]) if p["oscuro"] else None, p["cta"])
+
+        musica.generar(
+            proy / "assets" / "music-bed.wav",
+            p["D"],
+            p["golpes"],
+            tuple(p["oscuro"]) if p["oscuro"] else None,
+            p["cta"],
+        )
     out = proy / "index.html"
     out.write_text(_html(p), encoding="utf-8")
     _andamiaje(proy)
-    print(f"✓ {out.relative_to(RAIZ)}  {len(p['escenas'])} escenas · {len(p['fotos'])} fotos · {p['D']}s")
+    print(
+        f"✓ {out.relative_to(RAIZ)}  {len(p['escenas'])} escenas · {len(p['fotos'])} fotos · {p['D']}s"
+    )
     if con_carve:
         _carve(out)
     return out
 
 
-IGNORAR = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/music-bed.wav",
-           "assets/img/*.jpg", "assets/clips/*.src", "assets/v/", "assets/t/*-desenfoque.jpg", "social/",
-           "assets/musica/*.src", "assets/sfx/*.src", "assets/sfx/*.wav", "assets/clips/detalle.json",
-           "assets/t/*.ocr.json")
+IGNORAR = (
+    "renders/",
+    "snapshots/",
+    ".hyperframes/",
+    "node_modules/",
+    "assets/_motor/",
+    "assets/music-bed.wav",
+    "assets/img/*.jpg",
+    "assets/clips/*.src",
+    "assets/v/",
+    "assets/t/*-desenfoque.jpg",
+    "social/",
+    "assets/musica/*.src",
+    "assets/sfx/*.src",
+    "assets/sfx/*.wav",
+    "assets/clips/detalle.json",
+    "assets/t/*.ocr.json",
+)
 
 
 def _andamiaje(proy: Path) -> None:
     """hyperframes.json / package.json / .gitignore mínimos si el proyecto es nuevo."""
     if not (proy / "hyperframes.json").exists():
-        (proy / "hyperframes.json").write_text(json.dumps({
-            "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
-            "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
-            "media": {"autoProxy": True}}, indent=2) + "\n")
+        (proy / "hyperframes.json").write_text(
+            json.dumps(
+                {
+                    "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+                    "paths": {
+                        "blocks": "compositions",
+                        "components": "compositions/components",
+                        "assets": "assets",
+                    },
+                    "media": {"autoProxy": True},
+                },
+                indent=2,
+            )
+            + "\n"
+        )
     if not (proy / "package.json").exists():
-        (proy / "package.json").write_text(json.dumps({
-            "name": proy.name, "private": True, "type": "module",
-            "scripts": {"build": f"python ../motor/construir.py .",
+        (proy / "package.json").write_text(
+            json.dumps(
+                {
+                    "name": proy.name,
+                    "private": True,
+                    "type": "module",
+                    "scripts": {
+                        "build": f"python ../motor/construir.py .",
                         "lint": "npx --yes hyperframes@latest lint",
-                        "render": f"npx --yes hyperframes@latest render --quality high --output renders/{proy.name}.mp4"}},
-            indent=2) + "\n")
-    gi = proy / ".gitignore"                     # lo regenerable no se versiona; se AÑADE lo que falte
+                        "render": f"npx --yes hyperframes@latest render --quality high --output renders/{proy.name}.mp4",
+                    },
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+    gi = proy / ".gitignore"  # lo regenerable no se versiona; se AÑADE lo que falte
     tiene = gi.read_text(encoding="utf-8").splitlines() if gi.exists() else []
     faltan = [x for x in IGNORAR if x not in tiene]
     if faltan:
@@ -909,13 +1454,23 @@ def _andamiaje(proy: Path) -> None:
 
 # The upstream skill moved (Oct-2026): `hyperframes-audio/scripts` -> `media-use/audio/scripts`.
 # Both are tried so an older install keeps working.
-CARVE_RUTAS = ("media-use/audio/scripts/carve.mjs", "hyperframes-audio/scripts/carve.mjs")
+CARVE_RUTAS = (
+    "media-use/audio/scripts/carve.mjs",
+    "hyperframes-audio/scripts/carve.mjs",
+)
 
 
 def ruta_carve() -> str | None:
     if os.environ.get("HF_CARVE"):
         return os.environ["HF_CARVE"]
-    return next((str(c) for r in CARVE_RUTAS if (c := Path.home() / ".claude/skills" / r).exists()), None)
+    return next(
+        (
+            str(c)
+            for r in CARVE_RUTAS
+            if (c := Path.home() / ".claude/skills" / r).exists()
+        ),
+        None,
+    )
 
 
 VOL_MUSICA = 0.5
@@ -929,7 +1484,10 @@ def volumen_motor(sb: dict) -> dict:
     corte, golpe, subida). Por defecto los de siempre. Existe porque el crítico midió en el #7 que
     el whoosh de corte y el riser tapaban la voz y no había perilla para corregirlo (28-oct)."""
     m = sb.get("mezcla") or {}
-    return {k: round(min(1.0, max(0.0, float(m.get(k, v)))), 3) for k, v in VOL_MOTOR.items()}
+    return {
+        k: round(min(1.0, max(0.0, float(m.get(k, v)))), 3)
+        for k, v in VOL_MOTOR.items()
+    }
 
 
 def volumen_musica(sb: dict) -> float:
@@ -946,7 +1504,9 @@ def estilo_aviso(av: dict) -> str:
     WCAG AA con 4,19:1 sobre el fondo nítido, 28-oct). `tam`: tamaño de letra en px (defecto 23)."""
     css = []
     if av.get("placa"):
-        css.append("background:rgba(10,26,20,0.86);padding:10px 18px;border-radius:12px;color:#f4f6f3")
+        css.append(
+            "background:rgba(10,26,20,0.86);padding:10px 18px;border-radius:12px;color:#f4f6f3"
+        )
     if av.get("tam"):
         css.append(f"font-size:{int(av['tam'])}px")
     return f' style="{";".join(css)}"' if css else ""
@@ -964,15 +1524,37 @@ def _carve(out: Path) -> None:
             return
         v_core, v_carve = hfversion.version_core(core), hfversion.version_carve(carve)
         if v_core != quiere or v_carve not in (None, quiere):
-            print(f"✗ carve falló: versiones distintas (hyperframes {quiere}, core {v_core}, carve {v_carve}). "
-                  f"Actualiza HF_CORE (npm install --save-exact @hyperframes/core@{quiere}) y el checkout de carve.")
+            print(
+                f"✗ carve falló: versiones distintas (hyperframes {quiere}, core {v_core}, carve {v_carve}). "
+                f"Actualiza HF_CORE (npm install --save-exact @hyperframes/core@{quiere}) y el checkout de carve."
+            )
             return
-        r = subprocess.run(["node", carve, "--comp", str(out), "--bed", "music-bed", "--voice", "vo", "--core", core],
-                           capture_output=True, text=True)
-        print("✓ carve (ducking)" if r.returncode == 0 else "✗ carve falló:\n" + r.stderr[-800:])
+        r = subprocess.run(
+            [
+                "node",
+                carve,
+                "--comp",
+                str(out),
+                "--bed",
+                "music-bed",
+                "--voice",
+                "vo",
+                "--core",
+                core,
+            ],
+            capture_output=True,
+            text=True,
+        )
+        print(
+            "✓ carve (ducking)"
+            if r.returncode == 0
+            else "✗ carve falló:\n" + r.stderr[-800:]
+        )
     else:
-        print("⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core de la misma versión que hyperframes) y la skill media-use (audio/carve.mjs). "
-              "La música pisará la voz.")
+        print(
+            "⚠ SIN ducking: define HF_CORE (carpeta con @hyperframes/core de la misma versión que hyperframes) y la skill media-use (audio/carve.mjs). "
+            "La música pisará la voz."
+        )
 
 
 def main() -> None:

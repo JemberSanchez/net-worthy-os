@@ -2,289 +2,946 @@
 // construir.py: todas las anclas convertidas a segundos). Una función por tipo de escena del
 // catálogo; el markup lo pone construir.py, aquí solo se anima. Determinista: PRNG con semilla.
 (function () {
-  const P = window.PLAN, D = P.D;
+  const P = window.PLAN,
+    D = P.D;
   const tl = gsap.timeline({ paused: true });
-  let seed = 1337; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  let seed = 1337;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const $ = (id) => document.getElementById(id);
   const q = (sel) => document.querySelector(sel);
   const inn = (sel, at, from, dur = 0.3, ease = "power3.out") =>
-    tl.fromTo(sel, from, { x: 0, y: 0, scale: 1, opacity: 1, rotation: 0, filter: "blur(0px)", duration: dur, ease }, at);
-  const out = (sel, at, dur = 0.2) => tl.to(sel, { y: -160, opacity: 0, filter: "blur(12px)", duration: dur, ease: "power3.in" }, at);
-  const drawP = (sel, at, dur) => document.querySelectorAll(sel).forEach((p, i) =>
-    tl.fromTo(p, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dur, ease: "power2.out" }, at + i * 0.08));
+    tl.fromTo(
+      sel,
+      from,
+      {
+        x: 0,
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        rotation: 0,
+        filter: "blur(0px)",
+        duration: dur,
+        ease,
+      },
+      at,
+    );
+  const out = (sel, at, dur = 0.2) =>
+    tl.to(
+      sel,
+      {
+        y: -160,
+        opacity: 0,
+        filter: "blur(12px)",
+        duration: dur,
+        ease: "power3.in",
+      },
+      at,
+    );
+  const drawP = (sel, at, dur) =>
+    document
+      .querySelectorAll(sel)
+      .forEach((p, i) =>
+        tl.fromTo(
+          p,
+          { strokeDasharray: 1, strokeDashoffset: 1 },
+          { strokeDashoffset: 0, duration: dur, ease: "power2.out" },
+          at + i * 0.08,
+        ),
+      );
   const flash = (at, a = 0.22) => {
-    tl.fromTo("#flash", { opacity: 0 }, { opacity: a, duration: 0.05, ease: "none", immediateRender: false }, at);
-    tl.to("#flash", { opacity: 0, duration: 0.35, ease: "power2.out" }, at + 0.05);
+    tl.fromTo(
+      "#flash",
+      { opacity: 0 },
+      { opacity: a, duration: 0.05, ease: "none", immediateRender: false },
+      at,
+    );
+    tl.to(
+      "#flash",
+      { opacity: 0, duration: 0.35, ease: "power2.out" },
+      at + 0.05,
+    );
   };
-  const strike = (sel, at) => tl.fromTo(sel, { scaleX: 0 }, { scaleX: 1, duration: 0.18, ease: "power3.out" }, at);
+  const strike = (sel, at) =>
+    tl.fromTo(
+      sel,
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.18, ease: "power3.out" },
+      at,
+    );
   const counter = (el, from, to, at, dur, fmt, ease = "power2.out") => {
     const o = { v: from };
-    tl.fromTo(o, { v: from }, { v: to, duration: dur, ease, onUpdate: () => { el.textContent = fmt(o.v); } }, at);
+    tl.fromTo(
+      o,
+      { v: from },
+      {
+        v: to,
+        duration: dur,
+        ease,
+        onUpdate: () => {
+          el.textContent = fmt(o.v);
+        },
+      },
+      at,
+    );
   };
   const money = (p) => (v) => p + Math.round(v).toLocaleString("en-US");
   // Temblor de cámara en los golpes grandes (revelación, llegada del contador): lenguaje de edición
   // real en vez del estallido de monedas de clip-art (26-sep). Solo x/y de #cam: el punch-in usa scale.
   const sacudida = (at, a = 16) => {
-    const pasos = [[a, -a * 0.6], [-a * 0.8, a * 0.5], [a * 0.5, a * 0.35], [-a * 0.3, -a * 0.2], [0, 0]];
+    const pasos = [
+      [a, -a * 0.6],
+      [-a * 0.8, a * 0.5],
+      [a * 0.5, a * 0.35],
+      [-a * 0.3, -a * 0.2],
+      [0, 0],
+    ];
     let prev = [0, 0];
     pasos.forEach(([x, y], i) => {
-      tl.fromTo("#cam", { x: prev[0], y: prev[1] }, { x, y, duration: 0.045, ease: "none", immediateRender: false }, at + i * 0.045);
+      tl.fromTo(
+        "#cam",
+        { x: prev[0], y: prev[1] },
+        { x, y, duration: 0.045, ease: "none", immediateRender: false },
+        at + i * 0.045,
+      );
       prev = [x, y];
     });
   };
 
   // ---------- capas persistentes ----------
-  tl.fromTo("#glow", { x: -120, y: 0 }, { x: 260, y: 260, duration: D, ease: "sine.inOut" }, 0);
-  tl.fromTo("#progress", { scaleX: 0 }, { scaleX: 1, duration: D, ease: "none" }, 0);
-  tl.fromTo("#grain", { x: 0, y: 0 }, { x: -180, y: -140, duration: D, ease: "steps(600)" }, 0);
+  tl.fromTo(
+    "#glow",
+    { x: -120, y: 0 },
+    { x: 260, y: 260, duration: D, ease: "sine.inOut" },
+    0,
+  );
+  tl.fromTo(
+    "#progress",
+    { scaleX: 0 },
+    { scaleX: 1, duration: D, ease: "none" },
+    0,
+  );
+  tl.fromTo(
+    "#grain",
+    { x: 0, y: 0 },
+    { x: -180, y: -140, duration: D, ease: "steps(600)" },
+    0,
+  );
   (P.aviso.ventanas || []).forEach(([a, b]) => {
-    tl.fromTo("#aviso", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, a);
+    tl.fromTo(
+      "#aviso",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3, immediateRender: false },
+      a,
+    );
     tl.to("#aviso", { opacity: 0, duration: 0.2 }, b - 0.2);
   });
-  if (P.aviso.final != null) tl.fromTo("#aviso", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, P.aviso.final);
+  if (P.aviso.final != null)
+    tl.fromTo(
+      "#aviso",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3, immediateRender: false },
+      P.aviso.final,
+    );
   // la PRUEBA: el documento entra de golpe, la cámara empuja hacia la frase y el subrayador la marca
   (P.pruebas || []).forEach((pr) => {
     const c = "#" + pr.id + "-cam";
-    tl.fromTo(c, { scale: 1.14, rotation: -1.2, opacity: 0 }, { scale: 0.96, rotation: 0, opacity: 1, duration: 0.2, ease: "power3.out", immediateRender: false }, pr.t0);
-    tl.fromTo(c, { scale: 0.96 }, { scale: 1.06, duration: Math.max(0.2, pr.t1 - pr.t0 - 0.2), ease: "sine.out", immediateRender: false }, pr.t0 + 0.2);
-    tl.fromTo("#" + pr.id + "-f", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out", immediateRender: false }, Math.min(pr.t0 + 0.12, pr.marca - 0.1));
-    tl.fromTo("#" + pr.id + "-m", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out", immediateRender: false }, pr.marca);
+    tl.fromTo(
+      c,
+      { scale: 1.14, rotation: -1.2, opacity: 0 },
+      {
+        scale: 0.96,
+        rotation: 0,
+        opacity: 1,
+        duration: 0.2,
+        ease: "power3.out",
+        immediateRender: false,
+      },
+      pr.t0,
+    );
+    tl.fromTo(
+      c,
+      { scale: 0.96 },
+      {
+        scale: 1.06,
+        duration: Math.max(0.2, pr.t1 - pr.t0 - 0.2),
+        ease: "sine.out",
+        immediateRender: false,
+      },
+      pr.t0 + 0.2,
+    );
+    tl.fromTo(
+      "#" + pr.id + "-f",
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 0.25,
+        ease: "power1.out",
+        immediateRender: false,
+      },
+      Math.min(pr.t0 + 0.12, pr.marca - 0.1),
+    );
+    tl.fromTo(
+      "#" + pr.id + "-m",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.35, ease: "power2.out", immediateRender: false },
+      pr.marca,
+    );
     tl.to(c, { opacity: 0, duration: 0.15 }, pr.t1 - 0.15);
   });
   // sello de serie: entra con el logo sonoro y sale antes de la 2ª frase (no compite con el gancho)
   if (P.serie) {
-    tl.fromTo("#serie", { opacity: 0, y: -14, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(2)", immediateRender: false }, P.serie.t0);
-    tl.to("#serie", { opacity: 0, y: -10, duration: 0.25, ease: "power2.in" }, P.serie.t1 - 0.25);
+    tl.fromTo(
+      "#serie",
+      { opacity: 0, y: -14, scale: 0.9 },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.35,
+        ease: "back.out(2)",
+        immediateRender: false,
+      },
+      P.serie.t0,
+    );
+    tl.to(
+      "#serie",
+      { opacity: 0, y: -10, duration: 0.25, ease: "power2.in" },
+      P.serie.t1 - 0.25,
+    );
   }
 
   // ---------- fotos: Ken Burns (dirección por preset; el cuadro nunca queda quieto) ----------
   const KB = {
-    push: [{ scale: 1.08, x: 0, y: 30 }, { scale: 1.26, x: 0, y: -30 }],
-    pull: [{ scale: 1.3, x: 0, y: -30 }, { scale: 1.08, x: 0, y: 30 }],
-    izq: [{ scale: 1.3, x: 90, y: 0 }, { scale: 1.42, x: -90, y: 0 }],
-    der: [{ scale: 1.3, x: -90, y: 0 }, { scale: 1.42, x: 90, y: 0 }],
-    sube: [{ scale: 1.2, x: -30, y: 70 }, { scale: 1.06, x: 20, y: -50 }],
-    final: [{ scale: 1.12, x: -80, y: 60 }, { scale: 1.5, x: 80, y: -160 }],
+    push: [
+      { scale: 1.08, x: 0, y: 30 },
+      { scale: 1.26, x: 0, y: -30 },
+    ],
+    pull: [
+      { scale: 1.3, x: 0, y: -30 },
+      { scale: 1.08, x: 0, y: 30 },
+    ],
+    izq: [
+      { scale: 1.3, x: 90, y: 0 },
+      { scale: 1.42, x: -90, y: 0 },
+    ],
+    der: [
+      { scale: 1.3, x: -90, y: 0 },
+      { scale: 1.42, x: 90, y: 0 },
+    ],
+    sube: [
+      { scale: 1.2, x: -30, y: 70 },
+      { scale: 1.06, x: 20, y: -50 },
+    ],
+    final: [
+      { scale: 1.12, x: -80, y: 60 },
+      { scale: 1.5, x: 80, y: -160 },
+    ],
   };
   // b-roll de vídeo: el metraje ya se mueve; solo un empuje suave, sobre el CONTENEDOR (no el <video>)
   const KBV = { pull: [{ scale: 1.12 }, { scale: 1.02 }] };
   P.fotos.forEach((f) => {
     const sel = "#" + f.id + (f.video ? "" : "-img");
-    const [a, b] = f.video ? KBV[f.mov] || [{ scale: 1.02 }, { scale: 1.12 }] : KB[f.mov] || KB.push;
-    tl.fromTo(sel, { ...a, opacity: f.opacidad }, { ...b, opacity: f.opacidad, duration: f.t1 - f.t0, ease: "none" }, f.t0);
-    if (f.aparece) tl.fromTo(sel, { opacity: 0 }, { opacity: f.opacidad, duration: 0.5, immediateRender: false }, f.aparece);
+    const [a, b] = f.video
+      ? KBV[f.mov] || [{ scale: 1.02 }, { scale: 1.12 }]
+      : KB[f.mov] || KB.push;
+    tl.fromTo(
+      sel,
+      { ...a, opacity: f.opacidad },
+      { ...b, opacity: f.opacidad, duration: f.t1 - f.t0, ease: "none" },
+      f.t0,
+    );
+    if (f.aparece)
+      tl.fromTo(
+        sel,
+        { opacity: 0 },
+        { opacity: f.opacidad, duration: 0.5, immediateRender: false },
+        f.aparece,
+      );
   });
 
   // ---------- catálogo de escenas ----------
   const ESC = {
     foto(s, id) {
-      if (s.kicker) inn(`#${id}-kicker`, s.kicker.en, { y: 30, opacity: 0 }, 0.25);
-      if (s.titulo) inn(`#${id}-titulo`, s.titulo.en, { scale: 1.8, opacity: 0, filter: "blur(18px)" }, 0.3, "power4.out");
+      if (s.kicker)
+        inn(`#${id}-kicker`, s.kicker.en, { y: 30, opacity: 0 }, 0.25);
+      if (s.titulo)
+        inn(
+          `#${id}-titulo`,
+          s.titulo.en,
+          { scale: 1.8, opacity: 0, filter: "blur(18px)" },
+          0.3,
+          "power4.out",
+        );
       if (s.sub) inn(`#${id}-sub`, s.sub.en, { y: 20, opacity: 0 }, 0.25);
     },
     revelacion(s, id) {
       inn(`#${id}-l1`, s.t0 + 0.02, { y: 40, opacity: 0 }, 0.25);
-      inn(`#${id}-l2`, s.linea2.en, { scale: 2.2, opacity: 0, filter: "blur(20px)" }, 0.28, "power4.out");
+      inn(
+        `#${id}-l2`,
+        s.linea2.en,
+        { scale: 2.2, opacity: 0, filter: "blur(20px)" },
+        0.28,
+        "power4.out",
+      );
       if (s.golpe != null) {
-        tl.to(`#${id}-l2`, { scale: 1.08, duration: 0.12, ease: "power4.out" }, s.golpe);
-        tl.to(`#${id}-l2`, { scale: 1.0, duration: 0.4, ease: "power2.out" }, s.golpe + 0.12);
+        tl.to(
+          `#${id}-l2`,
+          { scale: 1.08, duration: 0.12, ease: "power4.out" },
+          s.golpe,
+        );
+        tl.to(
+          `#${id}-l2`,
+          { scale: 1.0, duration: 0.4, ease: "power2.out" },
+          s.golpe + 0.12,
+        );
         tl.to(`#${id}-l1`, { opacity: 0.35, duration: 0.3 }, s.golpe);
-        flash(s.golpe, 0.25); sacudida(s.golpe);
+        flash(s.golpe, 0.25);
+        sacudida(s.golpe);
       }
       out(`#${id} .stack`, s.t1 - 0.2);
     },
     lista(s, id) {
       s.items.forEach((it, k) => {
-        const from = s.icono === "x" ? { x: k % 2 ? 700 : -700, opacity: 0 } : { x: -500, opacity: 0 };
+        const from =
+          s.icono === "x"
+            ? { x: k % 2 ? 700 : -700, opacity: 0 }
+            : { x: -500, opacity: 0 };
         inn(`#${id}-i${k}`, it.en - 0.06, from, 0.26, "power4.out");
-        drawP(`#${id}-i${k} .mk path`, it.marca != null ? it.marca : it.en + 0.12, s.icono === "x" ? 0.16 : 0.2);
+        drawP(
+          `#${id}-i${k} .mk path`,
+          it.marca != null ? it.marca : it.en + 0.12,
+          s.icono === "x" ? 0.16 : 0.2,
+        );
       });
       const n = s.items.length;
-      if (s.icono === "x" && n > 1) tl.to(s.items.slice(0, -1).map((_, k) => `#${id}-i${k}`).join(","), { opacity: 0.55, duration: 0.2 }, s.items[n - 1].en);
-      else tl.to(`#${id}-i${n - 1}`, { scale: 1.08, duration: 0.15, yoyo: true, repeat: 1 }, s.items[n - 1].en + 0.5);
+      if (s.icono === "x" && n > 1)
+        tl.to(
+          s.items
+            .slice(0, -1)
+            .map((_, k) => `#${id}-i${k}`)
+            .join(","),
+          { opacity: 0.55, duration: 0.2 },
+          s.items[n - 1].en,
+        );
+      else
+        tl.to(
+          `#${id}-i${n - 1}`,
+          { scale: 1.08, duration: 0.15, yoyo: true, repeat: 1 },
+          s.items[n - 1].en + 0.5,
+        );
       out(`#${id} .stack`, s.t1 - 0.2);
     },
     titulo(s, id) {
       if (s.kicker) inn(`#${id}-k`, s.kicker.en, { y: -20, opacity: 0 }, 0.22);
       (s.lineas || []).forEach((l, k) => {
-        const from = l.estilo === "boton" ? { scale: 1.6, opacity: 0 } : k === 0 ? { y: 80, opacity: 0 } : { y: 60, opacity: 0 };
+        const from =
+          l.estilo === "boton"
+            ? { scale: 1.6, opacity: 0 }
+            : k === 0
+              ? { y: 80, opacity: 0 }
+              : { y: 60, opacity: 0 };
         inn(`#${id}-l${k}`, l.en - 0.05, from, 0.26, "power4.out");
       });
       if (s.icono) {
-        inn(`#${id}-ico`, s.icono.en - 0.05, { scale: 0.3, opacity: 0, rotation: -90 }, 0.3, "back.out(2)");
-        tl.fromTo(`#${id}-ico`, { rotation: 0 }, { rotation: 240, duration: s.t1 - s.icono.en, ease: "none", immediateRender: false }, s.icono.en + 0.3);
+        inn(
+          `#${id}-ico`,
+          s.icono.en - 0.05,
+          { scale: 0.3, opacity: 0, rotation: -90 },
+          0.3,
+          "back.out(2)",
+        );
+        tl.fromTo(
+          `#${id}-ico`,
+          { rotation: 0 },
+          {
+            rotation: 240,
+            duration: s.t1 - s.icono.en,
+            ease: "none",
+            immediateRender: false,
+          },
+          s.icono.en + 0.3,
+        );
       }
-      if (s.contador) counter($(`${id}-n`), 0, s.contador.valor, s.contador.en, 0.7, (v) => Math.round(v));
+      if (s.contador)
+        counter($(`${id}-n`), 0, s.contador.valor, s.contador.en, 0.7, (v) =>
+          Math.round(v),
+        );
       if (s.cheque) {
-        inn(`#${id}-cheque`, s.cheque.en - 0.05, { y: 400, rotation: 8, opacity: 0 }, 0.3);
-        if (s.cheque.tachar != null) strike(`#${id}-cheque .strike`, s.cheque.tachar);
+        inn(
+          `#${id}-cheque`,
+          s.cheque.en - 0.05,
+          { y: 400, rotation: 8, opacity: 0 },
+          0.3,
+        );
+        if (s.cheque.tachar != null)
+          strike(`#${id}-cheque .strike`, s.cheque.tachar);
       }
       if (s.tachar) {
         strike(`#${id}-t${s.tachar.linea}`, s.tachar.en);
-        tl.to(`#${id}-l${s.tachar.linea}`, { opacity: 0.45, scale: 0.92, duration: 0.3 }, s.tachar.en + 0.2);
+        tl.to(
+          `#${id}-l${s.tachar.linea}`,
+          { opacity: 0.45, scale: 0.92, duration: 0.3 },
+          s.tachar.en + 0.2,
+        );
       }
-      if (s.alarma) tl.fromTo(`#${id}-scan`, { y: 0 }, { y: 1900, duration: 1.2, ease: "none", repeat: 1 }, s.t0);
-      const last = (s.lineas || []).length ? s.lineas[s.lineas.length - 1].en : s.t0;
-      tl.fromTo(`#${id} .stack`, { scale: 1 }, { scale: 1.07, duration: Math.max(0.3, s.t1 - last - 0.5), ease: "none", immediateRender: false }, last + 0.3);
+      if (s.alarma)
+        tl.fromTo(
+          `#${id}-scan`,
+          { y: 0 },
+          { y: 1900, duration: 1.2, ease: "none", repeat: 1 },
+          s.t0,
+        );
+      const last = (s.lineas || []).length
+        ? s.lineas[s.lineas.length - 1].en
+        : s.t0;
+      tl.fromTo(
+        `#${id} .stack`,
+        { scale: 1 },
+        {
+          scale: 1.07,
+          duration: Math.max(0.3, s.t1 - last - 0.5),
+          ease: "none",
+          immediateRender: false,
+        },
+        last + 0.3,
+      );
       out(`#${id} .stack`, s.t1 - 0.2);
     },
     tarjetas(s, id) {
       s.imgs.forEach((c, k) => {
-        const rot = [-9, 6, -3, 4][k % 4], dx = [-40, 30, 0, 20][k % 4];
-        tl.fromTo(`#${id}-c${k}`, { y: 1300, rotation: rot * 3, x: dx, opacity: 1 }, { y: (k - 1) * 26, rotation: rot, x: dx, duration: 0.45, ease: "power3.out" }, c.en - 0.1);
+        const rot = [-9, 6, -3, 4][k % 4],
+          dx = [-40, 30, 0, 20][k % 4];
+        tl.fromTo(
+          `#${id}-c${k}`,
+          { y: 1300, rotation: rot * 3, x: dx, opacity: 1 },
+          {
+            y: (k - 1) * 26,
+            rotation: rot,
+            x: dx,
+            duration: 0.45,
+            ease: "power3.out",
+          },
+          c.en - 0.1,
+        );
       });
-      tl.fromTo(`#${id} .cert img`, { scale: 1.12 }, { scale: 1.0, duration: s.t1 - s.t0, ease: "none" }, s.t0);
-      if (s.titulo) inn(`#${id}-tit`, s.titulo.en - 0.05, { y: -30, opacity: 0 }, 0.25);
+      tl.fromTo(
+        `#${id} .cert img`,
+        { scale: 1.12 },
+        { scale: 1.0, duration: s.t1 - s.t0, ease: "none" },
+        s.t0,
+      );
+      if (s.titulo)
+        inn(`#${id}-tit`, s.titulo.en - 0.05, { y: -30, opacity: 0 }, 0.25);
       if (s.flujo) {
         const f = s.flujo;
         inn(`#${id}-flujo`, f.en, { y: 30, opacity: 0 }, 0.25);
         if (f.contador) inn(`#${id}-cnt`, f.en, { y: 40, opacity: 0 }, 0.25);
-        const c0 = f.en + 0.1, c1 = f.hasta;   // sin monedas que caen: los certificados reales ya lo cuentan
+        const c0 = f.en + 0.1,
+          c1 = f.hasta; // sin monedas que caen: los certificados reales ya lo cuentan
         if (f.contador) {
-          counter($(`${id}-cntn`), f.contador.desde, f.contador.valor, c0 + 0.4, c1 - c0 + 0.45, (v) => Math.round(v), "power1.in");
-          tl.to(`#${id}-cnt .n`, { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1 }, c1 - 0.2);
+          counter(
+            $(`${id}-cntn`),
+            f.contador.desde,
+            f.contador.valor,
+            c0 + 0.4,
+            c1 - c0 + 0.45,
+            (v) => Math.round(v),
+            "power1.in",
+          );
+          tl.to(
+            `#${id}-cnt .n`,
+            { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1 },
+            c1 - 0.2,
+          );
         }
       }
-      tl.to(`#${id} .cert`, { y: -1400, rotation: 8, duration: 0.3, ease: "power3.in" }, s.t1 - 0.3);
+      tl.to(
+        `#${id} .cert`,
+        { y: -1400, rotation: 8, duration: 0.3, ease: "power3.in" },
+        s.t1 - 0.3,
+      );
     },
     contador3d(s, id) {
-      const L = s.llega, t0 = s.t0 + 0.05, split = t0 + (L - t0) * 0.62;
-      const P1 = [t0, split - t0, s.valor * 0.056], P2 = [split, L - split, s.valor];
-      window.__P3D = { P1, P2, t0: s.t0, t1: s.t1, cols: s.columnas || 6, valor: s.valor };
-      const m = { v: 0 }, el = $(`${id}-money`), f = money(s.prefijo ?? "$");
-      tl.fromTo(m, { v: 0 }, { v: P1[2], duration: P1[1], ease: "power1.in", onUpdate: () => { el.textContent = f(m.v); } }, P1[0]);
-      tl.to(m, { v: P2[2], duration: P2[1], ease: "power3.in", onUpdate: () => { el.textContent = f(m.v); } }, P2[0]);
-      tl.to(`#${id}-money`, { color: "#d8b25a", scale: 1.12, duration: 0.12, ease: "power4.out" }, L);
-      tl.to(`#${id}-money`, { scale: 1.0, duration: 0.3, ease: "power2.out" }, L + 0.12);
-      flash(L, 0.22); sacudida(L, 20);
-      if (s.kicker) inn(`#${id}-k`, s.kicker.en - 0.05, { y: -30, opacity: 0 }, 0.25);
-      if (s.pill) inn(`#${id}-pill`, s.pill.en - 0.05, { y: 60, opacity: 0 }, 0.3, "back.out(1.8)");
+      const L = s.llega,
+        t0 = s.t0 + 0.05,
+        split = t0 + (L - t0) * 0.62;
+      const P1 = [t0, split - t0, s.valor * 0.056],
+        P2 = [split, L - split, s.valor];
+      window.__P3D = {
+        P1,
+        P2,
+        t0: s.t0,
+        t1: s.t1,
+        cols: s.columnas || 6,
+        valor: s.valor,
+      };
+      const m = { v: 0 },
+        el = $(`${id}-money`),
+        f = money(s.prefijo ?? "$");
+      tl.fromTo(
+        m,
+        { v: 0 },
+        {
+          v: P1[2],
+          duration: P1[1],
+          ease: "power1.in",
+          onUpdate: () => {
+            el.textContent = f(m.v);
+          },
+        },
+        P1[0],
+      );
+      tl.to(
+        m,
+        {
+          v: P2[2],
+          duration: P2[1],
+          ease: "power3.in",
+          onUpdate: () => {
+            el.textContent = f(m.v);
+          },
+        },
+        P2[0],
+      );
+      tl.to(
+        `#${id}-money`,
+        { color: "#d8b25a", scale: 1.12, duration: 0.12, ease: "power4.out" },
+        L,
+      );
+      tl.to(
+        `#${id}-money`,
+        { scale: 1.0, duration: 0.3, ease: "power2.out" },
+        L + 0.12,
+      );
+      flash(L, 0.22);
+      sacudida(L, 20);
+      if (s.kicker)
+        inn(`#${id}-k`, s.kicker.en - 0.05, { y: -30, opacity: 0 }, 0.25);
+      if (s.pill)
+        inn(
+          `#${id}-pill`,
+          s.pill.en - 0.05,
+          { y: 60, opacity: 0 },
+          0.3,
+          "back.out(1.8)",
+        );
     },
     curva(s, id) {
       const dibuja = s.fin || s.t0 + 0.8;
-      tl.fromTo(`#${id}-curve`, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dibuja - s.t0, ease: "power1.in" }, s.t0 + 0.05);
+      tl.fromTo(
+        `#${id}-curve`,
+        { strokeDasharray: 1, strokeDashoffset: 1 },
+        { strokeDashoffset: 0, duration: dibuja - s.t0, ease: "power1.in" },
+        s.t0 + 0.05,
+      );
       // punto que recorre la línea con año y valor: misma curva de avance (power1.in) que el trazo,
       // muestreado sobre los puntos del plan (no getPointAtLength: seek-safe y sin depender del layout)
-      const pts = s.curva_pts || [], ph = $(`${id}-ph`), lab = $(`${id}-phl`);
+      const pts = s.curva_pts || [],
+        ph = $(`${id}-ph`),
+        lab = $(`${id}-phl`);
       if (pts.length > 1 && ph && lab) {
-        const L = pts.length - 1, fmt = money("$");
+        const L = pts.length - 1,
+          fmt = money("$");
         const pon = (p) => {
-          const f = Math.min(L, Math.max(0, p * L)), i = Math.floor(f), u = f - i, a = pts[i], b = pts[Math.min(L, i + 1)];
-          const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u, v = a[2] + (b[2] - a[2]) * u, an = a[3] + (b[3] - a[3]) * u;
-          ph.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+          const f = Math.min(L, Math.max(0, p * L)),
+            i = Math.floor(f),
+            u = f - i,
+            a = pts[i],
+            b = pts[Math.min(L, i + 1)];
+          const x = a[0] + (b[0] - a[0]) * u,
+            y = a[1] + (b[1] - a[1]) * u,
+            v = a[2] + (b[2] - a[2]) * u,
+            an = a[3] + (b[3] - a[3]) * u;
+          ph.setAttribute(
+            "transform",
+            `translate(${x.toFixed(1)},${y.toFixed(1)})`,
+          );
           lab.setAttribute("x", Math.min(760, Math.max(100, x)).toFixed(1));
           lab.setAttribute("y", Math.max(40, y - 40).toFixed(1));
-          const anio = s.curva_desde ? String(Math.floor(an)) : `Yr ${Math.floor(an)}`;
+          const anio = s.curva_desde
+            ? String(Math.floor(an))
+            : `Yr ${Math.floor(an)}`;
           lab.textContent = s.curva_valores ? `${anio} · ${fmt(v)}` : anio;
         };
         const o = { p: 0 };
-        tl.fromTo(o, { p: 0 }, { p: 1, duration: dibuja - s.t0, ease: "power1.in", onUpdate: () => pon(o.p), immediateRender: false }, s.t0 + 0.05);
-        tl.fromTo([ph, lab], { opacity: 0 }, { opacity: 1, duration: 0.2 }, s.t0 + 0.05);
+        tl.fromTo(
+          o,
+          { p: 0 },
+          {
+            p: 1,
+            duration: dibuja - s.t0,
+            ease: "power1.in",
+            onUpdate: () => pon(o.p),
+            immediateRender: false,
+          },
+          s.t0 + 0.05,
+        );
+        tl.fromTo(
+          [ph, lab],
+          { opacity: 0 },
+          { opacity: 1, duration: 0.2 },
+          s.t0 + 0.05,
+        );
         pon(0);
       }
-      if (s.aportado) { inn(`#${id}-ap`, s.aportado.en, { x: -40, opacity: 0 }, 0.25); tl.fromTo(`#${id}-paid`, { opacity: 0 }, { opacity: 1, duration: 0.25 }, s.aportado.en); }
-      if (s.area) { tl.fromTo(`#${id}-area`, { opacity: 0 }, { opacity: 1, duration: 0.5 }, s.area.en); inn(`#${id}-ar`, s.area.en, { scale: 0.7, opacity: 0 }, 0.3, "back.out(2)"); }
+      if (s.aportado) {
+        inn(`#${id}-ap`, s.aportado.en, { x: -40, opacity: 0 }, 0.25);
+        tl.fromTo(
+          `#${id}-paid`,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.25 },
+          s.aportado.en,
+        );
+      }
+      if (s.area) {
+        tl.fromTo(
+          `#${id}-area`,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5 },
+          s.area.en,
+        );
+        inn(
+          `#${id}-ar`,
+          s.area.en,
+          { scale: 0.7, opacity: 0 },
+          0.3,
+          "back.out(2)",
+        );
+      }
       // el área entra cuando la línea LLEGA: antes destapaba el final de la curva (Grace, 26-sep)
-      else tl.fromTo(`#${id}-area`, { opacity: 0 }, { opacity: 0.6, duration: 0.4 }, dibuja + 0.05);
+      else
+        tl.fromTo(
+          `#${id}-area`,
+          { opacity: 0 },
+          { opacity: 0.6, duration: 0.4 },
+          dibuja + 0.05,
+        );
       if (s.ilustrativo) inn(`#${id}-ill`, s.t0 + 0.1, { opacity: 0 }, 0.3);
-      if (s.titulo) inn(`#${id}-tit`, s.titulo.en - 0.05, { y: -20, opacity: 0 }, 0.25);
+      if (s.titulo)
+        inn(`#${id}-tit`, s.titulo.en - 0.05, { y: -20, opacity: 0 }, 0.25);
       (s.escalas || []).forEach((e, k, arr) => {
         const a = k === 0 ? s.t0 + 0.3 : e.en;
-        tl.fromTo(`#${id}-e${k}`, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.14 }, a);
-        if (k < arr.length - 1) tl.to(`#${id}-e${k}`, { opacity: 0, duration: 0.1 }, arr[k + 1].en);
+        tl.fromTo(
+          `#${id}-e${k}`,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.14 },
+          a,
+        );
+        if (k < arr.length - 1)
+          tl.to(`#${id}-e${k}`, { opacity: 0, duration: 0.1 }, arr[k + 1].en);
       });
-      if (s.encoger) tl.fromTo(`#${id}-svg`, { scale: 1, y: 0 }, { scale: 0.62, y: 160, duration: s.encoger.hasta - s.encoger.en, ease: "power2.inOut" }, s.encoger.en);
-      else tl.fromTo(`#${id}-svg`, { scale: 0.94, y: 30 }, { scale: 1.04, y: -20, duration: s.t1 - s.t0, ease: "none", immediateRender: false }, s.t0);
+      if (s.encoger)
+        tl.fromTo(
+          `#${id}-svg`,
+          { scale: 1, y: 0 },
+          {
+            scale: 0.62,
+            y: 160,
+            duration: s.encoger.hasta - s.encoger.en,
+            ease: "power2.inOut",
+          },
+          s.encoger.en,
+        );
+      else
+        tl.fromTo(
+          `#${id}-svg`,
+          { scale: 0.94, y: 30 },
+          {
+            scale: 1.04,
+            y: -20,
+            duration: s.t1 - s.t0,
+            ease: "none",
+            immediateRender: false,
+          },
+          s.t0,
+        );
       if (!s.encoger) out(`#${id}-svg`, s.t1 - 0.2);
     },
     puntos(s, id) {
-      const host = $(`${id}-dots`), COLS = 12, N = s.n;
+      const host = $(`${id}-dots`),
+        COLS = 12,
+        N = s.n;
       for (let i = 0; i < N; i++) {
-        const d = document.createElement("div"); d.className = "dot"; d.id = `${id}-d${i}`; host.appendChild(d);
-        d.style.left = (i % COLS) * 70 + "px"; d.style.top = Math.floor(i / COLS) * 70 + "px";
-        tl.fromTo(d, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(3)" }, s.cuenta.en + i * (0.66 / N));
+        const d = document.createElement("div");
+        d.className = "dot";
+        d.id = `${id}-d${i}`;
+        host.appendChild(d);
+        d.style.left = (i % COLS) * 70 + "px";
+        d.style.top = Math.floor(i / COLS) * 70 + "px";
+        tl.fromTo(
+          d,
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(3)" },
+          s.cuenta.en + i * (0.66 / N),
+        );
       }
       inn(`#${id}-num`, s.t0 + 0.05, { y: -40, opacity: 0 }, 0.25);
-      counter($(`${id}-n`), 0, N, s.cuenta.en, 0.66, (v) => Math.round(v), "power1.out");
+      counter(
+        $(`${id}-n`),
+        0,
+        N,
+        s.cuenta.en,
+        0.66,
+        (v) => Math.round(v),
+        "power1.out",
+      );
       if (s.cae) {
         const k = Math.floor(N * 0.46);
-        tl.to(`#${id}-d${k}`, { background: "#e0533d", duration: 0.1 }, s.cae.en - 0.15);
-        tl.to(`#${id}-d${k}`, { y: 700, rotation: 200, opacity: 0, duration: 0.7, ease: "power2.in" }, s.cae.en);
+        tl.to(
+          `#${id}-d${k}`,
+          { background: "#e0533d", duration: 0.1 },
+          s.cae.en - 0.15,
+        );
+        tl.to(
+          `#${id}-d${k}`,
+          {
+            y: 700,
+            rotation: 200,
+            opacity: 0,
+            duration: 0.7,
+            ease: "power2.in",
+          },
+          s.cae.en,
+        );
         if (s.cae.img) {
-          tl.fromTo(`#${id}-card`, { opacity: 0, rotation: -14, scale: 1.3, y: 60 }, { opacity: 1, rotation: -5, scale: 1, y: 0, duration: 0.25, ease: "power3.out" }, s.cae.en);
-          tl.to(`#${id}-card`, { opacity: 0, y: 500, rotation: 6, duration: 0.3, ease: "power3.in" }, s.cae.hasta);
+          tl.fromTo(
+            `#${id}-card`,
+            { opacity: 0, rotation: -14, scale: 1.3, y: 60 },
+            {
+              opacity: 1,
+              rotation: -5,
+              scale: 1,
+              y: 0,
+              duration: 0.25,
+              ease: "power3.out",
+            },
+            s.cae.en,
+          );
+          tl.to(
+            `#${id}-card`,
+            {
+              opacity: 0,
+              y: 500,
+              rotation: 6,
+              duration: 0.3,
+              ease: "power3.in",
+            },
+            s.cae.hasta,
+          );
         }
-        if (s.cae.texto) { inn(`#${id}-l1`, s.cae.en + 0.25, { opacity: 0, y: 20 }, 0.2); tl.to(`#${id}-l1`, { opacity: 0, duration: 0.15 }, (s.atenuar ? s.atenuar.en : s.t1) - 0.5); }
+        if (s.cae.texto) {
+          inn(`#${id}-l1`, s.cae.en + 0.25, { opacity: 0, y: 20 }, 0.2);
+          tl.to(
+            `#${id}-l1`,
+            { opacity: 0, duration: 0.15 },
+            (s.atenuar ? s.atenuar.en : s.t1) - 0.5,
+          );
+        }
       }
       if (s.atenuar) {
-        const idx = [...Array(s.atenuar.n)].map((_, j) => Math.floor((j + 0.37) * N / s.atenuar.n));
-        idx.forEach((k, j) => tl.to(`#${id}-d${k}`, { background: "rgba(224,83,61,0.35)", scale: 0.75, duration: 0.15 }, s.atenuar.en + j * 0.05));
-        if (s.atenuar.texto) inn(`#${id}-l2`, s.atenuar.en, { opacity: 0, y: 20 }, 0.2);
+        const idx = [...Array(s.atenuar.n)].map((_, j) =>
+          Math.floor(((j + 0.37) * N) / s.atenuar.n),
+        );
+        idx.forEach((k, j) =>
+          tl.to(
+            `#${id}-d${k}`,
+            { background: "rgba(224,83,61,0.35)", scale: 0.75, duration: 0.15 },
+            s.atenuar.en + j * 0.05,
+          ),
+        );
+        if (s.atenuar.texto)
+          inn(`#${id}-l2`, s.atenuar.en, { opacity: 0, y: 20 }, 0.2);
       }
-      tl.fromTo(`#${id}-dots`, { y: 0 }, { y: -30, duration: s.t1 - s.t0, ease: "none" }, s.t0);
+      tl.fromTo(
+        `#${id}-dots`,
+        { y: 0 },
+        { y: -30, duration: s.t1 - s.t0, ease: "none" },
+        s.t0,
+      );
     },
     anios(s, id) {
-      const a = s.cuenta.en, b = s.fin, el = $(`${id}-yr`), yr = { v: s.desde };
+      const a = s.cuenta.en,
+        b = s.fin,
+        el = $(`${id}-yr`),
+        yr = { v: s.desde };
       if (s.kicker) inn(`#${id}-k`, s.t0 + 0.05, { y: -20, opacity: 0 }, 0.2);
-      tl.fromTo(yr, { v: s.desde }, { v: s.hasta, duration: b - a, ease: "none", onUpdate: () => { el.textContent = Math.round(yr.v); } }, a);
-      tl.fromTo(`#${id}-fill`, { scaleX: 0 }, { scaleX: 1, duration: b - a, ease: "none" }, a);
+      tl.fromTo(
+        yr,
+        { v: s.desde },
+        {
+          v: s.hasta,
+          duration: b - a,
+          ease: "none",
+          onUpdate: () => {
+            el.textContent = Math.round(yr.v);
+          },
+        },
+        a,
+      );
+      tl.fromTo(
+        `#${id}-fill`,
+        { scaleX: 0 },
+        { scaleX: 1, duration: b - a, ease: "none" },
+        a,
+      );
       (s.hitos || []).forEach(([y], k) => {
-        const t = a + (y - s.desde) / (s.hasta - s.desde) * (b - a);
-        tl.fromTo(`#${id}-h${k}`, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, t - 0.05);
+        const t = a + ((y - s.desde) / (s.hasta - s.desde)) * (b - a);
+        tl.fromTo(
+          `#${id}-h${k}`,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.08 },
+          t - 0.05,
+        );
         tl.to(`#${id}-h${k}`, { opacity: 0, y: -30, duration: 0.12 }, t + 0.32);
       });
-      if (s.etiqueta) inn(`#${id}-l`, s.etiqueta.en, { opacity: 0, y: 20 }, 0.2);
+      if (s.etiqueta)
+        inn(`#${id}-l`, s.etiqueta.en, { opacity: 0, y: 20 }, 0.2);
     },
     cta(s, id) {
-      inn(`#${id}-a`, s.a.en - 0.05, { x: -500, opacity: 0 }, 0.25, "power4.out");
+      inn(
+        `#${id}-a`,
+        s.a.en - 0.05,
+        { x: -500, opacity: 0 },
+        0.25,
+        "power4.out",
+      );
       inn(`#${id}-o`, s.a.en + 0.2, { scale: 0.5, opacity: 0 }, 0.2);
-      inn(`#${id}-b`, s.b.en - 0.05, { x: 500, opacity: 0 }, 0.25, "power4.out");
+      inn(
+        `#${id}-b`,
+        s.b.en - 0.05,
+        { x: 500, opacity: 0 },
+        0.25,
+        "power4.out",
+      );
       if (s.pregunta) {
-        tl.to(`#${id}-vs`, { y: -60, scale: 0.8, duration: 0.35, ease: "power3.inOut" }, s.pregunta.en - 0.1);
+        tl.to(
+          `#${id}-vs`,
+          { y: -60, scale: 0.8, duration: 0.35, ease: "power3.inOut" },
+          s.pregunta.en - 0.1,
+        );
         tl.to(`#${id}-o`, { opacity: 0, duration: 0.2 }, s.pregunta.en - 0.1);
         inn(`#${id}-q`, s.pregunta.en, { y: 40, opacity: 0 }, 0.25);
-        if (s.botones && s.botones.length) tl.to(`#${id}-q`, { opacity: 0, y: -30, duration: 0.2 }, s.botones[0].en - 0.25);
+        if (s.botones && s.botones.length)
+          tl.to(
+            `#${id}-q`,
+            { opacity: 0, y: -30, duration: 0.2 },
+            s.botones[0].en - 0.25,
+          );
       }
-      (s.botones || []).forEach((b, k) => inn(`#${id}-p${k}`, b.en - 0.05, { y: 60, opacity: 0 }, 0.25, "back.out(2)"));
+      (s.botones || []).forEach((b, k) =>
+        inn(
+          `#${id}-p${k}`,
+          b.en - 0.05,
+          { y: 60, opacity: 0 },
+          0.25,
+          "back.out(2)",
+        ),
+      );
       // tarjeta final: la voz ya calló; movimiento REAL (medir_ritmo cazó 2,8 s quietos con solo un pulso sutil)
       const fin = P.fin_voz;
       inn(`#${id}-s`, fin, { opacity: 0, y: 20 }, 0.25);
-      tl.to(`#${id} .pill`, { scale: 1.14, duration: 0.4, yoyo: true, repeat: 5, ease: "sine.inOut" }, fin + 0.2);
-      tl.to(`#${id}-s`, { y: 22, duration: 0.35, yoyo: true, repeat: 5, ease: "sine.inOut" }, fin + 0.4);
-      tl.fromTo(`#${id}-luz`, { x: -600, rotation: 14, opacity: 1 }, { x: 1300, rotation: 14, opacity: 1, duration: 1.3, ease: "power1.inOut", repeat: 1 }, fin + 0.05);
+      tl.to(
+        `#${id} .pill`,
+        {
+          scale: 1.14,
+          duration: 0.4,
+          yoyo: true,
+          repeat: 5,
+          ease: "sine.inOut",
+        },
+        fin + 0.2,
+      );
+      tl.to(
+        `#${id}-s`,
+        { y: 22, duration: 0.35, yoyo: true, repeat: 5, ease: "sine.inOut" },
+        fin + 0.4,
+      );
+      tl.fromTo(
+        `#${id}-luz`,
+        { x: -600, rotation: 14, opacity: 1 },
+        {
+          x: 1300,
+          rotation: 14,
+          opacity: 1,
+          duration: 1.3,
+          ease: "power1.inOut",
+          repeat: 1,
+        },
+        fin + 0.05,
+      );
     },
   };
   P.escenas.forEach((s, k) => ESC[s.tipo](s, "s" + k));
 
   // ---------- subtítulos: grupos <=3 palabras; se omite el grupo que la escena YA muestra escrito ----------
-  const W = P.words, caps = $("caps"), groups = []; let cur = [];
+  const W = P.words,
+    caps = $("caps"),
+    groups = [];
+  let cur = [];
   const [C0, C1] = P.subtitulos;
   for (let i = C0; i <= C1; i++) {
-    const x = W[i]; cur.push(x);
-    const fin = /[.,?!]$/.test(x.text), gap = i < C1 ? W[i + 1].start - x.end : 1;
-    if (cur.length === 3 || fin || gap > 0.25) { groups.push(cur); cur = []; }
+    const x = W[i];
+    cur.push(x);
+    const fin = /[.,?!]$/.test(x.text),
+      gap = i < C1 ? W[i + 1].start - x.end : 1;
+    if (cur.length === 3 || fin || gap > 0.25) {
+      groups.push(cur);
+      cur = [];
+    }
   }
   if (cur.length) groups.push(cur);
   const nrm = (s) => s.toLowerCase().replace(/[^a-z0-9'$]/g, "");
   const HOT = new Set(P.calientes.map(nrm));
-  const enPantalla = (t) => { const s = P.escenas.find((e) => t >= e.t0 && t < e.t1); return s ? new Set(s.texto_visible) : new Set(); };
+  const enPantalla = (t) => {
+    const s = P.escenas.find((e) => t >= e.t0 && t < e.t1);
+    return s ? new Set(s.texto_visible) : new Set();
+  };
   groups.forEach((g, gi) => {
     const vis = enPantalla(g[0].start);
     // duplicado: la escena ya dice la MAYORÍA del grupo (con "todas" se colaba "NOBODY CAN ACTUALLY"
     // bajo "ALMOST NOBODY CAN MAKE" — Grace, 26-sep). Grupos de 1-2 palabras: todas.
-    if (g.filter((x) => vis.has(nrm(x.text))).length * 3 >= g.length * 2) return;
-    const el = document.createElement("div"); el.className = "cg"; el.id = "cg" + gi; caps.appendChild(el);
+    if (g.filter((x) => vis.has(nrm(x.text))).length * 3 >= g.length * 2)
+      return;
+    const el = document.createElement("div");
+    el.className = "cg";
+    el.id = "cg" + gi;
+    caps.appendChild(el);
     const gS = g[0].start - 0.05;
     // Nunca ocultar antes de mostrar: con palabras de duración 0 (alineación interpolada) el
     // "siguiente grupo" podía empezar antes que este, el fade-out caía ANTES del fade-in y el
     // subtítulo se quedaba pegado el resto del vídeo (Grace Groner, 23-sep).
-    const gE = Math.max(gS + 0.3, groups[gi + 1] ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35) : g[g.length - 1].end + 0.4);
-    tl.fromTo(el, { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "power2.out" }, gS);
+    const gE = Math.max(
+      gS + 0.3,
+      groups[gi + 1]
+        ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35)
+        : g[g.length - 1].end + 0.4,
+    );
+    tl.fromTo(
+      el,
+      { opacity: 0, y: 24, scale: 0.92 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "power2.out" },
+      gS,
+    );
     tl.to(el, { opacity: 0, duration: 0.05 }, gE - 0.05);
     g.forEach((x, k) => {
-      const s = document.createElement("span"); s.className = "w"; s.id = `w${gi}_${k}`; s.textContent = x.text.replace(/[.,?!]$/, ""); el.appendChild(s);
+      const s = document.createElement("span");
+      s.className = "w";
+      s.id = `w${gi}_${k}`;
+      s.textContent = x.text.replace(/[.,?!]$/, "");
+      el.appendChild(s);
       const hot = HOT.has(nrm(x.text));
-      tl.fromTo(s, { color: "#f4f6f3", scale: 1 }, { color: hot ? "#d8b25a" : "#9fe3c4", scale: hot ? 1.06 : 1.03, duration: 0.08, ease: "power2.out", immediateRender: false }, x.start - 0.04);
+      tl.fromTo(
+        s,
+        { color: "#f4f6f3", scale: 1 },
+        {
+          color: hot ? "#d8b25a" : "#9fe3c4",
+          scale: hot ? 1.06 : 1.03,
+          duration: 0.08,
+          ease: "power2.out",
+          immediateRender: false,
+        },
+        x.start - 0.04,
+      );
       tl.to(s, { color: "#f4f6f3", scale: 1, duration: 0.1 }, x.end);
     });
   });
@@ -302,22 +959,62 @@
   const REPOSO = { scale: 1, x: 0, y: 0 };
   P.cortes.forEach((t, i) => {
     const [sale, entra] = TR[ORDEN[i % ORDEN.length]];
-    tl.fromTo("#trans", { ...REPOSO, filter: "blur(0px)" }, { ...REPOSO, ...sale, filter: "blur(12px)", duration: 0.12, ease: "power2.in", immediateRender: false }, t - 0.12);
-    tl.fromTo("#trans", { ...REPOSO, ...entra, filter: "blur(12px)" }, { ...REPOSO, filter: "blur(0px)", duration: 0.24, ease: "power3.out", immediateRender: false }, t);
+    tl.fromTo(
+      "#trans",
+      { ...REPOSO, filter: "blur(0px)" },
+      {
+        ...REPOSO,
+        ...sale,
+        filter: "blur(12px)",
+        duration: 0.12,
+        ease: "power2.in",
+        immediateRender: false,
+      },
+      t - 0.12,
+    );
+    tl.fromTo(
+      "#trans",
+      { ...REPOSO, ...entra, filter: "blur(12px)" },
+      {
+        ...REPOSO,
+        filter: "blur(0px)",
+        duration: 0.24,
+        ease: "power3.out",
+        immediateRender: false,
+      },
+      t,
+    );
     tl.set("#trans", { filter: "none" }, t + 0.25);
   });
 
   // ---------- punch-in de cámara (zoom-cut): el recurso nº 1 de edición en Shorts ----------
   // Prioridad a los golpes; después, palabras calientes. Separación mínima 1,8 s (más seguido marea)
   // y nunca en el primer 0,8 s (el gancho ya entra con su propia animación).
-  const HUECO = 1.8, hechos = [];
-  const libre = (t) => t >= 0.8 && t <= P.fin_voz && hechos.every((h) => Math.abs(h - t) >= HUECO);
+  const HUECO = 1.8,
+    hechos = [];
+  const libre = (t) =>
+    t >= 0.8 && t <= P.fin_voz && hechos.every((h) => Math.abs(h - t) >= HUECO);
   const punch = (t, z) => {
     if (!libre(t)) return;
     // fromTo con valores explícitos: el render salta a cualquier instante (seek) y un `to` fuera de
     // orden sobre la misma propiedad cogería un valor inicial equivocado
-    tl.fromTo("#cam", { scale: 1 }, { scale: z, duration: 0.07, ease: "power3.out", immediateRender: false }, t - 0.02);
-    tl.fromTo("#cam", { scale: z }, { scale: 1, duration: 0.65, ease: "power2.inOut", immediateRender: false }, t + 0.08);
+    tl.fromTo(
+      "#cam",
+      { scale: 1 },
+      { scale: z, duration: 0.07, ease: "power3.out", immediateRender: false },
+      t - 0.02,
+    );
+    tl.fromTo(
+      "#cam",
+      { scale: z },
+      {
+        scale: 1,
+        duration: 0.65,
+        ease: "power2.inOut",
+        immediateRender: false,
+      },
+      t + 0.08,
+    );
     hechos.push(t);
   };
   P.golpes.forEach((t) => punch(t, 1.08));
