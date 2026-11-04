@@ -1,0 +1,102 @@
+[
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ },
+ {
+  "archivo": "braam_cuerpo.src",
+  "origen": "wikimedia",
+  "titulo": "File:647712 unfa braam.flac",
+  "autor": "Unfa",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:647712_unfa_braam.flac"
+ },
+ {
+  "archivo": "braam_sub.src",
+  "origen": "wikimedia",
+  "titulo": "File:647712 unfa braam.flac",
+  "autor": "Unfa",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:647712_unfa_braam.flac"
+ },
+ {
+  "archivo": "latido.src",
+  "origen": "wikimedia",
+  "titulo": "File:Heartbeat.ogg",
+  "autor": "HerbertBoland",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Heartbeat.ogg"
+ },
+ {
+  "archivo": "riser_gong.src",
+  "origen": "wikimedia",
+  "titulo": "File:Gong or bell vibrant (short).ogg",
+  "autor": "PDSounds description: http://www.pdsounds.org/sounds/gong_or_bell_vibrant",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Gong_or_bell_vibrant_(short).ogg"
+ },
+ {
+  "archivo": "riser_platillo.src",
+  "origen": "wikimedia",
+  "titulo": "File:CrashCymbalSample.ogg",
+  "autor": "RyGuy 8======D",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:CrashCymbalSample.ogg"
+ },
+ {
+  "archivo": "swell_corto.src",
+  "origen": "wikimedia",
+  "titulo": "File:CrashCymbalSample.ogg",
+  "autor": "RyGuy 8======D",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:CrashCymbalSample.ogg"
+ },
+ {
+  "archivo": "tack.src",
+  "origen": "wikimedia",
+  "titulo": "File:Mechanical tack.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Mechanical_tack.ogg"
+ },
+ {
+  "archivo": "thud.src",
+  "origen": "wikimedia",
+  "titulo": "File:Dull thud.ogg",
+  "autor": "gregoryweir",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Dull_thud.ogg"
+ },
+ {
+  "archivo": "tick.src",
+  "origen": "wikimedia",
+  "titulo": "File:Watch tick.ogg",
+  "autor": "Marble Toast",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Watch_tick.ogg"
+ }
+]

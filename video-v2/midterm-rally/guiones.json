@@ -1,0 +1,202 @@
+{
+  "ref": "midterm-rally",
+  "nota": "Signal from decide 2026-11-04: congress / democratic sweep / stocks rally. All figures: CNN, CNBC, 24/7 Wall St (see storyboard cifras).",
+  "estructuras": [
+    {
+      "id": "noche",
+      "nombre": "misterio / revelacion (la noche del martes)",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "The president's party lost Congress, and the Dow jumped fifteen hundred sixty-nine points."
+        },
+        {
+          "id": "why",
+          "texto": "Wall Street wasn't cheering for anyone."
+        },
+        {
+          "id": "fear",
+          "texto": "Some feared a long fight over the results."
+        },
+        {
+          "id": "night",
+          "texto": "Tuesday night, futures were falling.",
+          "giro": true
+        },
+        {
+          "id": "turn",
+          "texto": "Then Trump said he'd accept the outcome."
+        },
+        {
+          "id": "close",
+          "texto": "It closed with the Dow's best post-midterm day since nineteen eighty-two.",
+          "giro": true
+        },
+        {
+          "id": "oil",
+          "texto": "Oil sank almost nine percent on hopes the Iran war could end."
+        },
+        {
+          "id": "ai",
+          "texto": "But an AI infrastructure fund lost nine percent, as data centers became a campaign fight.",
+          "giro": true
+        },
+        {
+          "id": "history",
+          "texto": "Stocks rose the year after every midterm since nineteen fifty. That's nineteen data points."
+        },
+        {
+          "id": "you",
+          "texto": "Ask which part of your money moved.",
+          "giro": true
+        },
+        {
+          "id": "cta",
+          "texto": "Relief, or real rally, now that the president's party lost Congress?"
+        }
+      ]
+    },
+    {
+      "id": "dos-mercados",
+      "nombre": "contraste (dos mercados el mismo dia)",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Same day, same election: the Dow gained three percent, and an AI fund lost nine."
+        },
+        {
+          "id": "result",
+          "texto": "Democrats had just flipped both chambers of Congress."
+        },
+        {
+          "id": "winners",
+          "texto": "Oil sank almost nine percent, and bond yields fell.",
+          "giro": true
+        },
+        {
+          "id": "why",
+          "texto": "Investors expected less borrowing, and maybe an end to the Iran war."
+        },
+        {
+          "id": "losers",
+          "texto": "But CoreWeave sank ten percent, and Nvidia lost three.",
+          "giro": true
+        },
+        {
+          "id": "dc",
+          "texto": "Data centers had become a campaign fight, and traders priced in new limits."
+        },
+        {
+          "id": "history",
+          "texto": "History looks kind: stocks rose the year after every midterm since nineteen fifty.",
+          "giro": true
+        },
+        {
+          "id": "honest",
+          "texto": "That's only nineteen data points."
+        },
+        {
+          "id": "cta",
+          "texto": "Same day, same election: are you in the three percent, or the nine?"
+        }
+      ]
+    },
+    {
+      "id": "nadie-dice",
+      "nombre": "lo que nadie dice (el titular miente)",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Fifteen hundred points on the Dow, and it may have little to do with who won."
+        },
+        {
+          "id": "headline",
+          "texto": "The headline says Democrats took Congress and stocks loved it."
+        },
+        {
+          "id": "really",
+          "texto": "But Tuesday night, futures were falling.",
+          "giro": true
+        },
+        {
+          "id": "turn",
+          "texto": "They turned when Trump said he'd accept the outcome."
+        },
+        {
+          "id": "oil",
+          "texto": "Then oil sank almost nine percent.",
+          "giro": true
+        },
+        {
+          "id": "mix",
+          "texto": "Fear gone, fuel cheaper: that's a relief rally, not a verdict."
+        },
+        {
+          "id": "ai",
+          "texto": "And AI infrastructure lost nine percent that same day.",
+          "giro": true
+        },
+        {
+          "id": "you",
+          "texto": "So before you credit a party, check what really moved, and why."
+        },
+        {
+          "id": "cta",
+          "texto": "Fifteen hundred points on the Dow: politics, or relief?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "The president's party lost Congress, and the Dow jumped fifteen hundred sixty-nine points."
+    },
+    {
+      "id": "g2",
+      "texto": "Fifteen hundred sixty-nine points, the morning after the president's party lost Congress."
+    },
+    {
+      "id": "g3",
+      "texto": "Congress flipped overnight, and the Dow added fifteen hundred sixty-nine points."
+    }
+  ],
+  "juicio": {
+    "noche": {
+      "una_idea": 4,
+      "bucle_abierto": 5,
+      "giro": 5,
+      "nota": "Story with a clock: Tuesday night, the turn, the close. Two side facts (oil, AI) risk diluting."
+    },
+    "dos-mercados": {
+      "una_idea": 5,
+      "bucle_abierto": 2,
+      "giro": 3,
+      "nota": "Clean idea, but the hook answers itself: no question left to stay for."
+    },
+    "nadie-dice": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Reads as an argument about politics; riskier tone on a partisan day."
+    },
+    "noche+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 5,
+      "nota": "States the paradox with cause and effect; the loop line echoes it exactly."
+    },
+    "noche+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 5,
+      "nota": "Number first, but no Dow: unclear what moved, and the loop echoes less."
+    },
+    "noche+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 5,
+      "nota": "Loses the paradox: no hint that the president lost."
+    }
+  }
+}

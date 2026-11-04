@@ -1,0 +1,101 @@
+[
+ {
+  "archivo": "capitolio.src",
+  "origen": "pexels",
+  "titulo": "pexels:29549360",
+  "autor": "Nika Navi",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/stunning-view-of-the-us-capitol-building-29549360/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "tablero.src",
+  "origen": "pexels",
+  "titulo": "pexels:7579943",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/video-of-stock-exchange-7579943/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "voto.src",
+  "origen": "pexels",
+  "titulo": "pexels:5925192",
+  "autor": "Sora Shimazaki",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-spinning-ballot-box-5925192/",
+  "desde": 1.0
+ },
+ {
+  "archivo": "noche.src",
+  "origen": "pexels",
+  "titulo": "pexels:19332989",
+  "autor": "Volkan Yılmaz",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/new-york-streets-19332989/",
+  "desde": 1.0
+ },
+ {
+  "archivo": "bomba.src",
+  "origen": "pexels",
+  "titulo": "pexels:10327270",
+  "autor": "Andy Arthur",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/crane-working-at-oilfield-10327270/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "tanquero.src",
+  "origen": "pexels",
+  "titulo": "pexels:30583752",
+  "autor": "Julien Goettelmann",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/aerial-view-of-cargo-ship-in-open-sea-30583752/",
+  "desde": 1.0
+ },
+ {
+  "archivo": "torres.src",
+  "origen": "pexels",
+  "titulo": "pexels:34312355",
+  "autor": "Washi",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/high-voltage-power-lines-against-blue-sky-34312355/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "movil.src",
+  "origen": "pexels",
+  "titulo": "pexels:7947488",
+  "autor": "RDNE Stock project",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/monitoring-the-stock-market-7947488/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "conteo.src",
+  "origen": "pexels",
+  "titulo": "pexels:8847913",
+  "autor": "Mikhail Nilov",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/people-doing-vote-counting-8847913/",
+  "desde": 2.0
+ }
+]

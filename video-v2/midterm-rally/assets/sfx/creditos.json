@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "braam_cuerpo.src",
+  "origen": "wikimedia",
+  "titulo": "File:647712 unfa braam.flac",
+  "autor": "Unfa",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:647712_unfa_braam.flac"
+ },
+ {
+  "archivo": "braam_sub.src",
+  "origen": "wikimedia",
+  "titulo": "File:647712 unfa braam.flac",
+  "autor": "Unfa",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:647712_unfa_braam.flac"
+ },
+ {
+  "archivo": "pagina.src",
+  "origen": "wikimedia",
+  "titulo": "File:Turning a page.ogg",
+  "autor": "planish",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg"
+ },
+ {
+  "archivo": "reloj.src",
+  "origen": "wikimedia",
+  "titulo": "File:Clock ticking.ogg",
+  "autor": "natalie",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Clock_ticking.ogg"
+ },
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ },
+ {
+  "archivo": "tack.src",
+  "origen": "wikimedia",
+  "titulo": "File:Mechanical tack.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Mechanical_tack.ogg"
+ },
+ {
+  "archivo": "thud.src",
+  "origen": "wikimedia",
+  "titulo": "File:Dull thud.ogg",
+  "autor": "gregoryweir",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Dull_thud.ogg"
+ },
+ {
+  "archivo": "tick.src",
+  "origen": "wikimedia",
+  "titulo": "File:Watch tick.ogg",
+  "autor": "Marble Toast",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Watch_tick.ogg"
+ }
+]

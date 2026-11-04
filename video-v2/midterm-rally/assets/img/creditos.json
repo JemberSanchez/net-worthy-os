@@ -1,0 +1,52 @@
+[
+ {
+  "archivo": "ley.jpg",
+  "origen": "nysenate",
+  "titulo": "New York State Senate bill S10642, page 1",
+  "autor": "New York State Senate",
+  "licencia": "Public domain (legislative text)",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://legislation.nysenate.gov/pdf/bills/2025/S10642"
+ },
+ {
+  "archivo": "nyse.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Sign of the New York Stock Exchange, Broad Street.jpg",
+  "autor": "Billie Grace Ward",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sign_of_the_New_York_Stock_Exchange,_Broad_Street.jpg"
+ },
+ {
+  "archivo": "casablanca.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:The White House North Portico in Washington, D.C.jpg",
+  "autor": "Harrison Keely",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:The_White_House_North_Portico_in_Washington,_D.C.jpg"
+ },
+ {
+  "archivo": "mapa_dc.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Data center infrastructure in the United States.jpg",
+  "autor": "DOE/National Renewable Energy Laboratory (NREL)",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Data_center_infrastructure_in_the_United_States.jpg"
+ },
+ {
+  "archivo": "piso.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:NY stock exchange traders floor LC-U9-10548-6.jpg",
+  "autor": "Thomas J. O'Halloran",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:NY_stock_exchange_traders_floor_LC-U9-10548-6.jpg"
+ }
+]

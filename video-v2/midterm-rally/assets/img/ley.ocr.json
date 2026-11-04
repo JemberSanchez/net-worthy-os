@@ -1,0 +1,718 @@
+{
+ "tam": [
+  2040,
+  2640
+ ],
+ "lineas": [
+  {
+   "texto": "STATE OF NEW YORK",
+   "conf": 0.999,
+   "caja": [
+    700,
+    135,
+    1351,
+    186
+   ]
+  },
+  {
+   "texto": "10642",
+   "conf": 1.0,
+   "caja": [
+    977,
+    272,
+    1089,
+    311
+   ]
+  },
+  {
+   "texto": "IN SENATE",
+   "conf": 0.954,
+   "caja": [
+    853,
+    361,
+    1197,
+    408
+   ]
+  },
+  {
+   "texto": "June 1, 2026",
+   "conf": 0.994,
+   "caja": [
+    895,
+    458,
+    1153,
+    496
+   ]
+  },
+  {
+   "texto": "1NSENATE",
+   "conf": 0.932,
+   "caja": [
+    857,
+    380,
+    1196,
+    411
+   ]
+  },
+  {
+   "texto": "n n    nr e  n  e e",
+   "conf": 0.638,
+   "caja": [
+    264,
+    575,
+    1782,
+    612
+   ]
+  },
+  {
+   "texto": "printed to be committed to the Committee on Rules",
+   "conf": 0.998,
+   "caja": [
+    302,
+    613,
+    1341,
+    650
+   ]
+  },
+  {
+   "texto": "AN ACT to amend the environmental conservation law, the public service",
+   "conf": 0.989,
+   "caja": [
+    260,
+    687,
+    1783,
+    728
+   ]
+  },
+  {
+   "texto": "law, the public authorities law, the energy law and the labor law, in",
+   "conf": 0.982,
+   "caja": [
+    305,
+    729,
+    1782,
+    766
+   ]
+  },
+  {
+   "texto": "re  c  n g r g nt",
+   "conf": 0.671,
+   "caja": [
+    305,
+    768,
+    1654,
+    805
+   ]
+  },
+  {
+   "texto": "The People of the State of New York, represented in Senate and Assem-",
+   "conf": 0.999,
+   "caja": [
+    303,
+    844,
+    1783,
+    881
+   ]
+  },
+  {
+   "texto": "relation to enacting the responsible data center development act",
+   "conf": 0.999,
+   "caja": [
+    305,
+    767,
+    1654,
+    804
+   ]
+  },
+  {
+   "texto": "bly, do enact as follows:",
+   "conf": 0.998,
+   "caja": [
+    260,
+    882,
+    796,
+    919
+   ]
+  },
+  {
+   "texto": "1",
+   "conf": 1.0,
+   "caja": [
+    199,
+    959,
+    229,
+    995
+   ]
+  },
+  {
+   "texto": "Section 1. Short title. This act shall be known and may be cited as",
+   "conf": 0.972,
+   "caja": [
+    303,
+    958,
+    1782,
+    997
+   ]
+  },
+  {
+   "texto": "2",
+   "conf": 1.0,
+   "caja": [
+    196,
+    997,
+    233,
+    1033
+   ]
+  },
+  {
+   "texto": "the \"responsible data center development act\".",
+   "conf": 0.995,
+   "caja": [
+    259,
+    1000,
+    1232,
+    1033
+   ]
+  },
+  {
+   "texto": "3",
+   "conf": 1.0,
+   "caja": [
+    197,
+    1035,
+    231,
+    1073
+   ]
+  },
+  {
+   "texto": "S 2. The environmental conservation law is amended by adding a new",
+   "conf": 0.978,
+   "caja": [
+    302,
+    1035,
+    1785,
+    1074
+   ]
+  },
+  {
+   "texto": "4",
+   "conf": 1.0,
+   "caja": [
+    201,
+    1076,
+    232,
+    1108
+   ]
+  },
+  {
+   "texto": "article 31 to read as follows:",
+   "conf": 0.98,
+   "caja": [
+    259,
+    1077,
+    896,
+    1110
+   ]
+  },
+  {
+   "texto": "5",
+   "conf": 1.0,
+   "caja": [
+    199,
+    1113,
+    230,
+    1149
+   ]
+  },
+  {
+   "texto": "ARTICLE 31",
+   "conf": 0.995,
+   "caja": [
+    912,
+    1113,
+    1131,
+    1147
+   ]
+  },
+  {
+   "texto": "6",
+   "conf": 1.0,
+   "caja": [
+    201,
+    1152,
+    230,
+    1188
+   ]
+  },
+  {
+   "texto": "MORATORIUM ON DATA CENTER PERMIT ISSUANCE",
+   "conf": 0.998,
+   "caja": [
+    598,
+    1154,
+    1466,
+    1185
+   ]
+  },
+  {
+   "texto": "7",
+   "conf": 1.0,
+   "caja": [
+    201,
+    1191,
+    231,
+    1223
+   ]
+  },
+  {
+   "texto": "Section 31-0101. Definitions.",
+   "conf": 0.994,
+   "caja": [
+    260,
+    1192,
+    879,
+    1225
+   ]
+  },
+  {
+   "texto": "8",
+   "conf": 1.0,
+   "caja": [
+    198,
+    1226,
+    231,
+    1266
+   ]
+  },
+  {
+   "texto": "31-0103. Moratorium on large data center permit issuance.",
+   "conf": 0.998,
+   "caja": [
+    431,
+    1228,
+    1634,
+    1265
+   ]
+  },
+  {
+   "texto": "9",
+   "conf": 1.0,
+   "caja": [
+    199,
+    1266,
+    229,
+    1302
+   ]
+  },
+  {
+   "texto": "31-0105. Hearing requirement.",
+   "conf": 0.998,
+   "caja": [
+    430,
+    1266,
+    1049,
+    1306
+   ]
+  },
+  {
+   "texto": "10",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1304,
+    230,
+    1343
+   ]
+  },
+  {
+   "texto": "31-0107. Environmental impact report.",
+   "conf": 0.991,
+   "caja": [
+    430,
+    1305,
+    1213,
+    1342
+   ]
+  },
+  {
+   "texto": "11",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1343,
+    231,
+    1383
+   ]
+  },
+  {
+   "texto": "S 31-0101. Definitions.",
+   "conf": 0.986,
+   "caja": [
+    258,
+    1344,
+    756,
+    1385
+   ]
+  },
+  {
+   "texto": "12",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1380,
+    232,
+    1420
+   ]
+  },
+  {
+   "texto": "For the purposes of this article, the following terms shall have the",
+   "conf": 0.986,
+   "caja": [
+    301,
+    1383,
+    1783,
+    1419
+   ]
+  },
+  {
+   "texto": "13",
+   "conf": 1.0,
+   "caja": [
+    177,
+    1420,
+    235,
+    1459
+   ]
+  },
+  {
+   "texto": "following meanings:",
+   "conf": 0.999,
+   "caja": [
+    260,
+    1422,
+    669,
+    1458
+   ]
+  },
+  {
+   "texto": "14",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1458,
+    233,
+    1498
+   ]
+  },
+  {
+   "texto": "1. a. \"Data center\" shall mean all facilities, or combination of",
+   "conf": 0.981,
+   "caja": [
+    302,
+    1459,
+    1784,
+    1495
+   ]
+  },
+  {
+   "texto": "15",
+   "conf": 1.0,
+   "caja": [
+    178,
+    1499,
+    235,
+    1534
+   ]
+  },
+  {
+   "texto": "facilities under common ownership or control at the same site, that:",
+   "conf": 0.989,
+   "caja": [
+    261,
+    1501,
+    1699,
+    1534
+   ]
+  },
+  {
+   "texto": "16",
+   "conf": 1.0,
+   "caja": [
+    177,
+    1535,
+    233,
+    1575
+   ]
+  },
+  {
+   "texto": "i. Receive electric, gas, or water service from an electric corpo-",
+   "conf": 0.982,
+   "caja": [
+    302,
+    1537,
+    1783,
+    1574
+   ]
+  },
+  {
+   "texto": "17",
+   "conf": 1.0,
+   "caja": [
+    174,
+    1572,
+    236,
+    1614
+   ]
+  },
+  {
+   "texto": "ration, gas corporation, water-works corporation, or municipality, have",
+   "conf": 0.99,
+   "caja": [
+    260,
+    1576,
+    1783,
+    1613
+   ]
+  },
+  {
+   "texto": "18",
+   "conf": 1.0,
+   "caja": [
+    177,
+    1612,
+    235,
+    1651
+   ]
+  },
+  {
+   "texto": "applied or requested to receive such service, or have otherwise caused",
+   "conf": 0.996,
+   "caja": [
+    259,
+    1613,
+    1784,
+    1653
+   ]
+  },
+  {
+   "texto": "19",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1651,
+    233,
+    1690
+   ]
+  },
+  {
+   "texto": "an electric corporation, gas corporation, water-works corporation, or",
+   "conf": 0.985,
+   "caja": [
+    261,
+    1653,
+    1785,
+    1690
+   ]
+  },
+  {
+   "texto": "20",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1689,
+    231,
+    1728
+   ]
+  },
+  {
+   "texto": "municipality to incur an expense in relation to the provision of service",
+   "conf": 0.995,
+   "caja": [
+    259,
+    1691,
+    1782,
+    1727
+   ]
+  },
+  {
+   "texto": "21",
+   "conf": 1.0,
+   "caja": [
+    175,
+    1727,
+    231,
+    1768
+   ]
+  },
+  {
+   "texto": "pursuant to the public service law; and",
+   "conf": 0.995,
+   "caja": [
+    261,
+    1729,
+    1092,
+    1767
+   ]
+  },
+  {
+   "texto": "22",
+   "conf": 1.0,
+   "caja": [
+    175,
+    1766,
+    231,
+    1806
+   ]
+  },
+  {
+   "texto": "ii. Have a peak demand of one megawatt or more that is used for:",
+   "conf": 0.992,
+   "caja": [
+    304,
+    1768,
+    1655,
+    1804
+   ]
+  },
+  {
+   "texto": "23",
+   "conf": 1.0,
+   "caja": [
+    175,
+    1804,
+    232,
+    1847
+   ]
+  },
+  {
+   "texto": "(1) Computing infrastructure, not including manufacturing;",
+   "conf": 0.998,
+   "caja": [
+    306,
+    1807,
+    1530,
+    1844
+   ]
+  },
+  {
+   "texto": "24",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1842,
+    231,
+    1884
+   ]
+  },
+  {
+   "texto": "(2) Data processing services;",
+   "conf": 0.999,
+   "caja": [
+    306,
+    1845,
+    921,
+    1882
+   ]
+  },
+  {
+   "texto": "25",
+   "conf": 1.0,
+   "caja": [
+    176,
+    1881,
+    231,
+    1922
+   ]
+  },
+  {
+   "texto": "(3) Web hosting services, not including software publishing;",
+   "conf": 0.993,
+   "caja": [
+    304,
+    1884,
+    1572,
+    1921
+   ]
+  },
+  {
+   "texto": "26",
+   "conf": 1.0,
+   "caja": [
+    175,
+    1919,
+    233,
+    1960
+   ]
+  },
+  {
+   "texto": "(4) Streaming support services, not including streaming distribution;",
+   "conf": 0.993,
+   "caja": [
+    303,
+    1921,
+    1782,
+    1961
+   ]
+  },
+  {
+   "texto": "27",
+   "conf": 1.0,
+   "caja": [
+    175,
+    1958,
+    264,
+    1998
+   ]
+  },
+  {
+   "texto": "and",
+   "conf": 1.0,
+   "caja": [
+    244,
+    1960,
+    337,
+    1999
+   ]
+  },
+  {
+   "texto": "(3) web hosting services, not including sortware publisning;",
+   "conf": 0.95,
+   "caja": [
+    304,
+    1900,
+    1573,
+    1922
+   ]
+  },
+  {
+   "texto": "EXPLANATION--Matter in italics (underscored)is new; matter in brackets",
+   "conf": 0.995,
+   "caja": [
+    283,
+    2038,
+    1781,
+    2075
+   ]
+  },
+  {
+   "texto": "[-] is old law to be omitted.",
+   "conf": 0.995,
+   "caja": [
+    731,
+    2078,
+    1336,
+    2111
+   ]
+  },
+  {
+   "texto": "LBD16039-04-6",
+   "conf": 1.0,
+   "caja": [
+    1501,
+    2115,
+    1780,
+    2149
+   ]
+  }
+ ]
+}
