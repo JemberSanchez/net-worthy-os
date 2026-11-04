@@ -126,7 +126,7 @@ def _html_carrusel(slides: list[dict], fondos: list[str], tarjeta: bool = False)
         secciones.append(f'''
       <section id="s{k}" class="clip slide{" cover" if primera else ""}{" last" if ultima else ""}" data-start="{k}" data-duration="1">
         <img class="bg" src="{f}" alt="" /><div class="scrim"></div>
-        <div class="top"><span class="brand">NET WORTHY</span>{"" if tarjeta else f'<span class="num">{k + 1}/{n}</span>'}</div>
+        <div class="top"><span class="brand">Net Worthy</span>{"" if tarjeta else f'<span class="num">{k + 1}/{n}</span>'}</div>
         <div class="body">
           {f'<div class="kicker">{_t(d.get("kicker"))}</div>' if d.get("kicker") else ""}
           <div class="titulo{" xl" if primera else ""}">{_t(d["titulo"])}</div>
@@ -140,32 +140,30 @@ def _html_carrusel(slides: list[dict], fondos: list[str], tarjeta: bool = False)
 <html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width={W}, height={H}" />
 <script src="gsap.min.js"></script>
 <style>
-  @font-face {{ font-family: "Anton"; src: url("fonts/anton.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Inter"; font-weight: 600; src: url("fonts/inter-latin-600-normal.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Inter"; font-weight: 800; src: url("fonts/inter-latin-800-normal.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Inter"; font-weight: 900; src: url("fonts/inter-latin-900-normal.woff2") format("woff2"); }}
-  body {{ margin: 0; background: #0a1a14; }}
-  #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; font-family: "Inter", sans-serif; color: #f4f6f3; }}
-  .slide {{ position: absolute; inset: 0; overflow: hidden; background: #0a1a14; }}
+  @font-face {{ font-family: "NW Display"; src: url("fonts/source-serif-4-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 900; }}
+  @font-face {{ font-family: "NW Text"; font-weight: 600; src: url("fonts/schibsted-grotesk-latin-600-normal.woff2") format("woff2"); }}
+  @font-face {{ font-family: "NW Text"; font-weight: 700; src: url("fonts/schibsted-grotesk-latin-700-normal.woff2") format("woff2"); }}
+  @font-face {{ font-family: "NW Text"; font-weight: 800; src: url("fonts/schibsted-grotesk-latin-800-normal.woff2") format("woff2"); }}
+  body {{ margin: 0; background: #08090a; }}
+  #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; font-family: "NW Text", sans-serif; color: #f2ecdf; font-kerning: normal; }}
+  .slide {{ position: absolute; inset: 0; overflow: hidden; background: #08090a; }}
   .bg {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }}
-  .scrim {{ position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,26,20,0.55) 0%, rgba(10,26,20,0.15) 30%,
-           rgba(10,26,20,0.55) 58%, rgba(10,26,20,0.96) 100%); }}
-  .top {{ position: absolute; top: 56px; left: 70px; right: 70px; display: flex; justify-content: space-between;
-          font-weight: 800; font-size: 26px; letter-spacing: 0.4em; color: #d8b25a; }}
-  .num {{ letter-spacing: 0.1em; color: #cfd8d3; }}
-  .body {{ position: absolute; left: 70px; right: 70px; bottom: 150px; }}
-  .kicker {{ font-weight: 800; font-size: 34px; letter-spacing: 0.22em; text-transform: uppercase; color: #d8b25a; margin-bottom: 18px; }}
-  .titulo {{ font-family: "Anton", sans-serif; font-size: 118px; line-height: 0.98; text-transform: uppercase;
-             text-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 0 42px rgba(0,0,0,0.75); }}
-  .titulo.xl {{ font-size: 176px; }}
-  .texto {{ font-weight: 600; font-size: 40px; line-height: 1.32; margin-top: 26px; color: #e9eee9; text-shadow: 0 2px 18px rgba(0,0,0,0.8); }}
-  .gold {{ color: #d8b25a; }}
-  .swipe {{ margin-top: 34px; font-weight: 900; font-size: 34px; letter-spacing: 0.18em; text-transform: uppercase; color: #0a1a14;
-            background: #d8b25a; display: inline-block; padding: 14px 30px; border-radius: 999px; }}
-  .follow {{ margin-top: 34px; font-weight: 800; font-size: 32px; letter-spacing: 0.06em; color: #d8b25a; }}
-  .dots {{ position: absolute; bottom: 70px; left: 0; right: 0; display: flex; justify-content: center; gap: 14px; }}
-  .dots i {{ width: 14px; height: 14px; border-radius: 50%; background: rgba(244,246,243,0.3); }}
-  .dots i.on {{ background: #d8b25a; width: 40px; border-radius: 8px; }}
+  .scrim {{ position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,9,10,0.62) 0%, rgba(8,9,10,0.12) 26%,
+           rgba(8,9,10,0.5) 56%, rgba(8,9,10,0.95) 100%); }}
+  .top {{ position: absolute; top: 56px; left: 72px; right: 72px; display: flex; justify-content: space-between; padding-bottom: 14px;
+          border-bottom: 2px solid rgba(242,236,223,0.4); font: 700 34px "NW Display", serif; color: #f2ecdf; }}
+  .num {{ font: 600 28px "NW Text", sans-serif; color: #c3cfc7; }}
+  .body {{ position: absolute; left: 72px; right: 72px; bottom: 140px; }}
+  .kicker {{ font-weight: 700; font-size: 36px; color: #e3bd63; margin-bottom: 16px; }}
+  .titulo {{ font-family: "NW Display", serif; font-variation-settings: "opsz" 60; font-weight: 800; font-size: 104px; line-height: 1.02; letter-spacing: -0.015em; }}
+  .titulo.xl {{ font-weight: 900; font-size: 168px; line-height: 0.96; letter-spacing: -0.022em; }}
+  .texto {{ font-weight: 600; font-size: 40px; line-height: 1.3; margin-top: 24px; color: #f2ecdf; }}
+  .gold {{ color: #e3bd63; }}
+  .swipe {{ margin-top: 30px; font-weight: 700; font-size: 36px; color: #e3bd63; }}
+  .follow {{ margin-top: 30px; font-weight: 700; font-size: 32px; color: #e3bd63; }}
+  .dots {{ position: absolute; bottom: 70px; left: 72px; display: flex; gap: 12px; }}
+  .dots i {{ width: 14px; height: 4px; background: rgba(242,236,223,0.35); }}
+  .dots i.on {{ background: #e3bd63; width: 44px; }}
 </style></head>
 <body>
   <div id="root" data-composition-id="main" data-start="0" data-width="{W}" data-height="{H}" data-duration="{n}">{"".join(secciones)}

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import itertools
 import json
 import re
 import shutil
@@ -49,7 +50,7 @@ NUMEROS = re.compile(
     r"\$|\d|%|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
     r"twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|"
     r"billion|trillion)\b",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -66,7 +67,7 @@ def cargar_rubrica(proy: Path, ruta: Path | None = None) -> dict:
 
 def plan_de_html(html: str) -> dict:
     """El plan resuelto (segundos) que construir.py incrusta en index.html."""
-    m = re.search(r"window\.PLAN = (\{.*?\});</script>", html, re.S)
+    m = re.search(r"window\.PLAN = (\{.*?\});</script>", html, re.DOTALL)
     return json.loads(m.group(1).replace("<\\/", "</")) if m else {}
 
 
@@ -190,7 +191,7 @@ def revisar_reganchos(plan: dict, words: list[dict], u: dict) -> list[dict]:
     marcas = [0.0] + golpes + [fin]
     out = []
     vs = ventanas(plan)
-    for a, b in zip(marcas, marcas[1:]):
+    for a, b in itertools.pairwise(marcas):
         if b - a > u["hueco_max_s"]:
             medio = (a + b) / 2
             ancla = ancla_de(words, medio, a + 2, b - 2)
@@ -364,6 +365,16 @@ def revisar_sincronia(rv: dict, vs, u: dict) -> list[dict]:
     return out
 
 
+def voz_de_la_mezcla(proy: Path, sb: dict) -> Path:
+    """The voice stem the render really used. Asks the storyboard, not the disk: a voice-mix.wav
+    survives on disk after `ride` is removed, and measuring against it would corrupt the subtraction."""
+    return (
+        proy
+        / "assets"
+        / ("voice-mix.wav" if (sb.get("voz") or {}).get("ride") else "voice.mp3")
+    )
+
+
 def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[dict]:
     """Cada efecto que suena, con su tramo REAL (duración del WAV) y de dónde sale:
     `sonidos[i]` del storyboard (perilla `vol`), sfx de un clip/imagen, o del motor (whoosh de
@@ -404,9 +415,9 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
         )
     m = MOTOR / "assets"
     vm = {
-        "whoosh": 0.38,
+        "whoosh": 0.1,
         "impacto": 0.6,
-        "riser": 0.3,
+        "riser": 0.08,
         **(plan.get("vol_motor") or {}),
     }  # = construir.VOL_MOTOR
     ev += [
@@ -819,7 +830,7 @@ def puntuar(fallos: list[dict]) -> int:
 def medir_loudness(mp4: Path) -> dict | None:
     r = subprocess.run(
         [PY, str(RAIZ / "tools" / "medir_loudness.py"), str(mp4)],
-        capture_output=True,
+        check=False, capture_output=True,
         text=True,
     )
     lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)
@@ -943,7 +954,7 @@ def revisar(
 
     rm = medir_mezcla.medir(
         medir_mezcla.decodificar(mp4),
-        medir_mezcla.decodificar(proy / "assets" / "voice.mp3"),
+        medir_mezcla.decodificar(voz_de_la_mezcla(proy, sb)),
         medir_mezcla.tramos_de_words(words),
         umbral_db=u["voz_sobre_fondo_db"],
     )
@@ -1106,7 +1117,7 @@ def render(proy: Path) -> tuple[Path | None, dict, str]:
     """producir.py SIN subir (las rondas del crítico nunca salen de la máquina)."""
     r = subprocess.run(
         [PY, str(MOTOR / "producir.py"), str(proy), "--sin-subir"],
-        capture_output=True,
+        check=False, capture_output=True,
         text=True,
     )
     qa_f = proy / "renders" / "qa.json"

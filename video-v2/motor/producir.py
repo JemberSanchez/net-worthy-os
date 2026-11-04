@@ -42,7 +42,13 @@ def _run(
         cwd=cwd,
         capture_output=True,
         text=True,
-        env={**os.environ, **(env or {})},
+        encoding="utf-8",
+        errors="replace",
+        env={
+            **os.environ,
+            "PYTHONUTF8": "1",
+            **(env or {}),
+        },  # the tools print ✓/≈: cp1252 would crash them
     )
 
 
@@ -54,6 +60,15 @@ def _entorno() -> dict:
     if os.name == "nt":  # Git Bash prints MSYS paths: /c/Users/... -> C:/Users/...
         pares = [(k, re.sub(r"^/([a-zA-Z])/", r"\1:/", v)) for k, v in pares]
     return {k: v for k, v in pares if k not in os.environ and Path(v).exists()}
+
+
+RE_DVIDS = re.compile(
+    r"\b(DVIDS|DOD|DoW|U\.S\. Navy|USN|Navy Medicine|Department of War)\b"
+)
+AVISO_DVIDS = (
+    "The appearance of U.S. Department of War (DoW) visual information does not imply or "
+    "constitute DoW endorsement."
+)
 
 
 def descripcion(sb: dict, proy: Path) -> str:
@@ -122,6 +137,10 @@ def descripcion(sb: dict, proy: Path) -> str:
         ]
         if fichas:
             partes.append(sfx_libre.texto_creditos(fichas))
+    if RE_DVIDS.search(
+        "\n".join(p for p in partes[3:] if p)
+    ):  # DVIDS requires this line from every user of its material
+        partes.append(AVISO_DVIDS)
     return ajustar_limite([p for p in partes if p])
 
 
@@ -141,7 +160,7 @@ def ajustar_limite(partes: list[str], limite: int = LIMITE_DESC) -> str:
         t = "\n\n".join(
             re.sub(
                 r"(?m)^- (.+?) — ",
-                lambda m: (
+                lambda m, n=n: (
                     f"- {m.group(1)[:n].rstrip()}{'…' if len(m.group(1)) > n else ''} — "
                 ),
                 x,
@@ -467,7 +486,7 @@ def instantes_escena(html: str) -> list[float]:
         r'<section id="s\d+" class="clip scene" data-start="([\d.]+)" data-duration="([\d.]+)"',
         html,
     )
-    m = re.search(r"window\.PLAN = (\{.*?\});</script>", html, re.S)
+    m = re.search(r"window\.PLAN = (\{.*?\});</script>", html, re.DOTALL)
     tapas = (
         [
             (p["t0"], p["t1"])
@@ -602,6 +621,10 @@ def producir(proy: Path) -> dict:
 
     r = _run([PY, str(MOTOR / "construir.py"), str(proy), "--validar"])
     puerta("storyboard", r.returncode == 0, r.stdout + r.stderr)
+    sys.path.insert(0, str(RAIZ / "tools"))
+    import medir_parecido
+
+    puerta("repeticion", *medir_parecido.puerta_repeticion(proy))
     if not (proy / "assets" / "voice.mp3").exists():
         r = _run([PY, str(MOTOR / "voz.py"), str(proy)])
         puerta("voz", r.returncode == 0, r.stdout + r.stderr)

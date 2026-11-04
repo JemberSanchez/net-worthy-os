@@ -62,16 +62,19 @@ def _pcm(crudo: Path, desde: float, dur: float, sr: int = 48000):
     return np.frombuffer(raw, dtype=np.float32)
 
 
-def golpe(crudo: Path, destino: Path, desde: float, dur: float) -> dict:
+def golpe(crudo: Path, destino: Path, desde: float, dur: float, inverso: bool = False, extra: str = "") -> dict:
     """Un impacto con el transitorio EXACTO en t=0 (es lo que se ancla a la palabra), pico
     normalizado con limitador (sin clip al remuestrear) y cola fundida."""
     import numpy as np
     x = _pcm(crudo, desde, dur)
-    t0 = arranque(x, 48000)                       # el golpe perceptible, no el ruido previo
+    t0 = 0.0 if inverso else arranque(x, 48000)   # el golpe perceptible, no el ruido previo
     pico = 20 * np.log10(float(np.abs(x).max()) + 1e-9)
     lim = 10 ** (PICO_GOLPE / 20)
-    af = (f"aresample=48000,volume={PICO_GOLPE - pico:.2f}dB,alimiter=limit={lim:.3f}:attack=1:release=40:level=0,"
-          f"afade=t=out:st={max(0.05, dur - t0 - 0.3):.2f}:d=0.3")
+    # inverso: a real strike played backwards, it swells up to the hit point at its very end
+    cola = f"areverse,afade=t=in:d={dur * 0.6:.2f}" if inverso else f"afade=t=out:st={max(0.05, dur - t0 - 0.3):.2f}:d=0.3"
+    af = f"aresample=48000,volume={PICO_GOLPE - pico:.2f}dB,alimiter=limit={lim:.3f}:attack=1:release=40:level=0,{cola}"
+    if extra:       # curated catalogue only, never external input
+        af += f",{extra}"
     destino.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{desde + t0:.3f}", "-i", str(crudo), "-t", f"{dur - t0:.3f}",
                     "-af", af, "-ac", "2", "-c:a", "pcm_s16le", str(destino)], check=True)
@@ -97,7 +100,8 @@ def asegurar(usos: list[dict], carpeta: Path) -> list[dict]:
             continue
         c = cat[u["sfx"]]
         if u["tipo"] == "golpe":
-            golpe(crudos[u["sfx"]], dst, float(c.get("desde", 0)), float(c.get("dur", 1.5)))
+            golpe(crudos[u["sfx"]], dst, float(c.get("desde", 0)), float(c.get("dur", 1.5)),
+                  bool(c.get("inverso")), c.get("af", ""))
         else:
             ambiente(crudos[u["sfx"]], dst, float(c.get("desde", 0)), float(u["dur"]))
     return usos

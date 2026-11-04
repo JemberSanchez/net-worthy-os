@@ -8,5 +8,13 @@
   "pagina":    {"commons": "File:Turning a page.ogg", "tipo": "golpe", "desde": 0.8, "dur": 1.6, "vol": 0.6},
   "sello":     {"commons": "File:Rubber seal dabbed on ink pad.ogg", "tipo": "golpe", "desde": 13.7, "dur": 1.0, "vol": 0.6},
   "ding":      {"commons": "File:406243 stubb typewriter-ding-near-mono.wav", "tipo": "golpe", "desde": 0.0, "dur": 1.1, "vol": 0.5},
-  "obturador": {"commons": "File:Holga shuttersound.ogg", "tipo": "golpe", "desde": 0.0, "dur": 1.2, "vol": 0.55}
+  "obturador": {"commons": "File:Holga shuttersound.ogg", "tipo": "golpe", "desde": 0.0, "dur": 1.2, "vol": 0.55},
+  "braam_sub": {"commons": "File:647712 unfa braam.flac", "tipo": "golpe", "desde": 0.0, "dur": 4.0, "vol": 0.4, "af": "lowpass=f=250,lowpass=f=250"},
+  "braam_cuerpo": {"commons": "File:647712 unfa braam.flac", "tipo": "golpe", "desde": 0.0, "dur": 4.0, "vol": 0.4, "af": "highpass=f=250,volume='if(lt(t,0.82),0,min(1,(t-0.82)/0.15))':eval=frame"},
+  "thud": {"commons": "File:Dull thud.ogg", "tipo": "golpe", "desde": 0.0, "dur": 0.42, "vol": 0.3},
+  "tick": {"commons": "File:Watch tick.ogg", "tipo": "golpe", "desde": 0.0, "dur": 0.126, "vol": 0.09},
+  "tack": {"commons": "File:Mechanical tack.ogg", "tipo": "golpe", "desde": 0.0, "dur": 0.32, "vol": 0.08},
+  "riser_gong": {"commons": "File:Gong or bell vibrant (short).ogg", "tipo": "golpe", "desde": 0.25, "dur": 2.1, "vol": 0.2, "inverso": true},
+  "riser_platillo": {"commons": "File:CrashCymbalSample.ogg", "tipo": "golpe", "desde": 14.95, "dur": 2.1, "vol": 0.1, "inverso": true},
+  "swell_corto": {"commons": "File:CrashCymbalSample.ogg", "tipo": "golpe", "desde": 14.95, "dur": 0.71, "vol": 0.1, "inverso": true}
 }

@@ -85,6 +85,15 @@ class DescripcionTest(unittest.TestCase):
         self.assertIn("\n\n#shorts\n\n", t)          # antes de los créditos: nunca se corta
         self.assertLessEqual(len(t), 5000)
 
+    def test_aviso_dvids_solo_con_material_militar(self):
+        for autor, esperado in (("U.S. Navy", True), ("Orange County Archives", False)):
+            with self.subTest(autor=autor), tempfile.TemporaryDirectory() as d:
+                img = Path(d, "assets", "img")
+                img.mkdir(parents=True)
+                (img / "creditos.json").write_text(json.dumps([{"archivo": "x.jpg", "titulo": "File:X.jpg", "autor": autor,
+                    "licencia": "Public domain", "url_licencia": "", "fuente": "https://commons/x"}]))
+                self.assertEqual("does not imply or constitute DoW endorsement" in producir.descripcion(SB, Path(d)), esperado)
+
     def test_sin_creditos_no_rompe(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertIn("Not financial advice", producir.descripcion(SB, Path(d)))

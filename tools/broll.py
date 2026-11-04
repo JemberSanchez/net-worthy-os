@@ -297,7 +297,7 @@ GRADO_MARCA = (
 # Fondo detrás de texto: desenfoque fuerte (reducir -> desenfocar -> ampliar: igual a la vista y
 # ~10x más rápido que un gblur a 1080x1920).
 DESENFOQUE_FONDO = "scale=540:960,gblur=sigma=3,scale=1080:1920"  # 26-sep: la mitad de desenfoque (más metraje real)
-MODOS = ("color", "duotono")
+MODOS = ("color", "duotono", "natural")
 
 
 # Clip con mucho detalle (broll.detalle > construir.UMBRAL_DETALLE) detrás de texto: con sigma 3 un
@@ -348,6 +348,8 @@ def filtro(
     color = (
         GRADO_MARCA
         if modo == "color"
+        else "null"  # natural: untouched colour, the brand grade read as a green filter (docs/mejora/auditoria.md)
+        if modo == "natural"
         else f"format=gray,format=rgb24,lut1d=file={cube}"
     )
     blur = DESENFOQUE_FUERTE if fondo == "fuerte" else DESENFOQUE_FONDO

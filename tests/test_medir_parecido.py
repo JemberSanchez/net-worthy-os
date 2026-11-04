@@ -66,5 +66,63 @@ class CorpusTest(unittest.TestCase):
             self.assertEqual([p.name for p in P.corpus(raiz / "yo", raiz)], ["otro"])
 
 
+def _sb(guion="A fresh sentence about money today.", textos=(), ultimo="foto", primero="curva", pista="File:Otro - Tema.ogg", botones=False):
+    esc = [{"tipo": primero, "titulo": {"texto": t}} for t in textos] or [{"tipo": primero}]
+    esc.append({"tipo": ultimo, **({"botones": [{"texto": "Team a"}]} if botones else {})})
+    return {"guion": [{"texto": guion}], "escenas": esc, "musica": {"pista": {"commons": pista}}}
+
+
+class RepeticionTest(unittest.TestCase):
+    def test_caso_real_frase_comun_en_guion_falla(self):
+        a = _sb("Here's the part nobody tells you. Rates rose.")
+        b = _sb("Profit grew. Here's the part nobody tells you.", ultimo="titulo", primero="foto", pista="File:X - Y.ogg")
+        self.assertTrue(any("part nobody" in m for m in P.repeticiones(a, [b])))
+
+    def test_datos_compartidos_no_cuentan_como_frase(self):
+        a = _sb("Rates hit three point eight percent. Fine.")
+        b = _sb("Saving was three point eight percent. Ok.", ultimo="titulo", primero="foto", pista="File:X - Y.ogg")
+        self.assertEqual(P.repeticiones(a, [b]), [])
+
+    def test_texto_de_pantalla_identico_falla(self):
+        a = _sb("One thing here.", textos=["Nobody tells you."])
+        b = _sb("Other words there.", textos=["NOBODY TELLS  YOU."], ultimo="titulo", primero="foto", pista="File:X - Y.ogg")
+        self.assertTrue(any("nobody tells you" in m for m in P.repeticiones(a, [b])))
+
+    def test_mismo_final_apertura_o_autor_en_ventana_falla(self):
+        b = _sb("Other words there.", ultimo="cta", botones=True, primero="foto", pista="File:Kevin MacLeod - A.ogg")
+        for a, clave in ((_sb("One.", ultimo="cta", botones=True), "final"), (_sb("One.", primero="foto"), "apertura"),
+                         (_sb("One.", pista="File:Ghost Dance (MacLeod, Kevin) (ISRC X).oga"), "música")):
+            self.assertTrue(any(clave in m for m in P.repeticiones(a, [b])), clave)
+
+    def test_misma_apertura_con_otro_tema_visual_no_repite(self):
+        b = _sb("Other words there.", primero="foto")
+        a = {**_sb("One.", primero="foto"), "tema": "editorial"}
+        self.assertFalse(any("apertura" in m for m in P.repeticiones(a, [b])))
+
+    def test_sellos_fuera_de_ventana_no_fallan_pero_frases_si(self):
+        viejo = _sb("Here's the part nobody tells you.", ultimo="cta", primero="foto", pista="File:Kevin MacLeod - A.ogg")
+        relleno = [_sb(f"Sentence number {w} goes.", ultimo="titulo", primero="lista", pista=f"File:{w} - T.ogg") for w in "abc"]
+        a = _sb("Here's the part nobody tells you.", ultimo="cta", primero="foto", pista="File:Kevin MacLeod - B.ogg")
+        m = P.repeticiones(a, relleno + [viejo])
+        self.assertEqual(len(m), 1)
+        self.assertIn("guion", m[0])
+
+    def test_publicado_sin_formato_exento_y_nuevo_sin_formato_falla(self):
+        with tempfile.TemporaryDirectory() as d:
+            raiz = Path(d)
+            viejo, nuevo = raiz / "viejo", raiz / "nuevo"
+            (viejo / "renders").mkdir(parents=True)
+            nuevo.mkdir()
+            (viejo / "renders" / "viejo-final.mp4").write_bytes(b"x")
+            (viejo / "storyboard.json").write_text(json.dumps(_sb()), encoding="utf-8")
+            (nuevo / "storyboard.json").write_text(json.dumps(_sb("Other words there.", primero="lista")), encoding="utf-8")
+            self.assertTrue(P.puerta_repeticion(viejo)[0])
+            ok, det = P.puerta_repeticion(nuevo)
+            self.assertFalse(ok)
+            self.assertIn("formato", det)
+            (nuevo / "storyboard.json").write_text(json.dumps({**_sb("Other words there.", primero="lista", ultimo="lista", pista="File:Z - Z.ogg"), "formato": "grafica-viva"}), encoding="utf-8")
+            self.assertTrue(P.puerta_repeticion(nuevo)[0])
+
+
 if __name__ == "__main__":
     unittest.main()

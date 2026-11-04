@@ -10,6 +10,10 @@
       @font-face { font-family: "InterX"; src: url("assets/_motor/fonts/inter-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
       @font-face { font-family: "InterX"; src: url("assets/_motor/fonts/inter-latin-800-normal.woff2") format("woff2"); font-weight: 800; }
       @font-face { font-family: "InterX"; src: url("assets/_motor/fonts/inter-latin-900-normal.woff2") format("woff2"); font-weight: 900; }
+      @font-face { font-family: "NW Display"; src: url("assets/_motor/fonts/source-serif-4-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 900; }
+      @font-face { font-family: "NW Text"; src: url("assets/_motor/fonts/schibsted-grotesk-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "NW Text"; src: url("assets/_motor/fonts/schibsted-grotesk-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "NW Text"; src: url("assets/_motor/fonts/schibsted-grotesk-latin-800-normal.woff2") format("woff2"); font-weight: 800; }
       :root { --bg: #0a1a14; --bg2: #0e241b; --ink: #f4f6f3; --gold: #d8b25a; --green: #1f9e6e; --mute: #8da298; --red: #e0533d; --red-txt: #ff6450; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
@@ -35,7 +39,7 @@
       #grain { position: absolute; left: -200px; top: -200px; width: 1480px; height: 2320px; opacity: 0.13; mix-blend-mode: overlay;
                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
       #flash { position: absolute; inset: 0; background: var(--gold); opacity: 0; mix-blend-mode: screen; }
-      #brand { position: absolute; top: 118px; width: 100%; text-align: center; font-weight: 800; letter-spacing: 0.42em; font-size: 26px; color: var(--gold); }
+      #brand { position: absolute; top: 118px; width: 100%; text-align: center; font-weight: 800; letter-spacing: 0.42em; font-size: 26px; color: var(--gold); text-transform: uppercase; }
       /* plate behind the brand: on a bright photo it read 2.05:1 (#9, cartel); a shadow alone gave 2.23:1 */
       #brand span { display: inline-block; padding: 8px 6px 8px 22px; border-radius: 10px; background: rgba(10,26,20,0.78); }
       /* la PRUEBA: documento real a pantalla completa + subrayador (tools/ocr_doc.py) */
@@ -50,7 +54,6 @@
       #serieclip { position: absolute; top: 166px; left: 0; width: 100%; display: flex; justify-content: center; }
       #serie { font-weight: 800; font-size: 25px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--gold);
                padding: 9px 24px 9px 30px; border: 3px solid rgba(216,178,90,0.8); border-radius: 999px; background: rgba(10,26,20,0.78); }
-      #progress { position: absolute; top: 0; left: 0; height: 10px; width: 1080px; background: linear-gradient(90deg, var(--green), var(--gold)); transform-origin: 0 50%; }
       #aviso { position: absolute; left: 70px; right: 70px; top: 1440px; text-align: center; font-weight: 600; font-size: 23px; line-height: 1.45; color: rgba(244,246,243,0.72); opacity: 0; }
 
       /* área útil de escena: 250-1150 px (debajo: subtítulos y la UI de Shorts) */
@@ -138,15 +141,72 @@
       .luz { position: absolute; top: -200px; left: 0; width: 420px; height: 2400px; opacity: 0; mix-blend-mode: screen;
              background: linear-gradient(90deg, rgba(216,178,90,0) 0%, rgba(216,178,90,0.55) 50%, rgba(216,178,90,0) 100%); }
 
+      /* la gráfica viva: papel claro en vez del verde oscuro de marca */
+      #root.claro { --bg: #f2ecdf; --bg2: #f2ecdf; --ink: #17211c; --gold: #8a5f0a; --green: #0d6b49; --mute: #4c5a52; --red-txt: #bf2c17; }
+      #root.claro #ground { background: #f2ecdf url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='1920'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4' seed='7'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.18 0 0 0 0.11 0'/></filter><rect width='1080' height='1920' filter='url(%23p)'/></svg>"); }
+      #root.claro #glow, #root.claro .scrim { display: none; }
+      #root.claro #brand { color: #f2ecdf; }
+      .rot.huge { font-size: 130px; line-height: 1; }
+      .rot.mega { font-family: "Anton", sans-serif; font-size: 230px; line-height: 1; top: 520px; }
+      .rot.big { font-size: 88px; line-height: 1.05; }
+      #root.claro #vignette { display: none; }
+      #root.claro #caps { top: 1330px; }
+      #root.claro #aviso { top: 1250px; }
+      #root.claro #grain { mix-blend-mode: multiply; opacity: 0.1; }
+      #root.claro .huge, #root.claro .big, #root.claro .mid, #root.claro .w { text-shadow: none; }
+      #root.claro #aviso { color: var(--mute); }
+      .rot { position: absolute; left: 50px; right: 50px; top: 210px; text-align: center; opacity: 0; }
+      .graf { position: absolute; left: 30px; top: 330px; width: 1020px; height: 1020px; overflow: visible; font-family: "InterX", sans-serif; }
+      .graf .ln { fill: none; stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; }
+      .graf .rej { stroke: #17211c; stroke-opacity: 0.14; stroke-width: 2; }
+      .graf .tk { fill: #4c5a52; font-size: 30px; font-weight: 800; paint-order: stroke; stroke: #eae1d4; stroke-width: 10px; stroke-linejoin: round; }
+      .graf text { paint-order: stroke; stroke: #f2ecdf; stroke-width: 10px; stroke-linejoin: round; }
+      .graf .anio { font-family: "Anton", sans-serif; font-size: 260px; fill: #17211c; fill-opacity: 0.08; stroke: none; }
+      .graf .ratio { font-family: "Anton", sans-serif; font-size: 170px; fill: #bf2c17; }
+      .graf .ratiol { font-size: 34px; font-weight: 800; fill: #17211c; }
+      .graf .val { font-size: 38px; font-weight: 900; }
+      .graf .mc { font-size: 36px; font-weight: 900; fill: #17211c; }
+
       /* subtítulos */
       #caps { position: absolute; left: 50px; right: 50px; top: 1200px; height: 200px; }
       .cg { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 40px; opacity: 0; }
       .w { font-weight: 900; font-size: 76px; text-transform: uppercase; color: var(--ink); letter-spacing: -0.01em; display: inline-block;
            text-shadow: 0 6px 0 rgba(0,0,0,0.6), 0 0 30px rgba(0,0,0,0.7); }
+
+      /* tema editorial (docs/mejora/visual/SISTEMA.md): serif, left-aligned on a 72 px grid, no shadows or filters */
+      #root.editorial { --ink: #f2ecdf; --gold: #e3bd63; --mute: #c3cfc7; --red-txt: #ff7a66; font-family: "NW Text", sans-serif; font-kerning: normal; }
+      #root.editorial #ground { background: var(--bg); }
+      #root.editorial .huge, #root.editorial .big, #root.editorial .mid { font-family: "NW Display", serif; font-weight: 900; text-transform: none; letter-spacing: -0.02em; text-shadow: none; }
+      #root.editorial #glow, #root.editorial .scrim, #root.editorial #vignette { display: none; }
+      #root.editorial #grain { opacity: 0.06; }
+      #root.editorial .ph .shade { background: linear-gradient(180deg, rgba(8,9,10,0.84) 0%, rgba(8,9,10,0.76) 30%, rgba(8,9,10,0.6) 35%, rgba(8,9,10,0) 44%, rgba(8,9,10,0) 66%, rgba(8,9,10,0.62) 76%, rgba(8,9,10,0.72) 100%); }
+      #root.editorial #brand { left: 72px; width: 936px; top: 150px; text-align: left; padding-bottom: 14px; border-bottom: 2px solid rgba(242,236,223,0.34);
+        font: 700 34px "NW Display", serif; font-variation-settings: "opsz" 60; letter-spacing: 0; text-transform: none; color: var(--ink); }
+      #root.editorial #brand span { padding: 0; border-radius: 0; background: none; }
+      #root.editorial .rot { left: 72px; right: 72px; top: 226px; text-align: left; text-shadow: none; }
+      #root.editorial .rot.big, #root.editorial .rot.huge, #root.editorial .rot.mid, #root.editorial .rot.mega { font-family: "NW Display", serif; font-variation-settings: "opsz" 60; text-transform: none; text-align: left; text-shadow: none; }
+      #root.editorial .rot.mid { font-weight: 700; font-size: 76px; line-height: 1.08; letter-spacing: -0.01em; }
+      #root.editorial .rot.big { font-weight: 800; font-size: 104px; line-height: 1.02; letter-spacing: -0.015em; }
+      #root.editorial .rot.huge { font-weight: 900; font-size: 148px; line-height: 0.98; letter-spacing: -0.022em; }
+      #root.editorial .rot.mega { font-weight: 900; font-size: 300px; line-height: 0.92; letter-spacing: -0.03em; font-variant-numeric: lining-nums tabular-nums; }
+      #root.editorial .rot.nota { font-weight: 700; font-size: 44px; line-height: 1.2; }
+      #root.editorial .scene.papel { background: #f2ecdf; box-shadow: 0 0 0 60px #f2ecdf; --ink: #17211c; --gold: #8a5f0a; --mute: #4c5a52; --red-txt: #bf2c17; color: var(--ink); }
+      #root.editorial .graf { font-family: "NW Text", sans-serif; }
+      #root.editorial .graf text { stroke: none; }
+      #root.editorial .graf .anio { display: none; }
+      #root.editorial .graf .tk { font-size: 32px; font-weight: 600; paint-order: stroke; stroke: #f2ecdf; stroke-width: 10px; }
+      #root.editorial .graf .val { font-size: 40px; font-weight: 800; }
+      #root.editorial .graf .mc { font-weight: 800; }
+      #root.editorial .prueba .foco { border-radius: 0; }
+      #root.editorial #caps { left: 72px; width: 858px; right: auto; top: 1276px; height: 150px; }
+      #root.editorial .cg { display: block; text-wrap: balance; font-weight: 700; font-size: 62px; line-height: 1.26; letter-spacing: -0.008em; }
+      #root.editorial .cg .ln { background: rgba(10,26,20,0.94); padding: 6px 16px; margin-left: -16px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      #root.editorial .w { display: inline; font-weight: 700; font-size: 62px; text-transform: none; letter-spacing: inherit; color: #f2ecdf; text-shadow: none; padding: 0 6px; }
+      #root.editorial #aviso { left: 72px; right: auto; width: 858px; top: 1440px; text-align: left; font-size: 28px; line-height: 1.34; color: #d9e2dc; background: rgba(10,26,20,0.86); padding: 6px 12px; margin-left: -12px; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="__END__" data-width="1080" data-height="1920">
+    <div id="root" class="__TEMA__" data-composition-id="main" data-start="0" data-duration="__END__" data-width="1080" data-height="1920">
 __AUDIO__
 
       <div id="groundclip" class="clip" data-start="0" data-duration="__END__" data-track-index="0"><div id="ground"><div id="glow"></div></div></div>
@@ -160,8 +220,7 @@ __PRUEBAS__
       <div id="flashclip" class="clip" data-start="0" data-duration="__END__" data-track-index="60"><div id="flash"></div></div>
       <div id="captions" class="clip" data-start="0" data-duration="__END__" data-track-index="61"><div id="caps"></div></div>
       <div id="chrome" class="clip" data-start="0" data-duration="__END__" data-track-index="62">
-        <div id="progress"></div>
-        <div id="brand"><span>NET WORTHY</span></div>
+        <div id="brand"><span>Net Worthy</span></div>
         <div id="aviso"__AVISOESTILO__>__AVISO__</div>
         <div id="vignette"></div>
         <div id="grain"></div>

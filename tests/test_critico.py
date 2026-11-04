@@ -248,5 +248,16 @@ class BucleTest(unittest.TestCase):
         self.assertEqual((self.proy / "storyboard.json").read_text(), self.sb0)
 
 
+class VozDeLaMezclaTest(unittest.TestCase):
+    def test_wav_obsoleto_sin_ride_no_se_usa(self):
+        with tempfile.TemporaryDirectory() as d:
+            proy = Path(d)
+            (proy / "assets").mkdir()
+            (proy / "assets" / "voice-mix.wav").write_bytes(b"stale")
+            self.assertEqual(C.voz_de_la_mezcla(proy, {}).name, "voice.mp3")
+            self.assertEqual(C.voz_de_la_mezcla(proy, {"voz": {"ride": []}}).name, "voice.mp3")
+            self.assertEqual(C.voz_de_la_mezcla(proy, {"voz": {"ride": [{"en": "0:a", "db": 1}]}}).name, "voice-mix.wav")
+
+
 if __name__ == "__main__":
     unittest.main()

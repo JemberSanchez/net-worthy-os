@@ -26,6 +26,45 @@ def frases_del_storyboard(sb: dict) -> list[str]:
     return [g["texto"].strip() for g in guion]
 
 
+def tomas(sb: dict) -> list:
+    """Plan de síntesis por frase: [(texto, speed) | segundos de silencio]. `voz.cortes[id]` parte una
+    frase e inserta silencio ("the lines", 0.7, "crossed."), que Kokoro no puede hacer solo: la
+    puntuación añade como mucho 0,26 s (medido 3-nov). `voz.speed` = número o {id: número, "*": número}."""
+    cfg = sb.get("voz") or {}
+    sp = cfg.get("speed", 1.0)
+    pausa = float(cfg.get("pausa_s", 0.3))
+    out: list = []
+    for k, g in enumerate(sb.get("guion") or []):
+        v = sp if isinstance(sp, (int, float)) else sp.get(g.get("id"), sp.get("*", 1.0))
+        if k:
+            out.append(pausa)
+        for t in (cfg.get("cortes") or {}).get(g.get("id")) or [g["texto"].strip()]:
+            out.append(float(t) if isinstance(t, (int, float)) else (t, float(v)))
+    return out
+
+
+def recortar(m, sr: int, umbral: float = 0.01, margen_s: float = 0.03):
+    """Quita el silencio de relleno de Kokoro en los extremos de una toma."""
+    import numpy as np
+    i = np.flatnonzero(np.abs(m) > umbral)
+    if not len(i):
+        return m
+    g = int(margen_s * sr)
+    return m[max(0, i[0] - g): i[-1] + g + 1]
+
+
+def sintetizar_por_tomas(sb: dict, voz: str, gv):
+    import numpy as np
+    trozos, sr = [], 24000
+    for t in tomas(sb):
+        if isinstance(t, float):
+            trozos.append(np.zeros(int(t * sr), dtype="float32"))
+        else:
+            m, sr = gv.sintetizar_kokoro(t[0], voz, t[1])
+            trozos.append(recortar(m, sr))
+    return np.concatenate(trozos), sr
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
@@ -47,7 +86,10 @@ def main() -> None:
     frases = frases_del_storyboard(sb)
     texto = " ".join(frases)
     print(f"Proyecto: {proy.name} · motor {motor} ({voz}) · {len(texto)} caracteres\nSintetizando…")
-    muestras, sr = gv.sintetizar_kokoro(texto, voz) if motor == "kokoro" else gv.sintetizar_piper(texto, gv.VOZ_PIPER)
+    if motor == "kokoro" and (cfg.get("speed") or cfg.get("cortes") or cfg.get("por_frase")):
+        muestras, sr = sintetizar_por_tomas(sb, voz, gv)
+    else:
+        muestras, sr = gv.sintetizar_kokoro(texto, voz) if motor == "kokoro" else gv.sintetizar_piper(texto, gv.VOZ_PIPER)
     audio.parent.mkdir(parents=True, exist_ok=True)
     gv.guardar(muestras, sr, audio)
     print(f"✓ {audio.name} ({len(muestras) / sr:.2f}s)\n")

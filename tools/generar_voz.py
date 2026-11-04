@@ -81,7 +81,7 @@ def sintetizar_piper(texto: str, modelo_path: Path) -> tuple[np.ndarray, int]:
     return _normalizar_pico(muestras), sr
 
 
-def sintetizar_kokoro(texto: str, voz: str) -> tuple[np.ndarray, int]:
+def sintetizar_kokoro(texto: str, voz: str, speed: float = 1.0) -> tuple[np.ndarray, int]:
     """Sintetiza con Kokoro en el venv de Python 3.12 (subproceso: Kokoro no vive en el 3.14
     principal). El texto viaja por stdin — evita límites/escapes de línea de comandos."""
     import soundfile as sf
@@ -97,7 +97,7 @@ def sintetizar_kokoro(texto: str, voz: str) -> tuple[np.ndarray, int]:
     with tempfile.TemporaryDirectory() as tmp:
         wav_tmp = Path(tmp) / "kokoro.wav"
         r = subprocess.run(
-            [str(PYTHON_KOKORO), str(HELPER_KOKORO), voz, str(wav_tmp)],
+            [str(PYTHON_KOKORO), str(HELPER_KOKORO), voz, str(wav_tmp), str(speed)],
             input=texto, capture_output=True, text=True, encoding="utf-8")
         if r.returncode != 0 or not wav_tmp.exists():
             raise SystemExit(f"Kokoro falló (voz={voz}):\n{r.stderr[-2000:]}")

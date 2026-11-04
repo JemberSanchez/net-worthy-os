@@ -35,8 +35,9 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
      ("died with $7.2 million") — no se guarda el dato para el final. Nada de "hoy vamos a…".
    - **Open loop**: la primera o segunda frase abre una pregunta que se cierra tarde ("how?",
      "nobody knew"). El espectador se queda por la respuesta.
-   - **Re-gancho cada ~8-10 s**: una frase de giro ("But here's the part nobody tells you",
-     "That's not the crazy part") o una cifra nueva. El validador avisa si pasan >12 s sin golpe.
+   - **Re-gancho cada ~8-10 s**: un giro PROPIO de esta historia o una cifra nueva. Nunca una
+     fórmula de giro reutilizable: la puerta `repeticion` falla si una frase de 4 palabras se repite
+     en los últimos 10 vídeos. El validador avisa si pasan >12 s sin golpe.
    - **Final en bucle**: la última frase del CTA enlaza con la primera, para que la repetición
      suene continua (una vista repetida sube el % visto por encima de 100 %).
    - Ritmo de voz 150-175 palabras/min; nada de frases de relleno ("so basically", "you see").

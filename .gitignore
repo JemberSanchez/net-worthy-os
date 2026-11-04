@@ -23,3 +23,6 @@ tools/.venv-voces/
 tools/.modelos/
 tools/.venv-chatterbox/
 tools/.hf/
+
+# material de investigacion (206 MB: metraje, contact sheets): no va al repo
+docs/mejora/

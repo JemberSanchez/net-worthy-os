@@ -26,6 +26,7 @@ El catálogo (10 tipos) salió del #7 v2 hecho a mano: cada tipo ya se vio funci
 from __future__ import annotations
 
 import html
+import itertools
 import json
 import os
 import re
@@ -39,7 +40,7 @@ RAIZ = MOTOR.parents[1]
 sys.path.insert(0, str(MOTOR))
 sys.path.insert(0, str(RAIZ / "tools"))
 
-import anclas  # noqa: E402
+import anclas
 import hfversion
 
 CATALOGO = (
@@ -53,6 +54,7 @@ CATALOGO = (
     "puntos",
     "anios",
     "cta",
+    "grafica",
 )
 PRE = 0.14  # la escena entra un poco antes de que la voz empiece su frase
 # Escenas de TEXTO que, sin `fondo` propio, reciben uno automático: una imagen del propio proyecto
@@ -196,6 +198,19 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
             errores.append(
                 f'pruebas[{j}]: {{"img": <declarada en imagenes>, "texto": "frase del documento", "en": ancla, ["marca"], ["hasta"]}}'
             )
+    for k, s in enumerate(esc):
+        if s.get("tipo") == "grafica":
+            lineas = s.get("lineas") or []
+            if len(s.get("avance") or []) < 2 or not lineas:
+                errores.append(
+                    f"escena {k} (grafica): necesita `lineas` y al menos 2 pasos en `avance`"
+                )
+            for ln in lineas:
+                x = [p[0] for p in ln.get("puntos") or []]
+                if len(x) < 2 or x != sorted(x):
+                    errores.append(
+                        f"escena {k} (grafica): `{ln.get('nombre')}` necesita `puntos` [[año, valor], ...] en orden"
+                    )
     sr = sb.get("serie")
     if sr is not None and not (
         isinstance(sr, dict)
@@ -215,6 +230,8 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     sueltas += [
         x["en"] for x in sb.get("sonidos") or [] if isinstance(x, dict) and x.get("en")
     ]
+    sueltas += [x["en"] for x in (sb.get("musica") or {}).get("arco") or []]
+    sueltas += [x["en"] for x in (sb.get("voz") or {}).get("ride") or []]
     sueltas += [
         x[k]
         for x in sb.get("pruebas") or []
@@ -308,7 +325,7 @@ def avisos_retencion(p: dict) -> list[str]:
         }
     )
     marcas = [t for t in marcas if 0 <= t <= p["fin_voz"]]
-    for a_, b_ in zip(marcas, marcas[1:]):
+    for a_, b_ in itertools.pairwise(marcas):
         if b_ - a_ > REGANCHO_MAX:
             avisos.append(
                 f"{b_ - a_:.0f}s sin re-gancho ({a_:.1f}-{b_:.1f}s): mete un giro, una cifra nueva o una `revelacion`"
@@ -329,7 +346,7 @@ def huecos_estaticos(p: dict, maximo: float = 2.5) -> list[str]:
             s["t1"], p["fin_voz"]
         )  # tras la voz, la tarjeta final tiene su propio movimiento
         t = sorted({s["t0"], fin} | {x for x in _tiempos(s) if s["t0"] <= x <= fin})
-        for a, b in zip(t, t[1:]):
+        for a, b in itertools.pairwise(t):
             if b - a > maximo:
                 avisos.append(
                     f"escena {k} ({s['tipo']}): {b - a:.1f}s sin nada nuevo ({a:.1f}-{b:.1f}s) — "
@@ -375,6 +392,61 @@ def _clips_usados(s: dict) -> list[str]:
 
 
 # ───────────────────────────── markup por tipo ─────────────────────────────
+def rotulos_html(s, id_):
+    def pos(r):
+        e = "".join(
+            f"{c}:{r[k]}px;"
+            for k, c in (("top", "top"), ("tam", "font-size"))
+            if r.get(k)
+        )
+        return f' style="{e}"' if e else ""
+
+    return "".join(
+        f'<div class="rot {r.get("estilo", "huge")} {r.get("color", "ink")}" id="{id_}-r{k}"{pos(r)}>{txt(r["texto"])}</div>'
+        for k, r in enumerate(s.get("rotulos") or [])
+    )
+
+
+def _lerp(puntos: list[tuple[float, float]]) -> str:
+    """Piecewise-linear value of t as an ffmpeg expression."""
+    e = str(puntos[-1][1])
+    for (a, va), (b, vb) in reversed(list(itertools.pairwise(puntos))):
+        e = f"if(lt(t,{b}),{va}+({vb}-{va})*(t-{a})/{b - a:.3f},{e})"
+    return e
+
+
+def hornear_arco(bed: Path, arco: list[dict], words: list[dict]) -> None:
+    """Shape the bed: gain in dB plus an open/dark crossfade (lowpass 1100 Hz), both anchored to words."""
+    pts = [(round(anclas.t(words, x["en"]), 3), x) for x in arco]
+    g = _lerp(
+        [(t, x["db"]) for t, x in pts if "db" in x] or [(0, 0)]
+    )  # no db: unity gain
+    ab = _lerp(
+        [(t, x["abre"]) for t, x in pts if "abre" in x] or [(0, 1)]
+    )  # no abre: fully open
+    tmp = bed.with_suffix(".tmp.wav")
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(bed),
+            "-filter_complex",
+            ("[0:a]aresample=48000,asetnsamples=256,asplit=2[a][o];"
+            f"[a]volume='pow(10,({g})/20)*({ab})':eval=frame[x];"
+            f"[o]lowpass=f=1100,volume='pow(10,({g})/20)*(1-({ab}))':eval=frame[y];"
+            "[x][y]amix=inputs=2:normalize=0"),
+            "-c:a",
+            "pcm_s16le",
+            str(tmp),
+        ],
+        check=True,
+    )
+    tmp.replace(bed)
+
+
 def m_foto(s, id_):
     k = (
         f'<div id="{id_}-kicker" class="kicker plate" style="font-size:44px">{txt(s["kicker"]["texto"])}</div>'
@@ -391,7 +463,11 @@ def m_foto(s, id_):
         if s.get("titulo")
         else ""
     )
-    return t + (f'<div class="stack abajo">{k}{sub}</div>' if k or sub else "")
+    return (
+        t
+        + (f'<div class="stack abajo">{k}{sub}</div>' if k or sub else "")
+        + rotulos_html(s, id_)
+    )
 
 
 def m_revelacion(s, id_):
@@ -675,6 +751,11 @@ def m_cta(s, id_):
     return out
 
 
+def m_grafica(s, id_):
+    """La gráfica viva: datos REALES a pantalla completa; motor.js la dibuja según el tiempo."""
+    return f'{rotulos_html(s, id_)}<svg id="{id_}-svg" class="graf" viewBox="0 0 1000 1000"></svg>'
+
+
 MARKUP = {
     "foto": m_foto,
     "revelacion": m_revelacion,
@@ -686,6 +767,7 @@ MARKUP = {
     "puntos": m_puntos,
     "anios": m_anios,
     "cta": m_cta,
+    "grafica": m_grafica,
 }
 
 
@@ -716,6 +798,13 @@ def asegurar_imagenes(proy: Path, imagenes: dict) -> None:
             raise StoryboardError(
                 f"imagen {k!r}: no se pudo bajar {v.get('commons')!r} (¿licencia no admitida o 429?)"
             )
+        if v.get(
+            "color"
+        ):  # real colour: the stacked green duotone was the top tell in the visual audit
+            im = Image.open(crudo).convert("RGB")
+            im.thumbnail((1600, 2640))
+            im.save(proy / "assets" / "t" / f"{k}.jpg", quality=86)
+            continue
         duotono(
             Image.open(crudo), v.get("recorte", 0.02), v.get("contraste", 1.15), 1600
         ).save(proy / "assets" / "t" / f"{k}.jpg", quality=82)
@@ -743,7 +832,11 @@ def plan(sb: dict, words: list[dict]) -> dict:
         if src.get("clip"):  # b-roll: archivo propio de la duración exacta
             c = src["clip"]
             modo = (
-                "duotono" if clips[c].get("duotono") else "color"
+                "duotono"
+                if clips[c].get("duotono")
+                else "natural"
+                if clips[c].get("natural")
+                else "color"
             )  # color híbrido (26-sep)
             desde = float(clips[c].get("desde", 0)) + desde_extra
             # el nombre lleva modo y si es fondo: un tratado viejo nunca se reutiliza por error
@@ -926,6 +1019,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
         }
     return {
         "D": END,
+        "tema": sb.get("tema", ""),
+        "voz_mix": bool((sb.get("voz") or {}).get("ride")),
         "fin_voz": fin_voz,
         "words": words,
         "escenas": esc,
@@ -1218,12 +1313,12 @@ def _html(p: dict) -> str:
             '<div class="scrim"></div>' if s["tipo"] != "foto" else ""
         )  # sombra local tras el texto
         esc_html.append(
-            f'      <section id="s{k}" class="clip scene" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
+            f'      <section id="s{k}" class="clip scene{" papel" if s.get("papel") else ""}" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
             f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>'
         )
     fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
     audio = [
-        '      <audio id="vo" src="assets/voice.mp3" data-start="0" data-track-index="20" data-volume="1"></audio>',
+        f'      <audio id="vo" src="assets/{"voice-mix.wav" if p.get("voz_mix") else "voice.mp3"}" data-start="0" data-track-index="20" data-volume="1"></audio>',
         f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>',
     ]
     vm = p.get("vol_motor") or VOL_MOTOR
@@ -1282,6 +1377,7 @@ def _html(p: dict) -> str:
     )
     rep = {
         "__PRUEBAS__": pruebas,
+        "__TEMA__": p["tema"],
         "__SERIE__": serie,
         "__END__": f"{p['D']}",
         "__AUDIO__": "\n".join(audio),
@@ -1379,6 +1475,52 @@ def construir(
             tuple(p["oscuro"]) if p["oscuro"] else None,
             p["cta"],
         )
+    arco = (sb.get("musica") or {}).get("arco")
+    if con_musica and arco:
+        hornear_arco(proy / "assets" / "music-bed.wav", arco, words)
+    ride = (sb.get("voz") or {}).get("ride")
+    if ride:  # voice.mp3 stays intact: it is the input of the alignment
+        pts = [(round(anclas.t(words, x["en"]), 3), x["db"]) for x in ride]
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-y",
+                "-i",
+                str(proy / "assets" / "voice.mp3"),
+                "-af",
+                f"aresample=48000,asetnsamples=256,volume='pow(10,({_lerp(pts)})/20)':eval=frame",
+                "-c:a",
+                "pcm_s16le",
+                str(proy / "assets" / "voice-mix.wav"),
+            ],
+            check=True,
+        )
+    sil = (sb.get("musica") or {}).get("silencio")
+    if (
+        con_musica and sil
+    ):  # the bed must drop out with the voice: carve would raise it in a voice gap
+        a, b = anclas.t(words, sil[0]), anclas.t(words, sil[1])
+        bed, tmp = (
+            proy / "assets" / "music-bed.wav",
+            proy / "assets" / "music-bed.tmp.wav",
+        )
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-y",
+                "-i",
+                str(bed),
+                "-af",
+                f"volume=enable='between(t,{a:.3f},{b:.3f})':volume=0",
+                str(tmp),
+            ],
+            check=True,
+        )
+        tmp.replace(bed)
     out = proy / "index.html"
     out.write_text(_html(p), encoding="utf-8")
     _andamiaje(proy)
@@ -1436,7 +1578,7 @@ def _andamiaje(proy: Path) -> None:
                     "private": True,
                     "type": "module",
                     "scripts": {
-                        "build": f"python ../motor/construir.py .",
+                        "build": "python ../motor/construir.py .",
                         "lint": "npx --yes hyperframes@latest lint",
                         "render": f"npx --yes hyperframes@latest render --quality high --output renders/{proy.name}.mp4",
                     },
@@ -1476,7 +1618,9 @@ def ruta_carve() -> str | None:
 VOL_MUSICA = 0.5
 
 
-VOL_MOTOR = {"whoosh": 0.38, "impacto": 0.6, "riser": 0.3}
+# whoosh/riser: the critic had to lower them to about this level on #7, and all six later videos failed
+# M1 at the old 0.38/0.3 (10-20 % of windows masked vs 5 % allowed; informes de 3-nov)
+VOL_MOTOR = {"whoosh": 0.1, "impacto": 0.6, "riser": 0.08}
 
 
 def volumen_motor(sb: dict) -> dict:
@@ -1543,7 +1687,7 @@ def _carve(out: Path) -> None:
                 core,
             ],
             capture_output=True,
-            text=True,
+            text=True, check=False,
         )
         print(
             "✓ carve (ducking)"

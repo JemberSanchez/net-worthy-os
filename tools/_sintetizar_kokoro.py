@@ -19,6 +19,7 @@ def main() -> None:
     if len(sys.argv) < 3:
         raise SystemExit("Uso: _sintetizar_kokoro.py <voz> <wav-destino>  (texto por stdin)")
     voz, destino = sys.argv[1], sys.argv[2]
+    speed = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
     texto = sys.stdin.read().strip()
     if not texto:
         raise SystemExit("stdin vacío: no hay texto que sintetizar")
@@ -27,7 +28,7 @@ def main() -> None:
     lang = "b" if voz.startswith(("bm_", "bf_")) else "a"
     pipe = KPipeline(lang_code=lang)
 
-    trozos = [audio for _, _, audio in pipe(texto, voice=voz)]
+    trozos = [audio for _, _, audio in pipe(texto, voice=voz, speed=speed)]
     if not trozos:
         raise SystemExit(f"Kokoro no generó audio para la voz {voz!r}")
     audio = np.concatenate(trozos)

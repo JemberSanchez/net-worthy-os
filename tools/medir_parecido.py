@@ -147,6 +147,114 @@ def medir(proy: Path, raiz: Path | None = None, mp4: Path | None = None) -> dict
                     for k in ("visual", "guion", "estructura", "recursos")}}
 
 
+VENTANA_FRASES = 10  # frases y rótulos: no repetir ninguno en los últimos 10 vídeos
+VENTANA_SELLOS = (
+    3  # final/apertura/música: pocos tipos posibles, por eso una ventana más corta
+)
+_NUMEROS = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "thousand", "million", "billion", "trillion", "point", "percent", "dollars"}
+
+
+def _cuatrigramas(sb_: dict) -> set[str]:
+    p = re.findall(
+        r"[a-z0-9$%'.-]*[a-z0-9$%]",
+        " ".join(g["texto"] for g in sb_.get("guion") or []).lower(),
+    )
+    # share a data point ("three point eight percent") is legitimate; only sentence formulas count
+    return {
+        " ".join(q)
+        for q in zip(p, p[1:], p[2:], p[3:])
+        if not any(w in _NUMEROS or any(c.isdigit() for c in w) for w in q)
+    }
+
+
+def _rotulos(o) -> set[str]:
+    """Textos de pantalla de 2+ palabras, normalizados, sin cifras."""
+    out: set[str] = set()
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if isinstance(v, str) and k in ("texto", "sub", "sup", "tag", "linea"):
+                t = " ".join(v.lower().split())
+                if len(t.split()) >= 2 and not any(c.isdigit() for c in t):
+                    out.add(t)
+            else:
+                out |= _rotulos(v)
+    elif isinstance(o, list):
+        for x in o:
+            out |= _rotulos(x)
+    return out
+
+
+def _sello_final(sb_: dict) -> str:
+    e = (sb_.get("escenas") or [{}])[-1]
+    return e.get("tipo", "?") + ("+botones" if e.get("botones") else "")
+
+
+def _autor_musica(sb_: dict) -> str | None:
+    f = ((sb_.get("musica") or {}).get("pista") or {}).get("commons") or ""
+    if (
+        "macleod" in f.lower()
+    ):  # Commons names him two ways: "Kevin MacLeod - X" / "X (MacLeod, Kevin)"
+        return "kevin macleod"
+    f = f.removeprefix("File:")
+    return f.split(" - ")[0].strip().lower() if " - " in f else (f.lower() or None)
+
+
+def repeticiones(sa: dict, previos: list[dict]) -> list[str]:
+    """Motivos por los que `sa` repite a `previos` (el más reciente primero). Vacío = pasa."""
+    motivos = []
+    for pv in previos[:VENTANA_FRASES]:
+        comun = sorted(_cuatrigramas(sa) & _cuatrigramas(pv))
+        if comun:
+            motivos.append(
+                f"guion repite «{comun[0]}» ({len(comun)} frases de 4 palabras)"
+            )
+        comun = sorted(_rotulos(sa.get("escenas")) & _rotulos(pv.get("escenas")))
+        if comun:
+            motivos.append(f"pantalla repite «{comun[0]}»")
+    for pv in previos[:VENTANA_SELLOS]:
+        if _sello_final(sa) == _sello_final(pv):
+            motivos.append(f"mismo final: {_sello_final(sa)}")
+        if (sa.get("escenas") or [{}])[0].get("tipo") == (pv.get("escenas") or [{}])[
+            0
+        ].get("tipo") and sa.get("tema") == pv.get("tema"):  # a new visual theme is not a repeat
+            motivos.append(
+                f"misma apertura: {(sa.get('escenas') or [{}])[0].get('tipo')}"
+            )
+        if _autor_musica(sa) and _autor_musica(sa) == _autor_musica(pv):
+            motivos.append(f"misma música (autor): {_autor_musica(sa)}")
+    return list(dict.fromkeys(motivos))
+
+
+def puerta_repeticion(proy: Path) -> tuple[bool, str]:
+    sa = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
+    if not sa.get("formato"):
+        if mp4_final(
+            proy
+        ):  # made before this gate existed; re-rendering it must keep working
+            return True, "exento: vídeo anterior a la puerta (sin `formato`)"
+        return (
+            False,
+            "falta `formato` en el storyboard (p. ej. grafica-viva, expediente, reconstruccion, archivo, la-cuenta)",
+        )
+    # shortcut: order by storyboard mtime, a fresh clone scrambles it; add a date to the storyboard if that bites
+    otros = sorted(
+        corpus(proy, proy.parent),
+        key=lambda p: (p / "storyboard.json").stat().st_mtime,
+        reverse=True,
+    )
+    motivos = repeticiones(
+        sa,
+        [
+            json.loads((p / "storyboard.json").read_text(encoding="utf-8"))
+            for p in otros
+        ],
+    )
+    return (
+        not motivos,
+        " · ".join(motivos) or f"sin repetición contra {len(otros)} vídeos",
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("proyecto")

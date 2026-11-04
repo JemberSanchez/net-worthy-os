@@ -115,12 +115,6 @@
     0,
   );
   tl.fromTo(
-    "#progress",
-    { scaleX: 0 },
-    { scaleX: 1, duration: D, ease: "none" },
-    0,
-  );
-  tl.fromTo(
     "#grain",
     { x: 0, y: 0 },
     { x: -180, y: -140, duration: D, ease: "steps(600)" },
@@ -797,6 +791,288 @@
       if (s.etiqueta)
         inn(`#${id}-l`, s.etiqueta.en, { opacity: 0, y: 20 }, 0.2);
     },
+    // La gráfica viva: TODO es función pura del tiempo (seek-safe), un solo tween recorre la escena.
+    grafica(s, id) {
+      const NS = "http://www.w3.org/2000/svg",
+        svg = $(`${id}-svg`),
+        W = 850,
+        H = 830,
+        X0 = 60;
+      const el = (tag, attrs, txt) => {
+        const e = document.createElementNS(NS, tag);
+        Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+        if (txt != null) e.textContent = txt;
+        svg.appendChild(e);
+        return e;
+      };
+      const suave = (u) => u * u * (3 - 2 * u),
+        cl = (u) => Math.min(1, Math.max(0, u));
+      const mezcla = (p, q, u) => p + (q - p) * u;
+      const lineas = s.lineas,
+        av = s.avance,
+        a0 = av[0].anio,
+        amax = av[av.length - 1].anio;
+      const fmt =
+        s.unidad === "%"
+          ? (v) => `${v > 0 ? "+" : ""}${Number(v.toFixed(2))}%`
+          : (v) =>
+              v >= 1000 ? `$${(v / 1000).toFixed(2)}T` : `$${Math.round(v)}B`;
+      const fmtR = (r) =>
+        r < 0.995 ? `${Math.round(r * 100)}¢` : `$${r.toFixed(2)}`;
+      const anioEn = (t) => {
+        if (t <= av[0].en) return a0;
+        for (let k = 1; k < av.length; k++)
+          if (t <= av[k].en)
+            return mezcla(
+              av[k - 1].anio,
+              av[k].anio,
+              suave((t - av[k - 1].en) / (av[k].en - av[k - 1].en)),
+            );
+        return amax;
+      };
+      const valor = (pts, a) => {
+        for (let k = 1; k < pts.length; k++)
+          if (a <= pts[k][0])
+            return mezcla(
+              pts[k - 1][1],
+              pts[k][1],
+              (a - pts[k - 1][0]) / (pts[k][0] - pts[k - 1][0]),
+            );
+        return pts[pts.length - 1][1];
+      };
+      // framing: starts tight on the data drawn so far, then each keyframe blends over its duration
+      const vista = (t, a) => {
+        let top = 0;
+        lineas.forEach((l) =>
+          l.puntos.forEach((p) => {
+            if (p[0] <= a) top = Math.max(top, p[1]);
+          }),
+        );
+        let c = {
+          desde: a0,
+          ymin: s.ymin ?? 0,
+          ymax: s.ymax ?? Math.max(480, 1.45 * top),
+        };
+        (s.encuadres || []).forEach((k) => {
+          const u = suave(cl((t - k.en) / (k.dur || 1.2)));
+          c = {
+            desde: mezcla(c.desde, k.desde, u),
+            ymin: mezcla(c.ymin, k.ymin, u),
+            ymax: mezcla(c.ymax, k.ymax, u),
+          };
+        });
+        return c;
+      };
+      const estado = (l, t) => {
+        let c = { ancho: 11, op: 1 };
+        (l.estados || []).forEach((k) => {
+          const u = suave(cl((t - k.en) / (k.dur || 0.3)));
+          c = {
+            ancho: mezcla(c.ancho, k.ancho ?? c.ancho, u),
+            op: mezcla(c.op, k.op ?? c.op, u),
+          };
+        });
+        return c;
+      };
+      const fondoAnio = el(
+        "text",
+        { class: "anio", x: X0 + W, y: H - 24, "text-anchor": "end" },
+        "",
+      );
+      const reja = (s.rejilla || []).map((v) => [
+        v,
+        el("line", { class: "rej", x1: X0, x2: X0 + W }),
+        el("text", { class: "tk", x: X0, "text-anchor": "start" }, fmt(v)),
+      ]);
+      const tks = (s.ticks || []).map((a) => [
+        a,
+        el(
+          "text",
+          { class: "tk", y: H + 50, "text-anchor": "middle" },
+          String(a),
+        ),
+      ]);
+      // zooming must not let a line escape the plot into the subtitles
+      const clip = el("clipPath", { id: `${id}-clip` });
+      clip.appendChild(
+        el("rect", { x: X0, y: -40, width: W + 30, height: H + 40 }),
+      );
+      const hueco = el("path", {
+        fill: lineas[0].color,
+        "fill-opacity": 0.2,
+        stroke: "none",
+        "clip-path": `url(#${id}-clip)`,
+      });
+      const trazos = lineas.map((l) =>
+        el("path", {
+          class: "ln",
+          stroke: l.color,
+          "clip-path": `url(#${id}-clip)`,
+        }),
+      );
+      reja.forEach(([, , tx]) => svg.appendChild(tx));
+      const cabezas = lineas.map((l) => el("circle", { r: 15, fill: l.color }));
+      const vals = lineas.map((l) =>
+        el("text", { class: "val", fill: l.color, "text-anchor": "start" }, ""),
+      );
+      const marcas = (s.marcas || []).map((m) => [
+        m,
+        el("circle", {
+          r: 26,
+          fill: "none",
+          stroke: "#17211c",
+          "stroke-width": 7,
+        }),
+        el("text", { class: "mc", "text-anchor": "end" }, m.texto),
+      ]);
+      const ratio = s.ratio && [
+        el("text", { class: "ratio", x: X0, y: 150 }, ""),
+        el("text", { class: "ratiol", x: X0, y: 196 }, s.ratio.texto),
+      ];
+      (s.marcas || []).forEach((m) => {
+        if (m.golpe) {
+          flash(m.en, 0.2);
+          sacudida(m.en, 10);
+        }
+      });
+      const pinta = (t) => {
+        const a = anioEn(t),
+          v = vista(t, a),
+          span = amax - v.desde;
+        const X = (x) => X0 + ((x - v.desde) / span) * W,
+          Y = (y) => H - ((y - v.ymin) / (v.ymax - v.ymin)) * H;
+        fondoAnio.textContent = String(Math.floor(a));
+        const opR = ratio
+          ? cl((t - s.ratio.en) / 0.2) *
+            (s.ratio.hasta != null ? 1 - cl((t - s.ratio.hasta) / 0.2) : 1)
+          : 0;
+        reja.forEach(([y, ln, tx]) => {
+          // gridlines fade out before they run into the big ratio figure
+          const on =
+            (y >= v.ymin && y <= v.ymax ? 1 : 0) *
+            (1 - opR * (1 - cl((Y(y) - 215) / 40)));
+          ln.setAttribute("y1", Y(y));
+          ln.setAttribute("y2", Y(y));
+          ln.setAttribute("opacity", on);
+          tx.setAttribute("y", Y(y) - 10);
+          tx.setAttribute("opacity", on);
+        });
+        tks.forEach(([x, tx]) => {
+          tx.setAttribute("x", X(x));
+          tx.setAttribute(
+            "opacity",
+            x >= v.desde && (span > 20 ? x % 10 === 0 : x % 2 === 0) ? 1 : 0,
+          );
+        });
+        const heads = lineas.map((l, k) => {
+          const vis = l.puntos.filter((p) => p[0] <= a && p[0] >= v.desde);
+          const y = valor(l.puntos, a),
+            hx = X(a),
+            hy = Y(y),
+            pts = [...vis, [a, y]],
+            e = estado(l, t);
+          trazos[k].setAttribute(
+            "d",
+            "M" +
+              pts
+                .map((p) => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`)
+                .join(" L"),
+          );
+          trazos[k].setAttribute("stroke-width", e.ancho.toFixed(2));
+          trazos[k].setAttribute("opacity", e.op.toFixed(3));
+          cabezas[k].setAttribute("cx", hx);
+          cabezas[k].setAttribute("cy", hy);
+          cabezas[k].setAttribute("opacity", e.op.toFixed(3));
+          return { k, v: y, hx, hy, pts };
+        });
+        // labels never overlap: the lower one is pushed down when the lines run close
+        let yPrev = -1e9;
+        [...heads]
+          .sort((p, r) => p.hy - r.hy)
+          .forEach((h, i) => {
+            const ed = P.tema === "editorial";
+            const y = ed
+              ? Math.min(...heads.map((q) => q.hy)) - (i ? 34 : 84) // stacked above the top head, the lines never reach there
+              : Math.max(h.hy - 34, yPrev + 50);
+            yPrev = y;
+            vals[h.k].setAttribute("text-anchor", ed ? "end" : "start");
+            vals[h.k].setAttribute(
+              "x",
+              ed
+                ? Math.max(h.hx + 8, X0 + 360)
+                : Math.min(h.hx + 26, X0 + W - 340),
+            );
+            vals[h.k].setAttribute("y", y);
+            // discrete series: label the last real point, never an interpolated value between two of them
+            const real = s.unidad === "%"
+              ? lineas[h.k].puntos.filter((q) => q[0] <= a).at(-1)?.[1] ?? h.v
+              : h.v;
+            vals[h.k].textContent = `${lineas[h.k].nombre} ${fmt(real)}`;
+          });
+        if (s.hueco_desde != null && a > s.hueco_desde) {
+          const [p, r] = heads.map((h) =>
+            h.pts.filter((q) => q[0] >= s.hueco_desde),
+          );
+          hueco.setAttribute(
+            "d",
+            "M" +
+              [...p, ...[...r].reverse()]
+                .map((q) => `${X(q[0]).toFixed(1)},${Y(q[1]).toFixed(1)}`)
+                .join(" L") +
+              " Z",
+          );
+        } else hueco.setAttribute("d", "");
+        marcas.forEach(([m, c, tx]) => {
+          const op =
+            cl((t - m.en) / 0.2) *
+            (m.hasta != null ? 1 - cl((t - m.hasta) / 0.2) : 1);
+          const mx = X(m.anio),
+            my = Y(valor(lineas[0].puntos, m.anio));
+          c.setAttribute("cx", mx);
+          c.setAttribute("cy", my);
+          c.setAttribute("opacity", op);
+          // editorial: below-right of the point, the only area the value labels never reach
+          tx.setAttribute(
+            "text-anchor",
+            P.tema === "editorial" ? "start" : "end",
+          );
+          tx.setAttribute(
+            "x",
+            P.tema === "editorial" ? mx + 34 : Math.max(X0 + 350, mx - 40),
+          );
+          tx.setAttribute("y", P.tema === "editorial" ? my + 74 : my - 60);
+          tx.setAttribute("opacity", op);
+        });
+        if (ratio) {
+          ratio[0].textContent = fmtR(
+            valor(lineas[0].puntos, a) / valor(lineas[1].puntos, a),
+          );
+          ratio.forEach((e) => e.setAttribute("opacity", opR));
+        }
+      };
+      // the chart stays hidden during the hook and appears when the story reaches it
+      if (s.muestra)
+        tl.fromTo(
+          svg,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.25 },
+          s.muestra.en,
+        );
+      const o = { t: s.t0 };
+      tl.fromTo(
+        o,
+        { t: s.t0 },
+        {
+          t: s.t1,
+          duration: s.t1 - s.t0,
+          ease: "none",
+          onUpdate: () => pinta(o.t),
+          immediateRender: false,
+        },
+        s.t0,
+      );
+      pinta(s.t0);
+    },
     cta(s, id) {
       inn(
         `#${id}-a`,
@@ -871,7 +1147,53 @@
       );
     },
   };
-  P.escenas.forEach((s, k) => ESC[s.tipo](s, "s" + k));
+  P.escenas.forEach((s, k) => {
+    ESC[s.tipo](s, "s" + k);
+    (s.rotulos || []).forEach((r, j) => {
+      inn(
+        `#s${k}-r${j}`,
+        Math.max(0, r.en - 0.05),
+        { y: 24, opacity: 0, scale: 0.94 },
+        0.22,
+      );
+      if (r.hasta != null)
+        tl.to(`#s${k}-r${j}`, { opacity: 0, duration: 0.12 }, r.hasta - 0.12);
+    });
+  });
+  const ED = P.tema === "editorial";
+  if (ED) {
+    // brand and disclaimer live above the scenes: dark ink on paper, light ink on photos and dimmed documents
+    const papel = P.escenas.filter((s) => s.papel);
+    const docs = P.pruebas || [];
+    const claro = (t) =>
+      papel.some((s) => t >= s.t0 && t < s.t1) &&
+      !docs.some((d) => t >= d.t0 && t < d.t1);
+    [
+      ...new Set(
+        [...papel, ...docs].flatMap((x) => [x.t0, x.t1]).sort((a, b) => a - b),
+      ),
+    ].forEach((t) => {
+      const c = claro(t + 0.001);
+      tl.set(
+        "#brand",
+        {
+          color: c ? "#17211c" : "#f2ecdf",
+          borderBottomColor: c
+            ? "rgba(23,33,28,0.24)"
+            : "rgba(242,236,223,0.34)",
+        },
+        t,
+      );
+      tl.set(
+        "#aviso",
+        {
+          color: c ? "#4c5a52" : "#d9e2dc",
+          backgroundColor: c ? "rgba(10,26,20,0)" : "rgba(10,26,20,0.86)",
+        },
+        t,
+      );
+    });
+  }
 
   // ---------- subtítulos: grupos <=3 palabras; se omite el grupo que la escena YA muestra escrito ----------
   const W = P.words,
@@ -884,13 +1206,17 @@
     cur.push(x);
     const fin = /[.,?!]$/.test(x.text),
       gap = i < C1 ? W[i + 1].start - x.end : 1;
-    if (cur.length === 3 || fin || gap > 0.25) {
+    const lleno = ED
+      ? cur.length >= 6 || cur.map((w) => w.text).join(" ").length >= 40
+      : cur.length === 3;
+    if (lleno || fin || gap > 0.25) {
       groups.push(cur);
       cur = [];
     }
   }
   if (cur.length) groups.push(cur);
   const nrm = (s) => s.toLowerCase().replace(/[^a-z0-9'$]/g, "");
+  const TINTA = P.tema === "claro" ? "#17211c" : "#f4f6f3";
   const HOT = new Set(P.calientes.map(nrm));
   const enPantalla = (t) => {
     const s = P.escenas.find((e) => t >= e.t0 && t < e.t1);
@@ -918,23 +1244,55 @@
     );
     tl.fromTo(
       el,
-      { opacity: 0, y: 24, scale: 0.92 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "power2.out" },
+      ED ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 },
+      ED
+        ? { opacity: 1, duration: 0.06, ease: "none" }
+        : { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "power2.out" },
       gS,
     );
     tl.to(el, { opacity: 0, duration: 0.05 }, gE - 0.05);
+    let ln = null;
     g.forEach((x, k) => {
       const s = document.createElement("span");
       s.className = "w";
       s.id = `w${gi}_${k}`;
       s.textContent = x.text.replace(/[.,?!]$/, "");
-      el.appendChild(s);
       const hot = HOT.has(nrm(x.text));
+      if (ED) {
+        if (!ln) {
+          ln = document.createElement("span");
+          ln.className = "ln";
+          el.appendChild(ln);
+        }
+        ln.appendChild(s);
+        ln.appendChild(document.createTextNode(" "));
+        if (hot)
+          tl.fromTo(
+            s,
+            { backgroundColor: "rgba(240,203,107,0)", color: "#f2ecdf" },
+            {
+              backgroundColor: "rgba(240,203,107,1)",
+              color: "#17211c",
+              duration: 0.06,
+              ease: "none",
+              immediateRender: false,
+            },
+            x.start - 0.04,
+          );
+        return;
+      }
+      el.appendChild(s);
       tl.fromTo(
         s,
-        { color: "#f4f6f3", scale: 1 },
+        { color: TINTA, scale: 1 },
         {
-          color: hot ? "#d8b25a" : "#9fe3c4",
+          color: hot
+            ? P.tema === "claro"
+              ? "#bf2c17"
+              : "#d8b25a"
+            : P.tema === "claro"
+              ? TINTA
+              : "#9fe3c4",
           scale: hot ? 1.06 : 1.03,
           duration: 0.08,
           ease: "power2.out",
@@ -942,7 +1300,7 @@
         },
         x.start - 0.04,
       );
-      tl.to(s, { color: "#f4f6f3", scale: 1, duration: 0.1 }, x.end);
+      tl.to(s, { color: TINTA, scale: 1, duration: 0.1 }, x.end);
     });
   });
 
@@ -957,35 +1315,36 @@
   };
   const ORDEN = ["zoom", "izq", "zoom", "sube"];
   const REPOSO = { scale: 1, x: 0, y: 0 };
-  P.cortes.forEach((t, i) => {
-    const [sale, entra] = TR[ORDEN[i % ORDEN.length]];
-    tl.fromTo(
-      "#trans",
-      { ...REPOSO, filter: "blur(0px)" },
-      {
-        ...REPOSO,
-        ...sale,
-        filter: "blur(12px)",
-        duration: 0.12,
-        ease: "power2.in",
-        immediateRender: false,
-      },
-      t - 0.12,
-    );
-    tl.fromTo(
-      "#trans",
-      { ...REPOSO, ...entra, filter: "blur(12px)" },
-      {
-        ...REPOSO,
-        filter: "blur(0px)",
-        duration: 0.24,
-        ease: "power3.out",
-        immediateRender: false,
-      },
-      t,
-    );
-    tl.set("#trans", { filter: "none" }, t + 0.25);
-  });
+  if (!ED)
+    P.cortes.forEach((t, i) => {
+      const [sale, entra] = TR[ORDEN[i % ORDEN.length]];
+      tl.fromTo(
+        "#trans",
+        { ...REPOSO, filter: "blur(0px)" },
+        {
+          ...REPOSO,
+          ...sale,
+          filter: "blur(12px)",
+          duration: 0.12,
+          ease: "power2.in",
+          immediateRender: false,
+        },
+        t - 0.12,
+      );
+      tl.fromTo(
+        "#trans",
+        { ...REPOSO, ...entra, filter: "blur(12px)" },
+        {
+          ...REPOSO,
+          filter: "blur(0px)",
+          duration: 0.24,
+          ease: "power3.out",
+          immediateRender: false,
+        },
+        t,
+      );
+      tl.set("#trans", { filter: "none" }, t + 0.25);
+    });
 
   // ---------- punch-in de cámara (zoom-cut): el recurso nº 1 de edición en Shorts ----------
   // Prioridad a los golpes; después, palabras calientes. Separación mínima 1,8 s (más seguido marea)
@@ -1017,8 +1376,9 @@
     );
     hechos.push(t);
   };
-  P.golpes.forEach((t) => punch(t, 1.08));
-  W.filter((x) => HOT.has(nrm(x.text))).forEach((x) => punch(x.start, 1.05));
+  P.golpes.forEach((t) => punch(t, ED ? 1.04 : 1.08));
+  if (!ED)
+    W.filter((x) => HOT.has(nrm(x.text))).forEach((x) => punch(x.start, 1.05));
 
   window.__timelines["main"] = tl;
 })();
