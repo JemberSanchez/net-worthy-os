@@ -1064,6 +1064,23 @@ def cmd_record_outcome() -> None:
     con.close()
 
 
+def _repuntuar(con, ref: str) -> tuple[float, dict] | None:
+    """Recalcula y guarda el outcome. Sin muestra suficiente borra el anterior: es derivado de las
+    analíticas y dejarlo enseñaría un número que ya no es válido."""
+    from .creative import decisions, scoring
+
+    try:
+        score, partes = scoring.desde_analytics(con, ref)
+    except scoring.MuestraInsuficiente:
+        con.execute("DELETE FROM production_outcome WHERE production_ref=?", (ref,))
+        con.commit()
+        return None
+    decisions.record_outcome(
+        con, ref, score, score_version=scoring.SCORE_VERSION, score_parts=partes
+    )
+    return score, partes
+
+
 def cmd_rescore() -> None:
     """Recalcula el éxito de TODOS los videos con la fórmula actual, leyendo sus analíticas.
 
@@ -1080,7 +1097,8 @@ def cmd_rescore() -> None:
     refs = [
         r["production_ref"]
         for r in con.execute(
-            "SELECT production_ref FROM production_analytics ORDER BY production_ref"
+            "SELECT production_ref FROM production_analytics UNION "
+            "SELECT production_ref FROM production_social ORDER BY production_ref"
         )
     ]
     if not refs:
@@ -1101,6 +1119,11 @@ def cmd_rescore() -> None:
         ).fetchone()
         try:
             nuevo, partes = scoring.desde_analytics(con, ref)
+        except scoring.MuestraInsuficiente as exc:
+            print(f"  {exc}: sin score")
+            if not seco:
+                _repuntuar(con, ref)
+            continue
         except ValueError as exc:
             print(f"  {ref}: {exc}")
             continue
@@ -1437,10 +1460,7 @@ def cmd_analytics_sync() -> None:
             )
             continue
         r = ay.guardar(con, ref, datos)
-        score, partes = scoring.desde_analytics(con, ref)
-        decisions.record_outcome(
-            con, ref, score, score_version=scoring.SCORE_VERSION, score_parts=partes
-        )
+        puntuado = _repuntuar(con, ref)
         medidos += 1
         pc = " → ".join(f"{k} {v:.0%}" for k, v in r["puntos_control"].items())
         eng = (
@@ -1451,7 +1471,7 @@ def cmd_analytics_sync() -> None:
         bus = ", ".join(f"'{t}' {n}" for t, n in r["busquedas"]) or "—"
         print(
             f"  {ref}: {r['views']} vistas{eng} · visto {r['avg_view_pct_raw']:.0%} · {pc}\n"
-            f"      tráfico: {r['traffic_source']} · búsquedas: {bus} · score {score:.3f} ({scoring.SCORE_VERSION})"
+            f"      tráfico: {r['traffic_source']} · búsquedas: {bus} · {f'score {puntuado[0]:.3f} ({scoring.SCORE_VERSION})' if puntuado else f'sin score (< {scoring.MIN_VISTAS} vistas)'}"
         )
     con.close()
     if medidos:
@@ -1464,7 +1484,7 @@ def cmd_analytics_sync() -> None:
 def cmd_meta_sync() -> None:
     """Guarda las métricas actuales de los reels de Facebook e Instagram en production_social."""
     from . import publish_meta
-    from .creative import production_dna
+    from .creative import decisions, production_dna
     from .reasoning import store as kstore
 
     if not publish_meta.TOKEN_PATH.exists():
@@ -1478,6 +1498,7 @@ def cmd_meta_sync() -> None:
         "WHERE platform IN ('facebook', 'instagram') ORDER BY recorded_at"
     ).fetchall()
     medidos = 0
+    puntuar = set()
     for ref, plataforma, media_id in filas:
         if refs and ref not in refs:
             continue
@@ -1488,10 +1509,15 @@ def cmd_meta_sync() -> None:
             continue
         production_dna.record_social(con, ref, plataforma, m)
         medidos += 1
+        puntuar.add(ref)
         print(
             f"  {ref} {plataforma}: {m['views']} vistas · {m['avg_watch_s']} s de media · "
             f"{m['likes']} likes · {m['comments']} comentarios"
         )
+    decisions.init(con)
+    for ref in sorted(puntuar):
+        puntuado = _repuntuar(con, ref)
+        print(f"  {ref}: score {puntuado[0]:.3f}" if puntuado else f"  {ref}: sin score")
     con.close()
     print(f"{medidos} reels medidos (production_social).")
 

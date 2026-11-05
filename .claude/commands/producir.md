@@ -10,7 +10,7 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
 1. `bash tools/setup_nube.sh` — idempotente. Si falla, para y reporta qué paso y su salida.
 2. `python -m omega.cli estado-bajar` — si falta `ESTADO_REPO`, PARA: sin la base, `decide` no
    tiene historia y el tema saldría a ciegas. Reporta qué secreto falta.
-   Después, `python -m omega.cli analytics-sync`: mide los vídeos ya publicados (curva de
+   Después, `python -m omega.cli analytics-sync` y `python -m omega.cli meta-sync`: mide los vídeos ya publicados (curva de
    retención, fuente de tráfico, búsquedas) y re-puntúa sus outcomes. "Sin datos aún" o "aún
    privado" es normal (Analytics va ~2-3 días tarde); un ✗ de permisos se reporta pero NO para la
    rutina. Guarda del resumen: el punto de la curva donde más cae y las búsquedas que trajeron gente.

@@ -25,6 +25,18 @@ LA FÓRMULA (v2)
   sirve — pero no manda.
 - Los topes evitan que un outlier de alcance tape una retención mala (justo lo que pasaba antes).
 
+v3 (5-nov-2026): MISMA fórmula, otros datos
+-------------------------------------------
+- **Mínimo de vistas:** una plataforma solo aporta retención con `MIN_VISTAS`. Con menos, unas
+  pocas repeticiones daban 130 % visto y un score alto (housing-turn: 13 vistas -> 0,705). Sin
+  ninguna plataforma con el mínimo NO hay score: `MuestraInsuficiente`.
+- **Todas las plataformas:** alcance = suma; retención = media ponderada por vistas. En Facebook e
+  Instagram es tiempo medio / duración. v2 solo veía YouTube (binance-heist: 0,002 con 195 vistas
+  en Meta).
+- `score_parts["plataformas"]` guarda cada plataforma por separado, con `se_quedaron` de YouTube
+  (engaged views / vistas: 37,5 % frente al 37,9 % de Studio en aws-profit, 33 % frente a 38,5 % en
+  gdp-annualized, así que es una aproximación).
+
 QUÉ *NO* HACE
 -------------
 No convierte v1 en v2. Un `success` v1 y uno v2 **no son comparables**, así que cada outcome guarda
@@ -35,7 +47,7 @@ from __future__ import annotations
 
 import sqlite3
 
-SCORE_VERSION = "v2-retencion"
+SCORE_VERSION = "v3-plataformas"
 
 # Retención media que el algoritmo pide para empujar un Short de 30-60 s (benchmark 2026).
 UMBRAL_RETENCION = 0.50
@@ -45,6 +57,13 @@ ALCANCE_REF = 750
 
 PESO_RETENCION = 0.70
 PESO_ALCANCE = 0.30
+
+# PROVISIONAL: por debajo, un par de personas en bucle mueven la media. Sin calibrar (n bajo).
+MIN_VISTAS = 30
+
+
+class MuestraInsuficiente(ValueError):
+    """Ninguna plataforma llega a MIN_VISTAS: el vídeo no tiene score, no un score malo."""
 
 
 def calcular(*, retention_avg: float | None, views: int | None) -> tuple[float, dict]:
@@ -90,12 +109,52 @@ def calcular(*, retention_avg: float | None, views: int | None) -> tuple[float, 
 
 
 def desde_analytics(con: sqlite3.Connection, production_ref: str) -> tuple[float, dict]:
-    """Calcula el éxito LEYENDO las analíticas ya registradas. Nada de teclear el número a mano:
-    el score deja de depender de que alguien recuerde la fórmula."""
-    row = con.execute(
-        "SELECT retention_avg, views FROM production_analytics WHERE production_ref=?",
+    """Calcula el éxito LEYENDO las analíticas ya registradas de todas las plataformas. Nada de
+    teclear el número a mano: el score deja de depender de que alguien recuerde la fórmula."""
+    yt = con.execute(
+        "SELECT retention_avg, views, engaged_views FROM production_analytics WHERE production_ref=?",
         (production_ref,),
     ).fetchone()
-    if row is None:
+    meta = con.execute(
+        "SELECT platform, views, avg_watch_s FROM production_social WHERE production_ref=?",
+        (production_ref,),
+    ).fetchall()
+    if yt is None and not meta:
         raise ValueError(f"no hay analíticas de {production_ref!r}: corre antes `record-analytics`")
-    return calcular(retention_avg=row["retention_avg"], views=row["views"])
+    dna = con.execute(
+        "SELECT length_s FROM production_dna WHERE production_ref=?", (production_ref,)
+    ).fetchone()
+    duracion = dna["length_s"] if dna else None
+
+    plataformas: dict = {}
+    if yt is not None:
+        vistas = yt["views"] or 0
+        comprometidas = yt["engaged_views"]
+        plataformas["youtube"] = {
+            "views": vistas,
+            "retencion": yt["retention_avg"],
+            "se_quedaron": comprometidas / vistas if comprometidas is not None and vistas else None,
+        }
+    for fila in meta:
+        visto = fila["avg_watch_s"]
+        plataformas[fila["platform"]] = {
+            "views": fila["views"] or 0,
+            "retencion": min(1.0, visto / duracion) if visto is not None and duracion else None,
+        }
+    for p in plataformas.values():
+        p["cuenta"] = p["views"] >= MIN_VISTAS
+
+    total = sum(p["views"] for p in plataformas.values())
+    if not any(p["cuenta"] for p in plataformas.values()):
+        raise MuestraInsuficiente(
+            f"{production_ref}: ninguna plataforma llega a {MIN_VISTAS} vistas ({total} en total)"
+        )
+    medibles = [p for p in plataformas.values() if p["cuenta"] and p["retencion"] is not None]
+    retencion = (
+        sum(p["views"] * p["retencion"] for p in medibles) / sum(p["views"] for p in medibles)
+        if medibles
+        else None
+    )
+    score, partes = calcular(retention_avg=retencion, views=total)
+    partes["plataformas"] = plataformas
+    return score, partes

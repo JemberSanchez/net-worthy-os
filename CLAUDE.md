@@ -24,7 +24,7 @@ Publicar: `youtube-auth` (login una vez; también da permiso de Analytics) · `p
   `--publicar` — no se automatiza publicar en vivo sin que el usuario lo vea primero.
 Páginas: `python video-v2/motor/social.py video-v2/<ref>` (carrusel 4:5 + historia 9:16 + textos; lo hace producir.py) · `publish-social <ref> [--publicar]` (IG/FB; sin --publicar solo el plan; --publicar SOLO con confirmación en el chat)
 Aprobar: `programar <ref>` (Short ya subido como privado -> publicación a las 12:00 de Nueva York; `--ahora`)
-Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `meta-sync [<ref>...]` (reels de FB/IG -> vistas, tiempo medio, likes en `production_social`; no entra en el score) · `vincular <ref> <video_id>` (videos antiguos)
+Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `meta-sync [<ref>...]` (reels de FB/IG -> vistas, tiempo medio, likes en `production_social` + rescore; automático en /producir) · `vincular <ref> <video_id>` (videos antiguos)
 Estado/nube: `estado-bajar` · `estado-subir` · `produccion-guardar video-v2/<ref>` (repo PRIVADO `ESTADO_REPO`)
 Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` · `dna` · `learnings`
 Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
@@ -38,6 +38,11 @@ Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
   habría cazado en 100 ms los dos fallos que costaron horas el 26-jul: `pintarChecklist` (ya
   existía para el panel → la escena salía en blanco) y `reloj` (ya declarado → script abortado).
 Luego `tests-motor.html` en el navegador.
+
+## Score v3 (5-nov, `omega/creative/scoring.py`)
+Misma fórmula que v2, con otros datos: cuenta YouTube, Facebook e Instagram (alcance = suma, retención
+= media ponderada por vistas) y una plataforma solo aporta con ≥30 vistas (PROVISIONAL). Sin ninguna
+con el mínimo no hay score. Cada plataforma queda por separado en `score_parts`. v1, v2 y v3 no son comparables.
 
 ## Crítico automático (Fase 1, 28-oct) — `video-v2/motor/critico.py`, rúbrica en `docs/RUBRICA.md`
 `python video-v2/motor/critico.py video-v2/<ref> [--mp4 <x>] [--solo-revisar] [--rondas 2]`: medidores
