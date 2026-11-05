@@ -36,8 +36,11 @@ SCOPES = [
     "pages_read_engagement",
     "pages_manage_posts",
     "business_management",
-    "instagram_business_basic",
-    "instagram_business_content_publish",
+    "instagram_basic",
+    "instagram_content_publish",
+    "read_insights",
+    "pages_read_user_content",
+    "instagram_manage_insights",
 ]
 REDIRECT_URI = "https://localhost/"
 
@@ -197,6 +200,48 @@ def _authorize() -> dict:
         f"{', IG vinculado' if ig_user_id else ', SIN Instagram vinculado'})."
     )
     return data
+
+
+def metricas_reel(platform: str, media_id: str, token: str) -> dict:
+    """Current metrics of a published reel. Metrics the platform does not report stay out (NULL)."""
+
+    def leer(ruta: str, **params) -> dict:
+        return _request(
+            "GET", f"{GRAPH}/{ruta}", params={**params, "access_token": token}
+        )
+
+    def insights(respuesta: dict) -> dict:
+        return {f["name"]: f["values"][0]["value"] for f in respuesta.get("data", [])}
+
+    if platform == "facebook":
+        b = leer(
+            media_id,
+            fields="views,likes.summary(true).limit(0),comments.summary(true).limit(0)",
+        )
+        i = insights(leer(f"{media_id}/video_insights"))
+        return {
+            "views": b.get("views"),
+            "likes": b.get("likes", {}).get("summary", {}).get("total_count"),
+            "comments": b.get("comments", {}).get("summary", {}).get("total_count"),
+            "replays": i.get("fb_reels_replay_count"),
+            "avg_watch_s": i.get("post_video_avg_time_watched", 0) / 1000 or None,
+        }
+    b = leer(media_id, fields="like_count,comments_count")
+    i = insights(
+        leer(
+            f"{media_id}/insights",
+            metric="views,reach,saved,shares,ig_reels_avg_watch_time",
+        )
+    )
+    return {
+        "views": i.get("views"),
+        "reach": i.get("reach"),
+        "likes": b.get("like_count"),
+        "comments": b.get("comments_count"),
+        "saved": i.get("saved"),
+        "shares": i.get("shares"),
+        "avg_watch_s": i.get("ig_reels_avg_watch_time", 0) / 1000 or None,
+    }
 
 
 def _get_page_token() -> dict:

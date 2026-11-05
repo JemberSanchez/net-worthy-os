@@ -1461,6 +1461,41 @@ def cmd_analytics_sync() -> None:
         )
 
 
+def cmd_meta_sync() -> None:
+    """Guarda las métricas actuales de los reels de Facebook e Instagram en production_social."""
+    from . import publish_meta
+    from .creative import production_dna
+    from .reasoning import store as kstore
+
+    if not publish_meta.TOKEN_PATH.exists():
+        raise SystemExit("✗ no hay data/meta_token.json: correr `meta-auth`")
+    token = publish_meta._get_page_token()["page_access_token"]
+    refs = sys.argv[2:]
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    filas = con.execute(
+        "SELECT production_ref, platform, video_id FROM production_video "
+        "WHERE platform IN ('facebook', 'instagram') ORDER BY recorded_at"
+    ).fetchall()
+    medidos = 0
+    for ref, plataforma, media_id in filas:
+        if refs and ref not in refs:
+            continue
+        try:
+            m = publish_meta.metricas_reel(plataforma, media_id, token)
+        except publish_meta.PublishError as e:  # a failed reel must not stop the others
+            print(f"  {ref} {plataforma}: ✗ {str(e)[:300]}")
+            continue
+        production_dna.record_social(con, ref, plataforma, m)
+        medidos += 1
+        print(
+            f"  {ref} {plataforma}: {m['views']} vistas · {m['avg_watch_s']} s de media · "
+            f"{m['likes']} likes · {m['comments']} comentarios"
+        )
+    con.close()
+    print(f"{medidos} reels medidos (production_social).")
+
+
 def cmd_programar() -> None:
     """APROBAR un Short ya subido como privado: lo programa a la hora pico de EE. UU. (12:00 de Nueva
     York por defecto, --hora HH:MM) o lo hace público ya (--ahora). Lee el video_id de
@@ -1597,7 +1632,7 @@ def cmd_youtube_auth() -> None:
     from . import publish
 
     try:
-        creds = publish._get_credentials()
+        creds = publish._get_credentials(relogin=True)
     except publish.PublishError as e:
         raise SystemExit(f"✗ {e}")
     from googleapiclient.discovery import build
@@ -1683,6 +1718,7 @@ def main(argv: list[str]) -> int:
         "vincular": cmd_vincular,
         "publish-social": cmd_publish_social,
         "analytics-sync": cmd_analytics_sync,
+        "meta-sync": cmd_meta_sync,
         "estado-bajar": cmd_estado_bajar,
         "estado-subir": cmd_estado_subir,
         "produccion-guardar": cmd_produccion_guardar,

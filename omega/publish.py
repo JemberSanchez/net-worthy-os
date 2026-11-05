@@ -13,9 +13,16 @@ no accede a nada de terceros.
 Cuota: videos.insert cuesta 1600 unidades de las 10.000/día gratis -> 6 subidas/día de margen.
 No usar este comando como sandbox de pruebas repetidas sin necesidad.
 """
+
 from __future__ import annotations
+
+import threading
 import time
+import webbrowser
+from datetime import UTC
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from . import config
 
@@ -23,9 +30,11 @@ from . import config
 # de búsqueda (analítica automática). Se piden JUNTOS para autorizar una sola vez: cambiar los
 # scopes invalida el token y obliga a repetir el login.
 # youtube.force-ssl: publicar el comentario preparado (commentThreads.insert solo acepta ese scope).
-SCOPES = ["https://www.googleapis.com/auth/youtube",
-          "https://www.googleapis.com/auth/yt-analytics.readonly",
-          "https://www.googleapis.com/auth/youtube.force-ssl"]
+SCOPES = [
+    "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/yt-analytics.readonly",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+]
 SCOPE_COMENTARIOS = SCOPES[2]
 CLIENT_SECRET_PATH = config.DATA_DIR / "youtube_client_secret.json"
 TOKEN_PATH = config.DATA_DIR / "youtube_token.json"
@@ -39,7 +48,8 @@ class PublishError(Exception):
     """Fallo fatal al subir (credenciales inválidas, cuota agotada, body rechazado). No reintentar."""
 
 
-def _get_credentials():
+def _get_credentials(relogin: bool = False):
+    from google.auth.exceptions import RefreshError
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
@@ -50,24 +60,82 @@ def _get_credentials():
         # sirviendo para lo que ya autorizaba; pedir más al refrescar da invalid_scope y lo rompe todo.
         creds = Credentials.from_authorized_user_file(str(TOKEN_PATH))
 
+    necesita_login = not creds or not creds.valid
     if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-    elif not creds or not creds.valid:
+        necesita_login = False
+        try:
+            creds.refresh(Request())
+        except RefreshError as e:
+            # Only `youtube-auth` may open a browser: a scheduled upload would hang on it.
+            if not relogin:
+                raise PublishError(
+                    f"Token de YouTube inválido: repetir `youtube-auth` ({e})"
+                ) from e
+            necesita_login = True
+    if necesita_login:
         if not CLIENT_SECRET_PATH.exists():
             raise PublishError(
                 f"No existe {CLIENT_SECRET_PATH}. Descárgalo de Google Cloud Console "
-                "(OAuth client ID, tipo 'Desktop app') y guárdalo con ese nombre.")
-        flow = InstalledAppFlow.from_client_secrets_file(str(CLIENT_SECRET_PATH), SCOPES)
-        creds = flow.run_local_server(port=0)
+                "(OAuth client ID, tipo 'Desktop app') y guárdalo con ese nombre."
+            )
+        flow = InstalledAppFlow.from_client_secrets_file(
+            str(CLIENT_SECRET_PATH), SCOPES
+        )
+        creds = _login_navegador(flow)
 
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     TOKEN_PATH.write_text(creds.to_json(), encoding="utf-8")
     return creds
 
 
-def upload_video(video_path: Path, title: str, description: str, *, tags: list[str] | None = None,
-                  category_id: str = "27", privacy_status: str = "private",
-                  made_for_kids: bool = False) -> dict:
+def _login_navegador(flow):
+    """OAuth redirect listener that survives empty or idle connections. run_local_server() handles a
+    single connection, so one without a request makes it fail with WSGITimeoutError."""
+    recibido = {}
+    listo = threading.Event()
+
+    class Redireccion(BaseHTTPRequestHandler):
+        def do_GET(self):
+            query = urlsplit(self.path).query
+            es_redireccion = "code=" in query or "error=" in query
+            self.send_response(200 if es_redireccion else 404)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            if es_redireccion:
+                self.wfile.write(b"Listo: ya puedes cerrar esta ventana.")
+                recibido["ruta"] = self.path
+                listo.set()
+
+        def log_message(self, *_args):
+            pass
+
+    with ThreadingHTTPServer(("127.0.0.1", 0), Redireccion) as servidor:
+        threading.Thread(target=servidor.serve_forever, daemon=True).start()
+        flow.redirect_uri = f"http://127.0.0.1:{servidor.server_port}/"
+        # prompt=consent: without it Google may omit the refresh_token on a repeat login.
+        url, _ = flow.authorization_url(access_type="offline", prompt="consent")
+        print(f"Abre esta URL si el navegador no se abre solo:\n{url}")
+        webbrowser.open(url)
+        while not listo.wait(1):  # a timeout keeps Ctrl-C working on Windows
+            pass
+        servidor.shutdown()
+    # oauthlib demands https even on loopback; the state and PKCE checks happen in fetch_token.
+    flow.fetch_token(
+        authorization_response=f"https://127.0.0.1:{servidor.server_port}{recibido['ruta']}"
+    )
+    return flow.credentials
+
+
+def upload_video(
+    video_path: Path,
+    title: str,
+    description: str,
+    *,
+    tags: list[str] | None = None,
+    category_id: str = "27",
+    privacy_status: str = "private",
+    made_for_kids: bool = False,
+) -> dict:
     """Sube video_path a YouTube. Devuelve {"video_id": ..., "url": ...}.
 
     category_id default "27" (Education): no existe categoría "Finance" en la taxonomía de
@@ -96,8 +164,12 @@ def upload_video(video_path: Path, title: str, description: str, *, tags: list[s
             "selfDeclaredMadeForKids": made_for_kids,
         },
     }
-    media = MediaFileUpload(str(video_path), chunksize=-1, resumable=True, mimetype="video/mp4")
-    request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+    media = MediaFileUpload(
+        str(video_path), chunksize=-1, resumable=True, mimetype="video/mp4"
+    )
+    request = youtube.videos().insert(
+        part="snippet,status", body=body, media_body=media
+    )
 
     response = None
     attempt = 0
@@ -108,9 +180,11 @@ def upload_video(video_path: Path, title: str, description: str, *, tags: list[s
             status = exc.resp.status if exc.resp is not None else None
             if status in _RETRIABLE_STATUS and attempt < _MAX_RETRIES:
                 attempt += 1
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
                 continue
-            raise PublishError(f"Subida rechazada por YouTube (HTTP {status}): {exc}") from exc
+            raise PublishError(
+                f"Subida rechazada por YouTube (HTTP {status}): {exc}"
+            ) from exc
 
     video_id = response["id"]
     return {"video_id": video_id, "url": f"https://youtu.be/{video_id}"}
@@ -121,28 +195,38 @@ def upload_video(video_path: Path, title: str, description: str, *, tags: list[s
 # contenedor de la nube se recicla antes de que el usuario apruebe). Aprobar = programarlo a la
 # hora pico de la audiencia (EE. UU.) o hacerlo público ya. Motivo del horario: el S3 salió a las
 # 02:00 hora local con audiencia EN/US, confounder anotado en CLAUDE.md.
-HORA_PICO = "12:00"                 # hora de Nueva York; ajustable con --hora
+HORA_PICO = "12:00"  # hora de Nueva York; ajustable con --hora
 ZONA_AUDIENCIA = "America/New_York"
 
 
-def proximo_slot(ahora_utc, hora: str = HORA_PICO, zona: str = ZONA_AUDIENCIA, margen_min: int = 20,
-                 dias: int = 0):
+def proximo_slot(
+    ahora_utc,
+    hora: str = HORA_PICO,
+    zona: str = ZONA_AUDIENCIA,
+    margen_min: int = 20,
+    dias: int = 0,
+):
     """Próximo instante `hora` en `zona` que caiga al menos `margen_min` después de ahora, más
     `dias` días (para escalonar: uno al día rinde más que dos a la vez). Devuelve un datetime en
     UTC. Función pura (horario de verano incluido vía zoneinfo: se suma en calendario LOCAL)."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
     from zoneinfo import ZoneInfo
+
     tz = ZoneInfo(zona)
     h, m = (int(x) for x in hora.split(":"))
     local = ahora_utc.astimezone(tz)
     cand = local.replace(hour=h, minute=m, second=0, microsecond=0)
     if cand < local + timedelta(minutes=margen_min):
-        cand = (local + timedelta(days=1)).replace(hour=h, minute=m, second=0, microsecond=0)
-        cand = datetime(cand.year, cand.month, cand.day, h, m, tzinfo=tz)   # re-normaliza DST
+        cand = (local + timedelta(days=1)).replace(
+            hour=h, minute=m, second=0, microsecond=0
+        )
+        cand = datetime(
+            cand.year, cand.month, cand.day, h, m, tzinfo=tz
+        )  # re-normaliza DST
     if dias:
         d = cand.date() + timedelta(days=dias)
         cand = datetime(d.year, d.month, d.day, h, m, tzinfo=tz)
-    return cand.astimezone(timezone.utc)
+    return cand.astimezone(UTC)
 
 
 def _actualizar_status(video_id: str, cambios: dict, youtube=None) -> dict:
@@ -150,31 +234,54 @@ def _actualizar_status(video_id: str, cambios: dict, youtube=None) -> dict:
     no perder selfDeclaredMadeForKids, licencia, etc."""
     if youtube is None:
         from googleapiclient.discovery import build
+
         youtube = build("youtube", "v3", credentials=_get_credentials())
     items = youtube.videos().list(part="status", id=video_id).execute().get("items", [])
     if not items:
-        raise PublishError(f"YouTube no encuentra el video {video_id} (¿borrado o de otro canal?)")
-    status = {k: v for k, v in items[0]["status"].items()
-              if k in ("privacyStatus", "publishAt", "selfDeclaredMadeForKids", "license",
-                       "embeddable", "publicStatsViewable", "containsSyntheticMedia")}
+        raise PublishError(
+            f"YouTube no encuentra el video {video_id} (¿borrado o de otro canal?)"
+        )
+    status = {
+        k: v
+        for k, v in items[0]["status"].items()
+        if k
+        in (
+            "privacyStatus",
+            "publishAt",
+            "selfDeclaredMadeForKids",
+            "license",
+            "embeddable",
+            "publicStatsViewable",
+            "containsSyntheticMedia",
+        )
+    }
     status.update(cambios)
     status = {k: v for k, v in status.items() if v is not None}
-    return youtube.videos().update(part="status", body={"id": video_id, "status": status}).execute()
+    return (
+        youtube.videos()
+        .update(part="status", body={"id": video_id, "status": status})
+        .execute()
+    )
 
 
 def programar(video_id: str, publish_at_utc, youtube=None) -> dict:
     """Programa la publicación: YouTube exige privacyStatus=private + publishAt en el futuro."""
     iso = publish_at_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-    return _actualizar_status(video_id, {"privacyStatus": "private", "publishAt": iso}, youtube)
+    return _actualizar_status(
+        video_id, {"privacyStatus": "private", "publishAt": iso}, youtube
+    )
 
 
 def hacer_publico(video_id: str, youtube=None) -> dict:
-    return _actualizar_status(video_id, {"privacyStatus": "public", "publishAt": None}, youtube)
+    return _actualizar_status(
+        video_id, {"privacyStatus": "public", "publishAt": None}, youtube
+    )
 
 
 def _yt(youtube=None):
     if youtube is None:
         from googleapiclient.discovery import build
+
         youtube = build("youtube", "v3", credentials=_get_credentials())
     return youtube
 
@@ -184,26 +291,50 @@ def asegurar_playlist(nombre: str, descripcion: str = "", youtube=None) -> str:
     yt = _yt(youtube)
     token = None
     while True:
-        r = yt.playlists().list(part="snippet", mine=True, maxResults=50, pageToken=token).execute()
+        r = (
+            yt.playlists()
+            .list(part="snippet", mine=True, maxResults=50, pageToken=token)
+            .execute()
+        )
         for it in r.get("items", []):
             if it["snippet"]["title"].strip().lower() == nombre.strip().lower():
                 return it["id"]
         token = r.get("nextPageToken")
         if not token:
             break
-    r = yt.playlists().insert(part="snippet,status", body={
-        "snippet": {"title": nombre, "description": descripcion}, "status": {"privacyStatus": "public"}}).execute()
+    r = (
+        yt.playlists()
+        .insert(
+            part="snippet,status",
+            body={
+                "snippet": {"title": nombre, "description": descripcion},
+                "status": {"privacyStatus": "public"},
+            },
+        )
+        .execute()
+    )
     return r["id"]
 
 
 def agregar_a_playlist(video_id: str, playlist_id: str, youtube=None) -> bool:
     """Añade el vídeo a la lista si no está. Devuelve True si lo añadió."""
     yt = _yt(youtube)
-    ya = yt.playlistItems().list(part="id", playlistId=playlist_id, videoId=video_id, maxResults=1).execute()
+    ya = (
+        yt.playlistItems()
+        .list(part="id", playlistId=playlist_id, videoId=video_id, maxResults=1)
+        .execute()
+    )
     if ya.get("items"):
         return False
-    yt.playlistItems().insert(part="snippet", body={"snippet": {
-        "playlistId": playlist_id, "resourceId": {"kind": "youtube#video", "videoId": video_id}}}).execute()
+    yt.playlistItems().insert(
+        part="snippet",
+        body={
+            "snippet": {
+                "playlistId": playlist_id,
+                "resourceId": {"kind": "youtube#video", "videoId": video_id},
+            }
+        },
+    ).execute()
     return True
 
 
@@ -213,14 +344,34 @@ def comentar(video_id: str, texto: str, youtube=None) -> str:
     if youtube is None:
         creds = _get_credentials()
         if SCOPE_COMENTARIOS not in (creds.scopes or []):
-            raise PublishError("el token no tiene permiso de comentarios: repite `youtube-auth` (una vez)")
+            raise PublishError(
+                "el token no tiene permiso de comentarios: repite `youtube-auth` (una vez)"
+            )
         from googleapiclient.discovery import build
+
         youtube = build("youtube", "v3", credentials=creds)
-    r = youtube.commentThreads().insert(part="snippet", body={"snippet": {
-        "videoId": video_id, "topLevelComment": {"snippet": {"textOriginal": texto}}}}).execute()
+    r = (
+        youtube.commentThreads()
+        .insert(
+            part="snippet",
+            body={
+                "snippet": {
+                    "videoId": video_id,
+                    "topLevelComment": {"snippet": {"textOriginal": texto}},
+                }
+            },
+        )
+        .execute()
+    )
     return r["id"]
 
 
 def estado_privacidad(video_id: str, youtube=None) -> str | None:
-    items = _yt(youtube).videos().list(part="status", id=video_id).execute().get("items", [])
+    items = (
+        _yt(youtube)
+        .videos()
+        .list(part="status", id=video_id)
+        .execute()
+        .get("items", [])
+    )
     return items[0]["status"].get("privacyStatus") if items else None

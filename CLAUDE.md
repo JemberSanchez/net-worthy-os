@@ -24,7 +24,7 @@ Publicar: `youtube-auth` (login una vez; también da permiso de Analytics) · `p
   `--publicar` — no se automatiza publicar en vivo sin que el usuario lo vea primero.
 Páginas: `python video-v2/motor/social.py video-v2/<ref>` (carrusel 4:5 + historia 9:16 + textos; lo hace producir.py) · `publish-social <ref> [--publicar]` (IG/FB; sin --publicar solo el plan; --publicar SOLO con confirmación en el chat)
 Aprobar: `programar <ref>` (Short ya subido como privado -> publicación a las 12:00 de Nueva York; `--ahora`)
-Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `vincular <ref> <video_id>` (videos antiguos)
+Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `meta-sync [<ref>...]` (reels de FB/IG -> vistas, tiempo medio, likes en `production_social`; no entra en el score) · `vincular <ref> <video_id>` (videos antiguos)
 Estado/nube: `estado-bajar` · `estado-subir` · `produccion-guardar video-v2/<ref>` (repo PRIVADO `ESTADO_REPO`)
 Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` · `dna` · `learnings`
 Atajo: **/daily** corre ingest+youtube-scan+signals+decide.

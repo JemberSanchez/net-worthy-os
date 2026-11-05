@@ -18,22 +18,33 @@ Límites conocidos (no son bugs):
     se guarda tal cual; al score y a retention_by_block va recortado a 1 (su contrato es [0,1]).
   - CTR de miniatura no existe en la API para Shorts: `ctr` queda NULL.
 """
+
 from __future__ import annotations
 
 import json
 import re
 import sqlite3
 import time
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from . import config
 
 # insightTrafficSourceType -> vocabulario de production_analytics.traffic_source
-TRAFICO = {"SHORTS": "shorts", "YT_SEARCH": "search", "RELATED_VIDEO": "suggested",
-           "SUBSCRIBER": "browse", "BROWSE": "browse", "EXT_URL": "external", "YT_CHANNEL": "channel",
-           "PLAYLIST": "playlist", "NOTIFICATION": "notification", "END_SCREEN": "end_screen",
-           "HASHTAGS": "hashtags", "SOUND_PAGE": "sound_page"}
-PUNTOS_CONTROL = (3, 10, 20)          # segundos que el canal ya usa para comparar (3s -> 20s)
+TRAFICO = {
+    "SHORTS": "shorts",
+    "YT_SEARCH": "search",
+    "RELATED_VIDEO": "suggested",
+    "SUBSCRIBER": "browse",
+    "BROWSE": "browse",
+    "EXT_URL": "external",
+    "YT_CHANNEL": "channel",
+    "PLAYLIST": "playlist",
+    "NOTIFICATION": "notification",
+    "END_SCREEN": "end_screen",
+    "HASHTAGS": "hashtags",
+    "SOUND_PAGE": "sound_page",
+}
+PUNTOS_CONTROL = (3, 10, 20)  # segundos que el canal ya usa para comparar (3s -> 20s)
 
 
 class AnalyticsError(RuntimeError):
@@ -49,7 +60,9 @@ def filas(resp: dict) -> list[dict]:
 
 def duracion_iso(s: str) -> float:
     """'PT1M5S' -> 65.0 (contentDetails.duration)."""
-    m = re.fullmatch(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?", s or "")
+    m = re.fullmatch(
+        r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?", s or ""
+    )
     if not m:
         raise AnalyticsError(f"duración ISO no reconocida: {s!r}")
     d, h, mi, se = (float(x) if x else 0.0 for x in m.groups())
@@ -96,7 +109,9 @@ def por_bloques(curva, blocks: list[dict] | None, dur: float) -> dict:
 
 def puntos_control(curva, dur: float) -> dict:
     """{'3s': w, '10s': w, '20s': w, 'fin': w} SIN recortar (para leer bucles de Shorts)."""
-    res = {f"{s}s": retencion_en(curva, s / dur) for s in PUNTOS_CONTROL if dur and s < dur}
+    res = {
+        f"{s}s": retencion_en(curva, s / dur) for s in PUNTOS_CONTROL if dur and s < dur
+    }
     res["fin"] = retencion_en(curva, 1.0)
     return {k: round(v, 4) for k, v in res.items() if v is not None}
 
@@ -109,13 +124,17 @@ def trafico_dominante(filas_trafico: list[dict]) -> str | None:
     return TRAFICO.get(tipo, tipo.lower() or None)
 
 
-def resumen(basicas: dict, curva, filas_trafico: list[dict], blocks, dur: float) -> dict:
+def resumen(
+    basicas: dict, curva, filas_trafico: list[dict], blocks, dur: float
+) -> dict:
     """Todo lo medido -> kwargs de production_dna.record_analytics. Función pura."""
     pct = basicas.get("averageViewPercentage")
     frac = None if pct is None else round(min(1.0, max(0.0, pct / 100.0)), 4)
     return {
         "views": int(basicas["views"]) if basicas.get("views") is not None else None,
-        "engaged_views": int(basicas["engagedViews"]) if basicas.get("engagedViews") is not None else None,
+        "engaged_views": int(basicas["engagedViews"])
+        if basicas.get("engagedViews") is not None
+        else None,
         "avg_view_pct_raw": None if pct is None else round(pct / 100.0, 4),
         "avd_pct": frac,
         "retention_avg": frac,
@@ -127,73 +146,135 @@ def resumen(basicas: dict, curva, filas_trafico: list[dict], blocks, dur: float)
 # ── I/O contra las APIs ─────────────────────────────────────────────────────────────────────────
 def _clientes():
     from . import publish
+
     if not publish.TOKEN_PATH.exists():
-        raise AnalyticsError("no hay data/youtube_token.json (YOUTUBE_TOKEN_JSON en el entorno de la nube "
-                             "o `youtube-auth` en el PC)")
-    from google.oauth2.credentials import Credentials
+        raise AnalyticsError(
+            "no hay data/youtube_token.json (YOUTUBE_TOKEN_JSON en el entorno de la nube "
+            "o `youtube-auth` en el PC)"
+        )
+    from google.auth.exceptions import RefreshError
     from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
-    creds = Credentials.from_authorized_user_file(str(publish.TOKEN_PATH))   # scopes del propio token
+
+    creds = Credentials.from_authorized_user_file(
+        str(publish.TOKEN_PATH)
+    )  # scopes del propio token
     if not creds.valid:
         if not creds.refresh_token:
             raise AnalyticsError("token sin refresh_token: repetir `youtube-auth`")
-        creds.refresh(Request())
+        try:
+            creds.refresh(Request())
+        except RefreshError as e:
+            raise AnalyticsError(
+                f"token de YouTube inválido: repetir `youtube-auth` ({e})"
+            ) from e
         publish.TOKEN_PATH.write_text(creds.to_json(), encoding="utf-8")
-    return (build("youtube", "v3", credentials=creds, cache_discovery=False),
-            build("youtubeAnalytics", "v2", credentials=creds, cache_discovery=False))
+    return (
+        build("youtube", "v3", credentials=creds, cache_discovery=False),
+        build("youtubeAnalytics", "v2", credentials=creds, cache_discovery=False),
+    )
 
 
 def consultar(video_id: str, yt=None, yta=None, hoy: date | None = None) -> dict:
     """Trae todo lo de un video. Devuelve {'estado': 'ok'|'privado'|'sin_datos', ...}."""
     if yt is None or yta is None:
         yt, yta = _clientes()
-    items = yt.videos().list(part="snippet,status,contentDetails", id=video_id).execute().get("items", [])
+    items = (
+        yt.videos()
+        .list(part="snippet,status,contentDetails", id=video_id)
+        .execute()
+        .get("items", [])
+    )
     if not items:
-        raise AnalyticsError(f"YouTube no encuentra {video_id} (¿borrado o de otro canal?)")
+        raise AnalyticsError(
+            f"YouTube no encuentra {video_id} (¿borrado o de otro canal?)"
+        )
     v = items[0]
     if v["status"].get("privacyStatus") != "public":
         return {"estado": "privado", "publish_at": v["status"].get("publishAt")}
     dur = duracion_iso(v["contentDetails"]["duration"])
     inicio = v["snippet"]["publishedAt"][:10]
-    fin = (hoy or datetime.now(timezone.utc).date()).isoformat()
+    fin = (hoy or datetime.now(UTC).date()).isoformat()
 
     def q(**kw):
-        return filas(yta.reports().query(ids="channel==MINE", startDate=inicio, endDate=fin, **kw).execute())
+        return filas(
+            yta.reports()
+            .query(ids="channel==MINE", startDate=inicio, endDate=fin, **kw)
+            .execute()
+        )
 
     base = f"video=={video_id}"
-    try:           # engagedViews es reciente: si la API no la acepta, se sigue sin ella
-        basicas = q(metrics="views,engagedViews,averageViewPercentage,averageViewDuration", filters=base)
-    except Exception:                                              # noqa: BLE001
-        basicas = q(metrics="views,averageViewPercentage,averageViewDuration", filters=base)
+    try:  # engagedViews es reciente: si la API no la acepta, se sigue sin ella
+        basicas = q(
+            metrics="views,engagedViews,averageViewPercentage,averageViewDuration",
+            filters=base,
+        )
+    except Exception:  # noqa: BLE001
+        basicas = q(
+            metrics="views,averageViewPercentage,averageViewDuration", filters=base
+        )
     if not basicas or not basicas[0].get("views"):
         return {"estado": "sin_datos", "duracion": dur}
-    ret = q(dimensions="elapsedVideoTimeRatio", metrics="audienceWatchRatio,relativeRetentionPerformance",
-            filters=base)
-    traf = q(dimensions="insightTrafficSourceType", metrics="views", filters=base, sort="-views")
-    busq = q(dimensions="insightTrafficSourceDetail", metrics="views",
-             filters=f"{base};insightTrafficSourceType==YT_SEARCH", sort="-views", maxResults=25)
-    return {"estado": "ok", "duracion": dur, "basicas": basicas[0],
-            "curva": [(float(f["elapsedVideoTimeRatio"]), float(f["audienceWatchRatio"]),
-                       f.get("relativeRetentionPerformance")) for f in ret],
-            "trafico": traf,
-            "busquedas": [(f["insightTrafficSourceDetail"], int(f["views"])) for f in busq]}
+    ret = q(
+        dimensions="elapsedVideoTimeRatio",
+        metrics="audienceWatchRatio,relativeRetentionPerformance",
+        filters=base,
+    )
+    traf = q(
+        dimensions="insightTrafficSourceType",
+        metrics="views",
+        filters=base,
+        sort="-views",
+    )
+    busq = q(
+        dimensions="insightTrafficSourceDetail",
+        metrics="views",
+        filters=f"{base};insightTrafficSourceType==YT_SEARCH",
+        sort="-views",
+        maxResults=25,
+    )
+    return {
+        "estado": "ok",
+        "duracion": dur,
+        "basicas": basicas[0],
+        "curva": [
+            (
+                float(f["elapsedVideoTimeRatio"]),
+                float(f["audienceWatchRatio"]),
+                f.get("relativeRetentionPerformance"),
+            )
+            for f in ret
+        ],
+        "trafico": traf,
+        "busquedas": [(f["insightTrafficSourceDetail"], int(f["views"])) for f in busq],
+    }
 
 
-def guardar(con: sqlite3.Connection, ref: str, datos: dict, now: int | None = None) -> dict:
+def guardar(
+    con: sqlite3.Connection, ref: str, datos: dict, now: int | None = None
+) -> dict:
     """Escribe lo consultado en las tres tablas. Devuelve el resumen registrado."""
     from .creative import production_dna
+
     now = now or int(time.time())
-    fila = con.execute("SELECT blocks FROM production_dna WHERE production_ref=?", (ref,)).fetchone()
+    fila = con.execute(
+        "SELECT blocks FROM production_dna WHERE production_ref=?", (ref,)
+    ).fetchone()
     blocks = json.loads(fila[0]) if fila else None
     curva2 = [(t, w) for t, w, _ in datos["curva"]]
     r = resumen(datos["basicas"], curva2, datos["trafico"], blocks, datos["duracion"])
     production_dna.record_analytics(con, production_ref=ref, now=now, **r)
     con.execute("DELETE FROM production_retention WHERE production_ref=?", (ref,))
-    con.executemany("INSERT INTO production_retention VALUES (?,?,?,?)",
-                    [(ref, t, w, rel) for t, w, rel in datos["curva"]])
+    con.executemany(
+        "INSERT INTO production_retention VALUES (?,?,?,?)",
+        [(ref, t, w, rel) for t, w, rel in datos["curva"]],
+    )
     con.execute("DELETE FROM production_search_terms WHERE production_ref=?", (ref,))
-    con.executemany("INSERT INTO production_search_terms VALUES (?,?,?,?)",
-                    [(ref, term, n, now) for term, n in datos["busquedas"]])
+    con.executemany(
+        "INSERT INTO production_search_terms VALUES (?,?,?,?)",
+        [(ref, term, n, now) for term, n in datos["busquedas"]],
+    )
     con.commit()
     r["puntos_control"] = puntos_control(curva2, datos["duracion"])
     r["busquedas"] = datos["busquedas"][:3]
@@ -221,9 +302,14 @@ def video_desde_archivos(ref: str) -> str | None:
 
 def refs_publicados(con: sqlite3.Connection) -> list[str]:
     """Refs con video en la DB + los que solo tienen rastro en data/ (se vinculan al vuelo)."""
-    refs = {r[0] for r in con.execute("SELECT production_ref FROM production_video WHERE platform='youtube'")}
+    refs = {
+        r[0]
+        for r in con.execute(
+            "SELECT production_ref FROM production_video WHERE platform='youtube'"
+        )
+    }
     for p in config.DATA_DIR.glob("publish_*.json"):
-        refs.add(p.stem[len("publish_"):])
+        refs.add(p.stem[len("publish_") :])
     log = config.DATA_DIR / "publish_log.jsonl"
     if log.exists():
         for linea in log.read_text(encoding="utf-8").splitlines():

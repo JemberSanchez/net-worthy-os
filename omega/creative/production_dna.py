@@ -11,7 +11,9 @@ co-varía con b-roll/voz/música/ritmo (confounding). `dna_calibration` marca 'p
 tener n suficiente. La gráfica dice DÓNDE; para saber POR QUÉ hay que aislar la variable
 (ver creative/experiments.py y su guard de significancia). Este módulo ALMACENA; no concluye solo.
 """
+
 from __future__ import annotations
+
 import json
 import sqlite3
 import time
@@ -88,10 +90,27 @@ CREATE TABLE IF NOT EXISTS production_search_terms (
     measured_at    INTEGER NOT NULL,
     PRIMARY KEY (production_ref, term)
 );
+-- Latest metrics of each Facebook/Instagram reel (meta-sync). NULL = the platform does not report it.
+CREATE TABLE IF NOT EXISTS production_social (
+    production_ref TEXT    NOT NULL,
+    platform       TEXT    NOT NULL,        -- facebook | instagram
+    views          INTEGER,
+    reach          INTEGER,
+    likes          INTEGER,
+    comments       INTEGER,
+    saved          INTEGER,
+    shares         INTEGER,
+    replays        INTEGER,
+    avg_watch_s    REAL,
+    measured_at    INTEGER NOT NULL,
+    PRIMARY KEY (production_ref, platform)
+);
 """
 
 
-def _ensure_columns(con: sqlite3.Connection, table: str, columns: dict[str, str]) -> set[str]:
+def _ensure_columns(
+    con: sqlite3.Connection, table: str, columns: dict[str, str]
+) -> set[str]:
     """Añade columnas que faltan en una tabla ya existente. `CREATE TABLE IF NOT EXISTS` NO
     migra: si el esquema gana una columna nueva, una BD creada con el esquema viejo se queda
     sin ella y los INSERT petan en silencio. Idempotente. Devuelve las columnas AÑADIDAS."""
@@ -107,20 +126,35 @@ def _ensure_columns(con: sqlite3.Connection, table: str, columns: dict[str, str]
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA)
     # Migraciones idempotentes para BDs creadas antes de que el esquema ganara estas columnas.
-    _ensure_columns(con, "production_analytics", {"views": "INTEGER", "engaged_views": "INTEGER",
-                                                  "avg_view_pct_raw": "REAL"})
-    if "renderer_version" in _ensure_columns(con, "production_dna", {"renderer_version": "TEXT"}):
+    _ensure_columns(
+        con,
+        "production_analytics",
+        {"views": "INTEGER", "engaged_views": "INTEGER", "avg_view_pct_raw": "REAL"},
+    )
+    if "renderer_version" in _ensure_columns(
+        con, "production_dna", {"renderer_version": "TEXT"}
+    ):
         # Solo en el instante en que nace la columna: lo que ya había es v1 por construcción.
         # Después, un NULL significa "no declarado" y así se muestra — no se rellena a ciegas.
-        con.execute("UPDATE production_dna SET renderer_version=? WHERE renderer_version IS NULL",
-                    (RENDERER_PREVIO,))
+        con.execute(
+            "UPDATE production_dna SET renderer_version=? WHERE renderer_version IS NULL",
+            (RENDERER_PREVIO,),
+        )
     con.commit()
 
 
-def record_dna(con: sqlite3.Connection, *, production_ref: str, blocks: list[dict],
-               hook_type: str | None = None, story_type: str | None = None,
-               cta_type: str | None = None, length_s: int | None = None,
-               renderer_version: str | None = None, now: int | None = None) -> None:
+def record_dna(
+    con: sqlite3.Connection,
+    *,
+    production_ref: str,
+    blocks: list[dict],
+    hook_type: str | None = None,
+    story_type: str | None = None,
+    cta_type: str | None = None,
+    length_s: int | None = None,
+    renderer_version: str | None = None,
+    now: int | None = None,
+) -> None:
     """Registra el ADN de producción (el 'cómo se hizo') ANTES de publicar. Idempotente por ref.
 
     blocks: lista de {block, technique, length_s}. block_count se deriva. Capturar esto antes de
@@ -130,52 +164,100 @@ def record_dna(con: sqlite3.Connection, *, production_ref: str, blocks: list[dic
     if not isinstance(blocks, list):
         raise ValueError("blocks debe ser una lista de {block, technique, length_s}")
     if renderer_version is not None and renderer_version not in RENDERERS:
-        raise ValueError(f"renderer_version inválido: {renderer_version!r}. Permitidos: {sorted(RENDERERS)}")
+        raise ValueError(
+            f"renderer_version inválido: {renderer_version!r}. Permitidos: {sorted(RENDERERS)}"
+        )
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_dna (production_ref, hook_type, story_type, cta_type, "
         "length_s, renderer_version, block_count, blocks, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)",
-        (production_ref, hook_type, story_type, cta_type, length_s, renderer_version, len(blocks),
-         json.dumps(blocks, ensure_ascii=False), now),
+        (
+            production_ref,
+            hook_type,
+            story_type,
+            cta_type,
+            length_s,
+            renderer_version,
+            len(blocks),
+            json.dumps(blocks, ensure_ascii=False),
+            now,
+        ),
     )
     con.commit()
 
 
-def record_analytics(con: sqlite3.Connection, *, production_ref: str, ctr: float | None = None,
-                     avd_pct: float | None = None, retention_avg: float | None = None,
-                     views: int | None = None, traffic_source: str | None = None,
-                     retention_by_block: dict | None = None, engaged_views: int | None = None,
-                     avg_view_pct_raw: float | None = None, now: int | None = None) -> None:
+def record_analytics(
+    con: sqlite3.Connection,
+    *,
+    production_ref: str,
+    ctr: float | None = None,
+    avd_pct: float | None = None,
+    retention_avg: float | None = None,
+    views: int | None = None,
+    traffic_source: str | None = None,
+    retention_by_block: dict | None = None,
+    engaged_views: int | None = None,
+    avg_view_pct_raw: float | None = None,
+    now: int | None = None,
+) -> None:
     """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome.
 
     GUARD de captura-en-origen: ctr/avd_pct/retention_avg son FRACCIONES [0,1], pero YouTube
     Studio las muestra como porcentaje ("CTR 4.5%"). Sin este guard, teclear 4.5 envenenaría el
     dataset en silencio y la calibración con n bajo quedaría basura sin aviso."""
-    for field, val in (("ctr", ctr), ("avd_pct", avd_pct), ("retention_avg", retention_avg)):
+    for field, val in (
+        ("ctr", ctr),
+        ("avd_pct", avd_pct),
+        ("retention_avg", retention_avg),
+    ):
         if val is not None and not (0.0 <= val <= 1.0):
-            raise ValueError(f"{field}={val} fuera de [0,1]. Es FRACCIÓN, no porcentaje: "
-                             f"si YouTube Studio dice '{val}%', registra {val}/100.")
+            raise ValueError(
+                f"{field}={val} fuera de [0,1]. Es FRACCIÓN, no porcentaje: "
+                f"si YouTube Studio dice '{val}%', registra {val}/100."
+            )
     if views is not None and views < 0:
         raise ValueError(f"views={views} no puede ser negativo")
     if retention_by_block:
-        bad = {k: v for k, v in retention_by_block.items() if not (0.0 <= float(v) <= 1.0)}
+        bad = {
+            k: v for k, v in retention_by_block.items() if not (0.0 <= float(v) <= 1.0)
+        }
         if bad:
-            raise ValueError(f"retention_by_block fuera de [0,1]: {bad}. "
-                             "Son fracciones (85% -> 0.85).")
+            raise ValueError(
+                f"retention_by_block fuera de [0,1]: {bad}. "
+                "Son fracciones (85% -> 0.85)."
+            )
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_analytics (production_ref, ctr, avd_pct, retention_avg, "
         "views, traffic_source, retention_by_block, engaged_views, avg_view_pct_raw, measured_at) "
         "VALUES (?,?,?,?,?,?,?,?,?,?)",
-        (production_ref, ctr, avd_pct, retention_avg, views, traffic_source,
-         json.dumps(retention_by_block, ensure_ascii=False) if retention_by_block else None,
-         engaged_views, avg_view_pct_raw, now),
+        (
+            production_ref,
+            ctr,
+            avd_pct,
+            retention_avg,
+            views,
+            traffic_source,
+            json.dumps(retention_by_block, ensure_ascii=False)
+            if retention_by_block
+            else None,
+            engaged_views,
+            avg_view_pct_raw,
+            now,
+        ),
     )
     con.commit()
 
 
-def record_video(con: sqlite3.Connection, production_ref: str, video_id: str, *, platform: str = "youtube",
-                 publish_at: str | None = None, now: int | None = None) -> None:
+def record_video(
+    con: sqlite3.Connection,
+    production_ref: str,
+    video_id: str,
+    *,
+    platform: str = "youtube",
+    publish_at: str | None = None,
+    now: int | None = None,
+) -> None:
     """Dónde quedó publicado (o subido como privado) un video. Idempotente; conserva publish_at
     previo si no se pasa uno nuevo."""
     if not production_ref or not video_id:
@@ -185,27 +267,77 @@ def record_video(con: sqlite3.Connection, production_ref: str, video_id: str, *,
         "VALUES (?,?,?,?,?) ON CONFLICT(production_ref, platform) DO UPDATE SET "
         "video_id=excluded.video_id, publish_at=COALESCE(excluded.publish_at, publish_at), "
         "recorded_at=excluded.recorded_at",
-        (production_ref, platform, video_id, publish_at, now or int(time.time())))
+        (production_ref, platform, video_id, publish_at, now or int(time.time())),
+    )
     con.commit()
 
 
-def video_de(con: sqlite3.Connection, production_ref: str, platform: str = "youtube") -> str | None:
-    row = con.execute("SELECT video_id FROM production_video WHERE production_ref=? AND platform=?",
-                      (production_ref, platform)).fetchone()
+def video_de(
+    con: sqlite3.Connection, production_ref: str, platform: str = "youtube"
+) -> str | None:
+    row = con.execute(
+        "SELECT video_id FROM production_video WHERE production_ref=? AND platform=?",
+        (production_ref, platform),
+    ).fetchone()
     return row[0] if row else None
 
 
-def record_cost(con: sqlite3.Connection, *, production_ref: str, research_hours: float | None = None,
-                script_hours: float | None = None, edit_hours: float | None = None,
-                ai_cost_usd: float | None = None, time_to_publish_h: float | None = None,
-                now: int | None = None) -> None:
+def record_social(
+    con: sqlite3.Connection,
+    production_ref: str,
+    platform: str,
+    metricas: dict,
+    now: int | None = None,
+) -> None:
+    """Replaces the stored metrics of a reel with the latest measurement."""
+    columnas = (
+        "views",
+        "reach",
+        "likes",
+        "comments",
+        "saved",
+        "shares",
+        "replays",
+        "avg_watch_s",
+    )
+    con.execute(
+        "INSERT OR REPLACE INTO production_social (production_ref, platform, measured_at, "
+        f"{', '.join(columnas)}) VALUES (?, ?, ?{', ?' * len(columnas)})",
+        (
+            production_ref,
+            platform,
+            now or int(time.time()),
+            *(metricas.get(c) for c in columnas),
+        ),
+    )
+    con.commit()
+
+
+def record_cost(
+    con: sqlite3.Connection,
+    *,
+    production_ref: str,
+    research_hours: float | None = None,
+    script_hours: float | None = None,
+    edit_hours: float | None = None,
+    ai_cost_usd: float | None = None,
+    time_to_publish_h: float | None = None,
+    now: int | None = None,
+) -> None:
     """Registra el COSTE de producir un video. Habilita el rendimiento por unidad de esfuerzo."""
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_cost (production_ref, research_hours, script_hours, "
         "edit_hours, ai_cost_usd, time_to_publish_h, recorded_at) VALUES (?,?,?,?,?,?,?)",
-        (production_ref, research_hours, script_hours, edit_hours, ai_cost_usd,
-         time_to_publish_h, now),
+        (
+            production_ref,
+            research_hours,
+            script_hours,
+            edit_hours,
+            ai_cost_usd,
+            time_to_publish_h,
+            now,
+        ),
     )
     con.commit()
 
@@ -221,17 +353,30 @@ def efficiency(con: sqlite3.Connection) -> list[dict]:
     ).fetchall()
     out = []
     for r in rows:
-        total_h = sum(x for x in (r["research_hours"], r["script_hours"], r["edit_hours"]) if x)
-        out.append({"production_ref": r["production_ref"], "total_hours": round(total_h, 1),
-                    "success": r["success"],
-                    "success_per_hour": round(r["success"] / total_h, 3) if total_h else None})
-    out.sort(key=lambda x: (x["success_per_hour"] is not None, x["success_per_hour"] or 0),
-             reverse=True)
+        total_h = sum(
+            x for x in (r["research_hours"], r["script_hours"], r["edit_hours"]) if x
+        )
+        out.append(
+            {
+                "production_ref": r["production_ref"],
+                "total_hours": round(total_h, 1),
+                "success": r["success"],
+                "success_per_hour": round(r["success"] / total_h, 3)
+                if total_h
+                else None,
+            }
+        )
+    out.sort(
+        key=lambda x: (x["success_per_hour"] is not None, x["success_per_hour"] or 0),
+        reverse=True,
+    )
     return out
 
 
 def fetch_dna(con: sqlite3.Connection, production_ref: str) -> dict | None:
-    r = con.execute("SELECT * FROM production_dna WHERE production_ref=?", (production_ref,)).fetchone()
+    r = con.execute(
+        "SELECT * FROM production_dna WHERE production_ref=?", (production_ref,)
+    ).fetchone()
     if r is None:
         return None
     d = dict(r)
@@ -244,8 +389,9 @@ def list_dna(con: sqlite3.Connection) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def dna_calibration(con: sqlite3.Connection, dimension: str, *, min_n: int = 1,
-                    confident_n: int = 3) -> list[dict]:
+def dna_calibration(
+    con: sqlite3.Connection, dimension: str, *, min_n: int = 1, confident_n: int = 3
+) -> list[dict]:
     """Tasa de éxito real agrupada por una dimensión del ADN (hook_type/story_type/cta_type).
 
     Solo cuenta producciones con resultado MEDIDO (join con production_outcome). Marca
@@ -254,7 +400,9 @@ def dna_calibration(con: sqlite3.Connection, dimension: str, *, min_n: int = 1,
     comparables: el grupo mezcla la dimensión con el cambio de motor).
     """
     if dimension not in DIMENSIONS:
-        raise ValueError(f"dimensión inválida: {dimension!r}. Permitidas: {sorted(DIMENSIONS)}")
+        raise ValueError(
+            f"dimensión inválida: {dimension!r}. Permitidas: {sorted(DIMENSIONS)}"
+        )
     # dimension viene de la whitelist DIMENSIONS -> seguro interpolarlo
     rows = con.execute(
         f"SELECT d.{dimension} AS v, d.renderer_version AS rv, po.success FROM production_dna d "
@@ -273,9 +421,14 @@ def dna_calibration(con: sqlite3.Connection, dimension: str, *, min_n: int = 1,
     for value, vals in agg.items():
         if len(vals) < min_n:
             continue
-        out.append({"value": value, "n": len(vals),
-                    "success_rate": round(sum(vals) / len(vals), 3),
-                    "provisional": len(vals) < confident_n,
-                    "mixed_renderer": len(motores[value]) > 1})
+        out.append(
+            {
+                "value": value,
+                "n": len(vals),
+                "success_rate": round(sum(vals) / len(vals), 3),
+                "provisional": len(vals) < confident_n,
+                "mixed_renderer": len(motores[value]) > 1,
+            }
+        )
     out.sort(key=lambda x: x["success_rate"], reverse=True)
     return out
