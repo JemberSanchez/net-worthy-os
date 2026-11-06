@@ -367,5 +367,27 @@
    "marca": "4:figure",
    "hasta": "5"
   }
+ ],
+ "cifras": [
+  {
+   "dato": "Vanguard participants 65 and older: average 401(k) balance $330,186 at year-end 2025",
+   "fuente": "https://www.boldin.com/retirement/average-401k-balance-by-age/"
+  },
+  {
+   "dato": "Vanguard participants 65 and older: median 401(k) balance $103,202 at year-end 2025",
+   "fuente": "https://www.boldin.com/retirement/average-401k-balance-by-age/"
+  },
+  {
+   "dato": "The $167,970 all-participant average lands near the 75th percentile, about three in four hold less",
+   "fuente": "https://www.boldin.com/retirement/average-401k-balance-by-age/"
+  },
+  {
+   "dato": "Federal Reserve Bulletin 2023: large mean-median difference reflects the highly disproportionate share of financial assets held by some households",
+   "fuente": "https://www.federalreserve.gov/publications/files/scf23.pdf"
+  },
+  {
+   "dato": "Vanguard How America Saves 2026, 4.6 million participants; IRAs, pensions, home equity and Social Security excluded",
+   "fuente": "https://workplace.vanguard.com/content/dam/inst/iig-transformation/has/2026/pdf/HowAmericaSaves2026.pdf"
+  }
  ]
 }

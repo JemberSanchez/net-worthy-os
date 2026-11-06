@@ -222,9 +222,16 @@ class PuertaTest(unittest.TestCase):
             self.assertEqual(otra["_edicion"], sa["_edicion"])
 
     def test_todos_los_publicados_siguen_validando(self):
-        for f in sorted((RAIZ / "video-v2").glob("*/storyboard.json")):
-            if (f.parent / "assets" / "words.json").exists():
-                c.construir(f.parent, solo_validar=True, sin_contraste=True)
+        sbs = sorted((RAIZ / "video-v2").glob("*/storyboard.json"))
+        # a checkout has no renders or local base and both history gates order by storyboard mtime (their documented
+        # shortcut), so a touched storyboard fails on an older video's turn: history is tested in this class's own cases
+        with (
+            mock.patch("guionista.refs_publicadas", return_value=[f.parent.name for f in sbs]),
+            mock.patch("medir_parecido.puerta_repeticion", return_value=(True, "")),
+        ):
+            for f in sbs:
+                if (f.parent / "assets" / "words.json").exists():
+                    c.construir(f.parent, solo_validar=True, sin_contraste=True)
 
 
 class MedidorTest(unittest.TestCase):
