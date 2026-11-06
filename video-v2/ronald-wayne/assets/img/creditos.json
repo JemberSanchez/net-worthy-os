@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "maquina.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Vintage typewriter (Unsplash).jpg",
+  "autor": "Florian Klauer florianklauer",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Vintage_typewriter_(Unsplash).jpg"
+ },
+ {
+  "archivo": "logo.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Apple first logo.png",
+  "autor": "Ronald Wayne",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Apple_first_logo.png"
+ },
+ {
+  "archivo": "apple1.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Apple I (1976) - Computer History Museum.jpg",
+  "autor": "Michael Hicks from Saint Paul, MN, USA",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Apple_I_(1976)_-_Computer_History_Museum.jpg"
+ }
+]

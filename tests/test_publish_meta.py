@@ -278,5 +278,21 @@ class RequestHelperTest(unittest.TestCase):
         self.assertEqual(req.call_count, 1)
 
 
+
+class TestIgPublicarTras5xx(unittest.TestCase):
+    def _llamar(self, estado):
+        err = publish_meta.PublishError("HTTP 500")
+        side = [err, {"status_code": estado}, {"data": [{"id": "M1"}]}, {"permalink": "u"}]
+        with mock.patch.object(publish_meta, "_request", side_effect=side):
+            return publish_meta._ig_publicar("ig", "c1", "t")
+
+    def test_publicado_pese_al_500_no_falla(self):
+        self.assertEqual(self._llamar("PUBLISHED"), {"media_id": "M1", "url": "u"})
+
+    def test_no_publicado_propaga_el_error(self):
+        with self.assertRaises(publish_meta.PublishError):
+            self._llamar("FINISHED")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

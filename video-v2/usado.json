@@ -393,64 +393,68 @@
    }
   },
   {
-   "ref": "interest-outran-defense",
+   "ref": "ronald-wayne",
    "marca": null,
    "firma": {
     "transiciones": [
-     "cortina",
-     "inercia_der"
+     "iris",
+     "luma_baja"
     ],
     "camara": [
-     "baja",
-     "deriva",
-     "diag_desc"
+     "arco_der",
+     "diag_asc",
+     "tenso"
     ],
     "punch": [
-     "doble"
+     "rebote"
     ],
     "texto": [
-     "lateral"
+     "mascara"
     ],
     "efectos": [
-     "Alien technology scanning device.ogg",
-     "Computer Mouse Click.wav",
-     "Deep hit (Gravity Sound).wav",
-     "Kick 3 (Gravity Sound).wav",
-     "Knocking on wood or door.ogg"
+     "Coins dropped in metallic moneybox 0.ogg",
+     "Hardcover books dropped.ogg",
+     "Hollow hit (Gravity Sound).wav",
+     "Hollow stick hit 2 (Gravity Sound).wav",
+     "Slam closet door (Gravity Sound).wav",
+     "Turning a page.ogg",
+     "WWS Typewriter.ogg",
+     "Whip-sound.ogg"
     ],
     "riser": [
-     "ARP-Solina Crescendo clean.ogg"
+     "Zzrrrp sizzle.ogg"
     ],
     "musica": [
-     "Scott Buckley - Signal To Noise (nomelody mix).oga"
+     "Chris Zabriskie - 03 - Prelude No 3.ogg"
     ]
    },
    "eleccion": {
-    "semilla": "interest-outran-defense",
+    "semilla": "ronald-wayne",
     "transiciones": [
-     "cortina",
-     "inercia_der"
+     "luma_baja",
+     "iris"
     ],
     "camara": [
-     "deriva",
-     "baja",
-     "diag_desc"
+     "arco_der",
+     "tenso",
+     "diag_asc"
     ],
-    "punch": "doble",
-    "texto": "lateral",
+    "punch": "rebote",
+    "texto": "mascara",
     "sfx": {
-     "thud": "nudillo",
-     "tick": "bombo_mini",
-     "tack": "clic_raton"
+     "thud": "portazo",
+     "moneda_suelo": "monedas_hucha",
+     "nudillo": "golpe_hueco",
+     "tack": "baqueta"
     },
     "motor": {
-     "whoosh": "escaner",
-     "impacto": "golpe_hondo",
-     "riser": "riser_cuerdas"
+     "whoosh": "latigo",
+     "impacto": "libro_duro",
+     "riser": "riser_chisporroteo"
     },
     "musica": {
-     "commons": "File:Scott Buckley - Signal To Noise (nomelody mix).oga",
-     "desde": 107.0
+     "commons": "File:Chris Zabriskie - 03 - Prelude No 3.ogg",
+     "desde": 20.0
     }
    }
   }

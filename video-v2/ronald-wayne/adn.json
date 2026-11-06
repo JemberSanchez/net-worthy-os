@@ -1,0 +1,70 @@
+{
+  "production_ref": "ronald-wayne",
+  "hook_type": "contrast",
+  "story_type": "character_life",
+  "cta_type": "question",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 34,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "revelacion,foto+clip",
+      "length_s": 3.32
+    },
+    {
+      "block": "who",
+      "technique": "foto",
+      "length_s": 3.93
+    },
+    {
+      "block": "debt",
+      "technique": "foto+clip",
+      "length_s": 2.73
+    },
+    {
+      "block": "law",
+      "technique": "foto+clip",
+      "length_s": 2.54
+    },
+    {
+      "block": "only",
+      "technique": "foto+clip",
+      "length_s": 2.63
+    },
+    {
+      "block": "quit",
+      "technique": "foto+clip",
+      "length_s": 1.68
+    },
+    {
+      "block": "price",
+      "technique": "foto+clip",
+      "length_s": 1.75
+    },
+    {
+      "block": "papers",
+      "technique": "foto+clip",
+      "length_s": 3.26
+    },
+    {
+      "block": "auction",
+      "technique": "foto+clip",
+      "length_s": 2.14
+    },
+    {
+      "block": "paper",
+      "technique": "foto+clip",
+      "length_s": 2.82
+    },
+    {
+      "block": "saw",
+      "technique": "foto+clip",
+      "length_s": 3.38
+    },
+    {
+      "block": "cta",
+      "technique": "titulo",
+      "length_s": 4.04
+    }
+  ]
+}

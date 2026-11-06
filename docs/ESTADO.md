@@ -32,6 +32,7 @@ Publicación según `production_video`, no comprobada en vivo. Puntuación = sco
 | aws-profit                           | 2-nov                     | sí    | 3            | 0,61                                            |
 | saving-rate                          | 3-nov                     | sí    | 2            | sin outcome                                     |
 | midterm-rally                        | 5-nov                     | sí    | 421          | 0,61                                            |
+| ronald-wayne                         | 6-nov (UTC)               | sí    | -            | sin outcome                                     |
 | interest-vs-defense                  | no publicado (piloto)     | no    | -            | -                                               |
 | read-janitor (#7), grace-groner (#8) | no publicados en v2       | no    | -            | -                                               |
 
@@ -44,7 +45,15 @@ Orden en `docs/PLAN.md`. Hecho: 1.1 (`guionista.py`), 3.1 parcial (solo duració
 score v3, `meta-sync`. Abiertos de mayor peso: 1.2 contar con imagen y la queja del piloto, 2.1
 verificar cifras contra la fuente, 3.2 tema.
 
+Decisiones del 5-nov: `aspecto: cine` sigue opt-in (A ganó, n=1 y temas distintos: no aísla la variable),
+pero se usa en vídeos nuevos hasta tener un par con el mismo tema. Demo `interest-outran-defense` fuera de
+`video-v2/usado.json` (no publicada, bloqueaba aperturas; un rebuild la vuelve a añadir). Turno 2 del
+calendario de `docs/VIRALIDAD.md` §7: noticia con estructura "error común".
+
 ## Trampas vigentes
+
+- **Meta 500 en `media_publish`:** puede haber publicado igual. `_ig_publicar` ya mira el contenedor; si
+  ves un 500 en otro paso, mira el feed antes de reintentar.
 
 - **Publicar:** nada público sin aprobación explícita en el chat. Meta (FB/IG) `--publicar` SIEMPRE
   con confirmación. Fijar el comentario es a mano en Studio.

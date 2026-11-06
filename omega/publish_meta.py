@@ -463,12 +463,27 @@ def _esperar_contenedor(container_id: str, token: str) -> None:
 
 
 def _ig_publicar(ig_user_id: str, container_id: str, token: str) -> dict:
-    media_id = _request(
-        "POST",
-        f"{GRAPH}/{ig_user_id}/media_publish",
-        data={"creation_id": container_id, "access_token": token},
-        retriable=False,
-    )["id"]
+    try:
+        media_id = _request(
+            "POST",
+            f"{GRAPH}/{ig_user_id}/media_publish",
+            data={"creation_id": container_id, "access_token": token},
+            retriable=False,
+        )["id"]
+    except PublishError:
+        # Measured 5-nov-2026: HTTP 500 here and the carousel went live anyway; a retry duplicates.
+        estado = _request(
+            "GET",
+            f"{GRAPH}/{container_id}",
+            params={"fields": "status_code", "access_token": token},
+        ).get("status_code")
+        if estado != "PUBLISHED":
+            raise
+        media_id = _request(
+            "GET",
+            f"{GRAPH}/{ig_user_id}/media",
+            params={"fields": "id", "limit": 1, "access_token": token},
+        )["data"][0]["id"]
     media = _request(
         "GET",
         f"{GRAPH}/{media_id}",

@@ -380,11 +380,11 @@ def avisos_retencion(p: dict) -> list[str]:
     puede tener un buen motivo). Gancho con imagen en movimiento y texto en <0,8 s; re-gancho
     (golpe, impacto o revelación) al menos cada REGANCHO_MAX s."""
     avisos, e0 = [], p["escenas"][0]
-    if e0["tipo"] != "foto":
+    if e0["tipo"] != "foto" and not e0.get("fondo"):
         avisos.append(
             "gancho sin imagen: la escena 0 debería ser `foto` (mejor con `clip`) — el primer segundo decide el scroll"
         )
-    elif not e0.get("clip"):
+    elif e0["tipo"] == "foto" and not e0.get("clip"):
         avisos.append(
             "gancho con foto fija: un `clip` (b-roll en movimiento) frena mejor el scroll"
         )
@@ -393,6 +393,9 @@ def avisos_retencion(p: dict) -> list[str]:
         for k in ("kicker", "titulo", "sub")
         if isinstance(e0.get(k), dict) and "en" in e0[k]
     ] + [r["en"] for r in e0.get("rotulos") or [] if "en" in r]
+    textos += [x["en"] for x in e0.get("lineas") or [] if "en" in x]
+    if isinstance(e0.get("linea1"), dict):  # revelacion: linea1 opens with the scene
+        textos.append(e0["linea1"].get("en", e0.get("en", 0)))
     if not textos or min(textos) > 0.3:
         avisos.append(
             f'el gancho no pone texto desde el primer fotograma ({min(textos):.2f}s): ancla con "0-0.4" — '

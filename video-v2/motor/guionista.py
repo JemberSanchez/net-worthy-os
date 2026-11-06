@@ -284,6 +284,14 @@ def _contiene(texto: str, frase: str) -> bool:
     )
 
 
+def _frases_guion(frases: list[dict]) -> list[dict]:
+    """Frases para el storyboard. `giro` se conserva: producir.py repite G-GIRO sobre este guion."""
+    return [
+        {"id": f["id"], "texto": f["texto"], **({"giro": True} if f.get("giro") else {})}
+        for f in frases
+    ]
+
+
 def _es_giro(f: dict) -> bool:
     return (
         bool(f.get("giro"))
@@ -751,7 +759,7 @@ def main() -> None:
         if sb_ruta.exists()
         else {"ref": proy.name}
     )
-    sb["guion"] = [{"id": f["id"], "texto": f["texto"]} for f in ganador["frases"]]
+    sb["guion"] = _frases_guion(ganador["frases"])
     sb_ruta.write_text(
         json.dumps(sb, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

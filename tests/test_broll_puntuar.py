@@ -78,5 +78,21 @@ class UsadosTest(unittest.TestCase):
             os.chdir(cwd)
 
 
+
+class TestVigente(unittest.TestCase):
+    def test_crudo_sigue_a_la_fuente_declarada(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as d:
+            src = Path(d) / "c.src"
+            self.assertFalse(broll._vigente(src, {"pexels": 1}))
+            src.write_bytes(b"x")
+            self.assertTrue(broll._vigente(src, {"pexels": 1}))  # older project, no record
+            broll._origen_ruta(src).write_text("1", encoding="utf-8")
+            self.assertTrue(broll._vigente(src, {"pexels": 1}))
+            self.assertFalse(broll._vigente(src, {"pexels": 2}))
+
+
 if __name__ == "__main__":
     unittest.main()

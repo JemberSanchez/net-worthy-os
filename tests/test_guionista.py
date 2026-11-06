@@ -20,6 +20,15 @@ def puerta(frases, pid):
     return next(p for p in G.puertas(frases) if p["id"] == pid)
 
 
+class TestFrasesGuion(unittest.TestCase):
+    def test_conserva_giro_solo_si_lo_hay(self):
+        fs = [{"id": "a", "texto": "x", "giro": True}, {"id": "b", "texto": "y"}]
+        self.assertEqual(
+            G._frases_guion(fs),
+            [{"id": "a", "texto": "x", "giro": True}, {"id": "b", "texto": "y"}],
+        )
+
+
 class TestCifra(unittest.TestCase):
     def test_numeros_en_palabras_y_digitos(self):
         self.assertTrue(G.tiene_cifra("This janitor died with eight million dollars."))

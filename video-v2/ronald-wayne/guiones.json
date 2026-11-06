@@ -1,0 +1,169 @@
+{
+  "ref": "ronald-wayne",
+  "nota": "Turno 1 del calendario de docs/VIRALIDAD.md §7. Fuentes: Wikipedia (Ronald Wayne), KQED 2011, DNAinfo 2011, YCharts vía búsqueda.",
+  "estructuras": [
+    {
+      "id": "vida",
+      "nombre": "vida de personaje",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Apple's third founder walked away for the price of your phone."
+        },
+        {
+          "id": "who",
+          "texto": "Ronald Wayne wrote the contract, drew the logo, and owned a tenth."
+        },
+        {
+          "id": "debt",
+          "texto": "Then Jobs borrowed to fill their first order.",
+          "giro": true
+        },
+        {
+          "id": "law",
+          "texto": "In a partnership, each partner owes it all."
+        },
+        {
+          "id": "only",
+          "texto": "Wayne was the only one with assets to lose."
+        },
+        {
+          "id": "quit",
+          "texto": "That same month, he quit."
+        },
+        {
+          "id": "price",
+          "texto": "His price: eight hundred dollars.",
+          "giro": true
+        },
+        {
+          "id": "papers",
+          "texto": "Years later, he sold those papers for five hundred."
+        },
+        {
+          "id": "auction",
+          "texto": "They fetched one point six million.",
+          "giro": true
+        },
+        {
+          "id": "paper",
+          "texto": "That tenth would be hundreds of billions today, on paper."
+        },
+        {
+          "id": "saw",
+          "texto": "But he couldn't see the iPhone. He could see the debt.",
+          "giro": true
+        },
+        {
+          "id": "cta",
+          "texto": "With your savings on the line, would you have walked away too?"
+        }
+      ]
+    },
+    {
+      "id": "contradiccion",
+      "nombre": "contradicción",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "This man's Apple deal looks like the worst in history, but your savings say otherwise."
+        },
+        {
+          "id": "stake",
+          "texto": "He owned a tenth of Apple, and he sold it for eight hundred dollars."
+        },
+        {
+          "id": "why",
+          "texto": "So why would your money say he was right?",
+          "giro": true
+        },
+        {
+          "id": "debt",
+          "texto": "Because Jobs had just borrowed to fill their first order."
+        },
+        {
+          "id": "law",
+          "texto": "In a partnership, each partner owes it all."
+        },
+        {
+          "id": "only",
+          "texto": "And only Wayne had assets creditors could seize.",
+          "giro": true
+        },
+        {
+          "id": "scar",
+          "texto": "He'd already spent a year repaying one failed business."
+        },
+        {
+          "id": "paper",
+          "texto": "Today that tenth would be hundreds of billions, on paper.",
+          "giro": true
+        },
+        {
+          "id": "honest",
+          "texto": "But that's the winner's math, and he never had it."
+        },
+        {
+          "id": "cta",
+          "texto": "So was it the worst deal in history, or would you have signed too?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Apple's third founder walked away for the price of your phone."
+    },
+    {
+      "id": "g2",
+      "texto": "Your phone costs about what this man got for his share of Apple."
+    },
+    {
+      "id": "g3",
+      "texto": "One of Apple's founders quit before you've ever heard of him."
+    },
+    {
+      "id": "g4",
+      "texto": "A third man signed Apple's first contract, then bailed for the price of your phone."
+    }
+  ],
+  "juicio": {
+    "vida": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Una sola decisión; papeles y deuda dan dos giros propios"
+    },
+    "contradiccion": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Defiende una tesis; pierde el giro de los papeles"
+    },
+    "vida+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Sujeto concreto, tensión, y \"walked away\" cierra el bucle"
+    },
+    "vida+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Falla G-BUCLE"
+    },
+    "vida+g3": {
+      "una_idea": 2,
+      "bucle_abierto": 3,
+      "giro": 2,
+      "nota": "Falla G-GANCHO y G-BUCLE"
+    },
+    "vida+g4": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Falla G-BUCLE"
+    }
+  }
+}

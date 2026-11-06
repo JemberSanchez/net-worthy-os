@@ -265,6 +265,23 @@ def _registrar(carpeta: Path, archivo: str, r: dict, desde: float) -> None:
     il._registrar(carpeta, ficha)
 
 
+def _origen(v: dict) -> str:
+    return str(v.get("commons") or v.get("pexels"))
+
+
+def _origen_ruta(destino: Path) -> Path:
+    return destino.with_name(destino.name + ".origen")
+
+
+def _vigente(destino: Path, v: dict) -> bool:
+    """The raw clip is valid if it exists and comes from the declared source. No record (older
+    projects) keeps it: downloading again would change videos already assembled."""
+    if not destino.exists():
+        return False
+    ruta = _origen_ruta(destino)
+    return not ruta.exists() or ruta.read_text(encoding="utf-8") == _origen(v)
+
+
 def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
     """{nombre: {"commons": "File:..."} | {"pexels": id}} -> crudos en `carpeta` (con créditos).
     Commons en UNA consulta; los que ya existen no se vuelven a pedir."""
@@ -272,7 +289,7 @@ def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
     out, faltan = {}, {}
     for k, v in decl.items():
         destino = carpeta / f"{k}.src"
-        if destino.exists():
+        if _vigente(destino, v):
             out[k] = destino
         else:
             faltan[k] = v
@@ -304,6 +321,7 @@ def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
             )
         destino = carpeta / f"{k}.src"
         destino.write_bytes(il._get(r["src"]))
+        _origen_ruta(destino).write_text(_origen(faltan[k]), encoding="utf-8")
         _registrar(carpeta, destino.name, r, float(v.get("desde", 0)))
         out[k] = destino
     return out

@@ -1,0 +1,92 @@
+[
+ {
+  "archivo": "baqueta.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hollow stick hit 2 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hollow_stick_hit_2_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "golpe_hueco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hollow hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hollow_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "latigo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Whip-sound.ogg",
+  "autor": "Mike Koenig",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Whip-sound.ogg"
+ },
+ {
+  "archivo": "libro_duro.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hardcover books dropped.ogg",
+  "autor": "stilgar",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hardcover_books_dropped.ogg"
+ },
+ {
+  "archivo": "maquina.src",
+  "origen": "wikimedia",
+  "titulo": "File:WWS Typewriter.ogg",
+  "autor": "Work With Sounds / Konrad Gutkowski",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:WWS_Typewriter.ogg"
+ },
+ {
+  "archivo": "monedas_hucha.src",
+  "origen": "wikimedia",
+  "titulo": "File:Coins dropped in metallic moneybox 0.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Coins_dropped_in_metallic_moneybox_0.ogg"
+ },
+ {
+  "archivo": "pagina.src",
+  "origen": "wikimedia",
+  "titulo": "File:Turning a page.ogg",
+  "autor": "planish",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg"
+ },
+ {
+  "archivo": "portazo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Slam closet door (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Slam_closet_door_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "riser_chisporroteo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Zzrrrp sizzle.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Zzrrrp_sizzle.ogg"
+ }
+]

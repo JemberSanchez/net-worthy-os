@@ -1,0 +1,546 @@
+{
+  "ref": "ronald-wayne",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "Apple's third founder walked away for the price of your phone."
+    },
+    {
+      "id": "who",
+      "texto": "Ronald Wayne wrote the contract, drew the logo, and owned a tenth."
+    },
+    {
+      "id": "debt",
+      "texto": "Then Jobs borrowed to fill their first order.",
+      "giro": true
+    },
+    {
+      "id": "law",
+      "texto": "In a partnership, each partner owes it all."
+    },
+    {
+      "id": "only",
+      "texto": "Wayne was the only one with assets to lose."
+    },
+    {
+      "id": "quit",
+      "texto": "That same month, he quit."
+    },
+    {
+      "id": "price",
+      "texto": "His price: eight hundred dollars.",
+      "giro": true
+    },
+    {
+      "id": "papers",
+      "texto": "Years later, he sold those papers for five hundred."
+    },
+    {
+      "id": "auction",
+      "texto": "They fetched one point six million.",
+      "giro": true
+    },
+    {
+      "id": "paper",
+      "texto": "That tenth would be hundreds of billions today, on paper."
+    },
+    {
+      "id": "saw",
+      "texto": "But he couldn't see the iPhone. He could see the debt.",
+      "giro": true
+    },
+    {
+      "id": "cta",
+      "texto": "With your savings on the line, would you have walked away too?"
+    }
+  ],
+  "aspecto": "cine",
+  "tema": "editorial",
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam",
+    "speed": 0.95,
+    "pausa_s": 0.28
+  },
+  "formato": "documental-editorial",
+  "fondos_auto": false,
+  "adn": {
+    "hook_type": "contrast",
+    "story_type": "character_life",
+    "cta_type": "question",
+    "renderer_version": "v2-hyperframes"
+  },
+  "cifras": [
+    {
+      "dato": "Wayne co-founded Apple Apr 1 1976 with a 10% stake; withdrew 12 days later; paid $800 for his stake",
+      "fuente": "https://en.wikipedia.org/wiki/Ronald_Wayne"
+    },
+    {
+      "dato": "Jobs took a $15,000 line of credit for the Byte Shop order; partners personally liable; only Wayne had seizable assets",
+      "fuente": "https://en.wikipedia.org/wiki/Ronald_Wayne"
+    },
+    {
+      "dato": "Wayne sold the founding documents for $500; bought at auction for $1.59 million in 2011",
+      "fuente": "https://www.kqed.org/news/50244/meet-the-guy-who-sold-the-apple-founding-documents-for-1-6-million-and-the-guy-who-sold-them-for-500"
+    },
+    {
+      "dato": "Apple market cap about $5.09T on Oct 22 2026: 10% is about $500B on paper, ignoring dilution; own calculation",
+      "fuente": "https://ycharts.com/companies/AAPL/market_cap"
+    },
+    {
+      "dato": "Partnership: unlimited personal liability unless structured as a limited partnership (SBA business-structure table)",
+      "fuente": "https://www.sba.gov/business-guide/launch-your-business/choose-business-structure"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "Not financial advice · Hypothetical, ignores dilution"
+    ],
+    "ventanas": [
+      [
+        "1",
+        "11"
+      ]
+    ],
+    "final": true,
+    "completo": "Not financial advice. $800 in 1976 is about $4,400 in 2024 dollars. Stake value is hypothetical and ignores dilution.",
+    "placa": true,
+    "tam": 27
+  },
+  "subtitulos": [
+    "1",
+    "11"
+  ],
+  "calientes": [
+    "partner",
+    "assets",
+    "quit",
+    "papers",
+    "billions",
+    "debt"
+  ],
+  "golpes": [
+    "2:borrowed",
+    "6:eight",
+    "8:one",
+    "11:debt"
+  ],
+  "musica": {
+    "pista": {
+      "mood": "reflexivo"
+    }
+  },
+  "sonidos": [
+    {
+      "sfx": "thud",
+      "en": "0:walked",
+      "vol": 0.2
+    },
+    {
+      "sfx": "maquina",
+      "en": "1:wrote",
+      "dur": 1.0
+    },
+    {
+      "sfx": "moneda_suelo",
+      "en": "6:eight"
+    },
+    {
+      "sfx": "pagina",
+      "en": "7:papers"
+    },
+    {
+      "sfx": "nudillo",
+      "en": "8:fetched"
+    },
+    {
+      "sfx": "tack",
+      "en": "9:paper",
+      "vol": 0.1
+    }
+  ],
+  "imagenes": {
+    "maquina": {
+      "commons": "File:Vintage typewriter (Unsplash).jpg",
+      "color": true,
+      "ligero": true
+    },
+    "logo": {
+      "commons": "File:Apple first logo.png",
+      "documento": true,
+      "color": true
+    },
+    "apple1": {
+      "commons": "File:Apple I (1976) - Computer History Museum.jpg",
+      "color": true,
+      "ligero": true
+    },
+    "sba": {
+      "color": true,
+      "documento": true
+    }
+  },
+  "clips": {
+    "telefono": {
+      "pexels": 6281213,
+      "desde": 2,
+      "ligero": true
+    },
+    "circuito": {
+      "pexels": 6754830,
+      "desde": 0,
+      "ligero": true
+    },
+    "firma": {
+      "pexels": 5519941,
+      "desde": 0,
+      "ligero": true
+    },
+    "casa": {
+      "pexels": 31887319,
+      "desde": 0,
+      "ligero": true
+    },
+    "billetes": {
+      "pexels": 32383787,
+      "desde": 0,
+      "ligero": true
+    },
+    "mazo": {
+      "pexels": 6101365,
+      "desde": 3,
+      "ligero": true
+    },
+    "bolsa": {
+      "pexels": 38557069,
+      "desde": 0,
+      "ligero": true
+    },
+    "movil": {
+      "pexels": 5081435,
+      "desde": 2,
+      "ligero": true
+    },
+    "cuentas": {
+      "pexels": 34828872,
+      "desde": 0,
+      "ligero": true
+    },
+    "dron": {
+      "pexels": 6577730,
+      "desde": 2,
+      "ligero": true
+    },
+    "andando": {
+      "pexels": 19688516,
+      "desde": 0,
+      "ligero": true
+    },
+    "contrato": {
+      "pexels": 7841584,
+      "desde": 1,
+      "ligero": true
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "revelacion",
+      "en": "0",
+      "fondo": {
+        "clip": "dron",
+        "opacidad": 0.55
+      },
+      "linea1": {
+        "texto": "Apple's third founder"
+      },
+      "linea2": {
+        "texto": "*walked away.*",
+        "en": "0:walked"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "0:for",
+      "pos": "baj",
+      "rotulos": [
+        {
+          "texto": "the price of *your phone*",
+          "en": "0:for",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ],
+      "clip": "telefono"
+    },
+    {
+      "tipo": "foto",
+      "en": "1",
+      "pos": "ter",
+      "rotulos": [
+        {
+          "texto": "Ronald Wayne",
+          "en": "1",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "img": "maquina"
+    },
+    {
+      "tipo": "foto",
+      "en": "1:drew",
+      "img": "logo",
+      "limpio": true
+    },
+    {
+      "tipo": "foto",
+      "en": "1:owned",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "Owned *10%*",
+          "en": "1:owned",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "img": "apple1"
+    },
+    {
+      "tipo": "foto",
+      "en": "2",
+      "clip": "circuito",
+      "limpio": true
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "fondo": {
+        "clip": "firma",
+        "opacidad": 0.45
+      },
+      "lineas": [
+        {
+          "texto": "Each partner",
+          "en": "3",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "owes *it all*",
+          "en": "3:partner",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "4",
+      "pos": "ter",
+      "rotulos": [
+        {
+          "texto": "Only Wayne had *assets*",
+          "en": "4:only",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ],
+      "clip": "casa"
+    },
+    {
+      "tipo": "foto",
+      "en": "5",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "12 days in",
+          "en": "5:he",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "clip": "andando"
+    },
+    {
+      "tipo": "foto",
+      "en": "6",
+      "pos": "med",
+      "rotulos": [
+        {
+          "texto": "*$800*",
+          "en": "6:eight",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "clip": "billetes"
+    },
+    {
+      "tipo": "foto",
+      "en": "7",
+      "pos": "baj",
+      "rotulos": [
+        {
+          "texto": "Sold those papers: *$500*",
+          "en": "7:sold",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ],
+      "clip": "contrato"
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "pos": "med",
+      "rotulos": [
+        {
+          "texto": "*$1.6 million*",
+          "en": "8:one",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "clip": "mazo"
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "pos": "ter",
+      "rotulos": [
+        {
+          "texto": "Hundreds of billions, on paper",
+          "en": "9:hundreds",
+          "estilo": "mid",
+          "color": "gold"
+        }
+      ],
+      "clip": "bolsa"
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "movil",
+      "limpio": true
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "cuentas",
+        "opacidad": 0.4
+      },
+      "lineas": [
+        {
+          "texto": "He could see",
+          "en": "11",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*the debt.*",
+          "en": "11:debt",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "12",
+      "fondo": {
+        "clip": "dron",
+        "opacidad": 0.45
+      },
+      "lineas": [
+        {
+          "texto": "Would you have",
+          "en": "12:would",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*walked away* too?",
+          "en": "12:walked",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    }
+  ],
+  "publicacion": {
+    "titulo": "He co-founded Apple, then gave up his 10% for $800",
+    "descripcion": "Ronald Wayne wrote Apple's founding contract and drew its first logo in April 1976, holding a 10% stake. Twelve days later he withdrew: Jobs had taken a $15,000 line of credit, partners were personally liable, and only Wayne had assets creditors could seize. He got $800, later $1,500 more to waive claims. He later sold the founding papers for $500; they fetched $1.59 million at Sotheby's in 2011. $800 in 1976 is about $4,400 in 2024 dollars. Ten percent of Apple's roughly $5 trillion market cap would be about $500 billion on paper, a hypothetical that ignores dilution. Wikipedia notes Steve Wozniak has disputed the exact timing of Wayne's exit. Not financial advice.",
+    "tags": [
+      "Ronald Wayne",
+      "Apple history",
+      "Steve Jobs",
+      "startup equity",
+      "investing mistakes",
+      "partnership liability",
+      "personal finance",
+      "business history"
+    ],
+    "hashtags": [
+      "#Apple",
+      "#Investing",
+      "#Shorts"
+    ],
+    "comentario": "Knowing only what he knew in 1976, would you have walked away too?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:dron@1",
+        "kicker": "Apple's third founder",
+        "titulo": "*$800*",
+        "texto": "He walked away for the price of your phone. His name is Ronald Wayne."
+      },
+      {
+        "fondo": "img:logo",
+        "kicker": "April 1976",
+        "titulo": "He drew the *logo*",
+        "texto": "He also wrote the contract and held 10% of the company."
+      },
+      {
+        "fondo": "clip:firma@1",
+        "kicker": "The catch",
+        "titulo": "Partners owe *it all*",
+        "texto": "Jobs took a $15,000 line of credit. Only Wayne had assets creditors could seize."
+      },
+      {
+        "fondo": "clip:andando@1",
+        "kicker": "Twelve days later",
+        "titulo": "He *quit*",
+        "texto": "He took his name off the company and later got $800 for his stake."
+      },
+      {
+        "fondo": "clip:mazo@1",
+        "kicker": "The papers",
+        "titulo": "*$500* to $1.59M",
+        "texto": "He later sold the founding documents for $500. In 2011 they sold at auction for $1.59 million."
+      },
+      {
+        "fondo": "clip:cuentas@1",
+        "kicker": "Your turn",
+        "titulo": "Would you have *walked away*?",
+        "texto": "That 10% is hundreds of billions on paper, ignoring dilution. He could only see the debt."
+      }
+    ],
+    "caption": "Ronald Wayne co-founded Apple, then gave up his 10% for $800. It looks like the worst deal ever. He could see the debt, not the iPhone. Would you have walked away too?",
+    "historia": {
+      "hasta": "1:tenth$",
+      "cierre": "Full story in Reels"
+    }
+  },
+  "pruebas": [
+    {
+      "img": "sba",
+      "texto": "Unlimited personal liability",
+      "en": "3:owes",
+      "marca": "3:it",
+      "hasta": "4"
+    }
+  ]
+}
