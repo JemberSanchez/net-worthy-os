@@ -62,11 +62,25 @@ class RevisionesTest(unittest.TestCase):
         self.assertEqual((f[0]["t"], f[0]["t_fin"]), (2.0, 29.9))
         self.assertEqual(f[0]["parche"]["op"], "golpe")
 
-    def test_gancho_sin_cifra_ni_texto(self):
+    # Requirement changed on 5-nov (docs/mejora/guion/linea_base.md): a number in sentence 0 is optional.
+    # All 5 measured videos have one, so it cannot be tested; the only blind test (#9) went against it.
+    def test_gancho_sin_cifra_no_falla_y_sin_texto_si(self):
+        self.assertEqual(C.revisar_gancho(WORDS, [{"t": 0.0, "lineas": ["RICH"]}], U), [])
         f = C.revisar_gancho(WORDS, [{"t": 0.0, "lineas": []}, {"t": 0.5, "lineas": []}], U)
-        crits = sorted(x["detalle"][:20] for x in f)
-        self.assertEqual(len(f), 2)                                  # sin texto antes de 0,8 s + sin cifra
-        self.assertTrue(any("cifra" in x["detalle"] for x in f), crits)
+        self.assertEqual([(x["criterio"], x["severidad"]) for x in f], [("G1", "alta")])
+
+    def test_gancho_con_cifra_sola_falla_y_con_contraste_no(self):
+        sola = [w("Forty", 0.1, 0.4), w("percent", 0.4, 0.8), w("of", 0.8, 0.9), w("homes.", 0.9, 1.3)]
+        f = C.revisar_gancho(sola, [{"t": 0.0, "lineas": ["40%"]}], U)
+        self.assertEqual([(x["criterio"], x["severidad"]) for x in f], [("G1", "media")])
+        self.assertIn("cifra sola", f[0]["detalle"])
+        con = sola[:3] + [w("homes,", 0.9, 1.3), w("but", 1.3, 1.5), w("none", 1.5, 1.8), w("sold.", 1.8, 2.2)]
+        self.assertEqual(C.revisar_gancho(con, [{"t": 0.0, "lineas": ["40%"]}], U), [])
+
+    def test_rubrica_y_juicio_no_exigen_cifra_ni_dicotomia(self):
+        self.assertNotIn("cifra_en_frase", RUB["criterios"]["G1"])
+        self.assertNotIn("dicotom", C.JUICIO.lower())
+        self.assertNotIn("con su cifra", C.JUICIO)
 
     def test_mezcla_culpa_al_efecto_que_suena_y_no_a_la_musica(self):
         rm = {"pct_tapada": 50.0, "n_ventanas": 4, "mediana_db": 8, "ventanas": [
@@ -257,6 +271,38 @@ class VozDeLaMezclaTest(unittest.TestCase):
             self.assertEqual(C.voz_de_la_mezcla(proy, {}).name, "voice.mp3")
             self.assertEqual(C.voz_de_la_mezcla(proy, {"voz": {"ride": []}}).name, "voice.mp3")
             self.assertEqual(C.voz_de_la_mezcla(proy, {"voz": {"ride": [{"en": "0:a", "db": 1}]}}).name, "voice-mix.wav")
+
+
+class HojaContactosTest(unittest.TestCase):
+    def _fotos(self, d, n):
+        from PIL import Image
+        for i in range(n):
+            Image.new("RGB", (540, 960), (250, 250, 250)).save(Path(d) / f"f_{i:06.2f}.jpg")
+
+    def test_cabe_en_el_limite_y_cuesta_menos_que_las_sueltas(self):
+        from PIL import Image
+        for n in (1, 23, 40):
+            with tempfile.TemporaryDirectory() as d:
+                self._fotos(d, n)
+                with Image.open(C.hoja_contactos(Path(d))) as h:
+                    self.assertLessEqual(max(h.size), 1568)
+                    self.assertLess(h.width * h.height, 1568 * 1568 + 1)
+
+    def test_celda_rotulada_se_ve_sobre_fondo_claro(self):
+        from PIL import Image
+        with tempfile.TemporaryDirectory() as d:
+            self._fotos(d, 4)
+            with Image.open(C.hoja_contactos(Path(d))) as h:
+                esquina = h.convert("L").crop((0, 0, 60, 24)).getextrema()
+            self.assertLess(esquina[0], 100)  # the label's dark outline, on a near-white frame
+
+    def test_sin_fotogramas_no_hay_hoja(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIsNone(C.hoja_contactos(Path(d)))
+            self.assertFalse((Path(d) / "hoja.jpg").exists())
+
+    def test_juicio_pide_mirar_la_hoja(self):
+        self.assertIn("hoja.jpg", C.JUICIO)
 
 
 if __name__ == "__main__":

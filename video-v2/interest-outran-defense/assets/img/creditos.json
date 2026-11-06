@@ -1,0 +1,72 @@
+[
+ {
+  "archivo": "pentagono.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Aerial Closeup of the Pentagon, May 11, 2021.jpg",
+  "autor": "Air Force Staff Sgt. Brittany A. Chase, DOD",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Aerial_Closeup_of_the_Pentagon,_May_11,_2021.jpg"
+ },
+ {
+  "archivo": "y1980.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:USS Eisenhower (CVN-69) forward flight deck 1980.JPEG",
+  "autor": "PH1 Dave McLean, USN",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:USS_Eisenhower_(CVN-69)_forward_flight_deck_1980.JPEG"
+ },
+ {
+  "archivo": "y2020.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:USNS Comfort New York City 2020.jpg",
+  "autor": "Navy Medicine from Washington, DC, USA",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:USNS_Comfort_New_York_City_2020.jpg"
+ },
+ {
+  "archivo": "eccles.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Eccles Building (26088200676).jpg",
+  "autor": "Federalreserve",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Eccles_Building_(26088200676).jpg"
+ },
+ {
+  "archivo": "fomc.jpg",
+  "origen": "gov",
+  "titulo": "FOMC statement, July 26, 2023",
+  "autor": "Federal Reserve Board",
+  "licencia": "Public domain (U.S. government work)",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20230726a.htm"
+ },
+ {
+  "archivo": "ofs.jpg",
+  "origen": "gov",
+  "titulo": "Treasury Bulletin, September 2026, table OFS-2",
+  "autor": "U.S. Department of the Treasury",
+  "licencia": "Public domain (U.S. government work)",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://fiscal.treasury.gov/reports-statements/treasury-bulletin/"
+ },
+ {
+  "archivo": "mspd.jpg",
+  "origen": "gov",
+  "titulo": "Monthly Statement of the Public Debt, Sep 30 2026",
+  "autor": "U.S. Treasury, Bureau of the Fiscal Service",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://fiscaldata.treasury.gov/static-data/published-reports/mspd-entire/MonthlyStatementPublicDebt_Entire_202609.pdf"
+ }
+]

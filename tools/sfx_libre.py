@@ -1,6 +1,7 @@
 """Efectos de sonido REALES y sincronizados (grabaciones de Commons: PD / CC0 / CC BY).
 
     python tools/sfx_libre.py muestras <carpeta>          # cada efecto del catálogo, tratado, para escuchar
+    python tools/sfx_libre.py verificar                   # licencia de cada efecto contra la API de Commons
 
 Por qué: los whoosh/impact del motor son sintéticos y suenan igual en todos los vídeos. Lo que
 separa un Short "de canal grande" es el sonido DIEGÉTICO: si se ve una máquina de escribir, se oye
@@ -22,7 +23,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import musica_libre as ml  # noqa: E402
+import musica_libre as ml
 
 RAIZ = Path(__file__).resolve().parents[1]
 CATALOGO_PATH = RAIZ / "video-v2" / "motor" / "sfx.json"
@@ -62,16 +63,24 @@ def _pcm(crudo: Path, desde: float, dur: float, sr: int = 48000):
     return np.frombuffer(raw, dtype=np.float32)
 
 
-def golpe(crudo: Path, destino: Path, desde: float, dur: float, inverso: bool = False, extra: str = "") -> dict:
+def golpe(crudo: Path, destino: Path, desde: float, dur: float, inverso: bool = False, extra: str = "",
+          crece: bool = False, exacto: bool = False) -> dict:
     """Un impacto con el transitorio EXACTO en t=0 (es lo que se ancla a la palabra), pico
-    normalizado con limitador (sin clip al remuestrear) y cola fundida."""
+    normalizado con limitador (sin clip al remuestrear) y cola fundida. `inverso` y `crece` son
+    subidas: terminan justo al final del archivo, sin buscar transitorio."""
     import numpy as np
     x = _pcm(crudo, desde, dur)
-    t0 = 0.0 if inverso else arranque(x, 48000)   # el golpe perceptible, no el ruido previo
+    t0 = 0.0 if (inverso or crece) else arranque(x, 48000)   # el golpe perceptible, no el ruido previo
     pico = 20 * np.log10(float(np.abs(x).max()) + 1e-9)
     lim = 10 ** (PICO_GOLPE / 20)
     # inverso: a real strike played backwards, it swells up to the hit point at its very end
-    cola = f"areverse,afade=t=in:d={dur * 0.6:.2f}" if inverso else f"afade=t=out:st={max(0.05, dur - t0 - 0.3):.2f}:d=0.3"
+    # crece: a recorded crescendo played forward, only faded in
+    if inverso or crece:
+        # exacto: without atrim, areverse takes the rest of the file and -t keeps its tail reversed
+        corte = f"atrim=end={dur:.3f}," if exacto else ""
+        cola = f"{corte}{'areverse,' if inverso else ''}afade=t=in:d={dur * 0.6:.2f}"
+    else:
+        cola = f"afade=t=out:st={max(0.05, dur - t0 - 0.3):.2f}:d=0.3"
     af = f"aresample=48000,volume={PICO_GOLPE - pico:.2f}dB,alimiter=limit={lim:.3f}:attack=1:release=40:level=0,{cola}"
     if extra:       # curated catalogue only, never external input
         af += f",{extra}"
@@ -101,7 +110,7 @@ def asegurar(usos: list[dict], carpeta: Path) -> list[dict]:
         c = cat[u["sfx"]]
         if u["tipo"] == "golpe":
             golpe(crudos[u["sfx"]], dst, float(c.get("desde", 0)), float(c.get("dur", 1.5)),
-                  bool(c.get("inverso")), c.get("af", ""))
+                  bool(c.get("inverso")), c.get("af", ""), bool(c.get("crece")), bool(c.get("exacto")))
         else:
             ambiente(crudos[u["sfx"]], dst, float(c.get("desde", 0)), float(u["dur"]))
     return usos
@@ -118,6 +127,10 @@ def main() -> None:
         usos = [{"sfx": k, "tipo": v["tipo"], "dur": 4.0} for k, v in catalogo().items()]
         for u in asegurar(usos, dst):
             print(f"✓ {u['sfx']:10} {u['tipo']:9} {dst / u['archivo']}")
+    elif a == ["verificar"]:
+        fallos = ml.verificar(catalogo())
+        print(chr(10).join(fallos) or f"✓ {len(catalogo())} efectos con licencia verificada")
+        raise SystemExit(1 if fallos else 0)
     else:
         raise SystemExit(__doc__)
 

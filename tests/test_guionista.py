@@ -27,14 +27,6 @@ class TestCifra(unittest.TestCase):
         self.assertTrue(G.tiene_cifra("Thirty-nine months in a row."))
         self.assertFalse(G.tiene_cifra("More homes are for sale than in years."))
 
-    def test_puerta_mira_solo_la_primera_frase(self):
-        self.assertFalse(
-            puerta(["No number here.", "But eight million later."], "G-CIFRA")["ok"]
-        )
-        self.assertTrue(
-            puerta(["Eight million dollars.", "Then nothing."], "G-CIFRA")["ok"]
-        )
-
 
 class TestLargo(unittest.TestCase):
     def test_rango_85_110(self):

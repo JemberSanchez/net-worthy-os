@@ -3,7 +3,8 @@ description: Producción diaria de un Short v2 de punta a punta (tema → guion 
 ---
 
 Produce el Short de hoy con el motor v2. Responde en español; el contenido del canal, en inglés.
-Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y anclas).
+Lee `video-v2/motor/README.md` solo si no lo tienes (catálogo de escenas y anclas). `CLAUDE.md` ya está
+cargado: no lo releas. Storyboards: `Grep` o un extracto, no `Read` entero (44 KB).
 
 ## 0. Entorno y estado (sesión nueva en la nube)
 
@@ -27,27 +28,45 @@ Lee antes `CLAUDE.md` y `video-v2/motor/README.md` (catálogo de escenas y ancla
 
 ## 2. Guion (inglés, 85-110 palabras ≈ 27-35 s con Kokoro — medido 26-sep: 85 palabras = 27,5 s)
 
-5. Estructura: gancho de contraste (≤2 frases, la primera palabra ya dice algo) → qué pasó / datos
-   → por qué funciona → **la parte honesta** (riesgo, sesgo de superviviente) → "y a ti qué" →
-   CTA con UNA sola dicotomía para comentarios. Frases cortas: cada frase es un ancla.
-   Técnicas de retención de Shorts (por qué: la curva del canal cae entre 3 s y 20 s):
-   - **Gancho en 1 s con la cifra de payoff**: la primera frase ya dice el resultado raro
-     ("died with $7.2 million") — no se guarda el dato para el final. Nada de "hoy vamos a…".
-   - **Open loop**: la primera o segunda frase abre una pregunta que se cierra tarde ("how?",
-     "nobody knew"). El espectador se queda por la respuesta.
+5. **Formato según el calendario** (`docs/VIRALIDAD.md` §7): alterna noticia y personaje atemporal;
+   mira el `formato` del último publicado y no lo repitas. Cada guion usa UNA estructura de esta lista,
+   distinta de la del vídeo anterior (no existe una plantilla fija):
+   - **contradicción**: dos hechos que no deberían ir juntos → la causa → qué significa para ti;
+   - **misterio**: resultado raro → qué nadie entendía → revelación tardía;
+   - **error común**: lo que casi todos leen mal → la lectura correcta → qué cambia para ti;
+   - **cuenta atrás**: la secuencia en orden, con la decisión clave al final;
+   - **vida de personaje**: quién era → la decisión → el precio o el premio → qué te llevas tú.
+     Frases cortas: cada frase es un ancla. La parte honesta (riesgo, sesgo de superviviente) sigue
+     siendo obligatoria, sin fórmula de anuncio. Técnicas de retención (la curva cae entre 3 s y 20 s;
+     en `aws-profit`, de 0,90 a 0,33 entre los segundos 5 y 11, donde va el repaso de la noticia):
+   - **Gancho que se entiende sin contexto** (puerta G-GANCHO): un sujeto concreto y una tensión. La
+     cifra es opcional. PROVISIONAL (n=5, ver `docs/mejora/guion/linea_base.md`): la cifra SOLA retiene
+     menos que la cifra con contraste; sin cifra no hay ningún vídeo con ≥30 vistas para comparar.
+     Nada de empezar por el número, siglas ni nombres sin explicar. Nada de "hoy vamos a…".
+   - **Qué gana o pierde el espectador antes de la palabra 19** (≈6 s, puerta G-TU): di "you/your".
+   - **Máximo 3 cifras dichas** (G-CIFRAS): el resto va en pantalla o se quita. Nada de repasar la
+     noticia con una ristra de datos.
+   - **Sin frases comodín** (G-COMODIN, lista cerrada en `guionista.py`): nunca "here's the part nobody
+     tells you"; estaba en 7 de 10 guiones.
+   - **Cierre distinto** (G-CIERRE): dicotomía, pregunta, imperativo, dato o afirmación; el tipo no puede
+     repetir ninguno de los últimos 3 vídeos publicados. La dicotomía ya no es obligatoria; 8 de 10
+     la usaban. Sin dicotomía, el comentario fijado va en `publicacion.comentario`.
+   - **Open loop**: la primera o segunda frase abre una pregunta que se cierra tarde. El espectador
+     se queda por la respuesta.
    - **Re-gancho cada ~8-10 s**: un giro PROPIO de esta historia o una cifra nueva. Nunca una
      fórmula de giro reutilizable: la puerta `repeticion` falla si una frase de 4 palabras se repite
      en los últimos 10 vídeos. El validador avisa si pasan >12 s sin golpe.
-   - **Final en bucle**: la última frase del CTA enlaza con la primera, para que la repetición
+   - **Final en bucle**: la última frase enlaza con la primera, para que la repetición
      suene continua (una vista repetida sube el % visto por encima de 100 %).
    - Ritmo de voz 150-175 palabras/min; nada de frases de relleno ("so basically", "you see").
 6. **Cada cifra con fuente** (URL en `cifras`). Si no puedes verificar un número, no lo uses. Nada
    de consejo financiero personalizado; las curvas son ILUSTRATIVAS y se dice.
    6b. **Alternativas, no un guion único (bloque 1.1, PROVISIONAL).** Escribe `video-v2/<ref>/guiones.json`
-   con 2-3 estructuras completas (misterio/revelación, contraste, cuenta atrás, error común, "lo que
-   nadie dice") y 3-5 ganchos, y corre `python video-v2/motor/guionista.py video-v2/<ref>`: aplica
-   las puertas medibles (cifra en la 1.ª frase, 85-110 palabras, relleno, giro cada ≤10 s, final que
-   retoma la 1.ª frase) y pide tu juicio 1-5 (una idea, pregunta abierta, giro) de cada candidato.
+   con 2-3 estructuras completas de la lista del paso 5 y 3-5 ganchos, y corre
+   `python video-v2/motor/guionista.py video-v2/<ref>`: aplica las puertas medibles (G-GANCHO, G-TU,
+   G-CIFRAS, G-COMODIN, G-CIERRE, 85-110 palabras, relleno, giro cada ≤10 s, final que retoma la
+   1.ª frase) y pide tu juicio 1-5 (una idea, pregunta abierta, giro) de cada candidato.
+   `producir.py` repite esas puertas sobre el guion final (`guion`; exento lo ya publicado o renderizado).
    Si una puerta falla, reescribe la alternativa (no la juzgues para salvarla). Escribe el ganador en
    el `guion` del storyboard y deja `guiones.md` con las descartadas: enséñaselas al usuario.
    Referencia: `video-v2/housing-turn/` (plantilla congelada vs. elegido, par ciego con `--ciego`).
@@ -67,10 +86,18 @@ pexels "<q>"` (sale en COLOR con el grado de marca); histórico: `buscar commons
      (o en un `fondo`). Antes de fijar `desde`, mira UNA hoja de miniaturas
      (`ffmpeg -i assets/clips/<n>.src -vf "fps=1/2,scale=192:108,tile=8x2" -frames:v 1 hoja.jpg`):
      objetos/manos/lugares sí; caras reconocibles, logos o noticias con personas reales, no;
-   - **Música real:** `"musica": {"pista": {"commons": "File:Kevin MacLeod - X.ogg", "desde": s}}`
-     (catálogo: `python tools/musica_libre.py buscar "Kevin MacLeod"`); varía la pista entre vídeos
-     (la política de "contenido inauténtico" castiga plantillas idénticas). Certificados y
+   - **Música real:** `"musica": {"pista": {"mood": "tension"}}` (tension, oscuro, documental, reflexivo,
+     urgente, neutro): `construir.py` elige de `motor/musica.json` una pista no usada en los últimos
+     vídeos (la política de "contenido inauténtico" castiga plantillas idénticas). Sin `mood` puede
+     salir cualquiera. Para fijar una: `{"commons": "File:X.ogg", "desde": s}` (manda sobre `mood` y
+     cuenta para la puerta; catálogo: `python tools/musica_libre.py buscar "<q>"`). Certificados y
      periódicos en `imagenes` llevan `"documento": true` (sin parallax 2.5D).
+   - **Edición sin repetir (5-nov, `video-v2/motor/README.md`):** en un vídeo nuevo `construir.py` elige
+     transiciones, cámara, punch, entrada de texto, efectos y pista evitando los últimos 3 vídeos
+     (`video-v2/usado.json`, puerta P1 `repeticion`). **`mov` se ignora en vídeos nuevos**: no lo
+     escribas; para fijar el movimiento de una escena usa `"cam"` (y `"transicion"`, o `"corte"`, para
+     su transición). Lo fijado a mano cuenta para la puerta. La elección queda congelada al construir;
+     si la puerta salta o quieres otra, `python video-v2/motor/construir.py video-v2/<ref> --reelegir`.
    - **Sonido real sincronizado (27-sep):** 4-7 efectos del catálogo `video-v2/motor/sfx.json`
      (grabaciones reales, no whoosh genéricos): `"sfx"` en el clip que SE VE (máquina de escribir
      en un clip de máquina) y `"sonidos"` para golpes en palabras (caja en la cifra del gancho,
@@ -82,7 +109,7 @@ assets/t/<img>.jpg "<frase>"` para comprobarla); `marca` = la palabra de la voz 
      subraya. 1-1,5 s basta. Es lo que convierte "te lo cuento" en "aquí está".
    - **Serie:** `"serie": {"nombre": "Quiet Millionaires", "ep": N}` si el tema es de la serie
      (gente corriente que se hizo rica en silencio); N = siguiente episodio. El comentario para
-     fijar sale solo de la dicotomía del CTA (`publicacion.comentario` lo sustituye).
+     fijar sale solo de la dicotomía del CTA si la hay; si no, `publicacion.comentario`.
    - **Nada genérico ni de clip-art (26-sep):** cada visual es metraje real, un documento real
      (certificados, fotos de archivo) o un dato real con ejes. En `curva`, pon `"desde_anio"` SOLO
      si el año de inicio está verificado en las fuentes (Grace: 1935); si no, el eje va en "Yr N".
@@ -106,7 +133,7 @@ assets/t/<img>.jpg "<frase>"` para comprobarla); `marca` = la palabra de la voz 
 ## 3b. Páginas vivas (carrusel + historia)
 
 Añade al storyboard un bloque `social` (formato en `video-v2/motor/social.py`): 5-7 diapositivas
-con `fondo` real (`img:<clave>` o `clip:<clave>@<s>`), portada con la cifra del gancho, una idea por
+con `fondo` real (`img:<clave>` o `clip:<clave>@<s>`), portada con el gancho, una idea por
 diapositiva (texto ≤170 caracteres, dato verificado en `cifras`), última con la pregunta del CTA;
 `caption` sin hashtags ni fuentes (se añaden solos); `historia.hasta` = final de la 2.ª frase.
 `producir.py` lo genera en `social/` como una puerta más. Publicar en Facebook/Instagram:
@@ -114,6 +141,9 @@ diapositiva (texto ≤170 caracteres, dato verificado en `cifras`), última con 
 explícita del usuario en el chat (regla del proyecto).
 
 ## 4. Producir y medir
+
+**`producir.py` y `critico.py` van SIEMPRE en segundo plano** (`run_in_background`): el aviso llega solo.
+Nada de `tail`, `sleep` ni `Monitor`: cada consulta relee todo el contexto.
 
 9. `python video-v2/motor/producir.py video-v2/<ref>` — voz, build, lint, render, loudness, ritmo.
    Si una puerta falla, arregla la CAUSA (máx. 2 rondas). Nunca subas un umbral para pasar.
@@ -123,8 +153,8 @@ explícita del usuario en el chat (regla del proyecto).
 10. `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/<ref>-final.mp4 --solo-revisar`
     → medidores sobre el MP4 (legibilidad por OCR, ritmo, voz, sincronía, mezcla, datos, parecido;
     rúbrica PROVISIONAL en `docs/RUBRICA.md`). Deja `renders/critica/r0/juicio.md` + fotogramas.
-11. **Juicio:** mira UNA hoja de contactos de `renders/critica/r0/f_*.jpg` (no las imágenes sueltas)
-    y escribe `renders/critica/r0/juicio.json` con J1-J6 (lo que los medidores no ven: gancho,
+11. **Juicio:** mira `renders/critica/r0/hoja.jpg` (no las imágenes sueltas; abre un `f_*.jpg` solo si
+    dudas de ese segundo o para leer letra pequeña) y escribe `renders/critica/r0/juicio.json` con J1-J6 (lo que los medidores no ven: gancho,
     imagen = palabra, exactitud contra la fuente, cierre). Parches solo del catálogo; sin perilla
     segura -> `"parche": null` (se reporta, no se toca a ciegas).
 12. `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/critica/r0.mp4 --rondas 2`
@@ -150,4 +180,8 @@ explícita del usuario en el chat (regla del proyecto).
     borrador (sin token), antes `python -m omega.cli publish <ref>`.
 17. Facebook/Instagram: **solo con confirmación explícita para Meta** (regla del proyecto):
     `publish-fb <ref> --publicar` / `publish-ig <ref> --publicar`.
-18. `python -m omega.cli record-dna video-v2/<ref>/adn.json` y `estado-subir`.
+18. `python -m omega.cli record-dna video-v2/<ref>/adn.json`.
+19. `python -m omega.cli record-cost` (lee `data/production_cost.json`; o pásale otra ruta):
+    `{"production_ref": "<ref>", "research_hours": null, "script_hours": null, "edit_hours": null, "ai_cost_usd": null, "time_to_publish_h": null}`.
+    Solo valores medidos o dichos por el usuario: lo que no se sepa va en `null`, no se estima.
+20. `python -m omega.cli estado-subir`.

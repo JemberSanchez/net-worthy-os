@@ -2,6 +2,7 @@
 
     python tools/musica_libre.py buscar "<consulta>" [--n 20]
     python tools/musica_libre.py muestras <carpeta> "File:A.ogg" "File:B.ogg" ...   # fragmentos para escuchar
+    python tools/musica_libre.py verificar          # licencia de motor/musica.json contra la API de Commons
 
 Por qué: la música generada por código (video-v2/motor/musica.py) era el eslabón más débil. En
 Commons está buena parte del catálogo de Kevin MacLeod (incompetech), la música con licencia
@@ -21,7 +22,7 @@ import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import imagenes_libres as il  # noqa: E402
+import imagenes_libres as il
 
 NIVEL_CAMA = -20.0      # LUFS de la cama ANTES del ducking: presente sin pelear con la voz (-14 final)
 
@@ -78,6 +79,24 @@ def bajar(titulos: dict[str, str], carpeta: Path) -> dict[str, Path]:
     return out
 
 
+def verificar(cat: dict) -> list[str]:
+    """Compara un catálogo con la API de Commons: licencia real en la lista cerrada e igual a la anotada."""
+    titulos = sorted({v["commons"] for v in cat.values()})
+    info = {}
+    for i in range(0, len(titulos), 40):
+        info |= {r["titulo"]: r for r in _info({"titles": "|".join(titulos[i : i + 40])})}
+    fallos = []
+    for k, v in cat.items():
+        r = info.get(v["commons"])
+        if not r:
+            fallos.append(f"{k}: no existe en Commons ({v['commons']})")
+        elif not r["clase"]:
+            fallos.append(f"{k}: licencia NO admitida ({r['licencia']})")
+        elif r["licencia"] != v.get("licencia"):
+            fallos.append(f"{k}: el catálogo dice {v.get('licencia')!r}, Commons {r['licencia']!r}")
+    return fallos
+
+
 def _duracion(p: Path) -> float:
     r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)],
                        capture_output=True, text=True, check=True)
@@ -95,7 +114,7 @@ def cama(crudo: Path, destino: Path, dur: float, desde: float = 0.0, fundido: fl
     base = (f"afade=t=in:st=0:d={entrada:.2f},afade=t=out:st={max(0.0, dur - fundido):.2f}:d={fundido:.2f},"
             f"loudnorm=I={nivel}:TP=-3:LRA=11")
     medir = subprocess.run(["ffmpeg", "-hide_banner", *bucle, "-ss", f"{desde:.2f}", "-i", str(crudo), "-t", f"{dur:.3f}",
-                            "-af", base + ":print_format=json", "-f", "null", "-"], capture_output=True, text=True)
+                            "-af", base + ":print_format=json", "-f", "null", "-"], capture_output=True, text=True, check=False)
     import re
     m = re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", medir.stderr)
     af = base
@@ -133,6 +152,12 @@ def main() -> None:
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{min(20.0, total * 0.25):.1f}", "-i", str(p), "-t", "25",
                             "-af", "afade=t=in:d=0.5,afade=t=out:st=23.5:d=1.5", "-b:a", "160k", str(mp3)], check=True)
             print(f"✓ {k}: {mp3.name}  ({total:.0f}s)  {a[2 + int(k[1:]) - 1]}")
+    elif a == ["verificar"]:
+        ruta = Path(__file__).resolve().parents[1] / "video-v2" / "motor" / "musica.json"
+        cat = {k: v for k, v in json.loads(ruta.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+        fallos = verificar(cat)
+        print(chr(10).join(fallos) or f"✓ {len(cat)} pistas con licencia verificada")
+        raise SystemExit(1 if fallos else 0)
     else:
         raise SystemExit(__doc__)
 

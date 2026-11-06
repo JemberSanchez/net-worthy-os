@@ -1,218 +1,130 @@
 # Proyecto AI — Content Intelligence OS + canal "Net Worthy"
 
 ## Qué es
+
 Un sistema que decide QUÉ contenido crear (por datos: demanda + dinero) y acumula qué funciona.
 NO es un generador de video. El video es el primer producto; el activo es el conocimiento calibrado.
 Nicho: **finanzas/inversiones/crypto, faceless, audiencia EN**. Canal: **Net Worthy** (@networthytv).
 
-## El reparto mental (lo más importante)
 ```
 SISTEMA decide QUÉ (tema, por demanda+RPM)   →  TU CLAUDE piensa CÓMO (ángulo estructurado)
                                              →  SISTEMA acumula QUÉ FUNCIONA (record-outcome)
 ```
-Regla dura (memoria `raw-term-is-que-not-video`): un término que saca el detector ("build wealth")
-es una SEÑAL DE DEMANDA, no un video. SIEMPRE convertirlo en un catch-up explainer estructurado
-(hook → qué cambió → datos → alcista → riesgo → "y a mí qué" → cierre) + aviso YMYL.
+
+Regla dura (`raw-term-is-que-not-video`): un término del detector ("build wealth") es una SEÑAL DE
+DEMANDA, no un video. SIEMPRE convertirlo en un explainer estructurado (hook → qué cambió → datos →
+alcista → riesgo → "y a mí qué" → cierre) + aviso YMYL.
+
+**Estado actual: `docs/ESTADO.md`, léelo antes de tocar nada.** Historial y versión anterior de
+este archivo (motor v1, base v1, confounder del S3, carrera del Lote): `docs/archivo/`.
 
 ## Comandos (python -m omega.cli <cmd>)
-Diario:   `ingest` (RSS) · `youtube-scan` (demanda YouTube) · `signals` · `decide` (tema por $)
-Idea:     `think "<tema>"` → pegar pack en Claude → rellenar data/think_result.json → `record-think`
+
+Diario: `ingest` (RSS) · `youtube-scan` (demanda YouTube) · `signals` · `decide` (tema por $). Atajo: **/daily**.
+Idea: `think "<tema>"` → pegar pack en Claude → rellenar data/think_result.json → `record-think`
 Explorar: `trends` · `youtube <q>` · `related <tema>` · `patterns` · `combine <s>`
-Publicar: `youtube-auth` (login una vez; también da permiso de Analytics) · `publish <ref>` (YouTube) · `meta-auth` (setup una vez) · `publish-fb <ref> [--publicar]` ·
-  `publish-ig <ref> [--publicar]` — los tres privados/borrador por defecto; `--publicar` los hace
-  públicos. Meta (FB/IG) SIEMPRE requiere confirmación explícita en el chat antes de correr
-  `--publicar` — no se automatiza publicar en vivo sin que el usuario lo vea primero.
-Páginas: `python video-v2/motor/social.py video-v2/<ref>` (carrusel 4:5 + historia 9:16 + textos; lo hace producir.py) · `publish-social <ref> [--publicar]` (IG/FB; sin --publicar solo el plan; --publicar SOLO con confirmación en el chat)
-Aprobar: `programar <ref>` (Short ya subido como privado -> publicación a las 12:00 de Nueva York; `--ahora`)
-Medir: `analytics-sync [<ref>]` (YouTube Analytics -> retención por punto, tráfico, búsquedas + rescore; automático en /producir) · `meta-sync [<ref>...]` (reels de FB/IG -> vistas, tiempo medio, likes en `production_social` + rescore; automático en /producir) · `vincular <ref> <video_id>` (videos antiguos)
+Publicar: `youtube-auth` (una vez; también Analytics; repetir una vez para comentar, scope `youtube.force-ssl`) · `publish <ref>` · `meta-auth` (una vez) · `publish-fb <ref> [--publicar]` ·
+`publish-ig <ref> [--publicar]`: privados/borrador por defecto. **Meta (FB/IG) SIEMPRE requiere
+confirmación explícita en el chat antes de `--publicar`**: no se automatiza publicar en vivo.
+Páginas: `python video-v2/motor/social.py video-v2/<ref>` (carrusel + historia + textos; lo hace producir.py) · `publish-social <ref> [--publicar]` (sin --publicar solo el plan; --publicar SOLO con confirmación en el chat)
+Aprobar: `programar <ref>` (Short privado → 12:00 de Nueva York; `--ahora`) · `comentar <ref>` (fijarlo es a mano en Studio)
+Medir: `analytics-sync [<ref>]` (retención, tráfico, búsquedas + rescore) · `meta-sync [<ref>...]` (reels FB/IG + rescore), ambos automáticos en /producir · `vincular <ref> <video_id>` · `rescore`
 Estado/nube: `estado-bajar` · `estado-subir` · `produccion-guardar video-v2/<ref>` (repo PRIVADO `ESTADO_REPO`)
 Tras publicar: `record-dna` · `record-cost` · `record-analytics` · `record-outcome <ref> <0..1>` · `dna` · `learnings`
-Atajo: **/daily** corre ingest+youtube-scan+signals+decide.
 
 ## Tests
-`python -m unittest discover -s tests -q`  (deben pasar TODOS antes de commitear lógica).
-**Motor de video, ANTES de abrir el navegador** (los dos tardan <1s y cazan lo que la consola calla):
-- `node tools/check_motor.mjs` — SINTAXIS. Un error aquí no da error en consola: el navegador
-  aborta el script entero y la página "carga" sin hacer nada.
-- `node tools/lint_motor.mjs` — CORRECCIÓN (ESLint, solo reglas de bug). `no-redeclare` es el que
-  habría cazado en 100 ms los dos fallos que costaron horas el 26-jul: `pintarChecklist` (ya
-  existía para el panel → la escena salía en blanco) y `reloj` (ya declarado → script abortado).
-Luego `tests-motor.html` en el navegador.
+
+`python -m unittest discover -s tests -q` (deben pasar TODOS antes de commitear lógica).
+Antes de abrir el navegador o renderizar (<1 s, cazan lo que la consola calla):
+
+- `node tools/check_motor.mjs`: SINTAXIS. Un error no da error en consola: el navegador aborta el script.
+- `node tools/lint_motor.mjs`: CORRECCIÓN (ESLint, reglas de bug; `no-redeclare` caza lo que costó horas el 26-jul).
+
+## Motor v2 (HyperFrames): `video-v2/motor/README.md`
+
+Un Short = `storyboard.json` (guion + escenas ancladas a `frase:palabra`, nunca segundos) →
+`motor/voz.py` → `motor/construir.py` (valida, imágenes, música, HTML) → lint → render → QA.
+Nadie escribe HTML. Referencia: `video-v2/read-janitor/storyboard.json`. Registrar el ADN con
+`"renderer_version": "v2-hyperframes"`. Catálogo de escenas, b-roll, sonido, serie y pruebas: el README.
+
+- Medios con licencia (lista cerrada PD/CC0/CC BY + Pexels License; fuera SA/NC/ND):
+  `tools/imagenes_libres.py` (⚠ Commons limita por IP: `lote`, nunca bucles de `bajar`) ·
+  `tools/broll.py` (Pexels: `PEXELS_API_KEY` + dominio `videos.pexels.com`) · `tools/musica_libre.py` · `tools/sfx_libre.py` · `tools/ocr_doc.py` · `tools/duotono.py`.
+- "Todo real, nada genérico": metraje, documento o dato real con ejes reales (años verificados o "Yr N").
+- **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen. Los carruseles
+  sí (IG los recomienda a no seguidores); las historias solo llegan a seguidores.
+
+## Voz y sincronía (RESUELTO, no tocar a ojo)
+
+`python tools/generar_voz.py <clave> [--motor piper|kokoro] [--voz <nombre>]` sintetiza y alinea.
+No sobrescribe una voz existente sin `--forzar`. Por defecto **Kokoro `am_adam`** (elección del
+usuario), en venv Python 3.12 aparte (`tools/.venv-voces/`, gitignored: sin wheel para 3.14; si
+falta, el script da el comando). Ningún motor se elige unilateralmente: siempre con audio real.
+Alineamiento real con `tools/alinear_voz.py` (`.align.json`). **El LEAD no es la palanca**: se ajustó
+seis veces en vano; el error era dispersión, no offset.
 
 ## Score v3 (5-nov, `omega/creative/scoring.py`)
-Misma fórmula que v2, con otros datos: cuenta YouTube, Facebook e Instagram (alcance = suma, retención
-= media ponderada por vistas) y una plataforma solo aporta con ≥30 vistas (PROVISIONAL). Sin ninguna
-con el mínimo no hay score. Cada plataforma queda por separado en `score_parts`. v1, v2 y v3 no son comparables.
 
-## Crítico automático (Fase 1, 28-oct) — `video-v2/motor/critico.py`, rúbrica en `docs/RUBRICA.md`
+`0.70·min(1, retención/0.50) + 0.30·min(1, alcance/750)`, ahora con YouTube, Facebook e Instagram
+(alcance = suma, retención = media ponderada por vistas). Una plataforma solo aporta con ≥30 vistas
+(PROVISIONAL); sin ninguna no hay score. Cada una queda en `score_parts`. Se calcula con `rescore`, no
+se teclea. v1, v2 y v3 no son comparables: mirar `score_version`. Una "vista" de Shorts incluye
+scroll-by desde el 31-mar-2025: la retención es la palanca.
+
+## Crítico automático (`video-v2/motor/critico.py`, rúbrica en `docs/RUBRICA.md`)
+
 `python video-v2/motor/critico.py video-v2/<ref> [--mp4 <x>] [--solo-revisar] [--rondas 2]`: medidores
 sobre el MP4 final → fallos con segundo y escena → parches del storyboard (catálogo cerrado) →
-re-render sin subir, máx. 2 rondas, se queda la mejor ronda MEDIDA. Medidores (cada uno validado
-contra un caso conocido, ver RUBRICA): `tools/medir_texto.py` (OCR + contraste en el píxel, solo
-texto diseñado), `medir_voz.py` (ritmo/pausas/alineamiento), `medir_mezcla.py` (voz vs fondo por
-sustracción, con culpable: efecto o música), `medir_parecido.py` (vs vídeos de la misma marca).
-El juicio (J1-J6) lo escribe Claude en `renders/critica/rN/juicio.json` mirando UNA hoja de contactos.
-Rúbrica **PROVISIONAL** hasta ~10 notas a ciegas del usuario. Umbrales en `motor/rubrica.json`.
-
-## Sincronía de subtítulos — RESUELTO, no volver a tocarlo a ojo
-Antes de renderizar un Short: **`python tools/alinear_voz.py <clave-del-short>`**. Pone el tiempo
-REAL de cada palabra (reconocimiento de voz local, gratis e ilimitado) en `data/<voz>.align.json`;
-el motor lo carga solo al pulsar "Usar la voz del proyecto". Sin él, el calibrador ESTIMA dentro de
-cada bloque y el desfase vuelve. **El LEAD no es la palanca** (se ajustó seis veces sin arreglarlo:
-el error era dispersión, no offset).
-
-## Voz automática — Kokoro por defecto, Piper y CapCut siguen disponibles
-`python tools/generar_voz.py <clave-del-short> [--motor piper|kokoro] [--voz <nombre>]` sintetiza
-el guion y encadena el alineamiento en el mismo comando: sale con audio + `.align.json` listos.
-**No sobrescribe una voz ya existente sin `--forzar`** — la de un Short ya revisado no se toca sola.
-
-**Motor por defecto: Kokoro, voz `am_adam`** (elegida por el usuario 2026-07-30 en una comparativa
-a ciego de 7 voces, medidas por tono real en Hz para poder pedir "más grave" con datos). Kokoro
-corre en un venv de **Python 3.12 aparte** (`tools/.venv-voces/`, gitignored — el proyecto sigue en
-3.14): la cadena `kokoro -> misaki[en] -> spacy -> thinc -> blis<1.1.0` no tiene wheel para 3.14
-(verificado forzando la instalación: falla al COMPILAR, no es un límite de metadata sin más). Si el
-venv no existe, `generar_voz.py` avisa con el comando exacto para crearlo — no falla en silencio.
-
-`--motor piper` sigue disponible (voz `en_US-ryan-high`, MIT, corre en el 3.14 principal sin
-dependencias extra — fue el primero en automatizarse). CapCut también sigue siendo válido. Ningún
-motor se elige unilateralmente: siempre a partir de audio real escuchado por el usuario.
+re-render sin subir, máx. 2 rondas, se queda la mejor ronda MEDIDA. Medidores: `tools/medir_texto.py`,
+`medir_voz.py`, `medir_mezcla.py`, `medir_parecido.py`. El juicio (J1-J6) lo escribe Claude en
+`renders/critica/rN/juicio.json` mirando UNA hoja de contactos. Rúbrica **PROVISIONAL** hasta ~10
+notas a ciegas del usuario. Umbrales en `motor/rubrica.json`.
 
 ## QA del vídeo exportado (sobre el archivo, no sobre el modelo)
-- `python tools/medir_loudness.py <mp4>` — loudness real contra el estándar de la plataforma
-  (YouTube/FB normalizan a **-14 LUFS**, pico < -1 dBTP). Solo mide; no toca la mezcla del motor
-  salvo que el gap sea grande y consistente entre videos.
-- `python tools/analizar_video.py <mp4>` — cortes de plano con PySceneDetect (fiable, es de
-  terceros) + picos de movimiento con optical flow (⚠ ruidoso con contadores/texto animado —
-  probado y documentado en el propio script: úsalo para elegir dónde mirar, nunca como veredicto).
-- `python tools/medir_ritmo.py <mp4> [--max 2.5]` — tramo más largo SIN cambio visual (hipótesis
-  `pacing_2_3s`). Sale con código 1 si se pasa del máximo. PySceneDetect no sirve para esto: los
-  barridos, contadores y columnas que crecen son cambio visual real sin ser cortes de plano.
 
-## Motor v2 (HyperFrames) — imagen real con licencia registrada
-- `python tools/imagenes_libres.py buscar|lote|creditos` — Wikimedia Commons filtrado por
-  licencia (lista cerrada: PD, CC0, CC BY; fuera SA/NC/ND) + `creditos.json` por imagen. ⚠ La API
-  de Commons limita por IP y en la nube la IP es compartida (429, `Retry-After` hasta 600 s): usar
-  `lote` (UNA consulta para N títulos), nunca bucles de `bajar`. Solo tamaños de miniatura estándar.
-- `python tools/duotono.py <in> <out> [--recorte 0.04]` — duotono de marca horneado (no filtro CSS).
-- `python tools/broll.py buscar commons|pexels "<q>"` — b-roll de VÍDEO con la misma lista cerrada
-  de licencias (+ Pexels License) y créditos en `assets/clips/creditos.json` ("Footage:" en la
-  descripción). En el storyboard: `clips` + `"clip"` en una `foto`/`fondo`; `construir.py` lo baja
-  y lo trata (1080x1920, duotono por LUT 1D = la misma rampa que las fotos, duración exacta).
-  Pexels necesita `PEXELS_API_KEY` y el dominio `videos.pexels.com` permitido.
-- **Lenguaje profesional (25-sep):** fondos automáticos desenfocados en escenas de texto, punch-in
-  en golpes/palabras calientes, riser→impacto, puerta de contraste WCAG AA por escena en
-  `producir.py`, avisos de gancho/re-gancho al validar. Detalle en `video-v2/motor/README.md`.
-- **26-sep:** color híbrido (metraje moderno en color con grado de marca, archivo en duotono),
-  fondos de texto con clips en movimiento (≥4 clips por Short), transiciones con desenfoque de
-  movimiento en los cortes, loudnorm en 2 pasadas. Pexels llega por el proxy del entorno.
-  "Todo real, nada genérico": fuera monedas 3D/estallidos/monedas que caen; curvas con ejes reales
-  (años verificados o "Yr N") y punto con año y valor; temblor de cámara en los golpes grandes.
-- **Nivel documental (26-sep):** parallax 2.5D automático en las fotos de escenas `foto`
-  (`tools/profundidad.py`: Depth Anything V2 Small ONNX, Apache-2.0, en CPU; remap por píxel
-  según profundidad, sin huecos; `"documento": true` en la imagen o `"parallax": false` lo
-  apagan). Música REAL con licencia: `tools/musica_libre.py` (Commons: Kevin MacLeod CC BY 3.0) +
-  `"musica": {"pista": {"commons": "File:...", "desde": s}}`; créditos "Music:" solos. Fondos de
-  texto con la mitad de desenfoque.
-- **27-sep, sonido y serie:** efectos REALES sincronizados (`tools/sfx_libre.py` + catálogo
-  `video-v2/motor/sfx.json`: `sfx` en clips/imágenes y `sonidos` anclados a palabras; créditos
-  "Sound effects:"), serie `"serie": {"nombre", "ep"}` (sello en el gancho + logo sonoro propio +
-  lista de YouTube al `programar`). Comentario para fijar en `publish_<ref>.json`: se aprueba con
-  `programar`, se publica solo cuando el vídeo es público (`comentar <ref>` o `analytics-sync`);
-  FIJARLO es a mano en Studio (la API de YouTube no fija). Scope nuevo `youtube.force-ssl`: un
-  token viejo sigue valiendo para subir/medir; para comentar, repetir `youtube-auth` una vez.
-- **1-oct, imagen protagonista + la prueba:** fondos de texto con metraje NÍTIDO (antes desenfocado
-  al 46 %: luma media 40-46/255 medida, diapositivas oscuras) + sombra local tras el texto; los clips
-  con mucho detalle (`broll.detalle`) van con desenfoque fuerte. `pruebas`: documento real a pantalla
-  completa, foco + subrayador sobre la frase que localiza el OCR (`tools/ocr_doc.py`, RapidOCR).
-- **Motor por storyboard (`video-v2/motor/`, léase su README)**: un Short = `storyboard.json` (guion +
-  10 tipos de escena anclados a `frase:palabra`, nunca segundos) → `motor/voz.py` (voz + words.json)
-  → `motor/construir.py` (valida, imágenes, música, HTML, carve) → lint → render → QA. Nadie
-  escribe HTML. Referencia verificada: `video-v2/read-janitor/storyboard.json` (el #7).
-  Registrar el ADN con `"renderer_version": "v2-hyperframes"`.
+- `python tools/medir_loudness.py <mp4>`: YouTube/FB normalizan a **-14 LUFS**, pico < -1 dBTP.
+- `python tools/analizar_video.py <mp4>`: cortes + picos de movimiento (⚠ ruidoso: elige dónde mirar, no es veredicto).
+- `python tools/medir_ritmo.py <mp4> [--max 2.5]`: tramo más largo sin cambio visual; código 1 si se pasa.
 
-## POLÍTICA DE INGENIERÍA (docs/POLITICA.md) — respétala
-El motor **NO está congelado** (21-oct, decisión del usuario). Una mejora entra si sube una métrica
-MEDIDA: calificación a ciegas del usuario, distancia a Shorts de referencia del nicho, o retención real.
-Nada de mejorar a ojo en círculos. Hito: juez automático que coincida con el usuario → autonomía.
-No sobre-interpretar n bajo (marca PROVISIONAL). Aislar variables antes de concluir.
+## POLÍTICA DE INGENIERÍA (docs/POLITICA.md), respétala
 
-## Estado actual (2026-09-25) — BASE REINICIADA DESDE 0, LEE `docs/ESTADO.md` ANTES DE TOCAR NADA
-**Base nueva en el repo privado (`estado-bajar`)**: solo el ADN de #7 y #8 (v2-hyperframes), sin
-publicar aún. Hito: **10 vídeos v2**. Todo lo que sigue en esta sección es la base v1 ANTERIOR
-(PC viejo, no migrada: v1 y v2 no son comparables) — sirve como contexto, no como dato vigente.
+El motor NO está congelado. Una mejora entra si sube una métrica MEDIDA: calificación a ciegas del
+usuario, distancia a Shorts de referencia del nicho, o retención real. Nada de mejorar a ojo en
+círculos. Hito: juez automático que coincida con el usuario → autonomía. No sobre-interpretar n bajo
+(PROVISIONAL). Aislar variables antes de concluir.
 
-### Historial v1 (2026-07-24, base anterior — ya no existe en la base actual)
-**6 de 10 instrumentados, 5 medidos.** 117 tests verdes. `production_cost` = **0 filas**.
-**Score v2 (28-jul, `omega/creative/scoring.py`): `0.70·min(1, retención/0.50) + 0.30·min(1, alcance/750)`.**
-Se calcula desde `production_analytics` con `python -m omega.cli rescore`, NO se teclea a mano, y
-cada outcome guarda su `score_version`. Motivo: desde el 31-mar-2025 una "vista" de Shorts incluye
-scroll-by sin mínimo de tiempo (lo que antes era vista ahora es *engaged view*), así que el v1
-—alcance/750— mezclaba a quien vio el vídeo con quien pasó por encima. La retención es la palanca:
-el umbral para que el algoritmo empuje un Short de 30-60s es ~50% y el canal va por 6-16%.
-⚠ v1 y v2 NO son comparables: mirar siempre `score_version` antes de comparar dos outcomes.
-- **#6 Buffett CERRADO** (256 vistas → 0.341, 2º de 5). **FLATLINEÓ**: entre las 17h y los 7 días
-  sumó +1 vista. En Reels el veredicto llega en las primeras ~17h — una ventana corta ya es casi
-  el número final. Primera curva de retención del canal: **24,1% a 3s → 10,0% a 20s**. El gancho
-  es el mejor del canal y aun así se cae entre 3s y 20s: **el problema no es el gancho**.
-- **#7 Ronald Read:** montado en el motor (18-jul), **cero filas en la DB**.
-- **⚠ La captura está PARADA:** último `ingest` 15-jul, últimas `signals` 12-jul. **Correr `/daily`
-  antes de volver a usar `decide`** — opera sobre un corpus congelado.
-- Predicciones #15-#18 resueltas `inconclusive` el 24-jul: falló el instrumento (hueco de datos +
-  el extractor cambió de v0.2.0 a v0.2.1 dentro del horizonte), no la hipótesis. Ver `ESTADO.md`
-  para el gap metodológico que destapó (predicciones sin `extractor_version` sellada).
+## Docs
 
-- **Motor de video:** `docs/guiones/short-renderer.html` genera el Short entero (visuales + voz +
-  subtítulos quemados) y exporta **MP4 H.264+AAC** listo para subir. Sin CapCut. Datos por Short en
-  `SHORTS[...]`; el resto es motor. Tiene **calibrador automático** que deduce cortes y subtítulos
-  del audio (verificado: reproduce exacto la calibración manual del S3).
-- **Renderizar SIEMPRE por la cola de "Lote"** (campo + botón "Lote"), incluso para 1 solo Short —
-  no el flujo manual de seleccionar+cargar voz+grabar. El lote ya encadena cargarShort → traer
-  `data/<voz>` (la que deja `generar_voz.py`) → calibrar → exportar sin tocar nada a mano, y evita
-  una condición de carrera real (30-jul): seleccionar un Short dejaba `cortesMedidos=true` desde el
-  instante de elegirlo (antes de calibrar su voz), así que exportar demasiado rápido en el flujo
-  manual podía quemar los subtítulos/tiempos de **S3** (el primer Short) encima de la voz nueva —
-  visto en Ronald Read. Fix de una línea en `cargarShort` (línea ~3707); el lote nunca lo sufrió
-  porque ya esperaba a que la calibración real terminara antes de exportar.
-- **Voz actual:** CapCut TTS. ElevenLabs aplazado: su plan gratis no da derechos comerciales y sus
-  voces Default caducan el 31-dic-2026.
-- **Confounder anotado:** el S3 se publicó a las 02:00 hora local con audiencia EN/US. Si retiene
-  poco, puede ser la HORA, no el gancho. No atribuirlo a `hook_type`.
-- **Siguiente:** #7 Ronald Read (montado en el motor, sin publicar) = 7/10. Progreso = filas del
-  dataset, no commits. La palanca que señalan los datos es la RETENCIÓN entre 3s y 20s, no el gancho.
-- **NO construir un generador de posts de texto:** con 0 seguidores no se distribuyen (alcance
-  orgánico de una Página = 1-6% de sus seguidores). "Contenido diario" = más Shorts.
-  (26-sep: los CARRUSELES de imagen sí — Instagram los recomienda a no seguidores y se guardan/
-  comparten; salen del mismo Short sin trabajo extra. Las historias solo llegan a seguidores:
-  reutilización barata del gancho, no una apuesta de alcance.)
+`docs/ESTADO.md` (traspaso) · `docs/PLAN.md` (plan vigente: calidad primero, autonomía solo cuando el
+usuario lo diga) · `docs/POLITICA.md` · `docs/RUBRICA.md` · `docs/V2-CALIDAD.md` · `docs/VISION.md`
+(arquitectura congelada) · `docs/guiones/` · `marca/` · `docs/archivo/` (historia).
 
-## Docs (leer al retomar)
-`docs/PLAN.md` (**plan vigente**: calidad primero, autonomía solo cuando el usuario lo diga) · `docs/ESTADO.md` (traspaso, trae las trampas conocidas) · `docs/V2-CALIDAD.md` (motor v2 en HyperFrames: decisión verificada + PoC en `video-v2/`) · `docs/POLITICA.md` ·
-`docs/VISION.md` (arquitectura congelada) · `docs/guiones/` (guiones, motor, calibración) · `marca/`.
+## CÓMO TRABAJAR (método: sale de errores medidos, no de teoría)
 
-## CÓMO TRABAJAR (método — sale de errores medidos, no de teoría)
 - **Si algo se resiste DOS rondas, la pregunta no es "¿qué parámetro muevo?" sino "¿esto ya está
-  resuelto?".** El desfase de subtítulos costó SEIS rondas ajustando el LEAD; la solución era
-  alineamiento forzado, estándar desde hace años (`tools/alinear_voz.py`).
+  resuelto?".** El desfase de subtítulos costó seis rondas; la solución era alineamiento forzado.
 - **Antes de creer una medición, validar el instrumento.** Tres métricas propias dieron falsos
-  positivos (solapes sin aplicar la matriz del canvas; sincronía contra "el arranque de voz más
-  cercano" aunque fuera de otra tarjeta) y llevaron a "arreglar" cosas que no estaban rotas.
-- **Sustituir juicio por medición siempre que se pueda.** Lo que más ha mejorado el motor no es
-  pensar mejor: es `alinear_voz.py`, `check_motor.mjs` y `lint_motor.mjs`.
-- **Lo barato primero.** `check_motor` + `lint_motor` tardan <1s y cazan lo que el navegador calla:
-  correrlos SIEMPRE antes de abrir el preview o renderizar (3 min).
+  positivos y llevaron a "arreglar" cosas que no estaban rotas.
+- **Sustituir juicio por medición siempre que se pueda.**
+- **Lo barato primero.** `check_motor` + `lint_motor` antes de abrir el preview o renderizar (3 min).
 
 ## ECONOMÍA DE CONTEXTO (el usuario lo pidió explícitamente)
+
 - **Devolver agregados, no listados**: media, máximo y los 3 peores casos. Nada de volcar 50 filas.
 - **Agrupar cambios y verificar UNA vez por lote**, no tras cada constante.
-- **Las imágenes son lo más caro del turno.** Primero el número; la imagen solo para juicio visual
-  o confirmación final. Nunca una hoja de contactos entera si bastan 2 frames.
-- **Un render de vídeo por lote cerrado.** Cada uno son ~3 min y polling.
-- Preferir `Grep` con contexto a `Read` de bloques grandes del motor (288 KB).
+- **Imágenes:** primero el número; la imagen solo para juicio visual o confirmación final. Nunca una
+  hoja de contactos entera si bastan 2 frames.
+- **Un render de vídeo por lote cerrado.** Lánzalo en segundo plano y espera el aviso: nada de
+  `tail`/`sleep`, cada consulta relee todo el contexto.
+- **Preferir `Grep` con contexto a `Read` de bloques grandes**: motor v1 (288 KB), storyboards (44 KB).
+- **No retomar en frío una sesión grande:** tras >1 h sin actividad la caché caduca y el primer
+  mensaje reescribe todo el contexto. Mejor nota de traspaso y sesión nueva.
 
 ## Convenciones
+
 - Responder en **español**; el contenido del canal va en **inglés**.
 - Commits: mensaje via archivo si tiene comillas/`&`/`$` (PowerShell rompe here-strings con eso).
-  Terminar con `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`. Rama de trabajo `master`.
+  Terminar con `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Rama de trabajo `master`.
 - `data/` y `.env` están gitignored (nunca commitear). `YOUTUBE_API_KEY` vive en `.env`.
 - Verificar antes de afirmar (correr tests / el comando real). Windows + PowerShell.
 - Kernel `omega/reasoning/` es domain-agnostic (hay test de pureza por AST): no meterle nada de video.

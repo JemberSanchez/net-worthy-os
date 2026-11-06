@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -55,7 +56,9 @@ def _run(
 def _entorno() -> dict:
     """Cloud defaults (HF_CORE, browser path). The user's own environment wins, and a default path
     that does not exist here (the Linux container paths on the Windows PC) is dropped."""
-    out = _run(["bash", str(RAIZ / "tools" / "setup_nube.sh"), "--env"]).stdout
+    # a bare "bash" resolves to System32 (WSL) on Windows whatever PATH says, and WSL leaves HF_CORE empty
+    bash = shutil.which("bash") or "bash"
+    out = _run([bash, str(RAIZ / "tools" / "setup_nube.sh"), "--env"]).stdout
     pares = re.findall(r"export (\w+)=(\S+)", out)
     if os.name == "nt":  # Git Bash prints MSYS paths: /c/Users/... -> C:/Users/...
         pares = [(k, re.sub(r"^/([a-zA-Z])/", r"\1:/", v)) for k, v in pares]
@@ -625,6 +628,9 @@ def producir(proy: Path) -> dict:
     import medir_parecido
 
     puerta("repeticion", *medir_parecido.puerta_repeticion(proy))
+    import guionista
+
+    puerta("guion", *guionista.puerta_guion(proy))
     if not (proy / "assets" / "voice.mp3").exists():
         r = _run([PY, str(MOTOR / "voz.py"), str(proy)])
         puerta("voz", r.returncode == 0, r.stdout + r.stderr)
@@ -672,6 +678,7 @@ def producir(proy: Path) -> dict:
             f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
         )
     puerta("loudnorm", ok_ln, det_ln)
+    crudo.unlink(missing_ok=True)  # 40-60 MB; only input of loudnorm, the final ships
     r = _run([PY, str(RAIZ / "tools" / "medir_loudness.py"), str(final)])
     lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)
     pico = re.search(r"Pico real\s*:\s*(-?[\d.]+)", r.stdout)

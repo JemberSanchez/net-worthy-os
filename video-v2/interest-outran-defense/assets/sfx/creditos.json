@@ -1,0 +1,62 @@
+[
+ {
+  "archivo": "bombo_mini.src",
+  "origen": "wikimedia",
+  "titulo": "File:Kick 3 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Kick_3_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "clic_raton.src",
+  "origen": "wikimedia",
+  "titulo": "File:Computer Mouse Click.wav",
+  "autor": "FlowgerWikiCommons",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Computer_Mouse_Click.wav"
+ },
+ {
+  "archivo": "escaner.src",
+  "origen": "wikimedia",
+  "titulo": "File:Alien technology scanning device.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Alien_technology_scanning_device.ogg"
+ },
+ {
+  "archivo": "golpe_hondo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Deep hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Deep_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "nudillo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Knocking on wood or door.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Knocking_on_wood_or_door.ogg"
+ },
+ {
+  "archivo": "riser_cuerdas.src",
+  "origen": "wikimedia",
+  "titulo": "File:ARP-Solina Crescendo clean.ogg",
+  "autor": "MFbay",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:ARP-Solina_Crescendo_clean.ogg"
+ }
+]

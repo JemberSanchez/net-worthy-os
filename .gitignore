@@ -9,6 +9,7 @@ venv/
 docs/guiones/PREVIEW-*.jpg
 # exportaciones de render (voz + video): artefactos, no fuente — no inflar el repo
 *.mp4
+/renders/
 *.MP3
 docs/guiones/*.mp3
 # backups del moat (zip fechado de data/): van a nube/USB, no al repo

@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -109,6 +110,8 @@ def _info_videos(params: dict) -> list[dict]:
                 "url_licencia": em.get("LicenseUrl", {}).get("value", ""),
                 "fuente": vi.get("descriptionurl", ""),
                 "src": der["src"] if der else None,
+                "descripcion": il._limpiar(em.get("ImageDescription", {}).get("value", "")),
+                "fecha": il._limpiar(em.get("DateTimeOriginal", {}).get("value", "")),
             }
         )
     return out
@@ -162,15 +165,88 @@ def _ficha_pexels(v: dict) -> dict:
         "url_licencia": "https://www.pexels.com/license/",
         "fuente": v.get("url", ""),
         "src": f["link"] if f else None,
+        # Pexels has no description field: the page slug is the only text about the content.
+        "descripcion": v.get("url", "").rstrip("/").rsplit("/", 1)[-1].replace("-", " "),
+        "fecha": "",
     }
 
 
 def buscar_pexels(q: str, n: int = 10) -> list[dict]:
     d = _pexels(
         "search",
-        {"query": q, "per_page": n, "orientation": "portrait", "size": "medium"},
+        {"query": q, "per_page": n},  # portrait+medium hid specific footage; preparar crops anyway
     )
     return [x for x in map(_ficha_pexels, d.get("videos", [])) if x["src"]]
+
+
+# ── selección: puntuar candidatos contra la frase ──────────────────────────────────────────────
+GENERICO = frozenset(
+    "business businessman businesswoman handshake coins coin skyline laptop typing person people "
+    "man woman office pointing money abstract animation background concept".split()
+)
+PESOS = {"rel": 0.35, "esp": 0.25, "res": 0.15, "mov": 0.10, "lic": 0.05, "nuevo": 0.10}
+VALOR_LICENCIA = {"pd": 1.0, "cc0": 1.0, "pexels": 0.8, "cc-by": 0.7}
+
+
+def _tokens(s: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", (s or "").lower()))
+
+
+def usados(raiz: Path = Path(__file__).resolve().parents[1] / "video-v2") -> set[str]:
+    """Titles already credited in any of our videos."""
+    return {
+        f["titulo"]
+        for p in raiz.glob("*/assets/clips/creditos.json")
+        for f in json.loads(p.read_text(encoding="utf-8"))
+    }
+
+
+def puntuar(
+    c: dict,
+    terminos: str,
+    anio: int | None = None,
+    veto: tuple[str, ...] = (),
+    vistos: set[str] | frozenset[str] = frozenset(),
+    mov: float | None = None,
+) -> float | None:
+    """0..1, or None when rejected: no licence, under 1080 px, a vetoed event, or nothing in its
+    metadata matching the sentence. Reads only metadata; `mov` comes from movimiento() after download."""
+    texto = f"{c['titulo']} {c.get('descripcion', '')} {c.get('fecha', '')}"
+    t, pedidos = _tokens(texto), _tokens(terminos)
+    corto = min(c.get("alto") or 0, (c.get("ancho") or 0) * H / W)
+    if not c.get("clase") or corto < 1080 or not t & pedidos:
+        return None
+    if any(v.lower() in texto.lower() for v in veto):
+        return None
+    esp = max(0.0, 1 - 0.34 * len(t & GENERICO))
+    if anio and str(anio) not in t:
+        esp *= 0.5  # a period shot without the period in its metadata cannot be trusted
+    partes = {
+        "rel": len(t & pedidos) / len(pedidos),
+        "esp": esp,
+        "res": min(1.0, corto / 2160),
+        "mov": 0.5 if mov is None else min(1.0, mov / 15),
+        "lic": VALOR_LICENCIA[c["clase"]],
+        "nuevo": 0.0 if c["titulo"] in vistos else 1.0,
+    }
+    return round(sum(PESOS[k] * v for k, v in partes.items()), 3)
+
+
+def movimiento(crudo: Path, desde: float = 0.0, segundos: float = 14.0) -> float:
+    """Mean absolute luma change between frames at 2 fps (0-255). Measured 3-nov: carrier deck 19.2,
+    tax form 14.0, static building 3.3."""
+    import numpy as np
+
+    raw = subprocess.run(
+        [
+            "ffmpeg", "-v", "error", "-ss", f"{desde:.2f}", "-i", str(crudo), "-t", f"{segundos:.2f}",
+            "-vf", "fps=2,scale=160:90,format=gray", "-f", "rawvideo", "-",
+        ],
+        capture_output=True,
+        check=True,
+    ).stdout
+    f = np.frombuffer(raw, np.uint8).reshape(-1, 90, 160).astype(np.float32)
+    return round(float(np.abs(np.diff(f, axis=0)).mean()), 1) if len(f) > 1 else 0.0
 
 
 # ── descarga + tratamiento ──────────────────────────────────────────────────────────────────────
@@ -297,7 +373,10 @@ GRADO_MARCA = (
 # Fondo detrás de texto: desenfoque fuerte (reducir -> desenfocar -> ampliar: igual a la vista y
 # ~10x más rápido que un gblur a 1080x1920).
 DESENFOQUE_FONDO = "scale=540:960,gblur=sigma=3,scale=1080:1920"  # 26-sep: la mitad de desenfoque (más metraje real)
-MODOS = ("color", "duotono", "natural")
+# Light grade (aspecto "cine"): only ties sources together; no tint and no vignette, which is what turned
+# every video into the same green-black (docs/mejora/auditoria.md, tell 3: 72-83 % green-yellow pixels).
+GRADO_LIGERO = "eq=contrast=1.04:saturation=0.94"
+MODOS = ("color", "duotono", "natural", "ligero")
 
 
 # Clip con mucho detalle (broll.detalle > construir.UMBRAL_DETALLE) detrás de texto: con sigma 3 un
@@ -348,6 +427,8 @@ def filtro(
     color = (
         GRADO_MARCA
         if modo == "color"
+        else GRADO_LIGERO
+        if modo == "ligero"
         else "null"  # natural: untouched colour, the brand grade read as a green filter (docs/mejora/auditoria.md)
         if modo == "natural"
         else f"format=gray,format=rgb24,lut1d=file={cube}"
@@ -488,12 +569,19 @@ def main() -> None:
     if len(a) >= 3 and a[0] == "buscar":
         n = int(a[a.index("--n") + 1]) if "--n" in a else 10
         res = buscar_commons(a[2], n) if a[1] == "commons" else buscar_pexels(a[2], n)
-        for r in res:
+        terminos = a[a.index("--terminos") + 1] if "--terminos" in a else a[2]
+        anio = int(a[a.index("--anio") + 1]) if "--anio" in a else None
+        veto = tuple(a[a.index("--veto") + 1].split(",")) if "--veto" in a else ()
+        vistos = usados()
+        res = [(puntuar(r, terminos, anio, veto, vistos), r) for r in res]
+        res = sorted((x for x in res if x[0] is not None), key=lambda x: -x[0])
+        for s, r in res:
             print(
-                f"{r['titulo'][:70]:70} {r['duracion']:>6}s {r['ancho']}x{r['alto']}  {r['licencia']}  {r['autor'][:30]}"
+                f"{s:.2f} {r['titulo'][:60]:60} {r['duracion']:>6}s {r['ancho']}x{r['alto']}  {r['licencia']}  {r['fuente']}"
             )
+            print(f"     {r['descripcion'][:110]}")
         if not res:
-            print("(nada con licencia admitida)")
+            print("(nada admitido: licencia, resolución, veto o sin relación con los términos)")
     elif len(a) == 2 and a[0] == "lote":
         proy = Path(a[1])
         decl = (

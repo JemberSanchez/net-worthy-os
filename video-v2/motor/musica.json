@@ -1,0 +1,94 @@
+{
+  "_doc": "Pistas reales con licencia de la lista cerrada para la selección automática (edicion.py), por `mood`. Comprobar con `python tools/musica_libre.py verificar`. 5-nov: medidas 40 s por pista con ebur128 y Whisper tiny (Whisper devuelve frases típicas de alucinación en 4, sin confirmar si es voz). Fuera por LRA > 10 (saltan bajo la voz): Scott Holmes - Something In The Distance, Kai Engel - Sentinel, John Bartmann - broken-suspense. Nada escuchado: lo decide el oído del usuario.",
+  "komiku_tension": {
+    "commons": "File:Komiku - 12 - Tension.ogg",
+    "autor": "Komiku",
+    "licencia": "CC0",
+    "dur": 201.0,
+    "mood": ["tension"]
+  },
+  "bartmann_highway": {
+    "commons": "File:John Bartmann - dark-highway-master.ogg",
+    "autor": "John Bartmann",
+    "licencia": "CC0",
+    "dur": 244.0,
+    "mood": ["oscuro"]
+  },
+  "alex_deep": {
+    "commons": "File:Alex-Productions - Deep (Dark Ambient Background music).oga",
+    "autor": "Alex-Productions",
+    "licencia": "CC BY 3.0",
+    "dur": 268.8,
+    "mood": ["oscuro"]
+  },
+  "infraction_distant": {
+    "commons": "File:Infraction - Distant (Cinematic Documentary Drone style).opus",
+    "autor": "Infraction",
+    "licencia": "CC BY 3.0",
+    "dur": 147.0,
+    "mood": ["documental"]
+  },
+  "zabriskie_prelude": {
+    "commons": "File:Chris Zabriskie - 03 - Prelude No 3.ogg",
+    "autor": "Chris Zabriskie",
+    "licencia": "CC BY 4.0",
+    "dur": 90.4,
+    "mood": ["reflexivo"]
+  },
+  "buckley_signal": {
+    "commons": "File:Scott Buckley - Signal To Noise (nomelody mix).oga",
+    "autor": "Scott Buckley",
+    "licencia": "CC BY 4.0",
+    "dur": 354.4,
+    "mood": ["documental"]
+  },
+  "ende_news": {
+    "commons": "File:Breaking News 5 by Sascha Ende.ogg",
+    "autor": "Sascha Ende",
+    "licencia": "CC BY 4.0",
+    "dur": 224.0,
+    "mood": ["urgente"]
+  },
+  "ende_drone": {
+    "commons": "File:Epic Drone Shots 001 by Sascha Ende.mp3",
+    "autor": "Sascha Ende",
+    "licencia": "CC BY 4.0",
+    "dur": 186.0,
+    "mood": ["oscuro"]
+  },
+  "macleod_crypto": {
+    "commons": "File:Crypto (ISRC USUAN1600013).mp3",
+    "autor": "Kevin MacLeod",
+    "licencia": "CC BY 3.0",
+    "dur": 204.1,
+    "mood": ["tension"]
+  },
+  "macleod_dark_times": {
+    "commons": "File:Dark Times (ISRC USUAN1100747).mp3",
+    "autor": "Kevin MacLeod",
+    "licencia": "CC BY 3.0",
+    "dur": 183.7,
+    "mood": ["oscuro"]
+  },
+  "peritune_investigation": {
+    "commons": "File:PeriTune - Investigation2(Suspense-Royalty Free Music).opus",
+    "autor": "PeriTune",
+    "licencia": "CC BY 3.0",
+    "dur": 281.1,
+    "mood": ["tension"]
+  },
+  "musiclfiles_soft": {
+    "commons": "File:Soft Corporate by MusicLFiles.ogg",
+    "autor": "MusicLFiles",
+    "licencia": "CC BY 4.0",
+    "dur": 169.6,
+    "mood": ["neutro"]
+  },
+  "schaeffer_smoke": {
+    "commons": "File:Evan Schaeffer - 01 - Smoke.ogg",
+    "autor": "Evan Schaeffer",
+    "licencia": "CC BY 4.0",
+    "dur": 205.8,
+    "mood": ["neutro"]
+  }
+}

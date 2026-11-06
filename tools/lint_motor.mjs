@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { ESLint } from 'eslint';
 
 const ARCHIVOS = ['docs/guiones/short-renderer.html', 'docs/guiones/tests-motor.html'];
+const SCRIPTS = ['video-v2/motor/motor.js'];   // motor v2: JS suelto, sin <script> que extraer
 
 const eslint = new ESLint({
   overrideConfigFile: true,
@@ -53,6 +54,14 @@ for (const archivo of ARCHIVOS) {
       problemas++;
       console.error(`${archivo}:${lineaBase + msg.line - 1}  ${msg.ruleId ?? 'parse'}  ${msg.message}`);
     }
+  }
+}
+
+for (const archivo of SCRIPTS) {
+  const [res] = await eslint.lintText(readFileSync(archivo, 'utf8'), { filePath: 'motor.js' });
+  for (const msg of res.messages) {
+    problemas++;
+    console.error(`${archivo}:${msg.line}  ${msg.ruleId ?? 'parse'}  ${msg.message}`);
   }
 }
 

@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "carrier.src",
+  "origen": "wikimedia",
+  "titulo": "File:USS Abraham Lincoln (CVN-72) Conducts Flight Operations (1016141).webm",
+  "autor": "NAVCENT Public Affairs",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:USS_Abraham_Lincoln_(CVN-72)_Conducts_Flight_Operations_(1016141).webm",
+  "desde": 0.0
+ },
+ {
+  "archivo": "formulario.src",
+  "origen": "pexels",
+  "titulo": "pexels:6964256",
+  "autor": "Mikhail Nilov",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-footage-of-a-tax-return-form-6964256/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "capitol.src",
+  "origen": "pexels",
+  "titulo": "pexels:29188206",
+  "autor": "In Old News LLC",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/us-capitol-building-with-dramatic-sky-29188206/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "capitol2.src",
+  "origen": "pexels",
+  "titulo": "pexels:29188235",
+  "autor": "In Old News LLC",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/iconic-view-of-the-united-states-capitol-29188235/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "nyse.src",
+  "origen": "pexels",
+  "titulo": "pexels:4319342",
+  "autor": "CityXcape",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/finance-nyse-wall-street-new-york-city-4319342/",
+  "desde": 0.0
+ }
+]

@@ -5,68 +5,73 @@ python video-v2/motor/construir.py video-v2/<proyecto> --validar   # ¿el storyb
 HF_CORE=<dir con @hyperframes/core de la misma versión> HF_CARVE=<carve.mjs del checkout de esa versión> python video-v2/motor/construir.py video-v2/<proyecto>
 cd video-v2/<proyecto> && npx hyperframes@latest lint && npx hyperframes@latest render --quality high -o renders/x.mp4
 ```
+
 Proyecto = `storyboard.json` + `assets/voice.mp3` + `assets/words.json` (tiempos medidos por
 `tools/alinear_voz.py`). Todo lo demás (imágenes con licencia, duotono, música, sfx, ducking,
 subtítulos) lo pone el motor. **Nadie escribe HTML ni segundos**: se escriben anclas.
 
 ## Anclas (frase:palabra, nunca segundos)
+
 Las frases del guion se numeran desde 0 (corta en `. ? !`). Un ancla es un string:
 
-| Ancla | Significa |
-|---|---|
-| `"6"` | cuando arranca la frase 6 |
-| `"6:reinvested"` | cuando arranca la 1ª "reinvested" de la frase 6 (sin mayúsculas ni puntuación) |
-| `"21:team#2"` | la 2ª "team" de la frase 21 |
-| `"14:it$"` | cuando TERMINA esa palabra |
-| `"6:shares+0.34"` | desplazamiento en segundos (también `-0.1`) |
+| Ancla             | Significa                                                                      |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `"6"`             | cuando arranca la frase 6                                                      |
+| `"6:reinvested"`  | cuando arranca la 1ª "reinvested" de la frase 6 (sin mayúsculas ni puntuación) |
+| `"21:team#2"`     | la 2ª "team" de la frase 21                                                    |
+| `"14:it$"`        | cuando TERMINA esa palabra                                                     |
+| `"6:shares+0.34"` | desplazamiento en segundos (también `-0.1`)                                    |
 
 Claves que llevan ancla: `en`, `hasta`, `llega`, `fin`, `marca`, `golpe`, `tachar` (un número
 en esas claves, p. ej. `"hasta": 2014` en `anios`, no es ancla). Un ancla que no resuelve **rompe
 el build con el motivo** (qué frase, qué palabra): esa es la puerta para storyboards de un LLM.
 
 ## Nivel superior
-| Clave | Qué |
-|---|---|
-| `ref`, `adn` | id del vídeo y ADN (`hook_type`, `story_type`, `cta_type`, `renderer_version`) |
-| `guion` | `[{id, texto}]` — lo que dice la voz, en inglés. Fuente de verdad del texto |
-| `cifras` | `[{dato, fuente}]` — **cada número con URL** (YMYL); sin fuente no construye |
-| `aviso` | `{lineas: [..], ventanas: [[ancla, ancla]], final: true}` — obligatorio si hay cifras |
-| `imagenes` | `{id: {commons: "File:…", recorte: 0.04}}` — solo PD/CC0/CC BY (lo filtra `imagenes_libres`) |
-| `clips` | `{id: {commons: "File:….webm" \| pexels: <id>, desde: s, [contraste]}}` — b-roll de vídeo (`tools/broll.py`): mismas licencias + Pexels License; se trata a 1080x1920 con el MISMO duotono (LUT 1D), sin audio y con la duración exacta de su escena (`assets/v/`, regenerable) |
-| `subtitulos` | `[frase_desde, frase_hasta]` — normalmente sin el gancho ni el CTA (llevan su texto) |
-| `calientes` | palabras que se resaltan en dorado en el subtítulo |
-| `musica` | `{oscuro: [frase, frase]}` — tramo en que la música cae (p. ej. "the part nobody says") |
-| `golpes` | anclas extra de impacto (los de `revelacion` y `contador3d` ya son automáticos). Úsalos como **re-ganchos** en las frases de giro: cada golpe trae riser 1 s antes, impacto y punch-in de cámara. El validador avisa si pasan >12 s sin ninguno |
-| `fondos_auto` | `true` por defecto: las escenas de texto sin `fondo` reciben una imagen del proyecto desenfocada al 30 % (nunca texto sobre verde vacío). `false` lo apaga; `"fondo": false` en una escena, solo en esa |
-| `cola_s` | segundos tras la última palabra (tarjeta final). Por defecto 1.5 (0.6 la cortaba) |
-| `aviso.placa`, `aviso.tam` | placa oscura tras el aviso YMYL / tamaño en px (defecto: sin placa, 23 px). Las pone el crítico si el aviso no se lee |
-| `musica.volumen` | nivel de la cama antes del ducking (defecto 0.5). El crítico lo baja si la música tapa la voz |
-| `sonidos[].vol` | volumen de ese efecto (defecto: el del catálogo) |
-| `mezcla.whoosh`, `mezcla.impacto`, `mezcla.riser` | volumen de los efectos que pone el motor (defecto 0.38 / 0.6 / 0.3). El crítico los baja si tapan la voz |
-| escena `fondo_suave` | desenfoque fuerte del fondo de ESA escena (el remedio de los clips con mucho detalle) |
-| escena `fondo_opacidad` | opacidad del fondo de ESA escena (siguiente escalón del crítico si `fondo_suave` no basta) |
+
+| Clave                                             | Qué                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ref`, `adn`                                      | id del vídeo y ADN (`hook_type`, `story_type`, `cta_type`, `renderer_version`)                                                                                                                                                                                                  |
+| `guion`                                           | `[{id, texto}]` — lo que dice la voz, en inglés. Fuente de verdad del texto                                                                                                                                                                                                     |
+| `cifras`                                          | `[{dato, fuente}]` — **cada número con URL** (YMYL); sin fuente no construye                                                                                                                                                                                                    |
+| `aviso`                                           | `{lineas: [..], ventanas: [[ancla, ancla]], final: true}` — obligatorio si hay cifras                                                                                                                                                                                           |
+| `imagenes`                                        | `{id: {commons: "File:…", recorte: 0.04}}` — solo PD/CC0/CC BY (lo filtra `imagenes_libres`)                                                                                                                                                                                    |
+| `clips`                                           | `{id: {commons: "File:….webm" \| pexels: <id>, desde: s, [contraste]}}` — b-roll de vídeo (`tools/broll.py`): mismas licencias + Pexels License; se trata a 1080x1920 con el MISMO duotono (LUT 1D), sin audio y con la duración exacta de su escena (`assets/v/`, regenerable) |
+| `subtitulos`                                      | `[frase_desde, frase_hasta]` — normalmente sin el gancho ni el CTA (llevan su texto)                                                                                                                                                                                            |
+| `calientes`                                       | palabras que se resaltan en dorado en el subtítulo                                                                                                                                                                                                                              |
+| `musica`                                          | `{oscuro: [frase, frase]}` — tramo en que la música cae (p. ej. "the part nobody says")                                                                                                                                                                                         |
+| `golpes`                                          | anclas extra de impacto (los de `revelacion` y `contador3d` ya son automáticos). Úsalos como **re-ganchos** en las frases de giro: cada golpe trae riser 1 s antes, impacto y punch-in de cámara. El validador avisa si pasan >12 s sin ninguno                                 |
+| `fondos_auto`                                     | `true` por defecto: las escenas de texto sin `fondo` reciben una imagen del proyecto desenfocada al 30 % (nunca texto sobre verde vacío). `false` lo apaga; `"fondo": false` en una escena, solo en esa                                                                         |
+| `cola_s`                                          | segundos tras la última palabra (tarjeta final). Por defecto 1.5 (0.6 la cortaba)                                                                                                                                                                                               |
+| `aviso.placa`, `aviso.tam`                        | placa oscura tras el aviso YMYL / tamaño en px (defecto: sin placa, 23 px). Las pone el crítico si el aviso no se lee                                                                                                                                                           |
+| `musica.volumen`                                  | nivel de la cama antes del ducking (defecto 0.5). El crítico lo baja si la música tapa la voz                                                                                                                                                                                   |
+| `sonidos[].vol`                                   | volumen de ese efecto (defecto: el del catálogo)                                                                                                                                                                                                                                |
+| `mezcla.whoosh`, `mezcla.impacto`, `mezcla.riser` | volumen de los efectos que pone el motor (defecto 0.38 / 0.6 / 0.3). El crítico los baja si tapan la voz                                                                                                                                                                        |
+| escena `fondo_suave`                              | desenfoque fuerte del fondo de ESA escena (el remedio de los clips con mucho detalle)                                                                                                                                                                                           |
+| escena `fondo_opacidad`                           | opacidad del fondo de ESA escena (siguiente escalón del crítico si `fondo_suave` no basta)                                                                                                                                                                                      |
 
 Texto: `*así*` sale en dorado. Cada escena dura desde su `en` hasta el `en` de la siguiente.
 
 ## Catálogo (10 tipos, todos vistos funcionar en el #7 v2)
+
 Campos opcionales entre corchetes. `fondo` (cualquier escena) = foto de fondo al 40 %.
 
-| Tipo | Campos | Para qué |
-|---|---|---|
-| `foto` | `img` o `clip`, `[mov], [kicker{texto,en}], [titulo{texto,en}], [sub{texto,en}]` | imagen real a sangre con Ken Burns (`mov`: push/pull/izq/der/sube), o metraje real (`clip`) con un empuje suave. `fondo` también admite `{clip, opacidad}` |
-| `revelacion` | `linea1{texto}, linea2{texto,en}, [golpe]` | contraste de 2 líneas + estallido de monedas en `golpe` |
-| `lista` | `icono: x\|check, items[{texto,en,[marca],[color]}]` | ✗ que caen (negaciones) o ✓ (receta) |
-| `titulo` | `lineas[{texto,en,[estilo],[color],[tam]}], [kicker{texto,en,color}], [contador{linea,valor,en}], [tachar{linea,en}], [icono{tipo:"engranaje",en}], [cheque{monto,en,tachar}], [alarma], [posicion]` | frases fuertes. `estilo`: huge/big/mid/boton; `{n}` en una línea = contador |
-| `tarjetas` | `imgs[{img,en}], [titulo{texto,en}], [flujo{texto,en,hasta,contador{desde,valor,etiqueta}}]` | documentos/certificados que se apilan; monedas que fluyen a un contador |
-| `contador3d` | `valor, llega, [prefijo], [columnas], [kicker{texto,en}], [pill{texto,en}]` | cifra grande + columnas 3D sincronizadas; aterriza en `llega`. **Máx. 1 por vídeo** |
-| `curva` | `serie{mensual,tasa,anios,final}, [fin], [aportado{texto,en}], [area{texto,en}], [etiqueta_max], [ilustrativo], [titulo{texto,en}], [escalas[{texto,en}]], [encoger{en,hasta}]` | interés compuesto ILUSTRATIVO; `escalas` = misma curva, otra escala |
-| `puntos` | `n, etiqueta, cuenta{en}, [cae{en,hasta,img,texto}], [atenuar{en,n,texto}]` | cartera de N posiciones; una cae, algunas se atenúan |
-| `anios` | `desde, hasta, cuenta{en}, fin, [kicker], [hitos[[año,texto]]], [etiqueta{texto,en}]` | línea de años que corre con hitos (hechos históricos) |
-| `cta` | `a{texto,en}, [o], b{texto,en}, [pregunta{texto,en,fondo}], [botones[{texto,en}]], [sub]` | UNA dicotomía para comentarios + tarjeta final con movimiento |
+| Tipo         | Campos                                                                                                                                                                                               | Para qué                                                                                                                                                   |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `foto`       | `img` o `clip`, `[mov], [kicker{texto,en}], [titulo{texto,en}], [sub{texto,en}]`                                                                                                                     | imagen real a sangre con Ken Burns (`mov`: push/pull/izq/der/sube), o metraje real (`clip`) con un empuje suave. `fondo` también admite `{clip, opacidad}` |
+| `revelacion` | `linea1{texto}, linea2{texto,en}, [golpe]`                                                                                                                                                           | contraste de 2 líneas + estallido de monedas en `golpe`                                                                                                    |
+| `lista`      | `icono: x\|check, items[{texto,en,[marca],[color]}]`                                                                                                                                                 | ✗ que caen (negaciones) o ✓ (receta)                                                                                                                       |
+| `titulo`     | `lineas[{texto,en,[estilo],[color],[tam]}], [kicker{texto,en,color}], [contador{linea,valor,en}], [tachar{linea,en}], [icono{tipo:"engranaje",en}], [cheque{monto,en,tachar}], [alarma], [posicion]` | frases fuertes. `estilo`: huge/big/mid/boton; `{n}` en una línea = contador                                                                                |
+| `tarjetas`   | `imgs[{img,en}], [titulo{texto,en}], [flujo{texto,en,hasta,contador{desde,valor,etiqueta}}]`                                                                                                         | documentos/certificados que se apilan; monedas que fluyen a un contador                                                                                    |
+| `contador3d` | `valor, llega, [prefijo], [columnas], [kicker{texto,en}], [pill{texto,en}]`                                                                                                                          | cifra grande + columnas 3D sincronizadas; aterriza en `llega`. **Máx. 1 por vídeo**                                                                        |
+| `curva`      | `serie{mensual,tasa,anios,final}, [fin], [aportado{texto,en}], [area{texto,en}], [etiqueta_max], [ilustrativo], [titulo{texto,en}], [escalas[{texto,en}]], [encoger{en,hasta}]`                      | interés compuesto ILUSTRATIVO; `escalas` = misma curva, otra escala                                                                                        |
+| `puntos`     | `n, etiqueta, cuenta{en}, [cae{en,hasta,img,texto}], [atenuar{en,n,texto}]`                                                                                                                          | cartera de N posiciones; una cae, algunas se atenúan                                                                                                       |
+| `anios`      | `desde, hasta, cuenta{en}, fin, [kicker], [hitos[[año,texto]]], [etiqueta{texto,en}]`                                                                                                                | línea de años que corre con hitos (hechos históricos)                                                                                                      |
+| `cta`        | `a{texto,en}, [o], b{texto,en}, [pregunta{texto,en,fondo}], [botones[{texto,en}]], [sub]`                                                                                                            | UNA dicotomía para comentarios + tarjeta final con movimiento                                                                                              |
 
 Referencia completa y verificada: `video-v2/read-janitor/storyboard.json` (el #7).
 
 ## Puertas (en este orden, cada una barata antes que la siguiente)
+
 1. `construir.py --validar` — esquema, anclas, imágenes declaradas, fuentes de cifras, aviso.
 2. `hyperframes lint` — 0 errores.
 3. **Contraste WCAG AA** (`hyperframes check`, un instante por escena en pasadas de 5): ningún texto
@@ -118,3 +123,37 @@ van con desenfoque fuerte. `"fondos_nitidos": false` vuelve a lo anterior. La PR
 = el documento real a pantalla completa, foco que apaga todo menos la frase, empuje de cámara y
 subrayador en `marca`. La caja sale del OCR (`tools/ocr_doc.py`, RapidOCR por tiras, cacheado en
 `assets/t/<img>.ocr.json`) sobre la misma imagen que se ve; frase no encontrada = error.
+
+## Aspecto cine (5-nov, opt-in, PROVISIONAL hasta el A/B a ciegas)
+
+`"aspecto": "cine"` sobre `tema: editorial` (`docs/mejora/auditoria.md`, tells 3, 4, 9, 10): la imagen conserva su luz. Una sola viñeta suave solo sobre imagen; la sombra de texto entra y sale con el texto. Los vídeos sin la clave no cambian.
+
+| Clave                                 | Qué                                                                                                                                                |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| escena `pos`                          | `sup`, `med`, `ter`, `baj`: dónde va el texto de `rotulos` y su sombra local. En `rotulos`, `der` alinea a la derecha y `estilo: dato` usa la mono |
+| escena `limpio`                       | `foto` sin texto: sin subtítulos ni marca, solo imagen y voz                                                                                       |
+| `clips.x.ligero`, `imagenes.x.ligero` | grado ligero común (`broll.GRADO_LIGERO`), sin tinte ni viñeta. Duotono solo con `archivo: true`                                                   |
+| `aviso.completo`                      | el texto largo solo al final (`#avisofin`); `aviso.lineas` es la línea discreta durante el vídeo                                                   |
+| marca de `grafica`, `izq`             | etiqueta a la izquierda del punto (para marcas cerca del borde)                                                                                    |
+
+Vídeos nuevos (`errores_seleccion`): sin clichés (capucha, manos en teclado, bitcoin dorado; lee nombre y créditos), máximo 2 usos por fuente, al menos 1 `pruebas` si hay `cifras`. Avisos: más del 70 % con texto grande, más de 3 escenas seguidas con la misma posición. Métricas: `python tools/medir_aspecto.py video-v2/<ref>`.
+
+## Edición sin repetir (5-nov, `motor/edicion.py`)
+
+Vídeo nuevo (con `formato`, sin `legacy` en `video-v2/usado.json`): `construir.py` elige transiciones, cámara, punch,
+entrada de texto, efectos y pista evitando lo usado en los vídeos anteriores de la marca. Determinista (sha256 de `ref`),
+congelado en `usado.json` tras construir (`--reelegir` lo rehace). `--validar` elige y mide sin escribir.
+Corte seco por defecto; transición solo al empezar un bloque de `guion` (cambio de idea), ≥ 3 s entre sí, máx. 5.
+
+| Clave               | Qué                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `edicion`           | override: `{transiciones: [..], camara: [..], punch, texto, sfx: {nombre: nombre}, motor: {whoosh, impacto, riser}}`. Lo fijado cuenta para la puerta |
+| escena `transicion` | id del catálogo o `"corte"` para esa escena                                                                                                           |
+| escena `cam`        | movimiento fijo. **`mov` se ignora en vídeos nuevos**: es el campo antiguo y todos los storyboards lo traen                                           |
+| `musica.pista.mood` | sin `commons`: elige de `motor/musica.json` con ese mood (tension, oscuro, documental, reflexivo, urgente, neutro). Con `commons` manda la pista      |
+
+Para añadir recursos (motor.js solo interpreta datos, nada de catálogo en JS): `TRANSICIONES`, `CAMARA`, `PUNCH`, `TEXTO` en
+`edicion.py`; efectos en `sfx.json` con `rol`, y `python tools/sfx_libre.py verificar`; pistas en `musica.json`, y
+`python tools/musica_libre.py verificar`. `impacto`, `impacto_grande`, `riser`, `whoosh`, `tic` y `monedas` se intercambian
+solos en `sonidos`, reescalando `vol`; `diegetico` y `ambiente` no (un reloj suena a reloj). `tema: editorial` solo usa
+transiciones `sobria`. Repetición entre vídeos: `python tools/medir_parecido.py --tabla video-v2`.

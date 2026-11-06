@@ -2,6 +2,7 @@
 
     python video-v2/motor/construir.py video-v2/<proyecto>            # valida + genera index.html
     python video-v2/motor/construir.py video-v2/<proyecto> --validar  # solo valida (sin escribir)
+    ... --reelegir   # vuelve a elegir la edición (edicion.py): ignora la congelada y el `legacy`
 
 Un proyecto es una carpeta con:
     storyboard.json       guion + escenas del catálogo + imágenes + subtítulos/aviso (lo único a mano)
@@ -41,6 +42,7 @@ sys.path.insert(0, str(MOTOR))
 sys.path.insert(0, str(RAIZ / "tools"))
 
 import anclas
+import edicion
 import hfversion
 
 CATALOGO = (
@@ -148,6 +150,91 @@ def _validar_sonidos(sb: dict) -> list[str]:
     return err
 
 
+POSICIONES = ("sup", "med", "ter", "baj")  # top, middle, lower third, bottom
+
+
+def _validar_aspecto(sb: dict) -> list[str]:
+    errores = []
+    cine = sb.get("aspecto") == "cine"
+    if sb.get("aspecto") not in (None, "cine"):
+        errores.append(f'`aspecto` {sb["aspecto"]!r} no existe (solo "cine")')
+    for k, s in enumerate(sb.get("escenas") or []):
+        if s.get("pos") and s["pos"] not in POSICIONES:
+            errores.append(
+                f"escena {k}: `pos` {s['pos']!r} no existe ({', '.join(POSICIONES)})"
+            )
+        if s.get("limpio") and (
+            s.get("tipo") != "foto"
+            or any(s.get(x) for x in ("rotulos", "titulo", "kicker", "sub"))
+        ):
+            errores.append(
+                f"escena {k}: `limpio` es una `foto` sin texto: quita rótulos y título"
+            )
+        if (
+            cine
+            and s.get("tipo") == "foto"
+            and any(s.get(x) for x in ("titulo", "kicker", "sub"))
+        ):
+            errores.append(
+                f"escena {k}: con aspecto cine el texto va en `rotulos` (con `pos`)"
+            )
+    if cine:
+        for n, v in (sb.get("imagenes") or {}).items():
+            if not v.get("color") and not v.get("archivo"):
+                errores.append(
+                    f"imagenes.{n}: duotono solo para archivo real: `color` o `archivo`"
+                )
+        for n, v in (sb.get("clips") or {}).items():
+            if v.get("duotono") and not v.get("archivo"):
+                errores.append(
+                    f"clips.{n}: duotono solo para archivo real: quítalo o marca `archivo`"
+                )
+    return errores
+
+
+# Clichés of the niche (auditoría, tell 5). Matched on what is known about the source: file name, Pexels
+# slug, credits. Metadata only: looking at a frame is still mandatory.
+VETO_CLICHES = re.compile(
+    r"(?<![a-z])hood(ed|ie)?(?![a-z])|capucha|hacker|typing|keyboard|teclado|"
+    r"gold(en)?[-_ ].{0,12}bitcoin|bitcoin[-_ ].{0,12}gold",
+    re.I,
+)
+MAX_USOS_FUENTE = 2
+
+
+def errores_seleccion(sb: dict, proy: Path) -> list[str]:
+    """Footage selection for new videos: no clichés, at most 2 uses per source, and a real document on
+    screen when the video states figures."""
+    errores, usos, fichas = [], {}, []
+    for p in (proy / "assets").glob("*/creditos.json"):
+        fichas += json.loads(p.read_text(encoding="utf-8"))
+    for grupo in ("clips", "imagenes"):
+        for n, v in (sb.get(grupo) or {}).items():
+            texto = f"{v.get('commons', '')} {n} {v.get('desc', '')} " + " ".join(
+                f"{f.get('titulo', '')} {f.get('fuente', '')}"
+                for f in fichas
+                if Path(f.get("archivo", "")).stem == n
+            )
+            veto = VETO_CLICHES.search(texto)
+            if veto:
+                errores.append(f"{grupo}.{n}: cliché vetado ({veto.group(0)!r})")
+    for s in sb.get("escenas") or []:
+        for r in _imagenes_usadas(s) + _clips_usados(s):
+            usos[r] = usos.get(r, 0) + 1
+    for x in sb.get("pruebas") or []:
+        usos[x.get("img")] = usos.get(x.get("img"), 0) + 1
+    errores += [
+        f"fuente {n!r} usada {u} veces (máx. {MAX_USOS_FUENTE}): metraje nuevo para cada idea"
+        for n, u in usos.items()
+        if u > MAX_USOS_FUENTE
+    ]
+    if sb.get("cifras") and not sb.get("pruebas"):
+        errores.append(
+            "hay `cifras` y ninguna `pruebas`: enseña el documento real (mínimo 1)"
+        )
+    return errores
+
+
 def validar(sb: dict, words: list[dict]) -> list[str]:
     errores = []
     esc = sb.get("escenas") or []
@@ -188,6 +275,8 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
     errores += _validar_sonidos(sb)
+    errores += edicion.errores_manual(sb, catalogo_sfx())
+    errores += _validar_aspecto(sb)
     for j, x in enumerate(sb.get("pruebas") or []):
         if (
             not isinstance(x, dict)
@@ -303,7 +392,7 @@ def avisos_retencion(p: dict) -> list[str]:
         e0[k]["en"]
         for k in ("kicker", "titulo", "sub")
         if isinstance(e0.get(k), dict) and "en" in e0[k]
-    ]
+    ] + [r["en"] for r in e0.get("rotulos") or [] if "en" in r]
     if not textos or min(textos) > 0.3:
         avisos.append(
             f'el gancho no pone texto desde el primer fotograma ({min(textos):.2f}s): ancla con "0-0.4" — '
@@ -330,7 +419,58 @@ def avisos_retencion(p: dict) -> list[str]:
             avisos.append(
                 f"{b_ - a_:.0f}s sin re-gancho ({a_:.1f}-{b_:.1f}s): mete un giro, una cifra nueva o una `revelacion`"
             )
+    pct = pct_texto_grande(p)
+    if pct > MAX_TEXTO_GRANDE:
+        avisos.append(
+            f"{pct:.0f} % del tiempo con texto grande (> {MAX_TEXTO_GRANDE}): deja planos sin texto que respiren"
+        )
+    racha, ant = 0, None
+    for s in p["escenas"]:
+        pos = posicion_texto(s)
+        racha = racha + 1 if pos is not None and pos == ant else int(pos is not None)
+        ant = pos
+        if racha == MAX_MISMA_POSICION + 1:
+            avisos.append(
+                f"más de {MAX_MISMA_POSICION} escenas seguidas con el texto en la misma posición ({pos}): varía la composición"
+            )
     return avisos
+
+
+MAX_TEXTO_GRANDE = 70  # % of the video
+MAX_MISMA_POSICION = 3
+
+
+def posicion_texto(s: dict) -> str | None:
+    """Where a scene's big text sits; None = no big text. Scene types without `pos` are centred."""
+    if s["tipo"] in ("foto", "grafica"):
+        if not s.get("rotulos") and not s.get("titulo"):
+            return None
+        return s.get("pos") or ("centro" if s.get("titulo") else "sup")
+    return s.get("posicion") or "centro"
+
+
+def _ventanas_texto(s: dict) -> list[tuple[float, float]]:
+    """Seconds of a scene covered by big text."""
+    if s["tipo"] in ("foto", "grafica"):
+        out = [
+            (r.get("en", s["t0"]), r.get("hasta", s["t1"]))
+            for r in s.get("rotulos") or []
+        ]
+        if s.get("titulo"):
+            out.append((s["titulo"].get("en", s["t0"]), s["t1"]))
+        return [(max(a, s["t0"]), min(b, s["t1"])) for a, b in out]
+    return [(s["t0"], s["t1"])]
+
+
+def pct_texto_grande(p: dict) -> float:
+    """% of the video with big text on screen (merging overlapping windows)."""
+    v = sorted(w for s in p["escenas"] for w in _ventanas_texto(s) if w[1] > w[0])
+    total, fin = 0.0, 0.0
+    for a, b in v:
+        a = max(a, fin)
+        if b > a:
+            total, fin = total + b - a, b
+    return 100 * total / p["D"]
 
 
 def huecos_estaticos(p: dict, maximo: float = 2.5) -> list[str]:
@@ -393,6 +533,8 @@ def _clips_usados(s: dict) -> list[str]:
 
 # ───────────────────────────── markup por tipo ─────────────────────────────
 def rotulos_html(s, id_):
+    p = f" p-{s['pos']}" if s.get("pos") else ""
+
     def pos(r):
         e = "".join(
             f"{c}:{r[k]}px;"
@@ -402,7 +544,7 @@ def rotulos_html(s, id_):
         return f' style="{e}"' if e else ""
 
     return "".join(
-        f'<div class="rot {r.get("estilo", "huge")} {r.get("color", "ink")}" id="{id_}-r{k}"{pos(r)}>{txt(r["texto"])}</div>'
+        f'<div class="rot {r.get("estilo", "huge")} {r.get("color", "ink")}{p}{" der" if r.get("der") else ""}" id="{id_}-r{k}"{pos(r)}>{txt(r["texto"])}</div>'
         for k, r in enumerate(s.get("rotulos") or [])
     )
 
@@ -463,9 +605,15 @@ def m_foto(s, id_):
         if s.get("titulo")
         else ""
     )
+    scrim = (
+        f'<div class="tscrim {s["pos"]}" id="{id_}-ts"></div>'
+        if s.get("pos") and s.get("rotulos")
+        else ""
+    )
     return (
         t
         + (f'<div class="stack abajo">{k}{sub}</div>' if k or sub else "")
+        + scrim
         + rotulos_html(s, id_)
     )
 
@@ -782,7 +930,7 @@ def asegurar_imagenes(proy: Path, imagenes: dict) -> None:
         return
     import imagenes_libres as il
     from duotono import duotono
-    from PIL import Image
+    from PIL import Image, ImageEnhance
 
     crudos = [
         (v["commons"], proy / "assets" / "img" / f"{k}.jpg")
@@ -803,6 +951,8 @@ def asegurar_imagenes(proy: Path, imagenes: dict) -> None:
         ):  # real colour: the stacked green duotone was the top tell in the visual audit
             im = Image.open(crudo).convert("RGB")
             im.thumbnail((1600, 2640))
+            if v.get("ligero"):  # same as broll.GRADO_LIGERO: photos and clips must cut together
+                im = ImageEnhance.Color(ImageEnhance.Contrast(im).enhance(1.04)).enhance(0.94)
             im.save(proy / "assets" / "t" / f"{k}.jpg", quality=86)
             continue
         duotono(
@@ -836,6 +986,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
                 if clips[c].get("duotono")
                 else "natural"
                 if clips[c].get("natural")
+                else "ligero"
+                if clips[c].get("ligero")
                 else "color"
             )  # color híbrido (26-sep)
             desde = float(clips[c].get("desde", 0)) + desde_extra
@@ -983,11 +1135,18 @@ def plan(sb: dict, words: list[dict]) -> dict:
                     "aparece": s["pregunta"]["en"] - 0.29,
                 }
             )
-    cortes, ult = [], -9.0
-    for s in esc[1:]:  # sin ametrallar: >= SEP_CORTES entre cortes
-        if s["t0"] - ult >= SEP_CORTES:
-            cortes.append(round(s["t0"], 3))
-            ult = s["t0"]
+    ed = sb.get("_edicion")  # edicion.py: None = video before the gate, legacy behaviour
+    trans = None
+    if ed:
+        edicion.asignar_camara(fotos, esc, ed)
+        trans = edicion.transiciones(sb, esc, ed, words, fr)
+        cortes = [x["t"] for x in trans]
+    else:
+        cortes, ult = [], -9.0
+        for s in esc[1:]:  # sin ametrallar: >= SEP_CORTES entre cortes
+            if s["t0"] - ult >= SEP_CORTES:
+                cortes.append(round(s["t0"], 3))
+                ult = s["t0"]
     sub = sb.get("subtitulos")
     rango = [fr[int(sub[0])][0], fr[int(sub[1])][-1]] if sub else [0, len(words) - 1]
     av = r.get("aviso") or {}
@@ -1017,9 +1176,10 @@ def plan(sb: dict, words: list[dict]) -> dict:
             "t0": 0.1,
             "t1": round(min(3.0, max(1.6, fin0 + 0.3)), 3),
         }
-    return {
+    out = {
         "D": END,
         "tema": sb.get("tema", ""),
+        "aspecto": sb.get("aspecto", ""),
         "voz_mix": bool((sb.get("voz") or {}).get("ride")),
         "fin_voz": fin_voz,
         "words": words,
@@ -1036,6 +1196,7 @@ def plan(sb: dict, words: list[dict]) -> dict:
             else None,
             "placa": bool(av.get("placa")),
             "tam": av.get("tam"),
+            "completo": av.get("completo"),
         },
         "golpes": sorted(golpes),
         "impactos": sorted(impactos),
@@ -1054,6 +1215,24 @@ def plan(sb: dict, words: list[dict]) -> dict:
             prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])
         ],
     }
+    if ed:
+        import sfx_libre
+
+        out["transiciones"] = trans
+        out["edicion"] = edicion.presets(ed)
+        out["sonidos"] = sorted(
+            out["sonidos"]
+            + edicion.usos_motor(
+                ed,
+                out,
+                out["vol_motor"],
+                VOL_MOTOR,
+                catalogo_sfx(),
+                sfx_libre.archivo,
+            ),
+            key=lambda u: u["t"],
+        )
+    return out
 
 
 PRUEBA_ANCHO_FRASE = (
@@ -1325,18 +1504,20 @@ def _html(p: dict) -> str:
     k_imp = (
         vm["impacto"] / VOL_MOTOR["impacto"]
     )  # los impactos de `impactos` escalan igual
-    sfx = [
-        ("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]
-    ]  # whoosh = transición visual (motor.js)
-    sfx += [("impact.wav", g - 0.02, vm["impacto"]) for g in p["golpes"]] + [
-        ("ding.wav", g, 0.5) for g in p["golpes"][1:2]
-    ]
-    sfx += [
-        ("riser.wav", g - RISER_S, vm["riser"])
-        for g in p["golpes"]
-        if g - RISER_S >= 0.5
-    ]
-    sfx += [("impact.wav", t, round(0.45 * k_imp, 3)) for t in p["impactos"]]
+    sfx = []
+    if not p.get("edicion"):  # with edicion.py these are recordings chosen per video, in `sonidos`
+        sfx = [
+            ("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]
+        ]  # whoosh = transición visual (motor.js)
+        sfx += [("impact.wav", g - 0.02, vm["impacto"]) for g in p["golpes"]] + [
+            ("ding.wav", g, 0.5) for g in p["golpes"][1:2]
+        ]
+        sfx += [
+            ("riser.wav", g - RISER_S, vm["riser"])
+            for g in p["golpes"]
+            if g - RISER_S >= 0.5
+        ]
+        sfx += [("impact.wav", t, round(0.45 * k_imp, 3)) for t in p["impactos"]]
     sfx = [(f"assets/_motor/{f}", t, v) for f, t, v in sfx]
     if p.get("serie"):  # logo sonoro: la firma de la serie, igual en cada episodio
         sfx.append(("assets/_motor/logo.wav", p["serie"]["t0"], 0.32))
@@ -1377,7 +1558,12 @@ def _html(p: dict) -> str:
     )
     rep = {
         "__PRUEBAS__": pruebas,
-        "__TEMA__": p["tema"],
+        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')}".strip(),
+        "__AVISOFIN__": (
+            f'        <div id="avisofin">{html.escape(p["aviso"]["completo"])}</div>'
+            if p["aviso"].get("completo")
+            else ""
+        ),
         "__SERIE__": serie,
         "__END__": f"{p['D']}",
         "__AUDIO__": "\n".join(audio),
@@ -1406,11 +1592,14 @@ def construir(
     solo_validar: bool = False,
     con_musica: bool = True,
     con_carve: bool = True,
+    reelegir: bool = False,
 ) -> Path:
     proy = Path(proy).resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
     errores = validar(sb, words)
+    if not errores and edicion.preparar(proy, sb, reelegir) is not None:
+        errores = errores_seleccion(sb, proy)
     if errores:
         raise StoryboardError("storyboard inválido:\n  - " + "\n  - ".join(errores))
     # ventanas del aviso: anclas -> segundos (van aparte porque son pares, no claves `en`)
@@ -1429,6 +1618,18 @@ def construir(
         print(f"⚠ ritmo: {aviso}")
     for aviso in avisos_retencion(p):
         print(f"⚠ retención: {aviso}")
+    if sb.get("_edicion"):
+        motivos = edicion.puerta(proy, p, sb)
+        if motivos:
+            raise StoryboardError(
+                "repite demasiado los últimos vídeos (P1, quita el override o usa --reelegir):"
+                + "".join(f"{chr(10)}  - {m}" for m in motivos)
+            )
+        e = sb["_edicion"]
+        print(
+            f"✓ edición sin repetir: {len(p['cortes'])} transiciones ({', '.join(e['transiciones'])}), "
+            f"cámara {', '.join(e['camara'])}, punch {e['punch']}, texto {e['texto']}"
+        )
     if solo_validar:
         print(
             f"✓ storyboard válido: {len(p['escenas'])} escenas, {len(p['fotos'])} fotos, {p['D']}s"
@@ -1524,6 +1725,8 @@ def construir(
     out = proy / "index.html"
     out.write_text(_html(p), encoding="utf-8")
     _andamiaje(proy)
+    if sb.get("_edicion"):
+        edicion.registrar(proy, p, sb)
     print(
         f"✓ {out.relative_to(RAIZ)}  {len(p['escenas'])} escenas · {len(p['fotos'])} fotos · {p['D']}s"
     )
@@ -1705,7 +1908,11 @@ def main() -> None:
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
     try:
-        construir(Path(sys.argv[1]), solo_validar="--validar" in sys.argv)
+        construir(
+            Path(sys.argv[1]),
+            solo_validar="--validar" in sys.argv,
+            reelegir="--reelegir" in sys.argv,
+        )
     except (StoryboardError, anclas.AnclaError) as e:
         raise SystemExit(f"✗ {e}")
 

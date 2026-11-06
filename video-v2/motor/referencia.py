@@ -7,7 +7,7 @@
 
 Distancia por rasgo = |2·percentil − 1| dentro de la referencia: 0 en la mediana, 1 fuera del rango.
 Solo se compara lo que la referencia mide. Hoy es la DURACIÓN (la API no da transcripción: ver
-research/referencia_nicho.py); G-CIFRA/G-GIRO/G-BUCLE siguen con umbral heurístico, sin calibrar.
+research/referencia_nicho.py); G-GANCHO/G-GIRO/G-BUCLE siguen con umbral heurístico, sin calibrar.
 PROVISIONAL: n=30, muestra por búsqueda con ruido (anuncios, canales de otros mercados).
 """
 

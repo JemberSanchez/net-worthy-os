@@ -194,7 +194,8 @@ def consultar(video_id: str, yt=None, yta=None, hoy: date | None = None) -> dict
     if v["status"].get("privacyStatus") != "public":
         return {"estado": "privado", "publish_at": v["status"].get("publishAt")}
     dur = duracion_iso(v["contentDetails"]["duration"])
-    inicio = v["snippet"]["publishedAt"][:10]
+    publicado = v["snippet"]["publishedAt"]
+    inicio = publicado[:10]
     fin = (hoy or datetime.now(UTC).date()).isoformat()
 
     def q(**kw):
@@ -215,7 +216,7 @@ def consultar(video_id: str, yt=None, yta=None, hoy: date | None = None) -> dict
             metrics="views,averageViewPercentage,averageViewDuration", filters=base
         )
     if not basicas or not basicas[0].get("views"):
-        return {"estado": "sin_datos", "duracion": dur}
+        return {"estado": "sin_datos", "duracion": dur, "published_at": publicado}
     ret = q(
         dimensions="elapsedVideoTimeRatio",
         metrics="audienceWatchRatio,relativeRetentionPerformance",
@@ -237,6 +238,7 @@ def consultar(video_id: str, yt=None, yta=None, hoy: date | None = None) -> dict
     return {
         "estado": "ok",
         "duracion": dur,
+        "published_at": publicado,
         "basicas": basicas[0],
         "curva": [
             (
@@ -295,7 +297,12 @@ def video_desde_archivos(ref: str) -> str | None:
                 d = json.loads(linea)
             except json.JSONDecodeError:
                 continue
-            if d.get("production_ref") == ref and d.get("video_id"):
+            # Meta lines also carry a video_id; those are not YouTube ids.
+            if (
+                d.get("production_ref") == ref
+                and d.get("video_id")
+                and d.get("platform", "youtube") == "youtube"
+            ):
                 return d["video_id"]
     return None
 

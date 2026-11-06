@@ -139,6 +139,17 @@ class HfCoreWindows(unittest.TestCase):
                 env = producir._entorno()
         self.assertEqual(Path(env.get("HF_CORE", "")).resolve(), p)
 
+    def test_resuelve_bash_por_path_y_no_el_de_wsl(self):
+        # CreateProcess finds System32\bash.exe (WSL) for a bare "bash", ignoring PATH order.
+        import producir
+
+        with (
+            mock.patch.object(producir.shutil, "which", return_value="C:/git/bash.exe"),
+            mock.patch.object(producir, "_run", return_value=mock.Mock(stdout="")) as run,
+        ):
+            producir._entorno()
+        self.assertEqual(run.call_args[0][0][0], "C:/git/bash.exe")
+
 
 if __name__ == "__main__":
     unittest.main()

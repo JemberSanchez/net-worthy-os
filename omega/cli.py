@@ -1064,11 +1064,35 @@ def cmd_record_outcome() -> None:
     con.close()
 
 
+def _asegurar_adn(con, ref: str) -> None:
+    """Records video-v2/<ref>/adn.json if the DNA row is missing: the manual `record-dna` step got
+    skipped (housing-turn), and without length_s the Meta retention cannot be computed."""
+    import json
+
+    from .creative import production_dna
+
+    path = config.ROOT / "video-v2" / ref / "adn.json"
+    if production_dna.fetch_dna(con, ref) is not None or not path.exists():
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    production_dna.record_dna(
+        con,
+        production_ref=ref,
+        blocks=data.get("blocks", []),
+        hook_type=data.get("hook_type"),
+        story_type=data.get("story_type"),
+        cta_type=data.get("cta_type"),
+        length_s=data.get("length_s"),
+        renderer_version=data.get("renderer_version"),
+    )
+
+
 def _repuntuar(con, ref: str) -> tuple[float, dict] | None:
     """Recalcula y guarda el outcome. Sin muestra suficiente borra el anterior: es derivado de las
     analíticas y dejarlo enseñaría un número que ya no es válido."""
     from .creative import decisions, scoring
 
+    _asegurar_adn(con, ref)
     try:
         score, partes = scoring.desde_analytics(con, ref)
     except scoring.MuestraInsuficiente:
@@ -1113,6 +1137,8 @@ def cmd_rescore() -> None:
     )
     seco = "--dry-run" in sys.argv
     for ref in refs:
+        if not seco:
+            _asegurar_adn(con, ref)
         antes = con.execute(
             "SELECT success, score_version FROM production_outcome WHERE production_ref=?",
             (ref,),
@@ -1448,7 +1474,11 @@ def cmd_analytics_sync() -> None:
             )
             print(f"  {ref}: aún privado{cuando}")
             continue
-        if not seco:  # ya es público: su comentario aprobado, si falta
+        if not seco:  # ya es público: su fecha real y su comentario aprobado, si falta
+            if datos.get("published_at"):
+                production_dna.record_video(
+                    con, ref, vid, publish_at=datos["published_at"]
+                )
             _comentar_pendiente(ref)
         if datos["estado"] == "sin_datos":
             print(f"  {ref}: sin datos aún (Analytics va con ~2-3 días de retraso)")
@@ -1459,6 +1489,7 @@ def cmd_analytics_sync() -> None:
                 f"  {ref}: {int(b['views'])} vistas, {b.get('averageViewPercentage')} % visto (dry-run)"
             )
             continue
+        _asegurar_adn(con, ref)  # before guardar: retention_by_block reads the DNA blocks
         r = ay.guardar(con, ref, datos)
         puntuado = _repuntuar(con, ref)
         medidos += 1

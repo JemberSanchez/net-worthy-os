@@ -123,3 +123,37 @@ que las vistas, porque no depende de cuánto te distribuyan.
 `_is_english`, calcula vistas/día, mult, like_rate) y `viral2.py` (comparación dentro de canales
 pequeños). ~100 unidades de cuota por búsqueda, 8 búsquedas × 2 muestras = 1.600 de 10.000/día.
 **Rehacerlo con más muestra y ≥90 días de vida mínima haría el n útil mucho más sólido.**
+
+## 7. Calendario de alternancia noticia / personaje (propuesta 5-nov, PROVISIONAL)
+
+Por qué: los 39 despegues de §3.1 son atemporales y el único formato con apoyo convergente es el de
+personaje (§3.2), pero es un estudio correlacional y sin medir retención. El canal publicó **7 noticias
+seguidas y 0 personajes**, así que no tiene datos propios para comparar. La alternancia es el
+experimento: **una variable (formato), 8 vídeos, se compara retención con ≥30 vistas por plataforma**.
+Sin ese corte, ni personaje ni noticia se declaran ganadores (POLITICA regla 2). `decide` sigue eligiendo
+las noticias; los personajes los pone este calendario porque el escáner no ve lo atemporal (§3.1).
+
+| Turno | Tipo | Tema | Estructura | Gancho posible (idea, guion en inglés por escribir) |
+| --- | --- | --- | --- | --- |
+| 1 | Personaje | Ronald Wayne | vida de personaje | vendió su 10 % de Apple por $800 |
+| 2 | Noticia | ganador de `decide` | error común | según el tema |
+| 3 | Personaje | Anne Scheiber | misterio | auditora del IRS, nunca ganó más de $4.000 al año, dejó $22 M |
+| 4 | Noticia | ganador de `decide` | cuenta atrás | según el tema |
+| 5 | Personaje | Jesse Livermore | cuenta atrás | ganó unos $100 M en el crac de 1929 y quebró en 1934 |
+| 6 | Noticia | ganador de `decide` | contradicción | según el tema |
+| 7 | Personaje | Oseola McCarty | vida de personaje | lavandera, donó unos $150.000 a una universidad |
+| 8 | Personaje | Isaac Newton | contradicción | el genio que perdió al menos £10.000 en la burbuja de los Mares del Sur |
+
+En reserva: Grace Groner y Ronald Read (ya montados, **sin publicar**; sus guiones fallan G-COMODIN y G-TU:
+reescribir antes de renderizar) y Hetty Green (faltan cifras por cotejar).
+
+Fuentes leídas el 5-nov (cifras de la tabla presentes en el texto):
+[Wayne](https://en.wikipedia.org/wiki/Ronald_Wayne) ·
+[Scheiber](https://en.wikipedia.org/wiki/Anne_Scheiber) ·
+[Livermore](https://en.wikipedia.org/wiki/Jesse_Livermore) ·
+[McCarty](https://en.wikipedia.org/wiki/Oseola_McCarty) ·
+[Newton, en South Sea Company](https://en.wikipedia.org/wiki/South_Sea_Company) ·
+[Green](https://en.wikipedia.org/wiki/Hetty_Green).
+⚠ Es Wikipedia, una fuente secundaria, y las páginas de Scheiber y McCarty llevan aviso de citas: al producir,
+cada cifra de `cifras[]` se coteja contra la referencia primaria que esa página enlaza (BBC y CNN en
+Wayne). Livermore murió por suicidio: el guion no lo usa como gancho ni como giro. Imágenes: solo Commons PD/CC0/CC BY.

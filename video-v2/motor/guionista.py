@@ -10,6 +10,8 @@ Lee `<proyecto>/guiones.json`:
 
 Dos etapas: 1) gana una estructura; 2) gana un gancho sobre esa estructura (ids "estructura+gN").
 Orden: primero las PUERTAS medibles (menos fallos gana), luego el juicio (lo que no se mide).
+Las puertas de retención (G-GANCHO, G-TU, G-CIFRAS, G-COMODIN, G-CIERRE) y su evidencia:
+docs/mejora/guion/. `producir.py` las aplica solo a guiones nuevos (puerta_guion).
 Si falta juicio de algún candidato, lo lista con sus puertas y sale con código 2: se rellena y se repite.
 Sale con `guiones.md` (ganador + descartadas y por qué) y el `guion` del storyboard. PROVISIONAL:
 umbrales sin calibrar con notas a ciegas del usuario (docs/RUBRICA.md).
@@ -21,7 +23,9 @@ import itertools
 import json
 import random
 import re
+import sqlite3
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import NoReturn
 
@@ -31,6 +35,10 @@ PALABRAS_MIN, PALABRAS_MAX = 85, 110  # producir.md: 85-110 palabras ≈ 27-35 s
 PALABRAS_POR_S = 3.1  # medido 26-sep con Kokoro: 85 palabras = 27,5 s
 HUECO_GIRO_MAX_S = 10.0  # re-gancho cada ~8-10 s
 CRITERIOS = ("una_idea", "bucle_abierto", "giro")
+# PROVISIONAL thresholds (docs/mejora/guion/linea_base.md): 10 scripts, 5 with >=30 measured views.
+TU_PALABRA_MAX = 19  # second 6 at 3.1 words/s; measured: median 19 words before 6 s (words.json, n=10)
+CIFRAS_MAX = 3
+CIERRE_VENTANA = 3  # a close type cannot repeat within the last N published videos
 
 NUMEROS = {
     "zero",
@@ -84,9 +92,128 @@ RELLENO = (
     "sort of",
     "you know",
 )
+# Closed list. Measured: "here's the part nobody tells you" in 7 of 10 scripts, a variant in an 8th.
+COMODINES = (
+    "here's the part",
+    "here's the thing",
+    "here's the catch",
+    "here's the kicker",
+    "here's the twist",
+    "here's the crazy part",
+    "here's the uncomfortable part",
+    "here's the problem",
+    "here's the truth",
+    "here's what nobody",
+    "here's what they",
+    "nobody tells you",
+    "nobody talks about",
+    "no one tells you",
+    "no one talks about",
+    "what they don't tell you",
+    "they don't want you to know",
+    "most people don't know",
+    "most people don't realize",
+    "let that sink in",
+    "think about that",
+    "the truth is",
+    "the real question is",
+    "but wait",
+    "and that's not all",
+    "you won't believe",
+)
+CONTRASTE = {"but", "and", "yet", "while", "still", "instead", "than", "you", "your"}
+TU = {
+    "you",
+    "your",
+    "you're",
+    "you'll",
+    "you've",
+    "yours",
+    "yourself",
+}
+# Bare "anyone" is not a stake: "Wall Street wasn't cheering for anyone" (midterm-rally) was a false hit.
+TU_FRASES = {"most people", "almost everyone", "anyone who"}
+# Closed list of names a global English-speaking viewer needs no explanation for.
+CONOCIDOS = {
+    "America",
+    "American",
+    "Americans",
+    "Amazon",
+    "Apple",
+    "Bitcoin",
+    "Congress",
+    "Dow",
+    "Fed",
+    "Google",
+    "Microsoft",
+    "Street",
+    "Tesla",
+    "Trump",
+    "Wall",
+    "Walmart",
+    "AI",
+    "CEO",
+    "IRS",
+    "US",
+    "USA",
+    "January",
+    "February",
+    "March",
+    "April",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+}
+PRONOMBRES = {"he", "she", "it", "they", "that", "those", "these"}
+IMPERATIVOS = {
+    "add",
+    "ask",
+    "check",
+    "compare",
+    "count",
+    "don't",
+    "find",
+    "look",
+    "open",
+    "own",
+    "pull",
+    "read",
+    "remember",
+    "run",
+    "start",
+    "stop",
+    "try",
+    "watch",
+    "write",
+}
+UNIDADES = {"dollar", "dollars", "cent", "cents", "percent", "points", "bucks"}
+MAGNITUDES = {"hundred", "thousand", "million", "billion", "trillion"}
+PEQUENAS = {
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+}
+# Stock phrases ("here's", "nobody") no longer count as a re-hook: see G-COMODIN.
 GIROS = (
-    "here's",
-    "nobody",
     "but",
     "instead",
     "that's not",
@@ -178,20 +305,238 @@ def _contenido(texto: str) -> set[str]:
     }
 
 
-def puertas(frases: list) -> list[dict]:
-    """Criterios que se miden sin juicio. `frases`: textos o dicts {texto, giro?}."""
+def _normal(texto: str) -> str:
+    return texto.lower().replace("’", "'")
+
+
+def _es_num(t: str) -> bool:
+    if re.fullmatch(r"\$?\d[\d,]*(?:\.\d+)?%?", t):
+        return True
+    validos = NUMEROS - UNIDADES - {"half", "double", "triple"}
+    return all(p in validos for p in t.split("-"))
+
+
+def cifras_protagonistas(texto: str) -> list[str]:
+    """Distinct figures said aloud: contiguous number words are one; years and bare small counts are none."""
+    toks = re.findall(
+        r"\$?\d[\d,]*(?:\.\d+)?%?|[a-z]+(?:-[a-z]+)*|[^\sa-z0-9]", _normal(texto)
+    )
+    grupos, i = [], 0
+    while i < len(toks):
+        if not _es_num(toks[i]):
+            i += 1
+            continue
+        g = [toks[i]]
+        i += 1
+        while i < len(toks):
+            sig = toks[i + 1] if i + 1 < len(toks) else ""
+            if (
+                _es_num(toks[i])
+                or toks[i] in UNIDADES
+                or toks[i] == "point"
+                or toks[i] == "and"
+                and _es_num(sig)
+            ):
+                g.append(toks[i])
+            elif not (toks[i] == "," and _es_num(sig) and g[-1] in MAGNITUDES):
+                break  # the comma case: "seven million, two hundred thousand" is one spoken figure
+            i += 1
+        grupos.append(g)
+
+    out: list[str] = []
+    for g in grupos:
+        nums = [t for t in g if t not in UNIDADES and t != "and"]
+        anio = re.fullmatch(r"(?:19|20)\d\d", g[0]) is not None or (
+            len(g) == 2
+            and g[0] in ("nineteen", "twenty")
+            and g[1] not in MAGNITUDES | UNIDADES
+        )
+        cuenta = (len(g) == 1 and g[0] in PEQUENAS) or nums == ["one"]
+        # "a hundred and eighty" and "one hundred and eighty" are the same figure
+        clave = " ".join(nums[1:] if nums[:2] == ["one", "hundred"] else nums)
+        if not anio and not cuenta and clave not in out:
+            out.append(clave)
+    return out
+
+
+def _gancho(fs: list[dict]) -> str:
+    """Text up to the first sentence end, even if it spans several script phrases."""
+    texto = " ".join(f["texto"].strip() for f in fs)
+    return re.split(r"(?<=[.?!])\s", texto, maxsplit=1)[0]
+
+
+def _nombres_sin_explicar(gancho: str, guion: str) -> list[str]:
+    out = []
+    aposicion = r",\s+(?:a|an|the|its|one|who|which|[A-Z][a-z]+'s)\b"
+    for m in re.finditer(r"\b[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)*", gancho):
+        palabras = m.group().split()
+        if m.group() == "I":
+            continue
+        # shortcut: a lone capitalised first word counts only if it reappears mid-sentence;
+        # a name used once as the very first word escapes. Upgrade with a dictionary if it bites.
+        solo_al_inicio = (
+            m.start() == 0
+            and len(palabras) == 1
+            and not re.fullmatch(r"[A-Z]{2,}", palabras[0])
+        )
+        if solo_al_inicio and not re.search(
+            rf"[a-z,]\s{re.escape(palabras[0])}\b", guion
+        ):
+            continue
+        if all(p in CONOCIDOS for p in palabras):
+            continue
+        if not re.match(aposicion, gancho[m.end() :]):
+            out.append(m.group())
+    return out
+
+
+def _puerta_gancho(fs: list[dict]) -> dict:
+    g = _gancho(fs)
+    toks = [t.strip(".,:;?!'") for t in _normal(g).split()]
+    nombres = _nombres_sin_explicar(g, " ".join(f["texto"] for f in fs))
+    motivos = []
+    if toks and _es_num(toks[0]) and not CONTRASTE & set(toks):
+        motivos.append("cifra sola: empieza por el número, sin sujeto ni contraste")
+    if nombres:
+        motivos.append(f"nombre sin explicar: {', '.join(nombres)}")
+    if toks and toks[0] in PRONOMBRES:
+        motivos.append(f"pronombre sin referente: {toks[0]}")
+    return {
+        "id": "G-GANCHO",
+        "ok": not motivos,
+        "detalle": "; ".join(motivos) or "se entiende sin contexto",
+    }
+
+
+def _puerta_tu(fs: list[dict]) -> dict:
+    ps = [w.strip('.,:;?!"') for f in fs for w in _normal(f["texto"]).split()]
+    pos = next(
+        (
+            i + 1
+            for i, w in enumerate(ps)
+            if w in TU or (i > 0 and f"{ps[i - 1]} {w}" in TU_FRASES)
+        ),
+        None,
+    )
+    return {
+        "id": "G-TU",
+        "ok": pos is not None and pos <= TU_PALABRA_MAX,
+        "detalle": f"espectador en la palabra {pos} (≤{TU_PALABRA_MAX})"
+        if pos
+        else "nunca habla del espectador",
+    }
+
+
+def tipo_cierre(frases: list) -> str:
+    """Close type of the last sentence: dicotomia, pregunta, imperativo, dato or afirmacion."""
+    ult = frases[-1]["texto"] if isinstance(frases[-1], dict) else frases[-1]
+    ult = re.split(r"(?<=[.?!])\s+", ult.strip())[-1]
+    if ult.endswith("?"):
+        return "dicotomia" if re.search(r"\bor\b", ult.lower()) else "pregunta"
+    if _normal(ult).split()[0].strip(".,:;") in IMPERATIVOS:
+        return "imperativo"
+    return "dato" if cifras_protagonistas(ult) else "afirmacion"
+
+
+def refs_publicadas() -> list[str]:
+    """Published refs, newest first (data/omega.sqlite; empty when the base is missing)."""
+    ruta = RAIZ / "data" / "omega.sqlite"
+    if not ruta.exists():
+        return []
+    con = sqlite3.connect(f"{ruta.as_uri()}?mode=ro", uri=True)
+    try:
+        filas = con.execute(
+            "SELECT production_ref, publish_at, recorded_at FROM production_video"
+            " WHERE platform = 'youtube'"
+        ).fetchall()
+    except sqlite3.Error:
+        return []
+    finally:
+        con.close()
+
+    def cuando(f: tuple) -> float:
+        if f[1]:
+            return datetime.fromisoformat(f[1]).timestamp()
+        return float(f[2] or 0)
+
+    return [f[0] for f in sorted(filas, key=cuando, reverse=True)]
+
+
+def cierres_previos(proy: Path, publicados: list[str] | None = None) -> list[str]:
+    """Close types of earlier videos, newest first. Without a base: storyboard mtime of the siblings."""
+    orden = refs_publicadas() if publicados is None else publicados
+    if not orden:
+        # shortcut: mtime order, a fresh clone scrambles it; same limit as medir_parecido.puerta_repeticion
+        sbs = proy.parent.glob("*/storyboard.json")
+        orden = [
+            s.parent.name
+            for s in sorted(sbs, key=lambda s: s.stat().st_mtime, reverse=True)
+        ]
+    out = []
+    for ref in orden:
+        ruta = proy.parent / ref / "storyboard.json"
+        if ref == proy.name or not ruta.exists():
+            continue
+        guion = json.loads(ruta.read_text(encoding="utf-8")).get("guion")
+        if guion:
+            out.append(tipo_cierre(guion))
+    return out
+
+
+def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool, str]:
+    """Gate for producir.py: new scripts only, so re-rendering a published video keeps working."""
+    pub = refs_publicadas() if publicados is None else publicados
+    if proy.name in pub or list((proy / "renders").glob("*-final.mp4")):
+        return True, "exento: vídeo anterior a la puerta o ya publicado"
+    sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
+    ps = puertas(sb["guion"], previos=cierres_previos(proy, pub))
+    fallan = [f"{p['id']}: {p['detalle']}" for p in ps if not p["ok"]]
+    if not sb.get("formato"):  # edicion.preparar exempts it from the repetition gate otherwise
+        fallan.append("G-FORMATO: falta `formato`, sin él no pasa por la puerta de edición")
+    return not fallan, " · ".join(fallan) or f"{len(ps)} puertas de guion OK"
+
+
+def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
+    """Criterios que se miden sin juicio. `frases`: textos o dicts {texto, giro?}.
+    `previos`: close types of earlier videos, newest first (None = no history, nothing vetoed)."""
     fs = [f if isinstance(f, dict) else {"texto": f} for f in frases]
     n = [len(f["texto"].split()) for f in fs]
     total = sum(n)
     out = []
 
+    out.append(_puerta_gancho(fs))
+    out.append(_puerta_tu(fs))
+    cifras = cifras_protagonistas(" ".join(f["texto"] for f in fs))
     out.append(
         {
-            "id": "G-CIFRA",
-            "ok": tiene_cifra(fs[0]["texto"]),
-            "detalle": "cifra en la 1.ª frase"
-            if tiene_cifra(fs[0]["texto"])
-            else "la 1.ª frase no tiene cifra",
+            "id": "G-CIFRAS",
+            "ok": len(cifras) <= CIFRAS_MAX,
+            "detalle": f"{len(cifras)} cifras dichas (≤{CIFRAS_MAX}): {'; '.join(cifras)}",
+        }
+    )
+    comodines = sorted(
+        {
+            c
+            for f in fs
+            for c in COMODINES
+            if _contiene(_normal(f["texto"]).replace("here is", "here's"), c)
+        }
+    )
+    out.append(
+        {
+            "id": "G-COMODIN",
+            "ok": not comodines,
+            "detalle": ", ".join(comodines) or "sin frases comodín",
+        }
+    )
+    tipo = tipo_cierre(fs)
+    vetado = tipo in (previos or [])[:CIERRE_VENTANA]
+    out.append(
+        {
+            "id": "G-CIERRE",
+            "ok": not vetado,
+            "detalle": f"cierre «{tipo}»"
+            + (f" ya usado en los últimos {CIERRE_VENTANA} vídeos" if vetado else ""),
         }
     )
     out.append(
@@ -271,9 +616,9 @@ def elegir(cands: list[dict], juicio: dict) -> tuple[dict, list[dict]]:
     return ranking[0], ranking
 
 
-def evaluar(cands: list[dict]) -> list[dict]:
+def evaluar(cands: list[dict], previos: list[str] | None = None) -> list[dict]:
     for c in cands:
-        c["puertas"] = puertas(c["frases"])
+        c["puertas"] = puertas(c["frases"], previos)
         c["fallos"] = sum(not p["ok"] for p in c["puertas"])
     return cands
 
@@ -373,16 +718,17 @@ def main() -> None:
     proy = Path(sys.argv[1]).resolve()
     datos = json.loads((proy / "guiones.json").read_text(encoding="utf-8"))
     juicio = datos.get("juicio") or {}
+    previos = cierres_previos(proy)
 
     ests = evaluar(
-        [{"id": e["id"], "frases": e["frases"]} for e in datos["estructuras"]]
+        [{"id": e["id"], "frases": e["frases"]} for e in datos["estructuras"]], previos
     )
     try:
         mejor_est, rank1 = elegir(ests, juicio)
     except FaltaJuicio as e:
         _pedir_juicio(e, ests)
     est = next(e for e in datos["estructuras"] if e["id"] == mejor_est["id"])
-    variantes = evaluar(candidatos_gancho(est, datos.get("ganchos") or []))
+    variantes = evaluar(candidatos_gancho(est, datos.get("ganchos") or []), previos)
     try:
         ganador, rank2 = elegir(variantes, juicio)
     except FaltaJuicio as e:

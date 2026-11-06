@@ -1,0 +1,458 @@
+{
+ "_doc": "Lo que usó cada vídeo, en orden de creación (edicion.py, medir_parecido.py). `legacy`: anterior a la puerta, su re-render no cambia. Lo escribe construir.py.",
+ "videos": [
+  {
+   "ref": "read-janitor",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "der",
+     "empuje",
+     "pull",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "Bag of coins.ogg",
+     "Clock ticking.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - 06 - Hustle.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "grace-groner",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "empuje",
+     "pull"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "Bag of coins.ogg",
+     "Clock ticking.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "WWS Typewriter.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - Broken Reality.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "housing-turn",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "empuje",
+     "pull",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Bag of coins.ogg",
+     "Clock ticking.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - Relent.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "fed-vs-card",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "der",
+     "empuje",
+     "pull",
+     "push"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Bag of coins.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - The Rule.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "binance-heist",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "empuje",
+     "pull",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Bag of coins.ogg",
+     "Clock ticking.ogg",
+     "Heartbeat.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Ghost Dance (MacLeod, Kevin) (ISRC USUAN1100573).oga"
+    ]
+   }
+  },
+  {
+   "ref": "gdp-annualized",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "empuje",
+     "izq",
+     "pull",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Clock ticking.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - The Endless.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "aws-profit",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "empuje",
+     "pull",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Bag of coins.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - Unity.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "saving-rate",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "der",
+     "empuje",
+     "pull",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Bag of coins.ogg",
+     "Heartbeat.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "motor:ding",
+     "motor:impact",
+     "motor:whoosh"
+    ],
+    "riser": [
+     "motor:riser"
+    ],
+    "musica": [
+     "Kevin MacLeod - Winter Reflections.ogg"
+    ]
+   }
+  },
+  {
+   "ref": "interest-vs-defense",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [],
+    "camara": [
+     "empuje",
+     "izq",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "647712 unfa braam.flac",
+     "Dull thud.ogg",
+     "Heartbeat.ogg",
+     "Mechanical tack.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Watch tick.ogg"
+    ],
+    "riser": [
+     "CrashCymbalSample.ogg",
+     "Gong or bell vibrant (short).ogg"
+    ],
+    "musica": [
+     "Impending Boom (ISRC USUAN1100198).mp3"
+    ]
+   }
+  },
+  {
+   "ref": "midterm-rally",
+   "marca": null,
+   "legacy": true,
+   "firma": {
+    "transiciones": [],
+    "camara": [
+     "empuje",
+     "izq",
+     "pull",
+     "push"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "647712 unfa braam.flac",
+     "Clock ticking.ogg",
+     "Dull thud.ogg",
+     "Mechanical tack.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "Watch tick.ogg",
+     "motor:ding"
+    ],
+    "riser": [],
+    "musica": [
+     "Distant Tension (ISRC USUAN1100257).mp3"
+    ]
+   }
+  },
+  {
+   "ref": "interest-outran-defense",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "cortina",
+     "inercia_der"
+    ],
+    "camara": [
+     "baja",
+     "deriva",
+     "diag_desc"
+    ],
+    "punch": [
+     "doble"
+    ],
+    "texto": [
+     "lateral"
+    ],
+    "efectos": [
+     "Alien technology scanning device.ogg",
+     "Computer Mouse Click.wav",
+     "Deep hit (Gravity Sound).wav",
+     "Kick 3 (Gravity Sound).wav",
+     "Knocking on wood or door.ogg"
+    ],
+    "riser": [
+     "ARP-Solina Crescendo clean.ogg"
+    ],
+    "musica": [
+     "Scott Buckley - Signal To Noise (nomelody mix).oga"
+    ]
+   },
+   "eleccion": {
+    "semilla": "interest-outran-defense",
+    "transiciones": [
+     "cortina",
+     "inercia_der"
+    ],
+    "camara": [
+     "deriva",
+     "baja",
+     "diag_desc"
+    ],
+    "punch": "doble",
+    "texto": "lateral",
+    "sfx": {
+     "thud": "nudillo",
+     "tick": "bombo_mini",
+     "tack": "clic_raton"
+    },
+    "motor": {
+     "whoosh": "escaner",
+     "impacto": "golpe_hondo",
+     "riser": "riser_cuerdas"
+    },
+    "musica": {
+     "commons": "File:Scott Buckley - Signal To Noise (nomelody mix).oga",
+     "desde": 107.0
+    }
+   }
+  }
+ ]
+}

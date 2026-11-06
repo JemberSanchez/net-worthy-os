@@ -29,6 +29,7 @@ import argparse
 import copy
 import itertools
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -140,7 +141,7 @@ def ancla_de(
 
 
 def revisar_gancho(words: list[dict], frames_ocr: list[dict], u: dict) -> list[dict]:
-    import anclas
+    import guionista
 
     out = []
     if words and words[0]["start"] > u["voz_arranca_max_s"]:
@@ -168,19 +169,11 @@ def revisar_gancho(words: list[dict], frames_ocr: list[dict], u: dict) -> list[d
                 evidencia="OCR de los primeros fotogramas vacío",
             )
         )
-    fr = anclas.frases(words) if words else []
-    k = int(u.get("cifra_en_frase", 0))
-    if fr and k < len(fr):
-        texto = " ".join(words[i]["text"] for i in fr[k])
-        if not NUMEROS.search(texto):
+    if words:
+        g = guionista._puerta_gancho([{"texto": " ".join(w["text"] for w in words)}])
+        if not g["ok"]:
             out.append(
-                fallo(
-                    "G1",
-                    "media",
-                    f"la frase {k} del gancho no dice ninguna cifra: «{texto}»",
-                    t=words[fr[k][0]]["start"],
-                    escena=0,
-                )
+                fallo("G1", "media", g["detalle"], t=words[0]["start"], escena=0)
             )
     return out
 
@@ -407,13 +400,18 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
                 "t1": s["t"] + d,
                 "fuente": f"sonidos[{i}] {s['sfx']}"
                 if i is not None
+                else f"motor {s['motor']} ({s['sfx']})"
+                if s.get("motor")
                 else f"sfx {s['sfx']}",
                 "sonido": i,
                 "vol": s.get("vol"),
                 "archivo": str(proy / "assets" / "sfx" / s["archivo"]),
+                **({"motor": s["motor"]} if s.get("motor") else {}),
             }
         )
     m = MOTOR / "assets"
+    # with edicion.py the motor's whoosh/impact/riser are recordings already listed in `sonidos`
+    motor_sint = not plan.get("edicion")
     vm = {
         "whoosh": 0.1,
         "impacto": 0.6,
@@ -429,7 +427,7 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
             "archivo": str(m / "whoosh.wav"),
             "vol": vm["whoosh"],
         }
-        for t in plan.get("cortes") or []
+        for t in (plan.get("cortes") or [] if motor_sint else [])
     ]
     ev += [
         {
@@ -440,7 +438,7 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
             "archivo": str(m / "impact.wav"),
             "vol": vm["impacto"],
         }
-        for g in plan.get("golpes") or []
+        for g in (plan.get("golpes") or [] if motor_sint else [])
     ]
     ev += [
         {
@@ -451,7 +449,7 @@ def eventos_sonido(plan: dict, proy: Path, sb: dict, words: list[dict]) -> list[
             "archivo": str(m / "riser.wav"),
             "vol": vm["riser"],
         }
-        for g in plan.get("golpes") or []
+        for g in (plan.get("golpes") or [] if motor_sint else [])
         if g - 1.0 >= 0.5
     ]
     if plan.get("serie"):
@@ -651,6 +649,8 @@ def revisar_parecido(rp: dict, u: dict) -> list[dict]:
                     "variar en el guion/storyboard (riesgo de contenido repetitivo)",
                 )
             )
+    for m in (rp.get("edicion") or {}).get("motivos") or []:
+        out.append(fallo("P1", "alta", f"repite edición: {m}"))
     return out
 
 
@@ -830,7 +830,8 @@ def puntuar(fallos: list[dict]) -> int:
 def medir_loudness(mp4: Path) -> dict | None:
     r = subprocess.run(
         [PY, str(RAIZ / "tools" / "medir_loudness.py"), str(mp4)],
-        check=False, capture_output=True,
+        check=False,
+        capture_output=True,
         text=True,
     )
     lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)
@@ -994,18 +995,19 @@ def revisar(
 
 JUICIO = """# Juicio del crítico — {ref}
 
-Mira los fotogramas (`{dir}/f_*.jpg`, el nombre lleva el segundo) y el guion. Escribe
+Mira `{dir}/hoja.jpg` (una sola imagen, cada celda rotulada con su segundo) y el guion. Abre un
+`f_*.jpg` suelto si dudas de ese segundo o para leer letra pequeña (J3, J6). Escribe
 `{dir}/juicio.json` (juicio de ESTA ronda; vuelve a correr el crítico con `--mp4 {dir}.mp4`) = `{{"fallos": [{{"criterio", "severidad": "alta|media|baja", "t", "escena",
 "detalle", "parche"}}]}}`. `parche` solo con operaciones del catálogo: {ops}
 (`set` admite rutas `escenas.N.campo`, `aviso.*`, `musica.volumen`, `golpes`, `calientes`).
 Sin parche = se reporta y no se toca. No repitas lo que ya midieron los medidores (abajo).
 
 Criterios de juicio (docs/RUBRICA.md, PROVISIONAL):
-- J1 Gancho: en 1-2 s, ¿se entiende el resultado raro con su cifra y la imagen frena el scroll?
+- J1 Gancho: en 1-2 s, ¿se entiende sin contexto (sujeto concreto y tensión) y la imagen frena el scroll?
 - J2 Imagen = palabra: ¿cada plano muestra lo que dice la voz en ese segundo?
 - J3 Exactitud: ¿cada cifra del guion coincide con su fuente (`cifras`)? ¿algo suena a consejo?
 - J4 Honestidad: ¿está la parte incómoda (riesgo, sesgo de superviviente)?
-- J5 Cierre: ¿UNA dicotomía clara y el final enlaza con el inicio?
+- J5 Cierre: ¿de un tipo distinto a los últimos 3 vídeos (G-CIERRE) y el final enlaza con el inicio?
 - J6 Acabado: textos cortados, solapes, elementos fuera de cuadro, faltas de ortografía.
 
 ## Guion
@@ -1020,6 +1022,35 @@ Criterios de juicio (docs/RUBRICA.md, PROVISIONAL):
 ## Ya medido ({n} fallos)
 {medidos}
 """
+
+
+def hoja_contactos(dir_: Path) -> Path | None:
+    """One sheet instead of N images: fits Claude's 1568 px limit, each cell labelled with its second."""
+    from PIL import Image, ImageDraw
+
+    fotos = sorted(dir_.glob("f_*.jpg"))
+    if not fotos:
+        return None
+    cols = math.ceil(math.sqrt(len(fotos) * 16 / 9))
+    filas = math.ceil(len(fotos) / cols)
+    celda = min(1568 // cols, 1568 * 9 // (filas * 16))
+    alto = celda * 16 // 9
+    hoja = Image.new("RGB", (cols * celda, filas * alto), "black")
+    for i, f in enumerate(fotos):
+        with Image.open(f) as src:
+            im = src.convert("RGB").resize((celda, alto), Image.LANCZOS)
+        ImageDraw.Draw(im).text(
+            (4, 4),
+            f.stem[2:],
+            fill="yellow",
+            font_size=16,
+            stroke_width=2,
+            stroke_fill="black",
+        )
+        hoja.paste(im, ((i % cols) * celda, (i // cols) * alto))
+    salida = dir_ / "hoja.jpg"
+    hoja.save(salida, quality=85)
+    return salida
 
 
 def preparar_juicio(
@@ -1050,6 +1081,7 @@ def preparar_juicio(
             ],
             check=False,
         )
+    hoja_contactos(dir_)
     esc = "\n".join(
         f"- {k} `{e['tipo']}` {a:.2f}-{b:.2f}s"
         for k, (e, (a, b)) in enumerate(zip(sb.get("escenas") or [], ventanas(plan)))
@@ -1117,7 +1149,8 @@ def render(proy: Path) -> tuple[Path | None, dict, str]:
     """producir.py SIN subir (las rondas del crítico nunca salen de la máquina)."""
     r = subprocess.run(
         [PY, str(MOTOR / "producir.py"), str(proy), "--sin-subir"],
-        check=False, capture_output=True,
+        check=False,
+        capture_output=True,
         text=True,
     )
     qa_f = proy / "renders" / "qa.json"

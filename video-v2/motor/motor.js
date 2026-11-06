@@ -9,10 +9,17 @@
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const $ = (id) => document.getElementById(id);
   const q = (sel) => document.querySelector(sel);
-  const inn = (sel, at, from, dur = 0.3, ease = "power3.out") =>
-    tl.fromTo(
+  // Text entrance chosen per video (edicion.py). It replaces only generic rises: opacity + small x/y.
+  const ENTRADA = P.edicion && P.edicion.texto;
+  const generica = (f) =>
+    Object.keys(f).every((k) => ["opacity", "x", "y"].includes(k)) &&
+    Math.abs(f.x || 0) <= 60 &&
+    Math.abs(f.y || 0) <= 60;
+  const inn = (sel, at, from, dur = 0.3, ease = "power3.out") => {
+    const pre = ENTRADA && generica(from) ? ENTRADA : null;
+    return tl.fromTo(
       sel,
-      from,
+      pre ? pre.from : from,
       {
         x: 0,
         y: 0,
@@ -20,11 +27,13 @@
         opacity: 1,
         rotation: 0,
         filter: "blur(0px)",
-        duration: dur,
+        ...(pre ? pre.to : {}),
+        duration: pre ? dur * pre.k : dur,
         ease,
       },
       at,
     );
+  };
   const out = (sel, at, dur = 0.2) =>
     tl.to(
       sel,
@@ -131,7 +140,7 @@
   });
   if (P.aviso.final != null)
     tl.fromTo(
-      "#aviso",
+      P.aviso.completo ? "#avisofin" : "#aviso",
       { opacity: 0 },
       { opacity: 1, duration: 0.3, immediateRender: false },
       P.aviso.final,
@@ -235,13 +244,20 @@
   const KBV = { pull: [{ scale: 1.12 }, { scale: 1.02 }] };
   P.fotos.forEach((f) => {
     const sel = "#" + f.id + (f.video ? "" : "-img");
-    const [a, b] = f.video
-      ? KBV[f.mov] || [{ scale: 1.02 }, { scale: 1.12 }]
-      : KB[f.mov] || KB.push;
+    const [a, b] = f.cam
+      ? [f.cam.a, f.cam.b]
+      : f.video
+        ? KBV[f.mov] || [{ scale: 1.02 }, { scale: 1.12 }]
+        : KB[f.mov] || KB.push;
     tl.fromTo(
       sel,
       { ...a, opacity: f.opacidad },
-      { ...b, opacity: f.opacidad, duration: f.t1 - f.t0, ease: "none" },
+      {
+        ...b,
+        opacity: f.opacidad,
+        duration: f.t1 - f.t0,
+        ease: f.cam ? f.cam.ease : "none",
+      },
       f.t0,
     );
     if (f.aparece)
@@ -288,7 +304,11 @@
           { scale: 1.0, duration: 0.4, ease: "power2.out" },
           s.golpe + 0.12,
         );
-        tl.to(`#${id}-l1`, { opacity: 0.35, duration: 0.3 }, s.golpe);
+        tl.to(
+          `#${id}-l1`,
+          { opacity: P.aspecto === "cine" ? 0.55 : 0.35, duration: 0.3 }, // 0.35 read 2.72:1 (critic L1)
+          s.golpe,
+        );
         flash(s.golpe, 0.25);
         sacudida(s.golpe);
       }
@@ -1034,11 +1054,13 @@
           // editorial: below-right of the point, the only area the value labels never reach
           tx.setAttribute(
             "text-anchor",
-            P.tema === "editorial" ? "start" : "end",
+            P.tema === "editorial" && !m.izq ? "start" : "end",
           );
           tx.setAttribute(
             "x",
-            P.tema === "editorial" ? mx + 34 : Math.max(X0 + 350, mx - 40),
+            P.tema === "editorial"
+              ? mx + (m.izq ? -64 : 34) // izq: a mark near the right edge would clip
+              : Math.max(X0 + 350, mx - 40),
           );
           tx.setAttribute("y", P.tema === "editorial" ? my + 74 : my - 60);
           tx.setAttribute("opacity", op);
@@ -1159,6 +1181,28 @@
       if (r.hasta != null)
         tl.to(`#s${k}-r${j}`, { opacity: 0, duration: 0.12 }, r.hasta - 0.12);
     });
+    // aspecto cine: the scrim lives and dies with the text, so the shot opens and can close clean
+    const rs = s.rotulos || [];
+    if ($(`s${k}-ts`) && rs.length) {
+      tl.fromTo(
+        `#s${k}-ts`,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.2, immediateRender: false },
+        Math.max(0, Math.min(...rs.map((r) => r.en)) - 0.05),
+      );
+      if (rs.every((r) => r.hasta != null))
+        tl.to(
+          `#s${k}-ts`,
+          { opacity: 0, duration: 0.15 },
+          Math.max(...rs.map((r) => r.hasta)) - 0.12,
+        );
+    }
+  });
+  // planos limpios: only the image and the voice
+  const LIMPIOS = P.escenas.filter((s) => s.limpio);
+  LIMPIOS.forEach((s) => {
+    tl.set("#brand", { opacity: 0 }, s.t0);
+    tl.set("#brand", { opacity: 1 }, s.t1);
   });
   const ED = P.tema === "editorial";
   if (ED) {
@@ -1188,10 +1232,20 @@
         "#aviso",
         {
           color: c ? "#4c5a52" : "#d9e2dc",
-          backgroundColor: c ? "rgba(10,26,20,0)" : "rgba(10,26,20,0.86)",
+          backgroundColor: c
+            ? "rgba(10,26,20,0)"
+            : P.aspecto === "cine"
+              ? "rgba(8,10,10,0.7)"
+              : "rgba(10,26,20,0.86)",
         },
         t,
       );
+      if (P.aspecto === "cine")
+        tl.set(
+          "#brand span",
+          { backgroundColor: c ? "rgba(8,10,10,0)" : "rgba(8,10,10,0.62)" },
+          t,
+        );
     });
   }
 
@@ -1228,6 +1282,8 @@
     // bajo "ALMOST NOBODY CAN MAKE" — Grace, 26-sep). Grupos de 1-2 palabras: todas.
     if (g.filter((x) => vis.has(nrm(x.text))).length * 3 >= g.length * 2)
       return;
+    const medio = (g[0].start + g[g.length - 1].end) / 2;
+    if (LIMPIOS.some((s) => medio >= s.t0 && medio < s.t1)) return;
     const el = document.createElement("div");
     el.className = "cg";
     el.id = "cg" + gi;
@@ -1236,11 +1292,15 @@
     // Nunca ocultar antes de mostrar: con palabras de duración 0 (alineación interpolada) el
     // "siguiente grupo" podía empezar antes que este, el fade-out caía ANTES del fade-in y el
     // subtítulo se quedaba pegado el resto del vídeo (Grace Groner, 23-sep).
+    const entra = LIMPIOS.find((s) => s.t0 > gS); // a clean shot cuts the caption dead
     const gE = Math.max(
       gS + 0.3,
-      groups[gi + 1]
-        ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35)
-        : g[g.length - 1].end + 0.4,
+      Math.min(
+        groups[gi + 1]
+          ? Math.min(groups[gi + 1][0].start - 0.05, g[g.length - 1].end + 0.35)
+          : g[g.length - 1].end + 0.4,
+        entra ? entra.t0 : Infinity,
+      ),
     );
     tl.fromTo(
       el,
@@ -1315,7 +1375,43 @@
   };
   const ORDEN = ["zoom", "izq", "zoom", "sube"];
   const REPOSO = { scale: 1, x: 0, y: 0 };
-  if (!ED)
+  // Chosen per video (edicion.py): data only, hard cut everywhere else. Reflection = mirror tile, so a
+  // long push/whip never shows the empty frame. Everything goes back to none after the entrance.
+  (P.transiciones || []).forEach((tr) => {
+    // "initial", not "none": GSAP ignores "none" on this property (checked in the browser)
+    const ref = (lado) => ({ webkitBoxReflect: lado });
+    if (tr.reflejo) tl.set("#trans", ref(tr.reflejo[0]), tr.t - tr.dur_sale);
+    tl.fromTo(
+      "#trans",
+      { ...tr.reposo },
+      {
+        ...tr.reposo,
+        ...tr.sale,
+        duration: tr.dur_sale,
+        ease: tr.ease_sale,
+        immediateRender: false,
+      },
+      tr.t - tr.dur_sale,
+    );
+    if (tr.reflejo) tl.set("#trans", ref(tr.reflejo[1]), tr.t);
+    tl.fromTo(
+      "#trans",
+      { ...tr.reposo, ...tr.entra },
+      {
+        ...tr.reposo,
+        duration: tr.dur_entra,
+        ease: tr.ease_entra,
+        immediateRender: false,
+      },
+      tr.t,
+    );
+    tl.set(
+      "#trans",
+      { filter: "none", clipPath: "none", ...ref("initial") },
+      tr.t + tr.dur_entra + 0.01,
+    );
+  });
+  if (!ED && !P.transiciones)
     P.cortes.forEach((t, i) => {
       const [sale, entra] = TR[ORDEN[i % ORDEN.length]];
       tl.fromTo(
@@ -1353,27 +1449,33 @@
     hechos = [];
   const libre = (t) =>
     t >= 0.8 && t <= P.fin_voz && hechos.every((h) => Math.abs(h - t) >= HUECO);
+  // [offset, level (1 = peak), duration, ease, rotation]; shape chosen per video (edicion.py)
+  const PASOS = (P.edicion && P.edicion.punch) || [
+    [-0.02, 1, 0.07, "power3.out", 0],
+    [0.08, 0, 0.65, "power2.inOut", 0],
+  ];
   const punch = (t, z) => {
     if (!libre(t)) return;
     // fromTo con valores explícitos: el render salta a cualquier instante (seek) y un `to` fuera de
     // orden sobre la misma propiedad cogería un valor inicial equivocado
-    tl.fromTo(
-      "#cam",
-      { scale: 1 },
-      { scale: z, duration: 0.07, ease: "power3.out", immediateRender: false },
-      t - 0.02,
-    );
-    tl.fromTo(
-      "#cam",
-      { scale: z },
-      {
-        scale: 1,
-        duration: 0.65,
-        ease: "power2.inOut",
-        immediateRender: false,
-      },
-      t + 0.08,
-    );
+    let nivel = 0,
+      giro = 0;
+    PASOS.forEach(([off, n, dur, ease, rot]) => {
+      tl.fromTo(
+        "#cam",
+        { scale: 1 + (z - 1) * nivel, rotation: giro },
+        {
+          scale: 1 + (z - 1) * n,
+          rotation: rot,
+          duration: dur,
+          ease,
+          immediateRender: false,
+        },
+        t + off,
+      );
+      nivel = n;
+      giro = rot;
+    });
     hechos.push(t);
   };
   P.golpes.forEach((t) => punch(t, ED ? 1.04 : 1.08));

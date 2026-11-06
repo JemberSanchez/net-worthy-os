@@ -54,7 +54,7 @@ class TestPuertasCalibradas(unittest.TestCase):
         fuera = {p["id"]: p for p in R.puertas_calibradas(guion_de(80), REF)}
         self.assertTrue(dentro["G-LARGO"]["ok"] and dentro["G-LARGO"]["calibrada"])
         self.assertFalse(fuera["G-LARGO"]["ok"])
-        self.assertFalse(dentro["G-CIFRA"]["calibrada"])
+        self.assertFalse(dentro["G-GANCHO"]["calibrada"])
 
 
 class TestDataset(unittest.TestCase):

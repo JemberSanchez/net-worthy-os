@@ -14,6 +14,8 @@
       @font-face { font-family: "NW Text"; src: url("assets/_motor/fonts/schibsted-grotesk-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
       @font-face { font-family: "NW Text"; src: url("assets/_motor/fonts/schibsted-grotesk-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
       @font-face { font-family: "NW Text"; src: url("assets/_motor/fonts/schibsted-grotesk-latin-800-normal.woff2") format("woff2"); font-weight: 800; }
+      @font-face { font-family: "NW Data"; src: url("assets/_motor/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "NW Data"; src: url("assets/_motor/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
       :root { --bg: #0a1a14; --bg2: #0e241b; --ink: #f4f6f3; --gold: #d8b25a; --green: #1f9e6e; --mute: #8da298; --red: #e0533d; --red-txt: #ff6450; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
@@ -203,6 +205,29 @@
       #root.editorial .cg .ln { background: rgba(10,26,20,0.94); padding: 6px 16px; margin-left: -16px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
       #root.editorial .w { display: inline; font-weight: 700; font-size: 62px; text-transform: none; letter-spacing: inherit; color: #f2ecdf; text-shadow: none; padding: 0 6px; }
       #root.editorial #aviso { left: 72px; right: auto; width: 858px; top: 1440px; text-align: left; font-size: 28px; line-height: 1.34; color: #d9e2dc; background: rgba(10,26,20,0.86); padding: 6px 12px; margin-left: -12px; }
+      /* aspecto cine (docs/mejora/auditoria.md, tells 3, 4, 9, 10), on top of editorial: the image keeps its own
+         light. One soft vignette over images only, a scrim only behind text and only while the text is on. */
+      #root.cine #ground { background: #0c0e0e; } /* evergreen flat fill was 51 % of the green-yellow pixels (medir_aspecto) */
+      #root.cine .ph .shade, #root.cine .ph .shade.fondo { background: radial-gradient(ellipse 85% 65% at 50% 46%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.2) 100%); }
+      .tscrim { position: absolute; left: -140px; right: -140px; pointer-events: none; opacity: 0; }
+      .tscrim.sup { top: -200px; height: 1040px; background: linear-gradient(180deg, rgba(6,8,8,0.72) 0%, rgba(6,8,8,0.66) 62%, rgba(6,8,8,0) 100%); }
+      .tscrim.med { top: 300px; height: 900px; background: linear-gradient(180deg, rgba(6,8,8,0) 0%, rgba(6,8,8,0.68) 28%, rgba(6,8,8,0.68) 72%, rgba(6,8,8,0) 100%); }
+      .tscrim.ter { top: 640px; height: 880px; background: linear-gradient(180deg, rgba(6,8,8,0) 0%, rgba(6,8,8,0.7) 32%, rgba(6,8,8,0.7) 76%, rgba(6,8,8,0) 100%); }
+      .tscrim.baj { top: 800px; height: 1320px; background: linear-gradient(180deg, rgba(6,8,8,0) 0%, rgba(6,8,8,0.7) 24%, rgba(6,8,8,0.72) 100%); }
+      #root.cine .rot { text-shadow: 0 1px 3px rgba(0,0,0,0.22); }
+      #root.cine .scene.papel .rot { text-shadow: none; }
+      #root.cine .rot.p-sup { top: 226px; }
+      #root.cine .rot.p-med { top: 620px; }
+      #root.cine .rot.p-ter { top: 960px; }
+      #root.cine .rot.p-baj { top: 1120px; }
+      #root.cine .rot.der { text-align: right; }
+      #root.cine .rot.dato { font-family: "NW Data", monospace; font-weight: 600; font-size: 38px; line-height: 1.25; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+      #root.cine .graf .tk { font-family: "NW Data", monospace; font-weight: 500; font-size: 30px; }
+      #root.cine #brand { width: auto; border-bottom: none; padding-bottom: 0; font-size: 30px; }
+      #root.cine #brand span { padding: 4px 12px; margin-left: -12px; background: rgba(8,10,10,0.62); }
+      #root.cine .cg .ln { background: rgba(8,10,10,0.8); }
+      #root.cine #aviso { top: 1452px; width: auto; max-width: 858px; white-space: nowrap; font-size: 26px; font-weight: 600; line-height: 1.3; padding: 3px 10px; margin-left: -10px; background: rgba(8,10,10,0.7); }
+      #avisofin { position: absolute; left: 72px; width: 858px; top: 1330px; opacity: 0; font-weight: 600; font-size: 30px; line-height: 1.34; color: #f2ecdf; padding: 10px 14px; margin-left: -14px; background: rgba(8,10,10,0.86); }
     </style>
   </head>
   <body>
@@ -222,6 +247,7 @@ __PRUEBAS__
       <div id="chrome" class="clip" data-start="0" data-duration="__END__" data-track-index="62">
         <div id="brand"><span>Net Worthy</span></div>
         <div id="aviso"__AVISOESTILO__>__AVISO__</div>
+__AVISOFIN__
         <div id="vignette"></div>
         <div id="grain"></div>
       </div>

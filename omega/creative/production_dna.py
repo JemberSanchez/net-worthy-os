@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS production_video (
     production_ref TEXT    NOT NULL,
     platform       TEXT    NOT NULL,        -- youtube | facebook | instagram
     video_id       TEXT    NOT NULL,
-    publish_at     TEXT,                    -- ISO UTC si se programó
+    publish_at     TEXT,                    -- ISO UTC: programado; analytics-sync pone el real
     recorded_at    INTEGER NOT NULL,
     PRIMARY KEY (production_ref, platform)
 );
