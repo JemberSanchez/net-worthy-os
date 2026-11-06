@@ -26,6 +26,7 @@ Comandos:
   python -m omega.cli analytics-sync [<ref>] [--dry-run]  # trae de YouTube Analytics retención/búsquedas + rescore
   python -m omega.cli vincular <ref> <video_id>    # asocia un video ya subido a su ref (para analytics/programar)
   python -m omega.cli comentar <ref>               # publica el comentario aprobado del Short (ya público); fijarlo es a mano
+  python -m omega.cli publicar <ref> [--publicar] [--reemplazar <redes>]  # YouTube, Facebook, Instagram y páginas tras el crítico (sin --publicar: solo el plan)
   python -m omega.cli publish-social <ref> [--publicar]  # carrusel + historia en IG/FB (sin --publicar: solo el plan)
   python -m omega.cli learnings                    # qué patrones funcionan (calibración acumulada)
   python -m omega.cli hypotheses # genera un prompt con la evidencia para pegar en Claude
@@ -819,6 +820,7 @@ def cmd_publish() -> None:
     d["video_id"] = result[
         "video_id"
     ]  # lo necesita `programar` para aprobar sin re-subir
+    d.setdefault("subido", {})["youtube"] = publish.sha256_de(video_path)
     path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
     _registrar_video(d.get("production_ref", ref), result["video_id"])
     log_path = config.DATA_DIR / "publish_log.jsonl"
@@ -956,6 +958,7 @@ def cmd_publish_fb() -> None:
     _log_publish("facebook", ref, result, live)
     if live:
         _registrar_publicacion(ref, "facebook", result)
+        _anotar_subida(ref, "facebook", d["video_path"])
 
 
 def cmd_publish_ig() -> None:
@@ -990,6 +993,7 @@ def cmd_publish_ig() -> None:
     if live:
         print(f"Publicado en Instagram: {result['url']}")
         _registrar_publicacion(ref, "instagram", result)
+        _anotar_subida(ref, "instagram", d["video_path"])
     else:
         print(
             f"Subido a Instagram, {result['status']} (contenedor {result['container_id']}). "
@@ -1359,6 +1363,139 @@ def _registrar_publicacion(ref: str, plataforma: str, result: dict) -> None:
         )
 
 
+def _anotar_subida(ref: str, plataforma: str, video_path: str) -> None:
+    """Fingerprint of the MP4 each network received, so a later re-render cannot pass as already uploaded.
+    shortcut: lives in data/publish_<ref>.json, not in the DB; a cloud session without that file sees no
+    fingerprint and cannot detect a replacement. Move it to production_video if that ever happens."""
+    import json
+    from pathlib import Path
+
+    from . import publish
+
+    path = config.DATA_DIR / f"publish_{ref}.json"
+    d = json.loads(path.read_text(encoding="utf-8"))
+    d.setdefault("subido", {})[plataforma] = publish.sha256_de(Path(video_path))
+    path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def estado_red(d: dict, vid: str | None, red: str, sha: str) -> str:
+    """falta | al dia | sin huella | reemplazado: has this network got THIS mp4?"""
+    if not vid:
+        return "falta"
+    huella = (d.get("subido") or {}).get(red)
+    return "sin huella" if not huella else "al dia" if huella == sha else "reemplazado"
+
+
+def _correr(fn, ref: str, *args: str) -> None:
+    """The publish commands read sys.argv: reuse them as they are, with their gates and idempotence."""
+    antes = sys.argv
+    sys.argv = ["omega.cli", fn.__name__, ref, *args]
+    try:
+        fn()
+    finally:
+        sys.argv = antes
+
+
+def cmd_publicar() -> None:
+    """Every network for one Short, after the critic passed. Without --publicar sends nothing: shows the plan.
+    --publicar goes LIVE: the project rule requires the user's explicit confirmation in the chat first.
+      publicar <ref> [--publicar] [--ahora] [--hora HH:MM] [--dias N] [--reemplazar youtube,facebook,instagram]
+    A network holding an older render stops everything unless named in --reemplazar: this never deletes
+    the old upload (done by hand), and replacing without deleting leaves both online."""
+    import json
+    from pathlib import Path
+
+    from . import publish, publish_meta
+
+    if len(sys.argv) < 3:
+        raise SystemExit(cmd_publicar.__doc__)
+    ref = sys.argv[2]
+    d = _load_publish_json(ref)
+    if not d:
+        raise SystemExit(1)
+    video = Path(d["video_path"])
+    sha = publish.sha256_de(video)
+    reemplazar = (
+        set(sys.argv[sys.argv.index("--reemplazar") + 1].split(","))
+        if "--reemplazar" in sys.argv
+        else set()
+    )
+    estado = {
+        red: estado_red(d, _video_id(ref, red), red, sha)
+        for red in ("youtube", "facebook", "instagram")
+    }
+    motivo = publish.exigir_critico(ref, video)
+    print(f"{ref} · crítico: {motivo or 'aprobado'}")
+    for red, e in estado.items():
+        print(f"  {red}: {e} {_video_id(ref, red) or ''}")
+    if "--publicar" not in sys.argv:
+        print(
+            "Plan: no se envió nada (--publicar, con confirmación en el chat). Instagram no programa: sale al momento."
+        )
+        return
+    if motivo:
+        raise SystemExit(f"✗ {motivo}")
+    viejas = [
+        r for r, e in estado.items() if e == "reemplazado" and r not in reemplazar
+    ]
+    if viejas:
+        raise SystemExit(
+            f"✗ {', '.join(viejas)} tiene(n) un render anterior. Bórralo a mano y corre: "
+            f"python -m omega.cli publicar {ref} --publicar --reemplazar {','.join(viejas)}"
+        )
+
+    def subir(red: str) -> bool:
+        return estado[red] == "falta" or red in reemplazar
+
+    def forzar(red: str) -> list[str]:
+        return ["--forzar"] if red in reemplazar else []
+
+    if subir("youtube"):
+        ruta = config.DATA_DIR / f"publish_{ref}.json"
+        fresco = json.loads(ruta.read_text(encoding="utf-8"))
+        # always up private first: the schedule below is what opens it
+        fresco["privacy_status"] = "private"
+        fresco.pop("publish_at", None)
+        ruta.write_text(
+            json.dumps(fresco, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        _correr(cmd_publish, ref, "--forzar")
+    d = _load_publish_json(ref)
+    # cmd_publish reports a failed upload without raising: scheduling now would open the old render
+    if subir("youtube") and (d.get("subido") or {}).get("youtube") != sha:
+        raise SystemExit("✗ YouTube no recibió este MP4: no programo nada")
+    if (
+        estado["youtube"] == "sin huella"
+    ):  # may already be public: scheduling would hide it
+        print("YouTube sin huella: no programo; usa `programar` si sigue privado")
+    elif d.get("privacy_status") != "public" and not d.get("publish_at"):
+        cuando = [
+            a
+            for i, a in enumerate(sys.argv)
+            if a in ("--ahora", "--hora", "--dias")
+            or sys.argv[i - 1] in ("--hora", "--dias")
+        ]
+        _correr(cmd_programar, ref, *cuando)
+    d = _load_publish_json(ref)
+    if subir("facebook"):
+        modo = (
+            "--programar"
+            if d.get("publish_at") and "--ahora" not in sys.argv
+            else "--publicar"
+        )
+        _correr(cmd_publish_fb, ref, modo, *forzar("facebook"))
+    if subir("instagram"):
+        _correr(cmd_publish_ig, ref, "--publicar", *forzar("instagram"))
+    plan = publish_meta.plan_social(_proyecto_de(ref) / "social")
+    if plan["carrusel"] or plan["historia"]:
+        _correr(cmd_publish_social, ref, "--publicar")
+    d = _load_publish_json(ref)
+    final = {r: estado_red(d, _video_id(ref, r), r, sha) for r in estado}
+    print("Final: " + " · ".join(f"{r} {e}" for r, e in final.items()))
+    if any(e not in ("al dia", "sin huella") for e in final.values()):
+        raise SystemExit(1)
+
+
 def _proyecto_de(ref: str):
     """video-v2/<proyecto> cuyo storyboard tiene ese `ref` (o cuyo nombre de carpeta es ref)."""
     import json
@@ -1519,7 +1656,9 @@ def cmd_analytics_sync() -> None:
                 f"  {ref}: {int(b['views'])} vistas, {b.get('averageViewPercentage')} % visto (dry-run)"
             )
             continue
-        _asegurar_adn(con, ref)  # before guardar: retention_by_block reads the DNA blocks
+        _asegurar_adn(
+            con, ref
+        )  # before guardar: retention_by_block reads the DNA blocks
         r = ay.guardar(con, ref, datos)
         puntuado = _repuntuar(con, ref)
         medidos += 1
@@ -1578,7 +1717,9 @@ def cmd_meta_sync() -> None:
     decisions.init(con)
     for ref in sorted(puntuar):
         puntuado = _repuntuar(con, ref)
-        print(f"  {ref}: score {puntuado[0]:.3f}" if puntuado else f"  {ref}: sin score")
+        print(
+            f"  {ref}: score {puntuado[0]:.3f}" if puntuado else f"  {ref}: sin score"
+        )
     con.close()
     print(f"{medidos} reels medidos (production_social).")
 
@@ -1803,6 +1944,7 @@ def main(argv: list[str]) -> int:
         "backup": cmd_backup,
         "youtube-auth": cmd_youtube_auth,
         "programar": cmd_programar,
+        "publicar": cmd_publicar,
         "comentar": cmd_comentar,
         "vincular": cmd_vincular,
         "publish-social": cmd_publish_social,

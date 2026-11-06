@@ -240,6 +240,7 @@ def subir_borrador(publish: dict, ref: str) -> str:
     except Exception as e:  # noqa: BLE001 - se reporta, no se aborta el QA
         return f"FALLÓ: {e}"
     publish["video_id"] = res["video_id"]
+    publish.setdefault("subido", {})["youtube"] = pub.sha256_de(Path(publish["video_path"]))
     (RAIZ / "data" / f"publish_{ref}.json").write_text(
         json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -809,7 +810,10 @@ def producir(proy: Path) -> dict:
         "serie": sb.get("serie"),
     }
     (RAIZ / "data").mkdir(exist_ok=True)
-    (RAIZ / "data" / f"publish_{ref}.json").write_text(
+    previo_f = RAIZ / "data" / f"publish_{ref}.json"
+    if previo_f.exists():  # what each network received outlives a re-render: omega.cli publicar compares it
+        publish["subido"] = json.loads(previo_f.read_text(encoding="utf-8")).get("subido") or {}
+    previo_f.write_text(
         json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     # El ADN se escribe solo si no existe: uno hecho a mano (técnica por bloque) vale más que este

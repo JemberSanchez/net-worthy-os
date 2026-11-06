@@ -27,6 +27,7 @@ Publicar: `youtube-auth` (una vez; también Analytics; repetir una vez para come
 `publish-ig <ref> [--publicar]`: privados/borrador por defecto. **Meta (FB/IG) SIEMPRE requiere
 confirmación explícita en el chat antes de `--publicar`**: no se automatiza publicar en vivo.
 Páginas: `python video-v2/motor/social.py video-v2/<ref>` (carrusel + historia + textos; lo hace producir.py) · `publish-social <ref> [--publicar]` (sin --publicar solo el plan; --publicar SOLO con confirmación en el chat)
+Publicar todo tras el crítico: `publicar <ref> [--publicar] [--reemplazar <redes>]` (sin --publicar solo el plan; con él, confirmación en el chat)
 Aprobar: `programar <ref>` (Short privado → 12:00 de Nueva York; `--ahora`) · `comentar <ref>` (fijarlo es a mano en Studio)
 Medir: `analytics-sync [<ref>]` (retención, tráfico, búsquedas + rescore) · `meta-sync [<ref>...]` (reels FB/IG + rescore), ambos automáticos en /producir · `vincular <ref> <video_id>` · `rescore`
 Estado/nube: `estado-bajar` · `estado-subir` · `produccion-guardar video-v2/<ref>` (repo PRIVADO `ESTADO_REPO`)

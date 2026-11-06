@@ -79,7 +79,7 @@ Referencia completa y verificada: `video-v2/read-janitor/storyboard.json` (el #7
 4. Render → `loudnorm` + corrección de pico medida en el archivo (`asegurar_pico`) →
    `tools/medir_loudness.py` (-14 ±1 LUFS, pico < -1) → `tools/medir_ritmo.py --max 2.5`.
 5. **Crítico** (`critico.py`, `docs/RUBRICA.md`): medidores sobre el MP4 final + juicio → fallos con
-   segundo y escena → parches del storyboard → re-render, máx. 2 rondas. No publica.
+   segundo y escena; `--rondas 2` añade parches y re-render (off por defecto: ninguna ronda ganó a la 0). No publica.
 
 Lenguaje de edición automático (sale del plan, nadie lo escribe): punch-in de cámara (zoom-cut)
 en golpes y palabras `calientes` con 1,8 s de separación mínima, riser→impacto en cada golpe,
