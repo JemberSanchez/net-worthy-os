@@ -32,6 +32,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import hfversion
+import puertas
 from construir import COLA_S
 
 MOTOR = Path(__file__).resolve().parent
@@ -240,7 +241,9 @@ def subir_borrador(publish: dict, ref: str) -> str:
     except Exception as e:  # noqa: BLE001 - se reporta, no se aborta el QA
         return f"FALLÓ: {e}"
     publish["video_id"] = res["video_id"]
-    publish.setdefault("subido", {})["youtube"] = pub.sha256_de(Path(publish["video_path"]))
+    publish.setdefault("subido", {})["youtube"] = pub.sha256_de(
+        Path(publish["video_path"])
+    )
     (RAIZ / "data" / f"publish_{ref}.json").write_text(
         json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -599,10 +602,47 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     )
 
 
-def hoja_previa(proy: Path, env: dict) -> tuple[bool, str]:
-    """One frame per scene from the built HTML: what a render would show, without the 3-4 min render."""
+def ocr_previo(salida: Path, instantes: list[float]) -> list[dict]:
+    """OCR of the preview frames at `instantes`, in the shape of medir_texto.ocr_frames (the file name has the second)."""
+    import medir_cuadros
+
+    frames = []
+    for f in sorted(salida.glob("frame-*.png")):
+        t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
+        if any(abs(t - x) < 0.011 for x in instantes):
+            frames.append({"t": t, **medir_cuadros.ocr_imagen(f)})
+    return frames
+
+
+def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
+    """Text over a document stops. L1 only warns: on 4 videos with 98 texts it raised 4 "unread" and the MP4 confirmed
+    at most 1, because a few sampled frames are not 2 fps (the OCR misses legible lines on busy photos). The MP4 blocks."""
+    import critico
+
+    plan = critico.plan_de_html((proy / "index.html").read_text(encoding="utf-8"))
+    words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
+    frames = ocr_previo(proy / "renders" / "previo", m["ocr"])
+    fallos = critico.revisar_previo(
+        sb, plan, words, frames, critico.cargar_rubrica(proy)
+    )
+    lineas = [critico.linea(f) for f in fallos if f["severidad"] != "baja"]
+    if lineas:
+        print("\n".join(f"⚠ {x}" for x in lineas))
+    return (
+        not any(f["severidad"] == "alta" and f["criterio"] != "L1" for f in fallos),
+        "\n".join(lineas) or f"{len(frames)} fotogramas leídos, sin fallos",
+    )
+
+
+def hoja_previa(
+    proy: Path, env: dict, ts: list[float] | None = None
+) -> tuple[bool, str]:
+    """Frames from the built HTML: what a render would show, without the 3-4 min render."""
     salida = proy / "renders" / "previo"
-    ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
+    shutil.rmtree(
+        salida, ignore_errors=True
+    )  # frames of an older preview would be read as this one's
+    ts = ts or instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
     r = _run(
         hfversion.npx(
             "snapshot",
@@ -627,6 +667,17 @@ def hoja_previa(proy: Path, env: dict) -> tuple[bool, str]:
     return True, " ".join(hojas)
 
 
+def social_previo(proy: Path, env: dict) -> tuple[bool, str]:
+    """Carousel only: the story cuts the final MP4, which a preview does not have (an old one would be judged)."""
+    import social
+
+    try:
+        s = social.generar(proy, env, con_historia=False)
+    except (social.SocialError, subprocess.CalledProcessError) as e:
+        return False, str(e)
+    return True, f"carrusel {len(s['carrusel'])} diapositivas"
+
+
 def fallos_critico(informe: dict, linea) -> list[str]:
     """What the critic found in the last round: alta/media one per line, baja only counted (informe.md has them)."""
     fallos = informe["rondas"][-1]["fallos"]
@@ -637,12 +688,23 @@ def fallos_critico(informe: dict, linea) -> list[str]:
 
 def medir_critico(proy: Path, final: Path) -> list[str]:
     """The critic's meters on the final file (no rounds, no re-render)."""
-    r = _run([PY, str(MOTOR / "critico.py"), str(proy), "--mp4", str(final), "--solo-revisar"])
+    r = _run(
+        [
+            PY,
+            str(MOTOR / "critico.py"),
+            str(proy),
+            "--mp4",
+            str(final),
+            "--solo-revisar",
+        ]
+    )
     if r.returncode != 0:
         return ["crítico falló: " + r.stderr[-300:]]
     import critico
 
-    inf = json.loads((proy / "renders" / "critica" / "informe.json").read_text(encoding="utf-8"))
+    inf = json.loads(
+        (proy / "renders" / "critica" / "informe.json").read_text(encoding="utf-8")
+    )
     return fallos_critico(inf, critico.linea)
 
 
@@ -690,7 +752,9 @@ def producir(proy: Path) -> dict:
             raise SystemExit(f"✗ puerta '{nombre}' fallida")
 
     # contrast keeps its own step after the build: the critic reads its patch from that gate
-    r = _run([PY, str(MOTOR / "construir.py"), str(proy), "--validar", "--sin-contraste"])
+    r = _run(
+        [PY, str(MOTOR / "construir.py"), str(proy), "--validar", "--sin-contraste"]
+    )
     # the three static gates report together: each stop-at-first-failure run costs a full turn
     puerta("storyboard", r.returncode == 0, r.stdout + r.stderr, seguir=True)
     sys.path.insert(0, str(RAIZ / "tools"))
@@ -705,6 +769,19 @@ def producir(proy: Path) -> dict:
     if not (proy / "assets" / "voice.mp3").exists():
         r = _run([PY, str(MOTOR / "voz.py"), str(proy)])
         puerta("voz", r.returncode == 0, r.stdout + r.stderr)
+    if (
+        proy.name not in puertas.ANTERIORES
+    ):  # voz.py leaves its best take when none passes: it does not get built
+        import voz
+
+        rotas = voz.pausas_rotas(
+            json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
+        )
+        puerta(
+            "pausas",
+            not rotas,
+            "\n".join(r["detalle"] for r in rotas) or "sin pausas rotas",
+        )
     r = _run([PY, str(MOTOR / "construir.py"), str(proy)], env=env)
     puerta(
         "build",
@@ -719,15 +796,35 @@ def producir(proy: Path) -> dict:
         m.group(0) if m else r.stdout[-300:] + r.stderr[-300:],
     )
     previo = "--previo" in sys.argv
+    exento = proy.name in puertas.ANTERIORES
+    muestreo = None
+    if previo and not exento:
+        import critico
+
+        muestreo = critico.muestreo_previo(
+            sb,
+            critico.plan_de_html((proy / "index.html").read_text(encoding="utf-8")),
+            json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8")),
+            instantes_escena((proy / "index.html").read_text(encoding="utf-8")),
+        )
     with ThreadPoolExecutor(1) as ex:
-        hoja = ex.submit(hoja_previa, proy, env) if previo else None
+        hoja = (
+            ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
+            if previo
+            else None
+        )
         puerta("contraste", *auditar_contraste(proy, env), seguir=previo)
         if hoja:
-            puerta("hoja", *hoja.result(), seguir=True)
+            ok_hoja, detalle = hoja.result()
+            puerta("hoja", ok_hoja, detalle, seguir=True)
     if previo:
+        if muestreo and ok_hoja:
+            puerta("texto", *texto_previo(proy, sb, muestreo), seguir=True)
+        if sb.get("social") and not exento:
+            puerta("social", *social_previo(proy, env), seguir=True)
         if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
             raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
-        print(f"✓ previo en {sum(p['s'] for p in qa['puertas']):.0f} s · {qa['puertas'][-1]['detalle']}")
+        print(f"✓ previo en {sum(p['s'] for p in qa['puertas']):.0f} s · {detalle}")
         return qa
     crudo, final, prev = (
         renders / f"{ref}.mp4",
@@ -812,7 +909,9 @@ def producir(proy: Path) -> dict:
     (RAIZ / "data").mkdir(exist_ok=True)
     previo_f = RAIZ / "data" / f"publish_{ref}.json"
     if previo_f.exists():  # what each network received outlives a re-render: omega.cli publicar compares it
-        publish["subido"] = json.loads(previo_f.read_text(encoding="utf-8")).get("subido") or {}
+        publish["subido"] = (
+            json.loads(previo_f.read_text(encoding="utf-8")).get("subido") or {}
+        )
     previo_f.write_text(
         json.dumps(publish, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -855,7 +954,9 @@ def producir(proy: Path) -> dict:
     (renders / "qa.json").write_text(
         json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(f"✓ puertas OK · {final.name} · preview {qa['preview_mb']} MB · YouTube: {qa['borrador_youtube']}")
+    print(
+        f"✓ puertas OK · {final.name} · preview {qa['preview_mb']} MB · YouTube: {qa['borrador_youtube']}"
+    )
     if "--sin-critico" not in sys.argv:
         fallos = medir_critico(proy, final)
         print(f"crítico: {len(fallos)} líneas · hoja renders/critica/r0/hoja.jpg")

@@ -110,7 +110,9 @@ def _info_videos(params: dict) -> list[dict]:
                 "url_licencia": em.get("LicenseUrl", {}).get("value", ""),
                 "fuente": vi.get("descriptionurl", ""),
                 "src": der["src"] if der else None,
-                "descripcion": il._limpiar(em.get("ImageDescription", {}).get("value", "")),
+                "descripcion": il._limpiar(
+                    em.get("ImageDescription", {}).get("value", "")
+                ),
                 "fecha": il._limpiar(em.get("DateTimeOriginal", {}).get("value", "")),
             }
         )
@@ -166,7 +168,10 @@ def _ficha_pexels(v: dict) -> dict:
         "fuente": v.get("url", ""),
         "src": f["link"] if f else None,
         # Pexels has no description field: the page slug is the only text about the content.
-        "descripcion": v.get("url", "").rstrip("/").rsplit("/", 1)[-1].replace("-", " "),
+        "descripcion": v.get("url", "")
+        .rstrip("/")
+        .rsplit("/", 1)[-1]
+        .replace("-", " "),
         "fecha": "",
     }
 
@@ -174,15 +179,17 @@ def _ficha_pexels(v: dict) -> dict:
 def buscar_pexels(q: str, n: int = 10) -> list[dict]:
     d = _pexels(
         "search",
-        {"query": q, "per_page": n},  # portrait+medium hid specific footage; preparar crops anyway
+        {
+            "query": q,
+            "per_page": n,
+        },  # portrait+medium hid specific footage; preparar crops anyway
     )
     return [x for x in map(_ficha_pexels, d.get("videos", [])) if x["src"]]
 
 
 # ── selección: puntuar candidatos contra la frase ──────────────────────────────────────────────
 GENERICO = frozenset(
-    "business businessman businesswoman handshake coins coin skyline laptop typing person people "
-    "man woman office pointing money abstract animation background concept".split()
+    ["business", "businessman", "businesswoman", "handshake", "coins", "coin", "skyline", "laptop", "typing", "person", "people", "man", "woman", "office", "pointing", "money", "abstract", "animation", "background", "concept"]
 )
 PESOS = {"rel": 0.35, "esp": 0.25, "res": 0.15, "mov": 0.10, "lic": 0.05, "nuevo": 0.10}
 VALOR_LICENCIA = {"pd": 1.0, "cc0": 1.0, "pexels": 0.8, "cc-by": 0.7}
@@ -239,8 +246,20 @@ def movimiento(crudo: Path, desde: float = 0.0, segundos: float = 14.0) -> float
 
     raw = subprocess.run(
         [
-            "ffmpeg", "-v", "error", "-ss", f"{desde:.2f}", "-i", str(crudo), "-t", f"{segundos:.2f}",
-            "-vf", "fps=2,scale=160:90,format=gray", "-f", "rawvideo", "-",
+            "ffmpeg",
+            "-v",
+            "error",
+            "-ss",
+            f"{desde:.2f}",
+            "-i",
+            str(crudo),
+            "-t",
+            f"{segundos:.2f}",
+            "-vf",
+            "fps=2,scale=160:90,format=gray",
+            "-f",
+            "rawvideo",
+            "-",
         ],
         capture_output=True,
         check=True,
@@ -282,6 +301,60 @@ def _vigente(destino: Path, v: dict) -> bool:
     return not ruta.exists() or ruta.read_text(encoding="utf-8") == _origen(v)
 
 
+OCR_CONF_MIN = 0.6  # below this the OCR is guessing at texture, and this list is meant to be read
+
+
+def _quitar_derivados(k: str, carpeta: Path) -> None:
+    """Everything cached under key `k`. The treated clip is named <k>-<desde>-<dur>-<modo> (construir.py), so a key
+    that merely starts with `k` is another clip."""
+    for p in (
+        carpeta / f"{k}.src",
+        _origen_ruta(carpeta / f"{k}.src"),
+        carpeta / f"{k}.hoja.jpg",
+        carpeta / f"{k}.hoja.txt",
+    ):
+        p.unlink(missing_ok=True)
+    tratado = re.compile(re.escape(k) + r"-[\d.e+-]+-\d+-[a-z]")
+    for p in (carpeta.parent / "v").glob(f"{k}-*.mp4"):
+        if tratado.match(p.name):
+            p.unlink()
+    det = carpeta / "detalle.json"
+    if det.exists():
+        d = json.loads(det.read_text(encoding="utf-8"))
+        det.write_text(
+            json.dumps(
+                {c: v for c, v in d.items() if c.rsplit("@", 1)[0] != k},
+                indent=1,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+
+def purgar_cambiados(decl: dict[str, dict], carpeta: Path, huerfanos: bool = True) -> list[str]:
+    """Same key, new source: the old clip must not survive in any cache. Also drops credits of clips no longer
+    declared or just purged, which would otherwise end up in the description. `decl` is the whole `clips`."""
+    cambiados = [
+        k
+        for k, v in decl.items()
+        if (carpeta / f"{k}.src").exists() and not _vigente(carpeta / f"{k}.src", v)
+    ]
+    for k in cambiados:
+        _quitar_derivados(k, carpeta)
+    cred = carpeta / "creditos.json"
+    if cred.exists():
+        fichas = json.loads(cred.read_text(encoding="utf-8"))
+        fuera = {f"{k}.src" for k in cambiados}
+        validos = {f"{k}.src" for k in decl}
+        vivas = [f for f in fichas if f.get("archivo") not in fuera and (not huerfanos or f.get("archivo") in validos)]
+        if len(vivas) != len(fichas):
+            cred.write_text(
+                json.dumps(vivas, ensure_ascii=False, indent=1), encoding="utf-8"
+            )
+    return cambiados
+
+
 def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
     """{nombre: {"commons": "File:..."} | {"pexels": id}} -> crudos en `carpeta` (con créditos).
     Commons en UNA consulta; los que ya existen no se vuelven a pedir."""
@@ -321,7 +394,7 @@ def bajar(decl: dict[str, dict], carpeta: Path) -> dict[str, Path]:
             )
         destino = carpeta / f"{k}.src"
         destino.write_bytes(il._get(r["src"]))
-        _origen_ruta(destino).write_text(_origen(faltan[k]), encoding="utf-8")
+        _origen_ruta(destino).write_text(_origen(v), encoding="utf-8")
         _registrar(carpeta, destino.name, r, float(v.get("desde", 0)))
         out[k] = destino
     return out
@@ -582,6 +655,37 @@ def detalle(crudo: Path, desde: float = 0.0, segundos: float = 8.0) -> float:
     )
 
 
+def hoja_clip(crudo: Path, desde: float = 0.0) -> list[str]:
+    """<clave>.hoja.jpg (up to 16 frames of the clip) and <clave>.hoja.txt (what the OCR reads in them). The clips
+    with Polish banknotes and a crypto chart were chosen by description: reading a clip's text is cheap here."""
+    import medir_cuadros as mc
+
+    util = max(0.1, _duracion(crudo) - desde)
+    n = max(1, min(16, round(util / 2)))
+    with tempfile.TemporaryDirectory() as d:
+        subprocess.run(
+            ["ffmpeg", "-v", "error", "-y", "-ss", f"{desde:.2f}", "-i", str(crudo), "-vf",
+             f"fps={n / util:.4f},scale=1280:1280:force_original_aspect_ratio=decrease", "-frames:v", "16",
+             "-q:v", "2", str(Path(d) / "f-%02d.jpg")],
+            check=True,
+        )
+        textos = list(
+            dict.fromkeys(
+                x["texto"]
+                for f in sorted(Path(d).glob("f-*.jpg"))
+                for x in mc.ocr_imagen(f)["lineas"]
+                if len(x["texto"].strip()) >= 3 and x["conf"] >= OCR_CONF_MIN
+            )
+        )
+        subprocess.run(
+            ["ffmpeg", "-v", "error", "-y", "-i", str(Path(d) / "f-%02d.jpg"), "-vf", "scale=320:-2,tile=4x4",
+             "-frames:v", "1", "-q:v", "4", str(crudo.with_suffix(".hoja.jpg"))],
+            check=True,
+        )
+    crudo.with_suffix(".hoja.txt").write_text("\n".join(textos) + "\n", encoding="utf-8")
+    return textos
+
+
 def main() -> None:
     a = sys.argv[1:]
     if len(a) >= 3 and a[0] == "buscar":
@@ -599,7 +703,9 @@ def main() -> None:
             )
             print(f"     {r['descripcion'][:110]}")
         if not res:
-            print("(nada admitido: licencia, resolución, veto o sin relación con los términos)")
+            print(
+                "(nada admitido: licencia, resolución, veto o sin relación con los términos)"
+            )
     elif len(a) == 2 and a[0] == "lote":
         proy = Path(a[1])
         decl = (
@@ -608,8 +714,16 @@ def main() -> None:
             )
             or {}
         )
+        for k in purgar_cambiados(decl, proy / "assets" / "clips"):
+            print(f"✓ clip {k}: origen nuevo, caché anterior borrada")
         for k, p in bajar(decl, proy / "assets" / "clips").items():
-            print(f"✓ {k}: {p} ({_duracion(p):.1f}s)")
+            if not p.with_suffix(".hoja.jpg").exists():
+                hoja_clip(p, float(decl[k].get("desde", 0)))
+            leido = p.with_suffix(".hoja.txt").read_text(encoding="utf-8").split("\n")
+            print(
+                f"✓ {k}: {p} ({_duracion(p):.1f}s) · hoja {p.with_suffix('.hoja.jpg').name}"
+                f" · texto en el clip: {' | '.join(x for x in leido if x)[:300] or 'ninguno'}"
+            )
     else:
         raise SystemExit(__doc__)
 

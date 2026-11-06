@@ -31,14 +31,14 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 ## 3. Storyboard (`video-v2/<ref>/storyboard.json`)
 
-6. Primero la voz, con solo `guion`: `python video-v2/motor/voz.py video-v2/<ref>`. Lista las frases: las anclas se
+6. Primero la voz, con solo `guion`: `python video-v2/motor/voz.py video-v2/<ref>`. Hace hasta 3 tomas; si sale con ✗, reescribe la frase que señala y repite con `--forzar`. Lista las frases: las anclas se
    escriben contra sus palabras exactas ("—" es una palabra; "seventy-five" va con guion).
 7. Decisiones que las puertas no toman por ti:
    - Medios: reutiliza primero `video-v2/*/assets/` + su `creditos.json`. Una búsqueda por concepto, sin bucles:
      `python tools/imagenes_libres.py buscar "<q>"` (objetos y lugares, nunca personas ni fotos de prensa),
      `python tools/broll.py buscar pexels|commons "<q>"`. ≥3 imágenes en `imagenes`, ≥4 clips en `clips`, uno en el gancho (0-3 s).
-     Sin caras reconocibles, logos ni noticias con personas: UNA hoja por clip antes de fijar `desde`
-     (`ffmpeg -i assets/clips/<n>.src -vf "fps=1/2,scale=192:108,tile=8x2" -frames:v 1 hoja.jpg`).
+     Sin caras reconocibles, logos ni noticias con personas: `python tools/broll.py lote video-v2/<ref>` deja `assets/clips/<n>.hoja.jpg` e imprime el
+     texto que el OCR lee en cada clip (billetes de otro país, tickers, marcas). Mira cada hoja y solo entonces pon `"visto": true`: sin él `construir` rechaza el clip.
      Metraje histórico con `"duotono": true`; documentos con `"documento": true`.
    - Música: `"musica": {"pista": {"mood": "tension|oscuro|documental|reflexivo|urgente|neutro"}}`.
    - Edición: no escribas `mov`; `"cam"` o `"transicion"` solo para fijar algo. `--reelegir` en `construir.py` repite la elección.
@@ -54,11 +54,11 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 **Siempre en segundo plano** (`run_in_background`): el aviso llega solo. Nada de `tail`, `sleep` ni `Monitor`.
 
-8. `python video-v2/motor/producir.py video-v2/<ref> --previo`: todas las puertas estáticas a la vez, build, lint, contraste y
-   hoja de contactos (~1 min). Mira la hoja que imprime (solapes, textos que no caben, imagen = palabra). Agrupa todos los
+8. `python video-v2/motor/producir.py video-v2/<ref> --previo`: todas las puertas estáticas a la vez, build, lint, contraste,
+   hoja de contactos, texto sobre documentos y carrusel. Un ⚠ de L1 solo avisa: mira ese segundo en la hoja. Mira la hoja que imprime (solapes, textos que no caben, imagen = palabra). Agrupa todos los
    arreglos y repite; nunca renderices con un defecto visible en la hoja.
-9. `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`: render (3-4 min), loudness, ritmo, preview, carrusel y
-   medidores del crítico. Imprime solo fallos, con segundo y escena. No sube: lo hace `publicar` en el paso 13.
+9. `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`: render (3-4 min), loudness, ritmo, preview, carrusel e historia, y
+   medidores del crítico, que sigue siendo la red final. Imprime solo fallos, con segundo y escena. No sube: lo hace `publicar` en el paso 13.
 10. **Juicio** sobre `renders/critica/r0/hoja.jpg` (no fotogramas sueltos, salvo para dudar de un segundo): escribe
     `renders/critica/r0/juicio.json` con J1-J6 y el `mp4_sha256` que da `juicio.md` (gancho, imagen = palabra, exactitud contra
     la fuente, cierre). Luego `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/critica/r0.mp4`

@@ -229,7 +229,7 @@ def revisar_activos(carrusel: list[dict], jpgs: list[Path], historia: Path | Non
     return out
 
 
-def generar(proy: Path, env: dict | None = None) -> dict:
+def generar(proy: Path, env: dict | None = None, con_historia: bool = True) -> dict:
     from PIL import Image
     proy = Path(proy).resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
@@ -257,7 +257,7 @@ def generar(proy: Path, env: dict | None = None) -> dict:
     historia = None
     h = so.get("historia") or {}
     final = next(iter(sorted((proy / "renders").glob("*-final.mp4"), key=lambda p: p.stat().st_mtime, reverse=True)), None)
-    if h and final:
+    if h and final and con_historia:
         import anclas
         words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
         try:

@@ -29,7 +29,9 @@ Puerta: **P** = plan (`construir --validar`, <1 s) · **M** = medida sobre el MP
 | Texto | Rótulos coincidentes leídos como una línea rota | **—** en OCR | solo el plan, si comparten `top` y tiempo | ver límites |
 | Texto | Texto cortado o al borde | M avisa + J | `cortados` | **no**: `media`, 2 de 2 falsos |
 | Texto | Bajo la interfaz de Shorts | M | L1 `zona_ui` | no: `baja` |
-| Texto | Subtítulo sobre el texto del documento | M | `subtitulo_sobre_documento` | sí |
+| Texto | Texto de diseño (subtítulo, rótulo, marca) sobre el del documento | previo + M | `pf.sobre_documento` | sí |
+| Texto | Rótulo ilegible | previo avisa + M | L1 (`critico.revisar_previo`) | previo no: 4 avisos en 98 textos de 4 vídeos, el MP4 confirma como mucho 1; MP4 sí |
+| Visual | Clip sin mirar, o texto ajeno dentro del clip | P | `broll.hoja_clip` + `puertas.clips_sin_ver` | sí; `visto` es una declaración, no prueba que se mirara |
 | Texto | Faltas de ortografía | J | `texto_completo` | sí, si se responde que no |
 | Texto | Voz sin subtítulo, texto fugaz | P | `puertas.voz_sin_subtitulo`, `texto_breve` | sí |
 | Audio | Pronunciación medida ("401k") | P | `puertas.pronunciacion` | sí |
@@ -38,7 +40,7 @@ Puerta: **P** = plan (`construir --validar`, <1 s) · **M** = medida sobre el MP
 | Audio | Mezcla que hace perder una palabra | M | transcripción + `medir_mezcla` (M1) | sí |
 | Audio | Mezcla con % de ventanas bajo 10 dB | M | M1 | no salvo >15 % de un culpable |
 | Audio | Loudness y pico | M | M1 | LUFS sí, pico no |
-| Audio | Pausa sin puntuación | M | `pausas_sin_puntuacion` (V1) | sí |
+| Audio | Pausa sin puntuación | antes de construir + M | `voz.mejor_toma`, puerta `pausas`, V1 | sí |
 | Audio | Pausa tras coma | M | V1 | no: `media` |
 | Audio | Voz poco natural, música inadecuada | J / — | sin medidor | no |
 | Sincronía | Subtítulos contra voz | M | S1, `alinear_voz` | según severidad |
@@ -50,7 +52,7 @@ Puerta: **P** = plan (`construir --validar`, <1 s) · **M** = medida sobre el MP
 | Publicación | Cifra del texto fuera de `cifras` | P | `puertas.publicacion` | sí |
 | Publicación | "four-oh-one-k" escrito | P | `puertas.forma_hablada_escrita` | sí |
 | Publicación | Título poco claro o engañoso | J | J1, J4 | según severidad |
-| Social | Título de diapositiva no leído, texto al borde | M | `social.revisar_activos` | sí, para el generador |
+| Social | Título de diapositiva no leído, texto al borde | previo + M | `social.revisar_activos` | sí |
 | Social | Historia cortada a media frase | P | `puertas.historia_corte` | sí |
 | Social | Historia en negro o congelada | M | `social.revisar_activos` | sí |
 | Social | Diseño feo del carrusel | — | nadie lo mira de forma obligatoria | no |
@@ -127,6 +129,10 @@ Medido en este PC, por ronda de crítico: transcripción 3-10 s (la mezcla, y la
 reutilizan el OCR de L1. Generar social: ~10-50 s medidos cargando el modelo por diapositiva; ahora se carga una vez, sin volver a medir.
 Plan: despreciable, salvo `voz.py`, que arranca el venv de Kokoro antes de sintetizar (~10 s estimados). Tokens: 1,5 KB más en `juicio.md` en
 `average-401k`, más la respuesta del checklist.
+
+Medido el 6-nov (jesse-livermore y copias, PROVISIONAL): el previo pasa de 60-100 s a unos 3 min según carga: hoja 44 s con 31 fotogramas, OCR 61 s con 24, carrusel 20-50 s. Una toma de voz con `speed` cuesta 115-127 s de síntesis (arranca Kokoro por frase) + 5 s de alineado: la primera limpia no añade nada, 3 tomas añaden unos 4 min. Tres tomas del mismo guion difieren (huecos mayores 0,70/0,74/0,72 s), pero ninguna tenía pausa rota: no está medido que otra toma arregle una rota.
+
+Los créditos de clips ya no declarados se quitan solo al construir de verdad un vídeo que no esté en `ANTERIORES`.
 
 ## Rondas de juicio antiguas
 

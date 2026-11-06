@@ -201,6 +201,7 @@ def ocr_imagen(ruta: Path) -> dict:
     import logging
 
     import cv2
+    import medir_texto
     from rapidocr import RapidOCR
 
     logging.getLogger("RapidOCR").setLevel(logging.ERROR)
@@ -209,11 +210,13 @@ def ocr_imagen(ruta: Path) -> dict:
     motor = _MOTOR
     bgr = cv2.imread(str(ruta))
     h, w = bgr.shape[:2]
-    res = motor(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+    res = motor(rgb)
     lineas = []
-    for caja, txt in zip(res.boxes, res.txts) if res.boxes is not None else []:
+    for caja, txt, conf in zip(res.boxes, res.txts, res.scores) if res.boxes is not None else []:
         xs, ys = [p[0] for p in caja], [p[1] for p in caja]
-        lineas.append({"texto": txt, "caja": [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))]})
+        c = [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))]
+        lineas.append({"texto": txt, "conf": round(float(conf), 3), "caja": c, "contraste": medir_texto.contraste_caja(rgb, c)})
     return {"ancho": w, "alto": h, "lineas": lineas}
 
 

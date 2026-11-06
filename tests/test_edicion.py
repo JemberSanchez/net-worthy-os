@@ -8,8 +8,8 @@ import re
 import sys
 import tempfile
 import unittest
-from unittest import mock
 from pathlib import Path
+from unittest import mock
 
 RAIZ = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path[:0] = [str(RAIZ / "video-v2" / "motor"), str(RAIZ / "tools")]
@@ -53,7 +53,10 @@ def sb_nuevo(ref="nuevo", **extra):
             {"tipo": "foto", "en": "2", "clip": "k"},
             {"tipo": "foto", "en": "3", "clip": "j"},
         ],
-        "clips": {"k": {"pexels": 1}, "j": {"pexels": 2}},  # max. 2 uses per source (errores_seleccion)
+        "clips": {
+            "k": {"pexels": 1},
+            "j": {"pexels": 2},
+        },  # max. 2 uses per source (errores_seleccion)
         "golpes": ["1:expected", "3:happens"],
         "calientes": [],
         "sonidos": [
@@ -189,8 +192,11 @@ class PuertaTest(unittest.TestCase):
                 c.construir(d, solo_validar=True, sin_contraste=True)
             d2 = crear(raiz, sb_nuevo("c"))
             # toy script: this test covers the edit gate and usado.json, not script or text repetition
-            with (mock.patch("medir_parecido.puerta_repeticion", return_value=(True, "")),
-                  mock.patch("guionista.puerta_guion", return_value=(True, ""))):
+            with (
+                mock.patch("medir_parecido.puerta_repeticion", return_value=(True, "")),
+                mock.patch("guionista.puerta_guion", return_value=(True, "")),
+                mock.patch("puertas.clips_sin_ver", return_value=[]),
+            ):
                 c.construir(d2, solo_validar=True, sin_contraste=True)
             self.assertEqual((raiz / "usado.json").read_text(encoding="utf-8"), antes)
 
@@ -226,7 +232,9 @@ class PuertaTest(unittest.TestCase):
         # a checkout has no renders or local base and both history gates order by storyboard mtime (their documented
         # shortcut), so a touched storyboard fails on an older video's turn: history is tested in this class's own cases
         with (
-            mock.patch("guionista.refs_publicadas", return_value=[f.parent.name for f in sbs]),
+            mock.patch(
+                "guionista.refs_publicadas", return_value=[f.parent.name for f in sbs]
+            ),
             mock.patch("medir_parecido.puerta_repeticion", return_value=(True, "")),
         ):
             for f in sbs:
@@ -263,7 +271,6 @@ class MedidorTest(unittest.TestCase):
 
 
 class CatalogoTest(unittest.TestCase):
-
     def test_licencias_en_la_lista_cerrada(self):
         for k, v in ed._cat_sfx().items():
             self.assertIn(v["licencia"], LISTA, k)

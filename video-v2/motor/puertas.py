@@ -35,6 +35,9 @@ ANTERIORES = frozenset(
     }
 )
 
+# Past these gates but finished before clip sheets existed: only `clips_sin_ver` skips them. Closed list too.
+ANTES_DE_VISTO = frozenset({"average-401k", "jesse-livermore"})
+
 # Kokoro's G2P (misaki) reads the digits as a plain number, measured 6-nov: "401k" -> fˈɔɹ hˈʌndɹəd wˈʌn kˈA.
 # shortcut: closed list of measured terms, add one when the G2P is measured to misread it
 PRONUNCIACION = (
@@ -171,7 +174,11 @@ def _voz_dice(ws: list[dict], valor: float, desde: float) -> float | None:
         for j in range(i + 1, min(i + 9, len(ws)) + 1):
             frase = " ".join(x["text"].strip(".,?!") for x in ws[i:j])
             r = trazabilidad.de_palabras(frase) + trazabilidad.de_digitos(frase)
-            if len(r) == 1 and frase.lower().startswith(r[0]["texto"].split()[0]) and trazabilidad.casa(r[0], [valor]):
+            if (
+                len(r) == 1
+                and frase.lower().startswith(r[0]["texto"].split()[0])
+                and trazabilidad.casa(r[0], [valor])
+            ):
                 return w["start"]
     return None
 
@@ -192,16 +199,23 @@ def prueba_breve(sb: dict, p: dict) -> list[str]:
 
 
 _FORMAS_HABLADAS = tuple(
-    re.compile(re.escape(b).replace(r"\ ", "[ -]").replace(r"\-", "[ -]"), re.IGNORECASE) for _, b in PRONUNCIACION
+    re.compile(
+        re.escape(b).replace(r"\ ", "[ -]").replace(r"\-", "[ -]"), re.IGNORECASE
+    )
+    for _, b in PRONUNCIACION
 )
 
 
 def forma_hablada_escrita(sb: dict, p: dict | None = None) -> list[str]:
     """What is respelled for the voice must never be read: "four-oh-one-k" on screen or in a caption."""
-    textos = [(d, t) for d, t in trazabilidad._textos_pantalla(sb)] + list(_textos_publicacion(sb).items())
+    textos = [(d, t) for d, t in trazabilidad._textos_pantalla(sb)] + list(
+        _textos_publicacion(sb).items()
+    )
     if p:
         c0, c1 = p["subtitulos"]
-        textos.append(("subtítulos", " ".join(w["text"] for w in p["words"][c0 : c1 + 1])))
+        textos.append(
+            ("subtítulos", " ".join(w["text"] for w in p["words"][c0 : c1 + 1]))
+        )
     return [
         f'{d}: "{m.group(0)}" es la forma para la voz; escrito va "401(k)" o similar'
         for d, t in textos
@@ -212,7 +226,11 @@ def forma_hablada_escrita(sb: dict, p: dict | None = None) -> list[str]:
 
 def _textos_publicacion(sb: dict) -> dict[str, str]:
     pub, so = sb.get("publicacion") or {}, sb.get("social") or {}
-    out = {"título": pub.get("titulo") or "", "descripción": pub.get("descripcion") or "", "caption": so.get("caption") or ""}
+    out = {
+        "título": pub.get("titulo") or "",
+        "descripción": pub.get("descripcion") or "",
+        "caption": so.get("caption") or "",
+    }
     for k, d in enumerate(so.get("carrusel") or []):
         for c in ("kicker", "titulo", "texto"):
             out[f"carrusel {k + 1} {c}"] = d.get(c) or ""
@@ -240,9 +258,13 @@ def historia_corte(sb: dict, words: list[dict]) -> list[str]:
     previas = [w for w in words if w["end"] <= t + 0.01]
     ult = previas[-1]["text"] if previas else ""
     if t + 0.35 > 14.0:
-        return [f"historia: `hasta` en {t:.1f}s se corta a 14 s en medio de una frase: elige una frase anterior"]
+        return [
+            f"historia: `hasta` en {t:.1f}s se corta a 14 s en medio de una frase: elige una frase anterior"
+        ]
     if not re.search(r"[.?!][\"')\]]*$", ult):
-        return [f'historia: el corte en {t:.1f}s cae tras "{ult}", sin terminar la frase: ancla al final de una frase']
+        return [
+            f'historia: el corte en {t:.1f}s cae tras "{ult}", sin terminar la frase: ancla al final de una frase'
+        ]
     return []
 
 
@@ -250,10 +272,18 @@ def g2p_dudosas(sb: dict, python: Path, script: Path) -> list[str]:
     """Before synthesis, in the Kokoro venv: words its lexicon does not know (espeak guesses them) and acronyms
     read as a word ("AWS" -> "oz", published that way in aws-profit). `pronuncia_ok`: heard and accepted."""
     texto = " ".join(g["texto"] for g in sb.get("guion") or [])
-    r = subprocess.run([str(python), str(script)], input=texto.encode("utf-8"), capture_output=True, check=False)
+    r = subprocess.run(
+        [str(python), str(script)],
+        input=texto.encode("utf-8"),
+        capture_output=True,
+        check=False,
+    )
     if r.returncode:
         return [f"g2p no midió ({r.stderr.decode('utf-8', 'replace')[-200:]})"]
-    return filtrar_g2p(json.loads(r.stdout.decode("utf-8").splitlines()[-1]), sb.get("pronuncia_ok") or [])
+    return filtrar_g2p(
+        json.loads(r.stdout.decode("utf-8").splitlines()[-1]),
+        sb.get("pronuncia_ok") or [],
+    )
 
 
 def filtrar_g2p(d: dict, aceptadas: list[str]) -> list[str]:
@@ -276,10 +306,30 @@ def tema_valido(sb: dict) -> list[str]:
     published average-401k. `cine` only exists on top of `editorial` (plantilla.tpl)."""
     t = sb.get("tema")
     if t not in (None, "", "claro", "editorial"):
-        return [f'`tema` {t!r} no existe (claro, editorial): el asunto del vídeo no va ahí, descoloca toda la maqueta']
+        return [
+            f"`tema` {t!r} no existe (claro, editorial): el asunto del vídeo no va ahí, descoloca toda la maqueta"
+        ]
     if sb.get("aspecto") == "cine" and t != "editorial":
         return ['`aspecto: cine` necesita `tema: "editorial"`']
     return []
+
+
+def clips_sin_ver(sb: dict, proy: Path) -> list[str]:
+    """Polish banknotes and a crypto chart in jesse-livermore: clips picked from their description. The sheet is
+    deleted when the source changes (broll.purgar_cambiados), so an old `visto` does not cover a new clip."""
+    if proy.name in ANTES_DE_VISTO:
+        return []
+    out = []
+    for n, v in (sb.get("clips") or {}).items():
+        if v.get("visto") is not True:
+            out.append(
+                f'clips.{n}: sin ver. Corre `python tools/broll.py lote <proyecto>`, mira su hoja y su texto, y pon `"visto": true`'
+            )
+        elif not (proy / "assets" / "clips" / f"{n}.hoja.jpg").exists():
+            out.append(
+                f"clips.{n}: `visto` sin hoja (origen cambiado o sin bajar). Corre `python tools/broll.py lote <proyecto>` y mírala"
+            )
+    return out
 
 
 def errores(sb: dict, p: dict) -> list[str]:

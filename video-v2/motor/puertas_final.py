@@ -11,6 +11,7 @@ import medir_cuadros as mc
 import medir_guion_audio as mga
 import medir_texto
 
+MARCA = "Net Worthy"  # #brand in plantilla.tpl, on every frame
 PUNTUACION = re.compile(r"[,:;—–\-.?!][\"')\]]*$")
 
 
@@ -211,6 +212,17 @@ def revisar_cajas(
                 evidencia="OCR, cajas de texto reales",
             )
         )
+    return out + sobre_documento(frames, diseno, plan, vs, u, fallo, escena_en)
+
+
+def sobre_documento(
+    frames: list[dict], diseno: list[dict], plan: dict, vs, u: dict, fallo, escena_en
+) -> list[dict]:
+    """In jesse-livermore this named the NYT headline as the caption and the brand as the document: the document's
+    own phrase counted as design and the brand did not. Same test, both the right way round."""
+    puesto = [d for d in diseno if not d.get("doc")] + [{"texto": MARCA}]
+    es = lambda texto, t: medir_texto.es_disenado(texto, t, puesto)
+    out = []
     for pr in plan.get("pruebas") or []:
         for c in mc.subtitulo_sobre_documento(
             [f for f in frames if pr["t0"] <= f["t"] < pr["t1"]], es, u
@@ -219,7 +231,7 @@ def revisar_cajas(
                 fallo(
                     "C2",
                     "alta",
-                    f'subtítulo "{c["a"]}" encima del texto del documento "{c["b"]}"',
+                    f'"{c["a"]}" encima del texto del documento "{c["b"]}"',
                     t=c["t"],
                     t_fin=c["t_fin"],
                     escena=escena_en(c["t"], vs),

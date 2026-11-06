@@ -155,6 +155,12 @@ def es_disenado(texto: str, t: float, diseno: list[dict]) -> bool:
     return False
 
 
+def en_orden(lineas: list[dict], alto: int) -> list[dict]:
+    """Reading order, not the detector's: pieces of one line ("$1001", "million?") can come back in any order."""
+    fila = 0.03 * alto  # shortcut: fixed row height, two lines closer than 3 % of the frame may swap
+    return sorted(lineas, key=lambda l: (round((l["caja"][1] + l["caja"][3]) / 2 / fila), l["caja"][0]))
+
+
 def analizar(frames: list[dict], esperados: list[dict], u: dict | None = None,
              diseno: list[dict] | None = None) -> dict:
     """Función pura sobre el OCR ya hecho.
@@ -187,7 +193,7 @@ def analizar(frames: list[dict], esperados: list[dict], u: dict | None = None,
                 if p > mejor:
                     mejor, t_mejor = p, f["t"]
             # el texto puede partirse en varias líneas: probar también la unión del frame
-            p = parecido(e["texto"], " ".join(l["texto"] for l in f["lineas"]))
+            p = parecido(e["texto"], " ".join(l["texto"] for l in en_orden(f["lineas"], f["alto"])))
             if p > mejor:
                 mejor, t_mejor = p, f["t"]
         if not en_ventana:

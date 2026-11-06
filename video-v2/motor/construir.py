@@ -1597,6 +1597,8 @@ def _puertas(
     in --validar: a full build comes from producir.py, which already ran them."""
     errores = []
     exento = proy.name in puertas.ANTERIORES  # by folder: older storyboards have no `ref` or another one
+    if not exento:
+        errores += puertas.clips_sin_ver(sb, proy)
     if not sin_plan:
         p = plan(sb, words)
         errores += [] if exento else puertas.errores(sb, p)
@@ -1641,6 +1643,13 @@ def construir(
     proy = Path(proy).resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
+    if sb.get("clips"):  # before the gates: a stale credit would veto the clip that replaced it
+        import broll
+
+        # undeclared credits only go in a real build of a new video: validating must not rewrite a published one's
+        huerfanos = not solo_validar and proy.name not in puertas.ANTERIORES
+        for k in broll.purgar_cambiados(sb["clips"], proy / "assets" / "clips", huerfanos):
+            print(f"✓ clip {k}: origen nuevo, caché anterior borrada")
     errores = validar(sb, words)
     sin_plan = bool(errores)  # the other gates still report; only the plan needs valid anchors
     if not errores and edicion.preparar(proy, sb, reelegir) is not None:
@@ -1797,6 +1806,9 @@ IGNORAR = (
     "assets/music-bed.wav",
     "assets/img/*.jpg",
     "assets/clips/*.src",
+    "assets/clips/*.src.origen",
+    "assets/clips/*.hoja.jpg",
+    "assets/clips/*.hoja.txt",
     "assets/v/",
     "assets/t/*-desenfoque.jpg",
     "social/",

@@ -75,8 +75,14 @@ def valor(ws: list[str]) -> int | None:
         if w.isdigit():
             actual += int(w)
         elif w in _UNIDADES:
-            actual += _UNIDADES[w]
+            n = _UNIDADES[w]
+            # "nineteen twenty nine" is no sum (it used to give 48): only "twenty nine" and "hundred nine" chain
+            if actual % (100 if n > 9 else 10):
+                return None
+            actual += n
         elif w in _DECENAS:
+            if actual % 100:
+                return None
             actual += _DECENAS[w]
         elif w == "hundred":
             actual = max(actual, 1) * 100
@@ -87,6 +93,31 @@ def valor(ws: list[str]) -> int | None:
             return None
         visto = True
     return total + actual if visto else None
+
+
+def anio_hablado(ws: list[str]) -> int | None:
+    """A year said in two pairs: "nineteen twenty nine" 1929, "nineteen oh five" 1905, "twenty twenty four" 2024.
+    The other readings ("two thousand eight", "nineteen hundred") are plain numbers: `valor` has them."""
+    alto = _UNIDADES.get(ws[0], _DECENAS.get(ws[0], 0)) if ws else 0
+    if not 10 <= alto <= 20 or len(ws) < 2:
+        return None
+    if ws[1] == "oh":
+        bajo = _UNIDADES.get(ws[2]) if len(ws) == 3 else None
+        return alto * 100 + bajo if bajo else None
+    bajo = valor(ws[1:])
+    return alto * 100 + bajo if bajo is not None and 10 <= bajo <= 99 else None
+
+
+def _es_anio(escrito: list[str], oido: list[str]) -> bool:
+    """shortcut: "$1,929" said as a year also passes (tokens lose the "$"); add context if a script ever has one."""
+    m = re.fullmatch(r"(\d{4})(s?)", escrito[0]) if len(escrito) == 1 else None
+    if not m or not oido:
+        return False
+    if m.group(2):  # "1920s" -> "nineteen twenties"
+        if not oido[-1].endswith("ies"):
+            return False
+        oido = [*oido[:-1], oido[-1][:-3] + "y"]
+    return anio_hablado(oido) == int(m.group(1)) or (not m.group(2) and valor(oido) == int(m.group(1)))
 
 
 def _de_numero(a: list[str], b: list[str]) -> bool:
@@ -104,7 +135,7 @@ def _mismo_sonido(a: list[str], b: list[str]) -> bool:
     """Same audio written differently. A number word never gets the fuzzy pass: only an equal value does."""
     if _de_numero(a, b):
         va, vb = valor(a), valor(b)
-        return (va is not None and va == vb) or [_HOMOFONOS.get(w, w) for w in a] == [_HOMOFONOS.get(w, w) for w in b]
+        return (va is not None and va == vb) or _es_anio(a, b) or _es_anio(b, a) or [_HOMOFONOS.get(w, w) for w in a] == [_HOMOFONOS.get(w, w) for w in b]
     return _parecido(a, b) >= PARECIDO_MIN
 
 

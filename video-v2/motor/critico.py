@@ -216,7 +216,7 @@ def revisar_texto(rt: dict, vs: list[tuple[float, float]], u: dict) -> list[dict
             fallo(
                 "L1",
                 "alta",
-                f'"{e["texto"]}" no se lee en el MP4 (OCR, parecido {e["parecido"]})',
+                f'"{e["texto"]}" no se lee (OCR, parecido {e["parecido"]})',
                 t=e["t0"],
                 t_fin=e["t1"],
                 escena=esc,
@@ -266,6 +266,111 @@ def revisar_texto(rt: dict, vs: list[tuple[float, float]], u: dict) -> list[dict
             )
         )
     return out
+
+
+def textos_previstos(sb: dict, plan: dict, words: list[dict]) -> tuple[list[dict], list[dict]]:
+    """L1: texts of each scene, the disclaimer lines in their windows and each document's highlighted phrase, with
+    the captions added as design. A document's phrase is printed on the document (`doc`), not put by the video."""
+    import anclas
+    import medir_texto
+
+    vs = ventanas(plan)
+    esperados = []
+    for k, esc in enumerate(sb.get("escenas") or []):
+        if k < len(vs):
+            esperados += [
+                {"texto": t, "escena": k, "t0": vs[k][0], "t1": vs[k][1]}
+                for t in medir_texto.textos_de_escena(esc)
+            ]
+    av = plan.get("aviso") or {}
+    esperados += esperados_aviso(av, float(plan.get("D") or (av.get("final") or 0) + 1))
+    for pr in plan.get("pruebas") or []:
+        src = next(
+            (x for x in sb.get("pruebas") or [] if x.get("img") == pr.get("img")), {}
+        )
+        if src.get("texto"):
+            esperados.append(
+                {
+                    "texto": src["texto"],
+                    "escena": escena_en(pr["t0"], vs),
+                    "t0": pr["t0"],
+                    "t1": pr["t1"],
+                    "doc": True,
+                }
+            )
+    diseno = [
+        {"texto": e["texto"], "t0": e["t0"], "t1": e["t1"], "doc": e.get("doc", False)}
+        for e in esperados
+    ]
+    diseno += [
+        {
+            "texto": " ".join(words[i]["text"] for i in idx),
+            "t0": words[idx[0]]["start"] - 0.5,
+            "t1": words[idx[-1]]["end"] + 0.5,
+        }
+        for idx in anclas.frases(words)
+    ]  # subtítulos: mientras se dice
+    return esperados, diseno
+
+
+def _tramo_visible(t0: float, t1: float, tapas: list[tuple[float, float]]) -> tuple[float, float]:
+    """Longest part of a text's window not under a full-screen document; the whole window if it is all under one."""
+    tramos, ini = [], t0
+    for a, b in sorted(tapas):
+        if a - 0.2 > ini:
+            tramos.append((ini, min(a - 0.2, t1)))
+        ini = max(ini, b + 0.2)
+    tramos.append((ini, t1))
+    mejor = max(tramos, key=lambda x: x[1] - x[0])
+    return mejor if mejor[1] - mejor[0] >= 0.3 else (t0, t1)
+
+
+def muestreo_previo(sb: dict, plan: dict, words: list[dict], de_escena: list[float]) -> dict:
+    """Which frames to snapshot and read before the render. The MP4 is read at 2 fps; a preview has few frames, and
+    judged by scene window 4 of 24 texts in jesse-livermore read as unread (they entered after the scene's frame).
+    So each text gets its own window, and a frame inside it where it is on screen and past its entrance. Documents
+    get frames every 0.5 s (the rate of the MP4), the overlap measure needs consecutive ones."""
+    import medir_texto
+    import puertas
+
+    tapas = [(p["t0"], p["t1"]) for p in plan.get("pruebas") or []]
+    ocr: list[float] = []
+    for t0, t1 in tapas:
+        d = t1 - t0
+        dentro = [round(t0 + 0.5 * k, 2) for k in range(1, int(d * 2) + 1) if t0 + 0.5 * k < t1 - 0.1]
+        ocr += dentro if len(dentro) >= 2 else [round(t0 + d * 0.5, 2), round(t0 + d * 0.85, 2)]
+    textos = []
+    for e in textos_previstos(sb, plan, words)[0]:
+        if isinstance(e["escena"], int) and not e.get("doc"):
+            propias = puertas._textos(plan["escenas"][e["escena"]]) if e["escena"] < len(plan["escenas"]) else []
+            casa = [x for x in propias if medir_texto.norm(x[0].replace("*", "")) == medir_texto.norm(e["texto"])]
+            if not casa:
+                continue  # shortcut: a text the plan rewrites has no known window; the MP4 still reads it
+            e = {**e, "t0": casa[0][1], "t1": casa[0][2]}
+        textos.append(e)
+        v0, v1 = _tramo_visible(e["t0"], e["t1"], tapas)
+        a, b = v0 + 0.35 * (v1 - v0), v0 + 0.85 * (v1 - v0)
+        if any(a <= x <= b for x in ocr):
+            continue
+        ya = next((x for x in de_escena if a <= x <= b), None)
+        ocr.append(ya if ya is not None else round(v0 + 0.6 * (v1 - v0), 2))
+    ocr = sorted(set(ocr))
+    return {"textos": textos, "ocr": ocr, "todos": sorted(set(de_escena) | set(ocr))}
+
+
+def revisar_previo(sb: dict, plan: dict, words: list[dict], frames: list[dict], rub: dict) -> list[dict]:
+    """L1 and designed text over a document, on preview frames. Only what was sampled is judged: the full pass is
+    still the critic's, on the MP4."""
+    import medir_texto
+    import puertas_final as pf
+
+    u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+    vs = ventanas(plan)
+    textos = muestreo_previo(sb, plan, words, [])["textos"]
+    diseno = textos_previstos(sb, plan, words)[1]
+    rt = medir_texto.analizar(frames, textos, {k: u[k] for k in medir_texto.UMBRALES if k in u}, diseno=diseno)
+    rt["aviso_lineas"] = (plan.get("aviso") or {}).get("lineas") or []
+    return revisar_texto(rt, vs, u) + pf.sobre_documento(frames, diseno, plan, vs, u, fallo, escena_en)
 
 
 def esperados_aviso(av: dict, fin: float) -> list[dict]:
@@ -893,42 +998,9 @@ def revisar(
         qa = {**qa, "_aviso": (sb.get("aviso") or {}).get("lineas") or []}
         fallos += fallos_de_qa(qa, vs)
 
-    # L1 legibilidad: textos de cada escena + líneas del aviso en sus ventanas (segundos del plan)
     frames = medir_texto.ocr_frames(mp4, 2.0)
-    esperados = []
-    for k, esc in enumerate(sb.get("escenas") or []):
-        if k < len(vs):
-            esperados += [
-                {"texto": t, "escena": k, "t0": vs[k][0], "t1": vs[k][1]}
-                for t in medir_texto.textos_de_escena(esc)
-            ]
+    esperados, diseno = textos_previstos(sb, plan, words)
     av = plan.get("aviso") or {}
-    esperados += esperados_aviso(av, float(plan.get("D") or (av.get("final") or 0) + 1))
-    for pr in plan.get("pruebas") or []:
-        src = next(
-            (x for x in sb.get("pruebas") or [] if x.get("img") == pr.get("img")), {}
-        )
-        if src.get("texto"):
-            esperados.append(
-                {
-                    "texto": src["texto"],
-                    "escena": escena_en(pr["t0"], vs),
-                    "t0": pr["t0"],
-                    "t1": pr["t1"],
-                }
-            )
-    import anclas
-
-    fr = anclas.frases(words)
-    diseno = [{"texto": e["texto"], "t0": e["t0"], "t1": e["t1"]} for e in esperados]
-    diseno += [
-        {
-            "texto": " ".join(words[i]["text"] for i in idx),
-            "t0": words[idx[0]]["start"] - 0.5,
-            "t1": words[idx[-1]]["end"] + 0.5,
-        }
-        for idx in fr
-    ]  # subtítulos: mientras se dice
     rt = medir_texto.analizar(
         frames,
         esperados,
