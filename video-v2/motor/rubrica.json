@@ -22,7 +22,34 @@
       "nombre": "Escenas sobre el plan (motor/puertas.py)",
       "texto_min_s": 0.5,
       "vacia_max_s": 1.0,
-      "fondo_tenue_max": 0.6
+      "fondo_tenue_max": 0.6,
+      "contador_antes_max_s": 0.3,
+      "contador_ventana_s": 1.5,
+      "prueba_entrada_s": 0.4,
+      "prueba_palabras_s": 3.0
+    },
+    "C1": {
+      "nombre": "Cuadros del MP4 final (tools/medir_cuadros.py)",
+      "negro_luma": 12,
+      "negro_min_s": 0.2,
+      "congelado_dif": 0.05,
+      "congelado_min_s": 1.5,
+      "gancho_s": 2.0,
+      "gancho_luma_min": 30,
+      "gancho_contraste_min": 25,
+      "plano_std": 18,
+      "plano_min_s": 0.5,
+      "texto_alto_px": 50,
+      "banda_alto": 0.05,
+      "banda_std": 3,
+      "banda_pct": 0.9,
+      "colision_solape": 0.1,
+      "colision_frames": 2,
+      "caja_recorte": 0.2,
+      "borde_margen": 0.008
+    },
+    "A1": {
+      "nombre": "Audio contra guion (tools/medir_guion_audio.py)"
     },
     "R1": { "nombre": "Ritmo visual", "quieto_max_s": 2.5 },
     "V1": {

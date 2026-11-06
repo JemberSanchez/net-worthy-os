@@ -72,9 +72,10 @@ class PrimeraVersionTest(unittest.TestCase):
         self.assertEqual(len(err), 1, err)
         self.assertIn("escena 10", err[0])
 
-    def test_la_version_corregida_pasa_todas(self):
+    def test_la_version_corregida_solo_falla_por_el_tema(self):
+        """`tema` went unnoticed through v2: see test_cero_errores.PlanTest."""
         sb, p = plan_de("v2")
-        self.assertEqual(puertas.errores(sb, p), [])
+        self.assertEqual(puertas.errores(sb, p), puertas.tema_valido(sb))
 
 
 class ReglasTest(unittest.TestCase):
@@ -252,6 +253,7 @@ class JuicioDeEseArchivoTest(unittest.TestCase):
         tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, tmp, True)
         self.assertFalse(critico.juicio_de(tmp, "abc"))
+        (tmp / "checklist.json").write_text('{"escenas": [], "cifras": []}', encoding="utf-8")
         (tmp / "juicio.json").write_text('{"fallos": [], "mp4_sha256": "viejo"}', encoding="utf-8")
         self.assertFalse(critico.juicio_de(tmp, "abc"))
         self.assertTrue(critico.juicio_de(tmp, "viejo"))

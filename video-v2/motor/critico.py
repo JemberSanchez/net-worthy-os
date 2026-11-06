@@ -976,6 +976,14 @@ def revisar(
         sb,
     )
 
+    import medir_cuadros
+    import puertas_final as pf
+
+    voz = voz_de_la_mezcla(proy, sb)
+    fallos += pf.revisar_audio(sb, mp4, voz, rm, vs, u, fallo, escena_en)
+    fallos += pf.pausas_sin_puntuacion(rv, vs, u, fallo, escena_en)
+    fallos += pf.revisar_cuadros(medir_cuadros.leer_grises(mp4), frames, vs, u, fallo, escena_en)
+    fallos += pf.revisar_cajas(frames, diseno, plan, vs, u, fallo, escena_en)
     fallos += revisar_datos(sb, rt)
     rp = medir_parecido.medir(proy, mp4=mp4)
     med["parecido"] = rp["max"]
@@ -1008,7 +1016,7 @@ Sin parche = se reporta y no se toca. No repitas lo que ya midieron los medidore
 Criterios de juicio (docs/RUBRICA.md, PROVISIONAL):
 - J1 Gancho: en 1-2 s, ¿se entiende sin contexto (sujeto concreto y tensión) y la imagen frena el scroll?
 - J2 Imagen = palabra: ¿cada plano muestra lo que dice la voz en ese segundo?
-- J3 Exactitud: ¿cada cifra del guion coincide con su fuente (`cifras`)? ¿algo suena a consejo?
+- J3 Exactitud: ¿cada dato de `cifras` coincide con lo que dice SU FUENTE? (la máquina solo comprueba guion = `cifras`) ¿algo suena a consejo?
 - J4 Honestidad: ¿está la parte incómoda (riesgo, sesgo de superviviente)?
 - J5 Cierre: ¿de un tipo distinto a los últimos 3 vídeos (G-CIERRE) y el final enlaza con el inicio?
 - J6 Acabado: textos cortados, solapes, elementos fuera de cuadro, faltas de ortografía.
@@ -1085,6 +1093,10 @@ def preparar_juicio(
             check=False,
         )
     hoja_contactos(dir_)
+    import juicio_lista
+
+    lista = juicio_lista.checklist(sb, plan)
+    (dir_ / "checklist.json").write_text(json.dumps(lista, ensure_ascii=False), encoding="utf-8")
     esc = "\n".join(
         f"- {k} `{e['tipo']}` {a:.2f}-{b:.2f}s"
         for k, (e, (a, b)) in enumerate(zip(sb.get("escenas") or [], ventanas(plan)))
@@ -1103,6 +1115,7 @@ def preparar_juicio(
         n=len(fallos),
         medidos="\n".join(f"- {linea(f)}" for f in fallos) or "(ninguno)",
     )
+    txt += "\n" + juicio_lista.texto_para_juicio(lista)
     (dir_ / "juicio.md").write_text(txt, encoding="utf-8")
     return dir_ / "juicio.md"
 
@@ -1334,7 +1347,7 @@ def veredicto(ronda: dict, bloquean: list[str], con_juicio: bool) -> dict:
     if malos:
         motivo = f"{len(malos)} fallos que bloquean: " + "; ".join(linea(f) for f in malos[:3])
     elif not con_juicio:
-        motivo = "falta el juicio sobre este archivo (renders/critica/rN/juicio.json con su `mp4_sha256`)"
+        motivo = "falta el juicio completo sobre este archivo (renders/critica/rN/juicio.json con su `mp4_sha256` y todo el checklist de juicio.md)"
     else:
         motivo = "ok"
     return {"aprobado": not malos and con_juicio, "motivo": motivo, "bloqueantes": malos}
@@ -1342,8 +1355,14 @@ def veredicto(ronda: dict, bloquean: list[str], con_juicio: bool) -> dict:
 
 def juicio_de(dir_ronda: Path, sha: str) -> bool:
     """A judgment only counts for the file it looked at: a re-render leaves the old juicio.json in place."""
+    import juicio_lista
+
     f = dir_ronda / "juicio.json"
-    return f.exists() and json.loads(f.read_text(encoding="utf-8")).get("mp4_sha256") == sha
+    return (
+        f.exists()
+        and json.loads(f.read_text(encoding="utf-8")).get("mp4_sha256") == sha
+        and not juicio_lista.juicio_completo(dir_ronda)
+    )
 
 
 def escribir_aprobacion(dir_: Path, historia: list[dict], bloquean: list[str]) -> None:

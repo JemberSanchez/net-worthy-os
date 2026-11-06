@@ -7,7 +7,10 @@ from __future__ import annotations
 import itertools
 import json
 import re
+import subprocess
 from pathlib import Path
+
+import trazabilidad
 
 _U = json.loads((Path(__file__).parent / "rubrica.json").read_text(encoding="utf-8"))[
     "criterios"
@@ -136,13 +139,163 @@ def rotulos_solapados(p: dict) -> list[str]:
     return out
 
 
+def contador_adelantado(p: dict) -> list[str]:
+    """A counter that runs before the voice says the figure spoils it: first average-401k started 0.69 s early
+    (corrected: 0.09 s). A figure the voice never says has nothing to be early for: `sin_fuente` still sees it."""
+    out = []
+    ws = p["words"]
+    for k, s in enumerate(p["escenas"]):
+        fl = s.get("flujo") or {}
+        cuentas = []
+        if s["tipo"] == "contador3d":
+            cuentas.append((s["t0"] + 0.05, s["valor"]))
+        if s.get("contador"):
+            cuentas.append((s["contador"]["en"], s["contador"]["valor"]))
+        if fl.get("contador"):
+            cuentas.append((fl["en"] + 0.5, fl["contador"]["valor"]))
+        for ini, valor in cuentas:
+            voz = _voz_dice(ws, valor, s["t0"] - _U["contador_ventana_s"])
+            if voz is not None and voz - ini > _U["contador_antes_max_s"]:
+                out.append(
+                    f"escena {k}: el contador de {valor:,} arranca {voz - ini:.2f}s antes de que la voz diga la cifra "
+                    f"(> {_U['contador_antes_max_s']}): ancla el contador a la cifra"
+                )
+    return out
+
+
+def _voz_dice(ws: list[dict], valor: float, desde: float) -> float | None:
+    """Second the voice starts saying `valor`, at the precision it says it."""
+    for i, w in enumerate(ws):
+        if w["start"] < desde:
+            continue
+        for j in range(i + 1, min(i + 9, len(ws)) + 1):
+            frase = " ".join(x["text"].strip(".,?!") for x in ws[i:j])
+            r = trazabilidad.de_palabras(frase) + trazabilidad.de_digitos(frase)
+            if len(r) == 1 and frase.lower().startswith(r[0]["texto"].split()[0]) and trazabilidad.casa(r[0], [valor]):
+                return w["start"]
+    return None
+
+
+def prueba_breve(sb: dict, p: dict) -> list[str]:
+    """A document only proves something if it can be read: entry + the highlighted phrase at 3 words/s."""
+    out = []
+    pruebas = {x.get("img"): x for x in sb.get("pruebas") or []}
+    for pr in p.get("pruebas") or []:
+        n = len(str(pruebas.get(pr.get("img"), {}).get("texto") or "").split())
+        minimo = _U["prueba_entrada_s"] + n / _U["prueba_palabras_s"]
+        if pr["t1"] - pr["t0"] < minimo:
+            out.append(
+                f"prueba {pr.get('img')}: se ve {pr['t1'] - pr['t0']:.2f}s desde {pr['t0']:.1f}s y su frase de {n} palabras "
+                f"pide {minimo:.2f}s: alarga `hasta`"
+            )
+    return out
+
+
+_FORMAS_HABLADAS = tuple(
+    re.compile(re.escape(b).replace(r"\ ", "[ -]").replace(r"\-", "[ -]"), re.IGNORECASE) for _, b in PRONUNCIACION
+)
+
+
+def forma_hablada_escrita(sb: dict, p: dict | None = None) -> list[str]:
+    """What is respelled for the voice must never be read: "four-oh-one-k" on screen or in a caption."""
+    textos = [(d, t) for d, t in trazabilidad._textos_pantalla(sb)] + list(_textos_publicacion(sb).items())
+    if p:
+        c0, c1 = p["subtitulos"]
+        textos.append(("subtítulos", " ".join(w["text"] for w in p["words"][c0 : c1 + 1])))
+    return [
+        f'{d}: "{m.group(0)}" es la forma para la voz; escrito va "401(k)" o similar'
+        for d, t in textos
+        for f in _FORMAS_HABLADAS
+        for m in f.finditer(t)
+    ]
+
+
+def _textos_publicacion(sb: dict) -> dict[str, str]:
+    pub, so = sb.get("publicacion") or {}, sb.get("social") or {}
+    out = {"título": pub.get("titulo") or "", "descripción": pub.get("descripcion") or "", "caption": so.get("caption") or ""}
+    for k, d in enumerate(so.get("carrusel") or []):
+        for c in ("kicker", "titulo", "texto"):
+            out[f"carrusel {k + 1} {c}"] = d.get(c) or ""
+    return {k: v for k, v in out.items() if v}
+
+
+def publicacion(sb: dict) -> list[str]:
+    """Written figures out of `cifras`."""
+    if not sb.get("publicacion") and not sb.get("social"):
+        return []
+    return trazabilidad.sin_fuente_publicacion(sb, _textos_publicacion(sb))
+
+
+def historia_corte(sb: dict, words: list[dict]) -> list[str]:
+    """The story is the hook cut at `hasta`: 14 s max (social.py). It must end on a finished sentence."""
+    h = (sb.get("social") or {}).get("historia") or {}
+    if not h.get("hasta"):
+        return []
+    import anclas
+
+    try:
+        t = anclas.t(words, h["hasta"])
+    except anclas.AnclaError as e:
+        return [f"historia: `hasta`: {e}"]
+    previas = [w for w in words if w["end"] <= t + 0.01]
+    ult = previas[-1]["text"] if previas else ""
+    if t + 0.35 > 14.0:
+        return [f"historia: `hasta` en {t:.1f}s se corta a 14 s en medio de una frase: elige una frase anterior"]
+    if not re.search(r"[.?!][\"')\]]*$", ult):
+        return [f'historia: el corte en {t:.1f}s cae tras "{ult}", sin terminar la frase: ancla al final de una frase']
+    return []
+
+
+def g2p_dudosas(sb: dict, python: Path, script: Path) -> list[str]:
+    """Before synthesis, in the Kokoro venv: words its lexicon does not know (espeak guesses them) and acronyms
+    read as a word ("AWS" -> "oz", published that way in aws-profit). `pronuncia_ok`: heard and accepted."""
+    texto = " ".join(g["texto"] for g in sb.get("guion") or [])
+    r = subprocess.run([str(python), str(script)], input=texto.encode("utf-8"), capture_output=True, check=False)
+    if r.returncode:
+        return [f"g2p no midió ({r.stderr.decode('utf-8', 'replace')[-200:]})"]
+    return filtrar_g2p(json.loads(r.stdout.decode("utf-8").splitlines()[-1]), sb.get("pronuncia_ok") or [])
+
+
+def filtrar_g2p(d: dict, aceptadas: list[str]) -> list[str]:
+    out = [
+        f'"{w}" no está en el léxico de Kokoro y espeak adivina /{f}/: escríbela como suena o escúchala y añádela a `pronuncia_ok`'
+        for w, f in d["desconocidas"].items()
+        if w not in aceptadas
+    ]
+    # a spelled acronym stresses every letter ("IOU" 3 marks); fewer marks = read as a word
+    out += [
+        f'"{w}" se lee como palabra /{f}/, no letra a letra: escribe "A-W-S" o similar, o añádela a `pronuncia_ok`'
+        for w, f in d["siglas"].items()
+        if w not in aceptadas and f.count("ˈ") + f.count("ˌ") < len(w)
+    ]
+    return out
+
+
+def tema_valido(sb: dict) -> list[str]:
+    """`tema` is a CSS class, not the topic: "average 401(k) vs median" shifted every frame down 300 px on the
+    published average-401k. `cine` only exists on top of `editorial` (plantilla.tpl)."""
+    t = sb.get("tema")
+    if t not in (None, "", "claro", "editorial"):
+        return [f'`tema` {t!r} no existe (claro, editorial): el asunto del vídeo no va ahí, descoloca toda la maqueta']
+    if sb.get("aspecto") == "cine" and t != "editorial":
+        return ['`aspecto: cine` necesita `tema: "editorial"`']
+    return []
+
+
 def errores(sb: dict, p: dict) -> list[str]:
     if sb.get("ref") in ANTERIORES:
         return []
     return (
-        pronunciacion(sb)
+        tema_valido(sb)
+        + pronunciacion(sb)
         + voz_sin_subtitulo(p)
         + pantalla_vacia(p)
         + texto_breve(p)
         + rotulos_solapados(p)
+        + contador_adelantado(p)
+        + prueba_breve(sb, p)
+        + forma_hablada_escrita(sb, p)
+        + publicacion(sb)
+        + historia_corte(sb, p["words"])
+        + trazabilidad.sin_fuente(sb)
     )

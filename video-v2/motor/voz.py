@@ -83,6 +83,12 @@ def main() -> None:
     if audio.exists() and "--forzar" not in sys.argv:
         raise SystemExit(f"{audio} ya existe. No se sobrescribe sola; usa --forzar si de verdad quieres regenerarla.")
 
+    if motor == "kokoro":
+        import puertas
+
+        dudas = puertas.g2p_dudosas(sb, gv.PYTHON_KOKORO, RAIZ / "tools" / "_g2p_kokoro.py")
+        if dudas:
+            raise SystemExit("Pronunciación sin revisar, no se sintetiza:\n  - " + "\n  - ".join(dudas))
     frases = frases_del_storyboard(sb)
     texto = " ".join(frases)
     print(f"Proyecto: {proy.name} · motor {motor} ({voz}) · {len(texto)} caracteres\nSintetizando…")

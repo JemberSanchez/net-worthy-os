@@ -201,6 +201,34 @@ def _preparar_dir(dir_: Path) -> None:
     (dir_ / "hyperframes.json").write_text(json.dumps({"media": {"autoProxy": False}}) + "\n")
 
 
+def revisar_activos(carrusel: list[dict], jpgs: list[Path], historia: Path | None) -> list[str]:
+    """OCR over each finished slide (title read, text not against the edge) and black or frozen frames in the story."""
+    sys.path.insert(0, str(RAIZ / "tools"))
+    import medir_cuadros as mc
+    import medir_texto
+
+    u = json.loads((MOTOR / "rubrica.json").read_text(encoding="utf-8"))["criterios"]["C1"]
+    out = []
+    for k, (d, jpg) in enumerate(zip(carrusel, jpgs)):
+        f = mc.ocr_imagen(jpg)
+        titulo = d.get("titulo", "").replace("*", "")
+        if medir_texto.parecido(titulo, " ".join(x["texto"] for x in f["lineas"])) < 0.8:
+            out.append(f'diapositiva {k + 1}: el título "{titulo}" no se lee en la imagen')
+        m = u["borde_margen"] * f["ancho"]
+        out += [
+            f'diapositiva {k + 1}: "{x["texto"]}" toca el borde'
+            for x in f["lineas"]
+            if (x["caja"][0] <= m or x["caja"][2] >= f["ancho"] - m)
+            and medir_texto.parecido(x["texto"], " ".join(str(v) for v in d.values())) >= 0.8
+        ]
+    if historia:
+        fr = mc.leer_grises(historia)
+        out += [f"historia: negro {x['t']}-{x['t_fin']}s" for x in mc.negros(fr, u)]
+        # the end card holds 2.5 s on purpose: only the hook part can be frozen by accident
+        out += [f"historia: congelada {x['t']}-{x['t_fin']}s" for x in mc.congelados(fr[: -int(3 * mc.FPS)], u)]
+    return out
+
+
 def generar(proy: Path, env: dict | None = None) -> dict:
     from PIL import Image
     proy = Path(proy).resolve()
@@ -253,6 +281,9 @@ def generar(proy: Path, env: dict | None = None) -> dict:
                         str(historia)], check=True)
     textos = captions(sb)
     (out / "textos.json").write_text(json.dumps(textos, ensure_ascii=False, indent=2), encoding="utf-8")
+    fallos = revisar_activos(so["carrusel"], jpgs, historia)
+    if fallos:
+        raise SocialError("social con defectos:\n  - " + "\n  - ".join(fallos))
     return {"carrusel": [str(p) for p in jpgs], "historia": str(historia) if historia else None,
             "textos": str(out / "textos.json")}
 
