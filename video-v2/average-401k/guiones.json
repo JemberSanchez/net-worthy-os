@@ -1,0 +1,170 @@
+{
+  "ref": "average-401k",
+  "nota": "Turno 2 calendario VIRALIDAD §7 (noticia, error comun). Ganador decide: checkup retirement. Fuentes: Boldin tabla de Vanguard How America Saves 2026.",
+  "estructuras": [
+    {
+      "id": "error",
+      "nombre": "error comun",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "You can be below the average four-oh-one-k and still beat most people your age."
+        },
+        {
+          "id": "wrong",
+          "texto": "The number you keep hearing is the wrong one."
+        },
+        {
+          "id": "avg",
+          "texto": "Among retirement age savers, Vanguard's average is three hundred thirty thousand dollars.",
+          "giro": true
+        },
+        {
+          "id": "feel",
+          "texto": "Feel behind yet?"
+        },
+        {
+          "id": "drag",
+          "texto": "A few giant accounts drag that figure up."
+        },
+        {
+          "id": "mid",
+          "texto": "The saver in the exact middle holds about one hundred three thousand.",
+          "giro": true
+        },
+        {
+          "id": "third",
+          "texto": "That's less than a third of the headline."
+        },
+        {
+          "id": "under",
+          "texto": "Across every age, most savers sit under the average.",
+          "giro": true
+        },
+        {
+          "id": "line",
+          "texto": "Still, the middle isn't a finish line.",
+          "giro": true
+        },
+        {
+          "id": "alone",
+          "texto": "That balance alone won't fund most retirements."
+        },
+        {
+          "id": "close",
+          "texto": "Measure yourself against your own bills, not the average four-oh-one-k."
+        }
+      ]
+    },
+    {
+      "id": "contradiccion",
+      "nombre": "contradiccion",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Your 401(k) can look terrible and still beat most people your age."
+        },
+        {
+          "id": "fact",
+          "texto": "Vanguard's average saver at sixty-five has three hundred thirty thousand dollars.",
+          "giro": true
+        },
+        {
+          "id": "fact2",
+          "texto": "Its typical saver has less than a third of that.",
+          "giro": true
+        },
+        {
+          "id": "cause",
+          "texto": "Both numbers are true, because a few giant accounts pull the average up."
+        },
+        {
+          "id": "gap",
+          "texto": "Across every age, three in four savers sit under it.",
+          "giro": true
+        },
+        {
+          "id": "you",
+          "texto": "So the average was never your benchmark."
+        },
+        {
+          "id": "risk",
+          "texto": "But the typical balance won't fund most retirements on its own either.",
+          "giro": true
+        },
+        {
+          "id": "skip",
+          "texto": "These numbers also skip IRAs and pensions."
+        },
+        {
+          "id": "close",
+          "texto": "Your bills decide your target, however terrible your 401(k) looks."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "You can be below the average four-oh-one-k and still beat most people your age."
+    },
+    {
+      "id": "g2",
+      "texto": "Most people with a four-oh-one-k are below average, and that may include you."
+    },
+    {
+      "id": "g3",
+      "texto": "The four-oh-one-k number that makes you feel behind describes almost nobody near you."
+    }
+  ],
+  "juicio": {
+    "error": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una idea: media vs mediana; giro honesto al final"
+    },
+    "contradiccion": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Da la respuesta demasiado pronto"
+    },
+    "error+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Paradoja clara y cierre vuelve a la media"
+    },
+    "error+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Menos tension"
+    },
+    "error+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Exagera: almost nobody"
+    },
+    "contradiccion+g1": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Respuesta temprana"
+    },
+    "contradiccion+g2": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Respuesta temprana"
+    },
+    "contradiccion+g3": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Respuesta temprana"
+    }
+  }
+}

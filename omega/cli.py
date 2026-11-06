@@ -727,6 +727,23 @@ def cmd_record_cost() -> None:
     con.close()
 
 
+def _critico_ok(d: dict, ref: str) -> bool:
+    """Gate before anything goes live: the critic must have passed the exact MP4 in publish_<ref>.json."""
+    from pathlib import Path
+
+    from . import publish
+
+    video = Path(d.get("video_path", ""))
+    motivo = (
+        publish.exigir_critico(ref, video)
+        if video.is_file()
+        else f"'video_path' no existe: {video}"
+    )
+    if motivo:
+        print(f"Rechazado: {motivo}")
+    return not motivo
+
+
 def cmd_publish() -> None:
     """Sube un Short ya renderizado a YouTube (privado por defecto). Lee data/publish_<ref>.json."""
     import json
@@ -775,6 +792,8 @@ def cmd_publish() -> None:
         return
     if not video_path.exists():
         print(f"Rechazado: 'video_path' no existe: {video_path}")
+        return
+    if d.get("privacy_status", "private") != "private" and not _critico_ok(d, ref):
         return
     if _ya_publicado(d.get("production_ref", ref), "youtube"):
         return
@@ -907,6 +926,8 @@ def cmd_publish_fb() -> None:
         return
     live = "--publicar" in sys.argv or bool(programar)
     ref = d.get("production_ref", ref)
+    if live and not _critico_ok(d, ref):
+        return
     if live and _ya_publicado(
         ref, "facebook"
     ):  # un borrador es invisible: solo cuenta lo público
@@ -953,6 +974,8 @@ def cmd_publish_ig() -> None:
     caption = str(d.get("ig_caption") or publish_meta.caption_ig(d["description"]))
     live = "--publicar" in sys.argv
     ref = d.get("production_ref", ref)
+    if live and not _critico_ok(d, ref):
+        return
     if live and _ya_publicado(ref, "instagram"):
         return
 
@@ -1356,6 +1379,8 @@ def cmd_publish_social() -> None:
     Sin --publicar NO envía nada: muestra el plan. Con --publicar publica EN VIVO — la regla del
     proyecto exige confirmación explícita del usuario en el chat antes de usarlo.
       publish-social <ref> [--publicar] [--solo carrusel|historia] [--red ig|fb]"""
+    import json
+
     from . import publish_meta as pm
 
     if len(sys.argv) < 3:
@@ -1367,6 +1392,11 @@ def cmd_publish_social() -> None:
     solo = sys.argv[sys.argv.index("--solo") + 1] if "--solo" in sys.argv else None
     red = sys.argv[sys.argv.index("--red") + 1] if "--red" in sys.argv else None
     publicar = "--publicar" in sys.argv
+    if publicar:
+        path = config.DATA_DIR / f"publish_{proy.name}.json"
+        d = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        if not _critico_ok(d, proy.name):
+            raise SystemExit(1)
     if not plan["carrusel"] and not plan["historia"]:
         raise SystemExit(
             f"✗ {proy.name}/social está vacío: genera antes con `python video-v2/motor/social.py video-v2/{proy.name}`"
@@ -1576,6 +1606,8 @@ def cmd_programar() -> None:
             f"✗ {ref} no tiene video_id (ni en la base ni en {path.name}): súbelo primero "
             f"como privado (`publish {ref}`) o vincúlalo (`vincular {ref} <video_id>`)."
         )
+    if not _critico_ok(d, ref):
+        raise SystemExit(1)
     try:
         if "--ahora" in sys.argv:
             publish.hacer_publico(vid)

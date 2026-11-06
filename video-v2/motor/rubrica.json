@@ -18,6 +18,12 @@
       "zona_derecha": 0.86,
       "zona_derecha_desde": 0.45
     },
+    "E1": {
+      "nombre": "Escenas sobre el plan (motor/puertas.py)",
+      "texto_min_s": 0.5,
+      "vacia_max_s": 1.0,
+      "fondo_tenue_max": 0.6
+    },
     "R1": { "nombre": "Ritmo visual", "quieto_max_s": 2.5 },
     "V1": {
       "nombre": "Ritmo de voz",

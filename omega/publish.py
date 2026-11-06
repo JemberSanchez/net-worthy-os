@@ -16,6 +16,8 @@ No usar este comando como sandbox de pruebas repetidas sin necesidad.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import threading
 import time
 import webbrowser
@@ -25,6 +27,25 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from . import config
+
+RAIZ_PROYECTO = Path(__file__).resolve().parents[1]
+
+
+def sha256_de(ruta: Path) -> str:
+    with open(ruta, "rb") as f:
+        return hashlib.file_digest(f, "sha256").hexdigest()
+
+
+def exigir_critico(ref: str, video: Path, raiz: Path | None = None) -> str | None:
+    """Why this exact file cannot go live, or None. Written by video-v2/motor/critico.py: a pass on
+    another render proves nothing (average-401k went out unwatched on 6-nov-2026)."""
+    f = (raiz or RAIZ_PROYECTO) / "video-v2" / ref / "renders" / "critica" / "aprobacion.json"
+    if not f.exists():
+        return f"no hay crítico de {ref}: python video-v2/motor/critico.py video-v2/{ref} --mp4 {video} --solo-revisar"
+    v = json.loads(f.read_text(encoding="utf-8")).get(sha256_de(video))
+    if v is None:
+        return f"el crítico revisó otro archivo, no {video}: vuelve a correrlo con --mp4 sobre este"
+    return None if v["aprobado"] else f"crítico no aprobado: {v['motivo']}"
 
 # youtube: subir y editar (videos.update). yt-analytics.readonly: retención por segundo y términos
 # de búsqueda (analítica automática). Se piden JUNTOS para autorizar una sola vez: cambiar los

@@ -1,0 +1,79 @@
+[
+ {
+  "archivo": "multitud.src",
+  "origen": "pexels",
+  "titulo": "pexels:37215129",
+  "autor": "iPhone Snaps 🇨🇦",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/aerial-view-of-diverse-crowd-walking-37215129/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "parque.src",
+  "origen": "pexels",
+  "titulo": "pexels:39522508",
+  "autor": "Hassan Ehsan",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/senior-man-walking-in-lush-park-pathway-39522508/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "yates.src",
+  "origen": "pexels",
+  "titulo": "pexels:30089284",
+  "autor": "Nelemson G",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/aerial-view-of-luxury-yachts-in-marina-30089284/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "docs.src",
+  "origen": "pexels",
+  "titulo": "pexels:6700256",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/cash-and-documents-on-top-of-the-table-6700256/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "calc.src",
+  "origen": "pexels",
+  "titulo": "pexels:6963487",
+  "autor": "Mikhail Nilov",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/man-using-calculator-6963487/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "factura.src",
+  "origen": "pexels",
+  "titulo": "pexels:7545831",
+  "autor": "SHVETS production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-woman-holding-a-billing-statement-7545831/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "cuentas.src",
+  "origen": "pexels",
+  "titulo": "pexels:6266251",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-counting-dollar-bills-6266251/",
+  "desde": 0.0
+ }
+]

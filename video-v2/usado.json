@@ -457,6 +457,74 @@
      "desde": 20.0
     }
    }
+  },
+  {
+   "ref": "average-401k",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "diagonal",
+     "luma_alta",
+     "push_izq"
+    ],
+    "camara": [
+     "arco_izq",
+     "asentar",
+     "diag_desc"
+    ],
+    "punch": [
+     "inclinado"
+    ],
+    "texto": [
+     "lateral"
+    ],
+    "efectos": [
+     "Close door (Gravity Sound).wav",
+     "Computer mouse single click.ogg",
+     "Kick 2 (Gravity Sound).wav",
+     "Knocking on wood or door.ogg",
+     "Lead - swish rave (Gravity Sound).wav",
+     "Shaking coins in palm.ogg",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg"
+    ],
+    "riser": [
+     "Crash hit 3 (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Scott Buckley - Signal To Noise (nomelody mix).oga"
+    ]
+   },
+   "eleccion": {
+    "semilla": "average-401k",
+    "transiciones": [
+     "luma_alta",
+     "push_izq",
+     "diagonal"
+    ],
+    "camara": [
+     "diag_desc",
+     "arco_izq",
+     "asentar"
+    ],
+    "punch": "inclinado",
+    "texto": "lateral",
+    "sfx": {
+     "thud": "nudillo",
+     "monedas": "monedas_mano",
+     "nudillo": "puerta_seca",
+     "tack": "clic_fino"
+    },
+    "motor": {
+     "whoosh": "barrido_sint",
+     "impacto": "bombo_seco",
+     "riser": "riser_crash"
+    },
+    "musica": {
+     "commons": "File:Scott Buckley - Signal To Noise (nomelody mix).oga",
+     "desde": 133.0
+    }
+   }
   }
  ]
 }

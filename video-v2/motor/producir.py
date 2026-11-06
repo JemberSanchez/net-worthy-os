@@ -12,6 +12,9 @@ Encadena (cada paso es una puerta: si falla, se para y sale con código 1):
   7. medir_ritmo --max 2.5        el cuadro nunca muerto más de 2,5 s
   8. preview <30 MB + publish_<ref>.json (PRIVADO) + adn.json
   9. si hay token de YouTube: sube el MP4 como PRIVADO (borrador; `--sin-subir` lo evita)
+`--previo` para antes del render: puertas + una hoja de contactos por escena (<1 min). Sin `--sin-critico`,
+al final corre los medidores del crítico. Solo imprime fallos, con segundo y escena; todo queda en
+`renders/qa.json` (puertas, con su duración) y `renders/corridas.jsonl` (una línea por corrida).
 Escribe `renders/qa.json` con cada puerta. NO publica: aprobar = `python -m omega.cli programar <ref>`
 (hora pico de EE. UU.) — publicar exige una persona (política del canal).
 """
@@ -24,6 +27,8 @@ import re
 import shutil
 import subprocess
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import hfversion
@@ -556,10 +561,11 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
     ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
     informes, textos = [], 0
-    for i in range(0, len(ts), 5):
+
+    def pasada(i: int) -> subprocess.CompletedProcess:
         # --timeout: con 10 s (defecto) el #7 (3D + 18 capas) no llegaba a cargar y la auditoría
         # devolvía 0 textos medidos SIN fallar (25-sep). Un instrumento que no mide no aprueba.
-        r = _run(
+        return _run(
             hfversion.npx(
                 "check",
                 "--json",
@@ -571,6 +577,10 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
             cwd=proy,
             env=env,
         )
+
+    with ThreadPoolExecutor(3) as ex:
+        pasadas = list(ex.map(pasada, range(0, len(ts), 5)))
+    for i, r in zip(range(0, len(ts), 5), pasadas, strict=True):
         try:
             d = json.loads(r.stdout)
         except json.JSONDecodeError:
@@ -588,6 +598,53 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     )
 
 
+def hoja_previa(proy: Path, env: dict) -> tuple[bool, str]:
+    """One frame per scene from the built HTML: what a render would show, without the 3-4 min render."""
+    salida = proy / "renders" / "previo"
+    ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
+    r = _run(
+        hfversion.npx(
+            "snapshot",
+            "--json",
+            "--no-end",
+            "--timeout",
+            "60000",
+            "--at",
+            ",".join(map(str, ts)),
+            "--output",
+            str(salida),
+        ),
+        cwd=proy,
+        env=env,
+    )
+    try:
+        hojas = json.loads(r.stdout).get("contactSheets") or []
+    except json.JSONDecodeError:
+        hojas = []
+    if r.returncode != 0 or not hojas:
+        return False, "snapshot sin hoja: " + (r.stderr or r.stdout)[-300:]
+    return True, " ".join(hojas)
+
+
+def fallos_critico(informe: dict, linea) -> list[str]:
+    """What the critic found in the last round: alta/media one per line, baja only counted (informe.md has them)."""
+    fallos = informe["rondas"][-1]["fallos"]
+    bajas = sum(f["severidad"] == "baja" for f in fallos)
+    out = [linea(f) for f in fallos if f["severidad"] != "baja"]
+    return out + ([f"{bajas} fallos baja: renders/critica/informe.md"] if bajas else [])
+
+
+def medir_critico(proy: Path, final: Path) -> list[str]:
+    """The critic's meters on the final file (no rounds, no re-render)."""
+    r = _run([PY, str(MOTOR / "critico.py"), str(proy), "--mp4", str(final), "--solo-revisar"])
+    if r.returncode != 0:
+        return ["crítico falló: " + r.stderr[-300:]]
+    import critico
+
+    inf = json.loads((proy / "renders" / "critica" / "informe.json").read_text(encoding="utf-8"))
+    return fallos_critico(inf, critico.linea)
+
+
 def producir(proy: Path) -> dict:
     proy = proy.resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
@@ -597,6 +654,7 @@ def producir(proy: Path) -> dict:
         hfversion.version()
     )  # one production, one version: children inherit it
     todo = {**os.environ, **env}
+    hfversion.alinear_core(todo.get("HF_CORE"))
     qa: dict = {
         "ref": ref,
         "hyperframes": {
@@ -609,28 +667,40 @@ def producir(proy: Path) -> dict:
     renders = proy / "renders"
     renders.mkdir(exist_ok=True)
 
-    def puerta(nombre: str, ok: bool, detalle: str) -> None:
+    reloj = [time.monotonic()]
+
+    def puerta(nombre: str, ok: bool, detalle: str, seguir: bool = False) -> None:
+        ahora = time.monotonic()
         qa["puertas"].append(
-            {"puerta": nombre, "ok": ok, "detalle": detalle.strip()[-600:]}
+            {
+                "puerta": nombre,
+                "ok": ok,
+                "s": round(ahora - reloj[0], 1),
+                "detalle": detalle.strip()[-600:],
+            }
         )
-        print(
-            f"{'✓' if ok else '✗'} {nombre}: {detalle.strip().splitlines()[-1] if detalle.strip() else ''}"
-        )
+        reloj[0] = ahora
+        if not ok:
+            print(f"✗ {nombre}: {detalle.strip()}")
         (renders / "qa.json").write_text(
             json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-        if not ok:
-            raise SystemExit(f"✗ puerta '{nombre}' fallida — ver {renders / 'qa.json'}")
+        if not ok and not seguir:
+            raise SystemExit(f"✗ puerta '{nombre}' fallida")
 
-    r = _run([PY, str(MOTOR / "construir.py"), str(proy), "--validar"])
-    puerta("storyboard", r.returncode == 0, r.stdout + r.stderr)
+    # contrast keeps its own step after the build: the critic reads its patch from that gate
+    r = _run([PY, str(MOTOR / "construir.py"), str(proy), "--validar", "--sin-contraste"])
+    # the three static gates report together: each stop-at-first-failure run costs a full turn
+    puerta("storyboard", r.returncode == 0, r.stdout + r.stderr, seguir=True)
     sys.path.insert(0, str(RAIZ / "tools"))
     import medir_parecido
 
-    puerta("repeticion", *medir_parecido.puerta_repeticion(proy))
+    puerta("repeticion", *medir_parecido.puerta_repeticion(proy), seguir=True)
     import guionista
 
-    puerta("guion", *guionista.puerta_guion(proy))
+    puerta("guion", *guionista.puerta_guion(proy), seguir=True)
+    if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
+        raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
     if not (proy / "assets" / "voice.mp3").exists():
         r = _run([PY, str(MOTOR / "voz.py"), str(proy)])
         puerta("voz", r.returncode == 0, r.stdout + r.stderr)
@@ -647,7 +717,17 @@ def producir(proy: Path) -> dict:
         bool(m) and m.group(1) == "0",
         m.group(0) if m else r.stdout[-300:] + r.stderr[-300:],
     )
-    puerta("contraste", *auditar_contraste(proy, env))
+    previo = "--previo" in sys.argv
+    with ThreadPoolExecutor(1) as ex:
+        hoja = ex.submit(hoja_previa, proy, env) if previo else None
+        puerta("contraste", *auditar_contraste(proy, env), seguir=previo)
+        if hoja:
+            puerta("hoja", *hoja.result(), seguir=True)
+    if previo:
+        if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
+            raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
+        print(f"✓ previo en {sum(p['s'] for p in qa['puertas']):.0f} s · {qa['puertas'][-1]['detalle']}")
+        return qa
     crudo, final, prev = (
         renders / f"{ref}.mp4",
         renders / f"{ref}-final.mp4",
@@ -771,10 +851,12 @@ def producir(proy: Path) -> dict:
     (renders / "qa.json").write_text(
         json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(
-        f"\n✓ TODAS LAS PUERTAS OK · final {final.name} · preview {qa['preview_mb']} MB · data/publish_{ref}.json (privado)"
-    )
-    print(f"  YouTube: {qa['borrador_youtube']}")
+    print(f"✓ puertas OK · {final.name} · preview {qa['preview_mb']} MB · YouTube: {qa['borrador_youtube']}")
+    if "--sin-critico" not in sys.argv:
+        fallos = medir_critico(proy, final)
+        print(f"crítico: {len(fallos)} líneas · hoja renders/critica/r0/hoja.jpg")
+        for x in fallos:
+            print("  " + x)
     return qa
 
 
@@ -784,4 +866,20 @@ if __name__ == "__main__":
     )  # redirected output on Windows is cp1252 (no ✓/✗)
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
-    producir(Path(sys.argv[1]))
+    t0, fallo = time.time(), None
+    try:
+        producir(Path(sys.argv[1]))
+    except SystemExit as e:
+        fallo = str(e)
+        raise
+    finally:  # failed runs and minutes per video: the numbers docs/POLITICA.md asks to compare
+        reg = Path(sys.argv[1]) / "renders" / "corridas.jsonl"
+        if reg.parent.exists():
+            with reg.open("a", encoding="utf-8") as f:
+                linea = {
+                    "t": int(t0),
+                    "s": round(time.time() - t0),
+                    "previo": "--previo" in sys.argv,
+                    "fallo": fallo,
+                }
+                f.write(json.dumps(linea, ensure_ascii=False) + "\n")

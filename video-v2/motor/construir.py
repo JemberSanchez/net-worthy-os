@@ -1,7 +1,7 @@
 """Motor v2: storyboard.json + voz medida -> composición HyperFrames lista para renderizar.
 
     python video-v2/motor/construir.py video-v2/<proyecto>            # valida + genera index.html
-    python video-v2/motor/construir.py video-v2/<proyecto> --validar  # solo valida (sin escribir)
+    python video-v2/motor/construir.py video-v2/<proyecto> --validar  # TODOS los fallos de una vez, sin render (escribe index.html para medir el contraste)
     ... --reelegir   # vuelve a elegir la edición (edicion.py): ignora la congelada y el `legacy`
 
 Un proyecto es una carpeta con:
@@ -43,6 +43,7 @@ sys.path.insert(0, str(RAIZ / "tools"))
 
 import anclas
 import edicion
+import puertas
 import hfversion
 
 CATALOGO = (
@@ -1589,6 +1590,44 @@ def _html(p: dict) -> str:
     return tpl
 
 
+def _puertas(
+    proy: Path, sb: dict, words: list[dict], sin_plan: bool, solo_validar: bool
+) -> list[str]:
+    """Gates that do not stop each other, so one run reports everything. Repetition and script only
+    in --validar: a full build comes from producir.py, which already ran them."""
+    errores = []
+    exento = proy.name in puertas.ANTERIORES  # by folder: older storyboards have no `ref` or another one
+    if not sin_plan:
+        p = plan(sb, words)
+        errores += [] if exento else puertas.errores(sb, p)
+        if sb.get("_edicion"):
+            errores += [f"repite los últimos vídeos: {m}" for m in edicion.puerta(proy, p, sb)]
+    elif not exento:
+        errores += puertas.pronunciacion(sb)
+    if solo_validar and not exento:
+        import guionista
+        import medir_parecido
+
+        for ok, detalle in (
+            medir_parecido.puerta_repeticion(proy),
+            guionista.puerta_guion(proy),
+        ):
+            errores += [] if ok else [detalle]
+    return errores
+
+
+def errores_contraste(proy: Path, reelegir: bool = False) -> list[str]:
+    """WCAG AA needs the page: builds it (no music, no carve, no usado.json) and audits it."""
+    import producir
+
+    try:
+        construir(proy, solo_html=True, con_musica=False, con_carve=False, reelegir=reelegir)
+        ok, detalle = producir.auditar_contraste(proy, producir._entorno())
+    except Exception as e:  # noqa: BLE001 -- an instrument that did not measure must not pass
+        return [f"contraste: no medido ({e})"]
+    return [] if ok else [f"contraste: {detalle}"]
+
+
 def construir(
     proy: Path,
     *,
@@ -1596,21 +1635,32 @@ def construir(
     con_musica: bool = True,
     con_carve: bool = True,
     reelegir: bool = False,
+    solo_html: bool = False,
+    sin_contraste: bool = False,
 ) -> Path:
     proy = Path(proy).resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
     errores = validar(sb, words)
+    sin_plan = bool(errores)  # the other gates still report; only the plan needs valid anchors
     if not errores and edicion.preparar(proy, sb, reelegir) is not None:
         errores = errores_seleccion(sb, proy)
-    if errores:
-        raise StoryboardError("storyboard inválido:\n  - " + "\n  - ".join(errores))
     # ventanas del aviso: anclas -> segundos (van aparte porque son pares, no claves `en`)
     av = sb.get("aviso") or {}
-    if av.get("ventanas"):
+    if av.get("ventanas") and not sin_plan:
         av["ventanas_t"] = [
             [anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]
         ]
+    if not solo_html:
+        errores += _puertas(proy, sb, words, sin_plan, solo_validar)
+        if solo_validar and not sin_contraste:
+            errores += (
+                ["contraste: no medido, arregla antes los errores del storyboard"]
+                if sin_plan
+                else errores_contraste(proy, reelegir)
+            )
+    if errores:
+        raise StoryboardError("storyboard inválido:\n  - " + "\n  - ".join(errores))
     if sb.get("fondos_nitidos", True) and sb.get("clips") and not solo_validar:
         medir_detalle(proy, sb)
     if sb.get("pruebas") and not solo_validar:
@@ -1728,7 +1778,7 @@ def construir(
     out = proy / "index.html"
     out.write_text(_html(p), encoding="utf-8")
     _andamiaje(proy)
-    if sb.get("_edicion"):
+    if sb.get("_edicion") and not solo_html:
         edicion.registrar(proy, p, sb)
     print(
         f"✓ {out.relative_to(RAIZ)}  {len(p['escenas'])} escenas · {len(p['fotos'])} fotos · {p['D']}s"
@@ -1872,6 +1922,7 @@ def _carve(out: Path) -> None:
         except hfversion.VersionError as e:
             print(f"✗ carve falló: {e}")
             return
+        hfversion.alinear_core(core)
         v_core, v_carve = hfversion.version_core(core), hfversion.version_carve(carve)
         if v_core != quiere or v_carve not in (None, quiere):
             print(
@@ -1915,6 +1966,7 @@ def main() -> None:
             Path(sys.argv[1]),
             solo_validar="--validar" in sys.argv,
             reelegir="--reelegir" in sys.argv,
+            sin_contraste="--sin-contraste" in sys.argv,
         )
     except (StoryboardError, anclas.AnclaError) as e:
         raise SystemExit(f"✗ {e}")

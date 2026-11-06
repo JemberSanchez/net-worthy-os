@@ -154,13 +154,15 @@ Nada de `tail`, `sleep` ni `Monitor`: cada consulta relee todo el contexto.
     → medidores sobre el MP4 (legibilidad por OCR, ritmo, voz, sincronía, mezcla, datos, parecido;
     rúbrica PROVISIONAL en `docs/RUBRICA.md`). Deja `renders/critica/r0/juicio.md` + fotogramas.
 11. **Juicio:** mira `renders/critica/r0/hoja.jpg` (no las imágenes sueltas; abre un `f_*.jpg` solo si
-    dudas de ese segundo o para leer letra pequeña) y escribe `renders/critica/r0/juicio.json` con J1-J6 (lo que los medidores no ven: gancho,
+    dudas de ese segundo o para leer letra pequeña) y escribe `renders/critica/r0/juicio.json` con J1-J6 y `mp4_sha256` (el valor que da `juicio.md`; sin él ese archivo no se puede publicar) (lo que los medidores no ven: gancho,
     imagen = palabra, exactitud contra la fuente, cierre). Parches solo del catálogo; sin perilla
     segura -> `"parche": null` (se reporta, no se toca a ciegas).
 12. `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/critica/r0.mp4 --rondas 2`
     → parchea el storyboard, re-renderiza (sin subir) y se queda con la mejor ronda MEDIDA. Entrega
     `renders/critica/informe.md` (fallos con segundo y escena por ronda + parches) y `rN.mp4`.
     Si quedó subido un borrador de la ronda 0 y ganó otra ronda: avisa, no re-subas solo.
+    **Antes de publicar:** `publish` no privado, `programar`, `publish-fb/ig/social --publicar` rechazan el MP4 si
+    `renders/critica/aprobacion.json` no lo aprueba: sin fallos `alta` y con juicio sobre ESE archivo (por SHA-256).
 
 ## 5. Entregar y PARAR
 

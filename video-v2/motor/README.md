@@ -1,7 +1,7 @@
 # Motor v2 — un Short desde `storyboard.json`
 
 ```
-python video-v2/motor/construir.py video-v2/<proyecto> --validar   # ¿el storyboard es correcto? (<1 s)
+python video-v2/motor/construir.py video-v2/<proyecto> --validar   # TODOS los fallos de una vez, contraste incluido (construye index.html; sin render)
 HF_CORE=<dir con @hyperframes/core de la misma versión> HF_CARVE=<carve.mjs del checkout de esa versión> python video-v2/motor/construir.py video-v2/<proyecto>
 cd video-v2/<proyecto> && npx hyperframes@latest lint && npx hyperframes@latest render --quality high -o renders/x.mp4
 ```
@@ -72,7 +72,7 @@ Referencia completa y verificada: `video-v2/read-janitor/storyboard.json` (el #7
 
 ## Puertas (en este orden, cada una barata antes que la siguiente)
 
-1. `construir.py --validar` — esquema, anclas, imágenes declaradas, fuentes de cifras, aviso.
+1. `construir.py --validar` — esquema, anclas, imágenes declaradas, fuentes de cifras, aviso + `puertas.py` (voz sin subtítulo, pronunciación, pantalla vacía, texto breve, rótulos solapados), repetición, guion y contraste. Reporta todo junto. `producir.py` usa `--sin-contraste`: el contraste tiene su propia puerta tras el build.
 2. `hyperframes lint` — 0 errores.
 3. **Contraste WCAG AA** (`hyperframes check`, un instante por escena en pasadas de 5): ningún texto
    ilegible. Solo contraste: su auditoría de maquetación da falsos positivos con capas decorativas.

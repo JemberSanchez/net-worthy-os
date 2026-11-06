@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import copy
 import itertools
+import hashlib
 import json
 import math
 import re
@@ -265,6 +266,17 @@ def revisar_texto(rt: dict, vs: list[tuple[float, float]], u: dict) -> list[dict
             )
         )
     return out
+
+
+def esperados_aviso(av: dict, fin: float) -> list[dict]:
+    """The disclaimer in its windows. The closing card shows `completo` when there is one (motor.js),
+    so looking for `lineas` there reported a readable disclaimer as unread."""
+    lineas = av.get("lineas") or []
+    esp = [(texto, a, b) for a, b in av.get("ventanas") or [] for texto in lineas]
+    if av.get("final") is not None:
+        t0 = av["final"] + 0.4  # tras su fundido
+        esp += [(texto, t0, fin) for texto in ([av["completo"]] if av.get("completo") else lineas)]
+    return [{"texto": x, "escena": "aviso", "t0": a, "t1": b} for x, a, b in esp]
 
 
 def _es_aviso(texto: str, rt: dict) -> bool:
@@ -891,16 +903,7 @@ def revisar(
                 for t in medir_texto.textos_de_escena(esc)
             ]
     av = plan.get("aviso") or {}
-    vent_aviso = list(av.get("ventanas") or [])
-    if av.get("final") is not None:
-        vent_aviso.append(
-            [av["final"] + 0.4, float(plan.get("D") or av["final"] + 1)]
-        )  # tras su fundido
-    for a, b in vent_aviso:
-        esperados += [
-            {"texto": l, "escena": "aviso", "t0": a, "t1": b}
-            for l in av.get("lineas") or []
-        ]
+    esperados += esperados_aviso(av, float(plan.get("D") or (av.get("final") or 0) + 1))
     for pr in plan.get("pruebas") or []:
         src = next(
             (x for x in sb.get("pruebas") or [] if x.get("img") == pr.get("img")), {}
@@ -997,7 +1000,7 @@ JUICIO = """# Juicio del crítico — {ref}
 
 Mira `{dir}/hoja.jpg` (una sola imagen, cada celda rotulada con su segundo) y el guion. Abre un
 `f_*.jpg` suelto si dudas de ese segundo o para leer letra pequeña (J3, J6). Escribe
-`{dir}/juicio.json` (juicio de ESTA ronda; vuelve a correr el crítico con `--mp4 {dir}.mp4`) = `{{"fallos": [{{"criterio", "severidad": "alta|media|baja", "t", "escena",
+`{dir}/juicio.json` (juicio de ESTA ronda; vuelve a correr el crítico con `--mp4 {dir}.mp4`; sin `"mp4_sha256": "{sha}"` en ese JSON no se puede publicar) = `{{"fallos": [{{"criterio", "severidad": "alta|media|baja", "t", "escena",
 "detalle", "parche"}}]}}`. `parche` solo con operaciones del catálogo: {ops}
 (`set` admite rutas `escenas.N.campo`, `aviso.*`, `musica.volumen`, `golpes`, `calientes`).
 Sin parche = se reporta y no se toca. No repitas lo que ya midieron los medidores (abajo).
@@ -1087,6 +1090,7 @@ def preparar_juicio(
         for k, (e, (a, b)) in enumerate(zip(sb.get("escenas") or [], ventanas(plan)))
     )
     txt = JUICIO.format(
+        sha=_sha256(mp4),
         ref=sb.get("ref", proy.name),
         dir=dir_.relative_to(RAIZ) if dir_.is_relative_to(RAIZ) else dir_,
         ops=", ".join(OPS),
@@ -1148,7 +1152,7 @@ def linea(f: dict) -> str:
 def render(proy: Path) -> tuple[Path | None, dict, str]:
     """producir.py SIN subir (las rondas del crítico nunca salen de la máquina)."""
     r = subprocess.run(
-        [PY, str(MOTOR / "producir.py"), str(proy), "--sin-subir"],
+        [PY, str(MOTOR / "producir.py"), str(proy), "--sin-subir", "--sin-critico"],
         check=False,
         capture_output=True,
         text=True,
@@ -1308,6 +1312,7 @@ def bucle(
         json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8"
     )
     (dir_ / "informe.md").write_text(informe_md(informe), encoding="utf-8")
+    escribir_aprobacion(dir_, historia, rub.get("severidad_bloquea") or ["alta"])
     print(
         f"\n✓ informe: {dir_ / 'informe.md'} · ronda elegida {informe['elegida']} · {informe['mp4_elegido']}"
     )
@@ -1316,6 +1321,44 @@ def bucle(
             "  (index.html y renders/ son de la última ronda probada: reconstruye antes de reutilizarlos)"
         )
     return informe
+
+
+def _sha256(ruta: Path) -> str:
+    with open(ruta, "rb") as f:
+        return hashlib.file_digest(f, "sha256").hexdigest()
+
+
+def veredicto(ronda: dict, bloquean: list[str], con_juicio: bool) -> dict:
+    """Passes publication: no blocking failure (rubrica `severidad_bloquea`) and someone looked at THIS file."""
+    malos = [f for f in ronda["fallos"] if f.get("severidad") in bloquean]
+    if malos:
+        motivo = f"{len(malos)} fallos que bloquean: " + "; ".join(linea(f) for f in malos[:3])
+    elif not con_juicio:
+        motivo = "falta el juicio sobre este archivo (renders/critica/rN/juicio.json con su `mp4_sha256`)"
+    else:
+        motivo = "ok"
+    return {"aprobado": not malos and con_juicio, "motivo": motivo, "bloqueantes": malos}
+
+
+def juicio_de(dir_ronda: Path, sha: str) -> bool:
+    """A judgment only counts for the file it looked at: a re-render leaves the old juicio.json in place."""
+    f = dir_ronda / "juicio.json"
+    return f.exists() and json.loads(f.read_text(encoding="utf-8")).get("mp4_sha256") == sha
+
+
+def escribir_aprobacion(dir_: Path, historia: list[dict], bloquean: list[str]) -> None:
+    """{sha256 of each measured MP4: verdict}; omega.publish.exigir_critico reads it before going live."""
+    out = {}
+    for h in historia:
+        if h["mp4"]:
+            sha = _sha256(Path(h["mp4"]))
+            out[sha] = {
+                "ronda": h["ronda"],
+                **veredicto(h, bloquean, juicio_de(dir_ / f"r{h['ronda']}", sha)),
+            }
+    (dir_ / "aprobacion.json").write_text(
+        json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
 
 
 def informe_md(inf: dict) -> str:
@@ -1351,7 +1394,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("proyecto")
     ap.add_argument("--mp4")
-    ap.add_argument("--rondas", type=int, default=2)
+    # off by default: chosen round was 0 in 11 of 11 projects measured 6-nov-2026, at ~12 min per round
+    ap.add_argument("--rondas", type=int, default=0)
     ap.add_argument("--rubrica")
     ap.add_argument("--solo-revisar", action="store_true")
     a = ap.parse_args()

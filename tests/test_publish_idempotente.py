@@ -36,6 +36,8 @@ class PublicarIdempotenteTest(unittest.TestCase):
         self.p = [
             mock.patch.object(config, "DATA_DIR", data),
             mock.patch.object(config, "DB_PATH", data / "omega.sqlite"),
+            # going live needs the critic's pass: test_puertas covers that gate, these cover idempotence
+            mock.patch.object(publish, "exigir_critico", return_value=None),
         ]
         for p in self.p:
             p.start()

@@ -8,6 +8,7 @@ import re
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 RAIZ = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -185,9 +186,12 @@ class PuertaTest(unittest.TestCase):
             e = sa["_edicion"]
             d = crear(raiz, sb_nuevo("b", edicion={"punch": e["punch"]}))
             with self.assertRaisesRegex(c.StoryboardError, "punch"):
-                c.construir(d, solo_validar=True)
+                c.construir(d, solo_validar=True, sin_contraste=True)
             d2 = crear(raiz, sb_nuevo("c"))
-            c.construir(d2, solo_validar=True)
+            # toy script: this test covers the edit gate and usado.json, not script or text repetition
+            with (mock.patch("medir_parecido.puerta_repeticion", return_value=(True, "")),
+                  mock.patch("guionista.puerta_guion", return_value=(True, ""))):
+                c.construir(d2, solo_validar=True, sin_contraste=True)
             self.assertEqual((raiz / "usado.json").read_text(encoding="utf-8"), antes)
 
     def test_legacy_y_sin_formato_no_cambian(self):
@@ -220,7 +224,7 @@ class PuertaTest(unittest.TestCase):
     def test_todos_los_publicados_siguen_validando(self):
         for f in sorted((RAIZ / "video-v2").glob("*/storyboard.json")):
             if (f.parent / "assets" / "words.json").exists():
-                c.construir(f.parent, solo_validar=True)
+                c.construir(f.parent, solo_validar=True, sin_contraste=True)
 
 
 class MedidorTest(unittest.TestCase):

@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "nyse.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Sign of the New York Stock Exchange, Broad Street.jpg",
+  "autor": "Billie Grace Ward",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sign_of_the_New_York_Stock_Exchange,_Broad_Street.jpg"
+ },
+ {
+  "archivo": "piso.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:NY stock exchange traders floor LC-U9-10548-6.jpg",
+  "autor": "Thomas J. O'Halloran",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:NY_stock_exchange_traders_floor_LC-U9-10548-6.jpg"
+ },
+ {
+  "archivo": "moneda.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:-finance -wealth -savings -security -coin.jpg",
+  "autor": "Free Images",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:-finance_-wealth_-savings_-security_-coin.jpg"
+ }
+]

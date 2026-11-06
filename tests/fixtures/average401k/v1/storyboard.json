@@ -1,0 +1,376 @@
+{
+ "ref": "average-401k",
+ "guion": [
+  {
+   "id": "hook",
+   "texto": "You can be below the average 401k and still beat most people your age."
+  },
+  {
+   "id": "wrong",
+   "texto": "The number you keep hearing is the wrong one."
+  },
+  {
+   "id": "avg",
+   "texto": "Among retirement age savers, Vanguard's average is three hundred thirty thousand dollars.",
+   "giro": true
+  },
+  {
+   "id": "feel",
+   "texto": "Feel behind yet?"
+  },
+  {
+   "id": "drag",
+   "texto": "A few giant accounts drag that figure up."
+  },
+  {
+   "id": "mid",
+   "texto": "The saver in the exact middle holds about one hundred three thousand.",
+   "giro": true
+  },
+  {
+   "id": "third",
+   "texto": "That's less than a third of the headline."
+  },
+  {
+   "id": "under",
+   "texto": "Across every age, most savers sit under the average.",
+   "giro": true
+  },
+  {
+   "id": "line",
+   "texto": "Still, the middle isn't a finish line.",
+   "giro": true
+  },
+  {
+   "id": "alone",
+   "texto": "That balance alone won't fund most retirements."
+  },
+  {
+   "id": "close",
+   "texto": "Measure yourself against your own bills, not the average 401k."
+  }
+ ],
+ "aspecto": "cine",
+ "tema": "average 401(k) vs median",
+ "voz": {
+  "motor": "kokoro",
+  "voz": "am_adam",
+  "speed": 1.02,
+  "pausa_s": 0.2
+ },
+ "formato": "documental-editorial",
+ "fondos_auto": false,
+ "aviso": {
+  "lineas": [
+   "Not financial advice · Vanguard plans, 2025 · excludes IRAs, pensions"
+  ],
+  "placa": true,
+  "ventanas": [
+   [
+    "1",
+    "9"
+   ]
+  ],
+  "final": true,
+  "completo": "Not financial advice. Source: Vanguard How America Saves 2026, plan participants 65+, balances at Dec 31, 2025. Excludes IRAs, pensions and Social Security. Vanguard plans skew toward larger employers."
+ },
+ "subtitulos": [
+  "1",
+  "9"
+ ],
+ "calientes": [
+  "wrong",
+  "giant",
+  "middle",
+  "third",
+  "retirements"
+ ],
+ "golpes": [
+  "0:still",
+  "5:one",
+  "8:finish"
+ ],
+ "imagenes": {
+  "nyse": {
+   "commons": "File:Sign of the New York Stock Exchange, Broad Street.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "fed": {
+   "color": true,
+   "documento": true
+  },
+  "moneda": {
+   "commons": "File:-finance -wealth -savings -security -coin.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "piso": {
+   "commons": "File:NY stock exchange traders floor LC-U9-10548-6.jpg",
+   "ligero": true,
+   "color": true
+  }
+ },
+ "clips": {
+  "cuentas": {
+   "pexels": 6266251,
+   "desde": 0,
+   "ligero": true
+  },
+  "multitud": {
+   "pexels": 37215129,
+   "desde": 0,
+   "ligero": true
+  },
+  "parque": {
+   "pexels": 39522508,
+   "desde": 0,
+   "ligero": true
+  },
+  "yates": {
+   "pexels": 30089284,
+   "desde": 0,
+   "ligero": true
+  },
+  "docs": {
+   "pexels": 6700256,
+   "desde": 0,
+   "ligero": true
+  },
+  "calc": {
+   "pexels": 6963487,
+   "desde": 0,
+   "ligero": true
+  },
+  "factura": {
+   "pexels": 7545831,
+   "desde": 0,
+   "ligero": true
+  }
+ },
+ "escenas": [
+  {
+   "tipo": "revelacion",
+   "en": "0",
+   "fondo": {
+    "clip": "cuentas",
+    "opacidad": 0.55
+   },
+   "linea1": {
+    "texto": "Below average?"
+   },
+   "linea2": {
+    "texto": "*Still ahead.*",
+    "en": "0:still"
+   }
+  },
+  {
+   "tipo": "foto",
+   "en": "0:most",
+   "pos": "baj",
+   "clip": "multitud",
+   "rotulos": [
+    {
+     "texto": "most people *your age*",
+     "en": "0:most",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "1",
+   "clip": "docs",
+   "limpio": true
+  },
+  {
+   "tipo": "foto",
+   "en": "1:wrong",
+   "pos": "ter",
+   "img": "nyse",
+   "rotulos": [
+    {
+     "texto": "The *wrong* number",
+     "en": "1:wrong",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "2",
+   "clip": "parque",
+   "limpio": true
+  },
+  {
+   "tipo": "contador3d",
+   "en": "2:average",
+   "valor": 330186,
+   "prefijo": "$",
+   "llega": "2:dollars",
+   "kicker": {
+    "texto": "Average · 65 and older",
+    "en": "2:average"
+   },
+   "pill": {
+    "texto": "Vanguard, 2025",
+    "en": "2:dollars"
+   }
+  },
+  {
+   "tipo": "titulo",
+   "en": "3",
+   "fondo": {
+    "clip": "docs",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "Feel *behind* yet?",
+     "en": "3",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "4",
+   "clip": "yates",
+   "pos": "ter",
+   "rotulos": [
+    {
+     "texto": "A few *giant accounts*",
+     "en": "4:few",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "4:drag",
+   "img": "piso",
+   "pos": "baj",
+   "rotulos": [
+    {
+     "texto": "drag it *up*",
+     "en": "4:drag",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "5",
+   "fondo": {
+    "clip": "multitud",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "The exact middle",
+     "en": "5:exact",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*$103,202*",
+     "en": "5:holds",
+     "estilo": "huge"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "6",
+   "img": "moneda",
+   "pos": "ter",
+   "rotulos": [
+    {
+     "texto": "*Under a third*",
+     "en": "6:less",
+     "estilo": "big",
+     "color": "ink"
+    },
+    {
+     "texto": "of the headline",
+     "en": "6:headline",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "7",
+   "fondo": {
+    "clip": "factura",
+    "opacidad": 0.35
+   },
+   "lineas": [
+    {
+     "texto": "About *3 in 4*",
+     "en": "7:most",
+     "estilo": "big",
+     "color": "ink"
+    },
+    {
+     "texto": "sit under the average",
+     "en": "7:under",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "8",
+   "clip": "parque",
+   "pos": "baj",
+   "rotulos": [
+    {
+     "texto": "Not a *finish line*",
+     "en": "8:finish",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "9",
+   "clip": "calc",
+   "limpio": true
+  },
+  {
+   "tipo": "cta",
+   "en": "10",
+   "fondo": {
+    "clip": "cuentas",
+    "opacidad": 0.35
+   },
+   "a": {
+    "texto": "Your bills",
+    "en": "10:own"
+   },
+   "o": "not",
+   "b": {
+    "texto": "The average",
+    "en": "10:average"
+   }
+  }
+ ],
+ "pruebas": [
+  {
+   "img": "fed",
+   "texto": "highly disproportionate share",
+   "en": "4:figure",
+   "marca": "4:up",
+   "hasta": "5"
+  }
+ ]
+}

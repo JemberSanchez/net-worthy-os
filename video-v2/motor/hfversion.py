@@ -64,6 +64,21 @@ def version_core(core: str | os.PathLike | None) -> str | None:
     )
 
 
+def alinear_core(core: str | os.PathLike | None) -> None:
+    """Install in HF_CORE the @hyperframes/core of the version this production renders with. A version
+    jump on npm otherwise drops the ducking (average-401k, 6-nov-2026). A failed install is not fatal
+    here: construir's version check right after it still reports the mismatch."""
+    if not core or not Path(core).is_dir() or version_core(core) == version():
+        return
+    subprocess.run(
+        [shutil.which("npm") or "npm", "install", "--silent", "--save-exact", f"@hyperframes/core@{version()}"],
+        check=False,
+        cwd=core,
+        capture_output=True,
+        timeout=180,
+    )
+
+
 def version_carve(carve: str | os.PathLike | None) -> str | None:
     """Version of the hyperframes checkout that holds carve.mjs (its packages/cli/package.json),
     or None when carve does not live in a checkout (e.g. a bare skill install)."""
