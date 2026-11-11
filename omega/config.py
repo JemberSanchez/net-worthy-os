@@ -1,5 +1,7 @@
 """Configuración central. Sin secretos aquí; las API keys viven en .env (gitignored)."""
+
 from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
@@ -30,8 +32,10 @@ _load_dotenv()
 
 # Ventanas de momentum (en días). "recent" vs "prior" para medir si un tema sube o baja.
 RECENT_WINDOW_DAYS = 3
-PRIOR_WINDOW_DAYS = 7          # baseline inmediatamente anterior a la ventana recent
-MIN_RECENT_DOC_FREQ = 3       # un término debe aparecer en >=3 documentos recientes (anti-ruido)
+PRIOR_WINDOW_DAYS = 7  # baseline inmediatamente anterior a la ventana recent
+MIN_RECENT_DOC_FREQ = (
+    3  # un término debe aparecer en >=3 documentos recientes (anti-ruido)
+)
 TOP_N = 15
 
 
@@ -56,8 +60,15 @@ TOP_N = 15
 # ⚠ REVERTIR a monetization 0.30 / demand 0.30 cuando el canal tenga audiencia real (orden de
 #   ~1.000 subs o vistas que ya no dependan del cold-start). Es un cambio de FASE, no una verdad:
 #   a partir de ahí el RPM vuelve a ser dinero de verdad y el criterio original recupera sentido.
-DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30,
-                    "demand": 0.45, "gap": 0.20, "demand_momentum": 0.20, "monetization": 0.10}
+DECISION_WEIGHTS = {
+    "momentum": 0.05,
+    "prevalence": 0.0,
+    "contradiction": -0.30,
+    "demand": 0.45,
+    "gap": 0.20,
+    "demand_momentum": 0.20,
+    "monetization": 0.10,
+}
 # si el mejor score < umbral -> ABSTENERSE.
 # Estaba en 0.50, que es EXACTAMENTE la confianza base de un candidato de la vía demanda
 # (0.50 + 0.08*momentum - 0.20*contradiction, con momentum 0 -> 0.50). Como score = confianza +
@@ -66,7 +77,7 @@ DECISION_WEIGHTS = {"momentum": 0.05, "prevalence": 0.0, "contradiction": -0.30,
 # estaba obligado a elegir algo cada día aunque no tuviera nada bueno.
 # 0.60 exige que las features aporten >= +0.10 REAL sobre la confianza base para no abstenerse.
 ABSTAIN_THRESHOLD = 0.60
-PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
+PREDICTION_HORIZON_DAYS = 14  # a cuántos días se verifica la predicción
 
 # Búsquedas que definen el NICHO en YouTube (finanzas/inversiones/crypto, audiencia EN).
 # 'youtube-scan' las barre para medir qué temas mueven vistas reales. ~100 unidades/query.
@@ -77,13 +88,28 @@ PREDICTION_HORIZON_DAYS = 14      # a cuántos días se verifica la predicción
 # propios, eventos macro, forecast) -> emergen frases-HISTORIA, no frases-categoría. Siguen siendo
 # áreas de descubrimiento amplias, no una historia concreta (eso lo descubre la demanda).
 YOUTUBE_NICHE_QUERIES = [
-    "stock market analysis",           # análisis con tesis (no stream "live today")
-    "best stocks to buy now",          # saca empresas/tickers concretos
-    "bitcoin price prediction",        # crypto forward-looking, con historia
-    "warren buffett investing",        # personalidad -> temas específicos
+    "stock market analysis",  # análisis con tesis (no stream "live today")
+    "best stocks to buy now",  # saca empresas/tickers concretos
+    "bitcoin price prediction",  # crypto forward-looking, con historia
+    "warren buffett investing",  # personalidad -> temas específicos
     "federal reserve interest rates",  # macro/evento con narrativa
-    "housing market forecast",         # real estate/macro, no "today"
-    "how to build wealth",             # personal finance aspiracional (faceless-friendly)
+    "housing market forecast",  # real estate/macro, no "today"
+    "how to build wealth",  # personal finance aspiracional (faceless-friendly)
+]
+
+# `outliers`: búsquedas de IDEA (personajes, historias, explicadores), no de noticia. Las de
+# VIRALIDAD.md §3.2 + personajes del calendario §7. ~200 unidades de cuota cada una.
+YOUTUBE_OUTLIER_QUERIES = [
+    "money advice",
+    "personal finance",
+    "stock market explained",
+    "how rich people think",
+    "millionaire story",
+    "investing mistakes",
+    "warren buffett",
+    "passive income",
+    "crypto explained",
+    "economy explained",
 ]
 
 

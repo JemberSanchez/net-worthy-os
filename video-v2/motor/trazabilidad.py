@@ -9,7 +9,28 @@ from __future__ import annotations
 
 import re
 
-_U = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+_U = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+]
 _D = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
 _NUM = {w: i for i, w in enumerate(_U)} | {w: (i + 2) * 10 for i, w in enumerate(_D)}
 _ESC = {"thousand": 1e3, "million": 1e6, "billion": 1e9, "trillion": 1e12}
@@ -67,14 +88,15 @@ def _entero(ws: list[str]) -> float:
 
 
 def _valor_hablado(run: list[str]) -> float:
-    """"three hundred thirty thousand", "one point three trillion", "twenty twenty five" (a year)."""
+    """ "three hundred thirty thousand", "one point three trillion", "twenty twenty five" (a year)."""
     if "point" in run:
         k = run.index("point")
         cola = run[k + 1 :]
         esc = _ESC.get(cola[-1], 1) if cola else 1
         dec = "".join(str(_NUM[w]) for w in cola if w in _NUM)
         return float(f"{_entero(run[:k]):.0f}.{dec or 0}") * esc
-    if len(run) >= 2 and run[0] in ("nineteen", "twenty") and run[1] in _NUM and _NUM[run[1]] >= 10:
+    siglo = ("sixteen", "seventeen", "eighteen", "nineteen", "twenty")
+    if len(run) >= 2 and run[0] in siglo and run[1] in _NUM and _NUM[run[1]] >= 10:
         return _NUM[run[0]] * 100 + _entero(run[1:])
     return _entero(run)
 

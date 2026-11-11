@@ -159,6 +159,7 @@ class TrazabilidadTest(unittest.TestCase):
         self.assertEqual(
             v("in twenty twenty five, three hundred thirty thousand"), [2025, 330000]
         )
+        self.assertEqual(v("in april seventeen twenty, he sold"), [1720])
         self.assertEqual(v("one of three savers, four-oh-one-k"), [])
         self.assertEqual(
             [

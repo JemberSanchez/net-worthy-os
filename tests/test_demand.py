@@ -641,3 +641,25 @@ class DemandOriginatesHypothesisTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestOutliers(unittest.TestCase):
+    """Idea probada = vistas muy por encima del tamaño de SU canal (no fama del canal)."""
+
+    def _v(self, vid, views, subs, likes=None):
+        v = _video(vid, vid, views)
+        v.update(subs=subs, likes=likes if likes is not None else views // 50)
+        return v
+
+    def test_ordena_por_vistas_sobre_subs_y_filtra(self):
+        videos = [
+            self._v("idea_10x", 50_000, 5_000),
+            self._v("idea_100x", 300_000, 3_000),
+            self._v("normal", 8_000, 4_000),               # 2x: no es outlier
+            self._v("canal_gigante", 9_000_000, 500_000),  # fuera de la liga del canal
+            self._v("sin_subs", 90_000, 0),                # subs ocultos: no medible
+            self._v("humo", 400_000, 2_000, likes=100),    # like 0,03 %: engagement falso
+        ]
+        got = demand.outliers(videos)
+        self.assertEqual([v["video_id"] for v in got], ["idea_100x", "idea_10x"])
+        self.assertEqual(got[0]["outlier"], 100.0)

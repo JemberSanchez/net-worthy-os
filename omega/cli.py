@@ -6,6 +6,7 @@ Comandos:
   python -m omega.cli youtube <query>   # demanda REAL: qué temas mueven vistas (YouTube API)
   python -m omega.cli youtube-scan      # barre el nicho y CACHEA demanda -> alimenta 'decide'
   python -m omega.cli youtube-evergreen # catálogo de >=90 días que SIGUE vivo (lo que sí despega)
+  python -m omega.cli outliers          # IDEAS probadas: Shorts con vistas >=10x subs de su canal
   python -m omega.cli related <tema>    # temas ADYACENTES: qué más ve esa audiencia (#1)
   python -m omega.cli signals    # extrae señales de lo observado (extractores-plugin)
   python -m omega.cli decide     # flujo completo: señales -> hipótesis -> decisión explicable
@@ -37,15 +38,16 @@ Comandos:
 
 from __future__ import annotations
 
+import contextlib
+import json
 import sys
 import time
 from datetime import UTC, datetime
 
-# Forzar UTF-8 en la consola de Windows (evita los caracteres '?').
-try:
+# Forzar UTF-8 en la consola de Windows (evita los caracteres '?'). Sin reconfigure (stdout
+# redirigido a algo que no es TextIOWrapper) se sigue con la codificación que haya.
+with contextlib.suppress(AttributeError):
     sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
 
 from . import config, db
 from .analyze import momentum
@@ -238,7 +240,7 @@ def cmd_youtube_evergreen() -> None:
         edad = (
             time.time()
             - datetime.fromisoformat(
-                v["published_at"].replace("Z", "+00:00")
+                v["published_at"]
             ).timestamp()
         ) / 86400
         like = v.get("likes", 0) / max(v.get("views", 1), 1)
@@ -252,6 +254,34 @@ def cmd_youtube_evergreen() -> None:
     print(
         "  de 'acumula constante'. Repite el barrido en unos días y compara para saberlo."
     )
+
+
+def cmd_outliers() -> None:
+    """IDEAS PROBADAS: Shorts que hicieron >=10x los subs de su canal (1k-100k subs).
+
+    `decide` da un término; esto da la idea concreta (tema + gancho) que ya batió a su canal.
+    Se copia la IDEA, nunca el guion ni las imágenes. Guarda data/outliers.json para /producir."""
+    from .analyze import demand
+    from .sources import youtube
+
+    queries = config.YOUTUBE_OUTLIER_QUERIES
+    print(
+        f"Buscando outliers ({len(queries)} búsquedas, ~{len(queries) * 200} de cuota)..."
+    )
+    try:
+        rows = demand.scan_outliers(queries)
+    except youtube.YouTubeError as exc:
+        print(f"\nError de YouTube API: {exc}")
+        return
+    salida = config.DB_PATH.parent / "outliers.json"
+    salida.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"\n{len(rows)} outliers -> {salida}\n")
+    for v in rows[:20]:
+        like = v.get("likes", 0) / max(v.get("views", 1), 1)
+        print(
+            f"  {v['outlier']:>6.0f}x {v['views']:>11,} vistas {v['subs']:>7,} subs "
+            f"{like:>5.1%}  {v['title'][:60]}  {v['url']}"
+        )
 
 
 def cmd_related() -> None:
@@ -1921,6 +1951,7 @@ def main(argv: list[str]) -> int:
         "youtube": cmd_youtube,
         "youtube-scan": cmd_youtube_scan,
         "youtube-evergreen": cmd_youtube_evergreen,
+        "outliers": cmd_outliers,
         "related": cmd_related,
         "signals": cmd_signals,
         "decide": cmd_decide,

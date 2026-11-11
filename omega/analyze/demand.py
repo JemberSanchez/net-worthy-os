@@ -5,13 +5,17 @@ El momentum de RSS responde "¿de qué se habla?" (presencia en artículos). Est
 contenido que aparece en los títulos: un tema que sale en videos muy vistos sube; uno que solo
 sale en videos ignorados, no. Ese es el detector de temas serio que faltaba.
 """
+
 from __future__ import annotations
+
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 
 from .momentum import _TOKEN as _TOKEN_WORDS  # mismo regex de token que los títulos
-from .momentum import _terms  # mismo tokenizador (unigramas + bigramas, stopwords EN/ES)
+from .momentum import (
+    _terms,
+)  # mismo tokenizador (unigramas + bigramas, stopwords EN/ES)
 
 
 def _agrupar_por_termino(videos: list[dict], peso, min_videos: int) -> list[tuple]:
@@ -23,7 +27,9 @@ def _agrupar_por_termino(videos: list[dict], peso, min_videos: int) -> list[tupl
 
     for v in videos:
         # misma normalización que _terms (lowercase + apóstrofe tipográfico -> ASCII)
-        channel_words = set(_TOKEN_WORDS.findall((v.get("channel") or "").lower().replace("’", "'")))
+        channel_words = set(
+            _TOKEN_WORDS.findall((v.get("channel") or "").lower().replace("’", "'"))
+        )
         for t in _terms(v.get("title", "")):
             if channel_words and set(t.split()) <= channel_words:
                 continue  # autobombo: el término ES (parte de) el nombre del canal
@@ -32,7 +38,9 @@ def _agrupar_por_termino(videos: list[dict], peso, min_videos: int) -> list[tupl
             if len(examples[t]) < 2:
                 examples[t].append(v.get("title", ""))
 
-    return [(t, total[t], count[t], examples[t]) for t in total if count[t] >= min_videos]
+    return [
+        (t, total[t], count[t], examples[t]) for t in total if count[t] >= min_videos
+    ]
 
 
 def views_per_day(video: dict, *, now: float | None = None) -> float:
@@ -48,13 +56,13 @@ def views_per_day(video: dict, *, now: float | None = None) -> float:
     if not pub:
         return 0.0
     try:
-        dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(pub)
     except ValueError:
         return 0.0
     ahora = now if now is not None else time.time()
     edad_dias = (ahora - dt.timestamp()) / 86400
     if edad_dias < 1:
-        edad_dias = 1.0            # un video de hoy no tiene velocidad medible: no lo infles
+        edad_dias = 1.0  # un video de hoy no tiene velocidad medible: no lo infles
     return video.get("views", 0) / edad_dias
 
 
@@ -69,43 +77,57 @@ def theme_demand(videos: list[dict], min_videos: int = 2) -> list[dict]:
     videos). Por eso un término cuyas palabras salgan todas del nombre del PROPIO canal se
     descarta para ese video. Si otros canales usan la frase como tema real, sobrevive por ellos.
     Es filtro en origen, no stoplist manual (que sería deuda de mantenimiento infinita)."""
-    rows = [{
-        "term": t,
-        "total_views": int(total),
-        "videos": n,
-        "avg_views": int(total) // max(n, 1),
-        "examples": ej,
-    } for t, total, n, ej in _agrupar_por_termino(videos, lambda v: v.get("views", 0), min_videos)]
+    rows = [
+        {
+            "term": t,
+            "total_views": int(total),
+            "videos": n,
+            "avg_views": int(total) // max(n, 1),
+            "examples": ej,
+        }
+        for t, total, n, ej in _agrupar_por_termino(
+            videos, lambda v: v.get("views", 0), min_videos
+        )
+    ]
 
     rows.sort(key=lambda r: r["total_views"], reverse=True)
     return rows
 
 
-def theme_evergreen(videos: list[dict], min_videos: int = 2,
-                    *, now: float | None = None) -> list[dict]:
+def theme_evergreen(
+    videos: list[dict], min_videos: int = 2, *, now: float | None = None
+) -> list[dict]:
     """Ranking EVERGREEN: pondera por vistas/DÍA, no por vistas totales.
 
     Con `days=0` el barrido trae catálogo antiguo, y ahí las vistas totales premian a lo viejo por
     ser viejo. La velocidad es lo que dice si un tema sigue moviendo audiencia HOY."""
-    rows = [{
-        "term": t,
-        "views_per_day": round(total, 1),
-        "videos": n,
-        "avg_views_per_day": round(total / max(n, 1), 1),
-        "examples": ej,
-    } for t, total, n, ej in _agrupar_por_termino(
-        videos, lambda v: views_per_day(v, now=now), min_videos)]
+    rows = [
+        {
+            "term": t,
+            "views_per_day": round(total, 1),
+            "videos": n,
+            "avg_views_per_day": round(total / max(n, 1), 1),
+            "examples": ej,
+        }
+        for t, total, n, ej in _agrupar_por_termino(
+            videos, lambda v: views_per_day(v, now=now), min_videos
+        )
+    ]
 
     rows.sort(key=lambda r: r["views_per_day"], reverse=True)
     return rows
 
 
-def scan_nicho(queries: list[str], days: int = 30, max_results: int = 25) -> tuple[list[dict], list[dict]]:
+def scan_nicho(
+    queries: list[str], days: int = 30, max_results: int = 25
+) -> tuple[list[dict], list[dict]]:
     """Barre varias búsquedas del nicho, DEDUPLICA videos entre queries y agrega la demanda.
 
     Devuelve (ranking_de_temas, videos_únicos). Un mismo video que aparece en dos búsquedas
     cuenta una sola vez (dedupe por video_id) para no inflar la demanda."""
-    from ..sources import youtube  # import local: demand no depende de la red salvo aquí
+    from ..sources import (
+        youtube,
+    )  # import local: demand no depende de la red salvo aquí
 
     seen: dict[str, dict] = {}
     for q in queries:
@@ -115,10 +137,16 @@ def scan_nicho(queries: list[str], days: int = 30, max_results: int = 25) -> tup
     return theme_demand(videos), videos
 
 
-def scan_evergreen(queries: list[str], *, min_age_days: int = 90, max_results: int = 25,
-                   min_subs: int = 1_000, max_subs: int = 100_000,
-                   min_like_rate: float = 0.01,
-                   now: float | None = None) -> tuple[list[dict], list[dict]]:
+def scan_evergreen(
+    queries: list[str],
+    *,
+    min_age_days: int = 90,
+    max_results: int = 25,
+    min_subs: int = 1_000,
+    max_subs: int = 100_000,
+    min_like_rate: float = 0.01,
+    now: float | None = None,
+) -> tuple[list[dict], list[dict]]:
     """Barrido EVERGREEN: el catálogo que `decide` no puede ver.
 
     POR QUÉ EXISTE (docs/VIRALIDAD.md §3.1, evidencia medida): de los 39 despegues del estudio,
@@ -138,23 +166,27 @@ def scan_evergreen(queries: list[str], *, min_age_days: int = 90, max_results: i
     real. Sin la banda de suscriptores, el barrido devuelve lo que hacen los canales enormes y
     reproduce el confounder que ya invalidó el Intento 2 del estudio.
     """
-    from ..sources import youtube  # import local: demand no depende de la red salvo aquí
+    from ..sources import (
+        youtube,
+    )  # import local: demand no depende de la red salvo aquí
 
     ahora = now if now is not None else time.time()
     seen: dict[str, dict] = {}
     for q in queries:
-        for v in youtube.fetch_recent(q, days=0, max_results=max_results, order="viewCount"):
+        for v in youtube.fetch_recent(
+            q, days=0, max_results=max_results, order="viewCount"
+        ):
             pub = (v.get("published_at") or "").strip()
             if not pub:
-                continue                       # sin fecha no hay edad ni velocidad: fuera
+                continue  # sin fecha no hay edad ni velocidad: fuera
             try:
-                dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+                dt = datetime.fromisoformat(pub)
             except ValueError:
                 continue
             if (ahora - dt.timestamp()) / 86400 < min_age_days:
-                continue                       # demasiado nuevo para llamarse evergreen
+                continue  # demasiado nuevo para llamarse evergreen
             if v.get("views", 0) and (v.get("likes", 0) / v["views"]) < min_like_rate:
-                continue                       # engagement de humo: §3.3 fija el suelo en 1%
+                continue  # engagement de humo: §3.3 fija el suelo en 1%
             v = {**v, "views_per_day": round(views_per_day(v, now=ahora), 1)}
             seen[v["video_id"]] = v
 
@@ -174,13 +206,69 @@ def scan_evergreen(queries: list[str], *, min_age_days: int = 90, max_results: i
     return theme_evergreen(videos, now=ahora), videos
 
 
-def related(root: str, videos: list[dict], top_k: int = 12, min_together: int = 2) -> list[dict]:
+def outliers(
+    videos: list[dict],
+    *,
+    min_ratio: float = 10,
+    min_subs: int = 1_000,
+    max_subs: int = 100_000,
+    min_like_rate: float = 0.01,
+) -> list[dict]:
+    """IDEAS PROBADAS: vídeos con vistas >= min_ratio x suscriptores de su canal.
+
+    `decide` elige un TÉRMINO por demanda; esto elige una IDEA concreta (tema + gancho) que ya
+    batió a su propio canal. Un canal pequeño no tiene audiencia que lo empuje: si su vídeo hace
+    50x sus subs, lo empujó la idea. Banda de subs y suelo de likes: VIRALIDAD.md §1 y §3.3.
+    """
+    out = []
+    for v in videos:
+        subs, views = v.get("subs", 0), v.get("views", 0)
+        if not subs or not min_subs <= subs <= max_subs:
+            continue
+        if views and v.get("likes", 0) / views < min_like_rate:
+            continue
+        ratio = views / subs
+        if ratio >= min_ratio:
+            out.append({**v, "outlier": round(ratio, 1)})
+    return sorted(out, key=lambda v: v["outlier"], reverse=True)
+
+
+def scan_outliers(queries: list[str], max_results: int = 50, **kw) -> list[dict]:
+    """Barre cada query dos veces (de siempre + últimos 90 días: lo probado y lo que despega ahora),
+    solo vídeos cortos, y devuelve `outliers()`. Cuota ≈ 200 unidades por query."""
+    from ..sources import (
+        youtube,
+    )  # import local: demand no depende de la red salvo aquí
+
+    seen: dict[str, dict] = {}
+    for q in queries:
+        for days in (0, 90):
+            for v in youtube.fetch_recent(
+                q,
+                days=days,
+                max_results=max_results,
+                order="viewCount",
+                duration="short",
+            ):
+                seen[v["video_id"]] = v
+    videos = list(seen.values())
+    subs = youtube.channel_subs([v.get("channel_id", "") for v in videos])
+    for v in videos:
+        v["subs"] = subs.get(v.get("channel_id", ""), 0)
+    return outliers(videos, **kw)
+
+
+def related(
+    root: str, videos: list[dict], top_k: int = 12, min_together: int = 2
+) -> list[dict]:
     """ADYACENCIA (#1): qué OTROS temas ven quienes ven 'root'. Co-ocurrencia en títulos,
     ponderada por vistas. No es el salto creativo (eso es el LLM/manual): es su INPUT de datos —
     'si la audiencia ve X, también le interesa Y'. Adelantarse = servir esa adyacencia desatendida.
     """
     root = root.lower().strip()
-    root_words = set(root.split())  # match a NIVEL DE PALABRA, no subcadena ('ai' no debe pegar en 'retail')
+    root_words = set(
+        root.split()
+    )  # match a NIVEL DE PALABRA, no subcadena ('ai' no debe pegar en 'retail')
     co_views: dict[str, int] = defaultdict(int)
     co_n: dict[str, int] = defaultdict(int)
     for v in videos:
@@ -193,7 +281,10 @@ def related(root: str, videos: list[dict], top_k: int = 12, min_together: int = 
                 continue
             co_views[t] += v.get("views", 0)
             co_n[t] += 1
-    rows = [{"term": t, "views": co_views[t], "together": co_n[t]}
-            for t in co_views if co_n[t] >= min_together]
+    rows = [
+        {"term": t, "views": co_views[t], "together": co_n[t]}
+        for t in co_views
+        if co_n[t] >= min_together
+    ]
     rows.sort(key=lambda r: r["views"], reverse=True)
     return rows[:top_k]
