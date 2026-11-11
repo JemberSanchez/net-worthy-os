@@ -18,11 +18,11 @@ nada: no ves a los miles que hicieron lo mismo y fracasaron.
 **Intento 2 — INVÁLIDO (confounder).** Comparar "los que explotaron" contra "vídeos normales"
 (`order=viewCount` vs `order=date`). Los grupos diferían en la variable dominante:
 
-| | explotaron | control |
-|---|---|---|
+|                    | explotaron  | control  |
+| ------------------ | ----------- | -------- |
 | **subs del canal** | **166.000** | **27,5** |
 
-Todo lo que "distinguía" a los ganadores podía ser simplemente *tener audiencia*. Cualquier
+Todo lo que "distinguía" a los ganadores podía ser simplemente _tener audiencia_. Cualquier
 conclusión de aquí es basura.
 
 **Intento 3 — el que vale.** Comparar **solo dentro de canales pequeños** (la situación real del
@@ -38,6 +38,7 @@ anuncios, trailers de películas, manualidades, contenido en otros idiomas mal e
 ## 2. ⛔ LO QUE **NO** SE SOSTIENE (lo más importante del documento)
 
 ### La duración NO predice nada
+
 Parecía que sí: los que explotan duraban 57s de mediana y los nuestros 24-32s. **Era el
 confounder del tamaño del canal** — los canales grandes hacen vídeos de ~57s. Dentro de canales
 pequeños:
@@ -50,11 +51,13 @@ NO despeg.: p25=21s  MEDIANA=38s  p75=60s
 Y los despegues reales van de **17s a 130s**. **No alargues ni acortes buscando un número mágico.**
 
 ### El título casi no distingue
+
 Dentro de canales pequeños, despegaron vs no despegaron: `you/your` 0.17 vs 0.18 · pregunta 0.10
 vs 0.09 · nombre propio 0.01 vs 0.01. **Prácticamente idénticos.** Único matiz débil: llevar un
 número 0.33 vs 0.22.
 
 ### "Más escenas / más producción" NO aparece por ningún lado
+
 El Short más brutal de la muestra —**9,8M de vistas con 3.890 subs**— dura **6 segundos** y es una
 persona metiendo monedas en una caja. Cero escenas, cero producción, cero guion. Y el mejor de
 todos (**25,5M con 26.800 subs**) es un challenge de sobres de **17 segundos**.
@@ -62,6 +65,7 @@ Corrobora el dato propio: el FED es el Short **más producido** del canal (músi
 vivo + 9 bloques) y es el **peor** (10 espectadores). S1 es el menos producido y el mejor (221).
 
 ### `vistas / suscriptores` es una métrica mala sin filtrar
+
 Con canales de 23 subs, 230 vistas ya son "x10". El multiplicador solo significa algo con
 canal real (≥1.000 subs) **y** engagement real.
 
@@ -70,6 +74,7 @@ canal real (≥1.000 subs) **y** engagement real.
 ## 3. ✅ LO QUE SÍ SE SOSTIENE
 
 ### 3.1. Ninguno de los 39 despegues es NOTICIA — todos son evergreen
+
 Edades de los despegues: **231, 321, 314, 352, 338, 291, 302, 333, 159, 133 días**. Vídeos de casi
 un año que **siguen acumulando vistas**. Cero temas noticiosos.
 
@@ -80,28 +85,31 @@ Concuerda con el dato propio: S1/S2/S3 (evergreen) 221/199/67 vs FED (noticia) 1
 ⚠ n=1 para la categoría noticia, y el FED tenía además 8s congelados. No está demostrado.
 
 ### 3.2. Tres formatos despegan. El boletín no es ninguno.
-1. **Clip de una persona real hablando** — *"A billionaire dropped the realest money advice"*
+
+1. **Clip de una persona real hablando** — _"A billionaire dropped the realest money advice"_
    (7,5M / 3.790 subs / 40s / like 2,1%) · Dave Ramsey (1,4M / 1.370 subs / 130s / 1,8%) ·
-   *"SHAQ REVEALS THE MONEY ADVICE…"* (1,1M / 1.580 subs / 68s / 1,4%) ·
-   *"He explained LEVERAGE better than college professors"* (18,3M / 30.300 subs / 47s / 2,1%).
-2. **Demo visual / challenge** — *"How to do the 100 envelope savings challenge"*
-   (**25,5M / 26.800 subs / 17s** / 1,8%) · *"100-Day Savings Challenge"* (9,8M / 3.890 subs / 6s).
-3. **Explicador con la promesa desnuda en el título** — *"This Is How The Stock Market Works"*
-   (11,7M / 53.900 subs / 112s / **like 3,7%**) · *"This is the actual power of passive income"*
+   _"SHAQ REVEALS THE MONEY ADVICE…"_ (1,1M / 1.580 subs / 68s / 1,4%) ·
+   _"He explained LEVERAGE better than college professors"_ (18,3M / 30.300 subs / 47s / 2,1%).
+2. **Demo visual / challenge** — _"How to do the 100 envelope savings challenge"_
+   (**25,5M / 26.800 subs / 17s** / 1,8%) · _"100-Day Savings Challenge"_ (9,8M / 3.890 subs / 6s).
+3. **Explicador con la promesa desnuda en el título** — _"This Is How The Stock Market Works"_
+   (11,7M / 53.900 subs / 112s / **like 3,7%**) · _"This is the actual power of passive income"_
    (6,2M / 13.700 subs / 32s).
 
-Ninguno es *gancho → 3 bullets → stat → CTA*. **El formato del canal no aparece ni una vez entre
+Ninguno es _gancho → 3 bullets → stat → CTA_. **El formato del canal no aparece ni una vez entre
 los que despegan.** Convergen aquí cinco caminos independientes: el `decide` arreglado (gana
 `warren buffett`, un personaje), el ADN propio (el único `story=character` es el mejor Short),
 los outliers (clips de personas), y el marco del tribunal (roles + conflicto).
 
 ### 3.3. Benchmark de engagement: **likes/vista entre 1% y 3,7%**
+
 Todos los despegues reales están en esa banda. Es un objetivo medible y comparable — mucho mejor
 que las vistas, porque no depende de cuánto te distribuyan.
 
 ---
 
 ## 4. Lo que este estudio NO puede decir
+
 - **No mide retención**, que es lo que decide la distribución en Shorts. La API no la da. Solo
   está en YouTube Studio / el panel de Facebook → hay que registrarla a mano.
 - **Es correlacional.** Que los clips de personajes despeguen no prueba que un clip de personaje
@@ -111,6 +119,7 @@ que las vistas, porque no depende de cuánto te distribuyan.
   e indonesio. Se corrige con `_is_english` del proyecto (el título manda), pero después.
 
 ## 5. Qué hacer con esto
+
 1. **No optimizar duración ni título.** No hay señal. Es tiempo tirado.
 2. **No añadir producción.** El dato propio y el ajeno dicen lo mismo: no compra alcance.
 3. **Evergreen, no noticia.** Y el sistema no puede ayudarte aquí: por `publishedAfter` solo ve
@@ -119,6 +128,7 @@ que las vistas, porque no depende de cuánto te distribuyan.
 5. **Medir retención y likes/vista.** Sin eso, todo esto se queda en teoría bonita.
 
 ## 6. Cómo reproducirlo
+
 `scratchpad/viral.py` (recogida: tratamiento `order=viewCount` + control `order=date`, filtro
 `_is_english`, calcula vistas/día, mult, like_rate) y `viral2.py` (comparación dentro de canales
 pequeños). ~100 unidades de cuota por búsqueda, 8 búsquedas × 2 muestras = 1.600 de 10.000/día.
@@ -133,16 +143,20 @@ experimento: **una variable (formato), 8 vídeos, se compara retención con ≥3
 Sin ese corte, ni personaje ni noticia se declaran ganadores (POLITICA regla 2). `decide` sigue eligiendo
 las noticias; los personajes los pone este calendario porque el escáner no ve lo atemporal (§3.1).
 
-| Turno | Tipo | Tema | Estructura | Gancho posible (idea, guion en inglés por escribir) |
-| --- | --- | --- | --- | --- |
-| 1 | Personaje | Ronald Wayne | vida de personaje | vendió su 10 % de Apple por $800 |
-| 2 | Noticia | ganador de `decide` | error común | según el tema |
-| 3 | Personaje | Anne Scheiber | misterio | auditora del IRS, nunca ganó más de $4.000 al año, dejó $22 M |
-| 4 | Noticia | ganador de `decide` | cuenta atrás | según el tema |
-| 5 | Personaje | Jesse Livermore | cuenta atrás | ganó unos $100 M en el crac de 1929 y quebró en 1934 |
-| 6 | Noticia | ganador de `decide` | contradicción | según el tema |
-| 7 | Personaje | Oseola McCarty | vida de personaje | lavandera, donó unos $150.000 a una universidad |
-| 8 | Personaje | Isaac Newton | contradicción | el genio que perdió al menos £10.000 en la burbuja de los Mares del Sur |
+| Turno | Tipo      | Tema                | Estructura        | Gancho posible (idea, guion en inglés por escribir)                     |
+| ----- | --------- | ------------------- | ----------------- | ----------------------------------------------------------------------- |
+| 1     | Personaje | Ronald Wayne        | vida de personaje | vendió su 10 % de Apple por $800                                        |
+| 2     | Noticia   | ganador de `decide` | error común       | según el tema                                                           |
+| 3     | Personaje | Anne Scheiber       | misterio          | auditora del IRS, nunca ganó más de $4.000 al año, dejó $22 M           |
+| 4     | Noticia   | ganador de `decide` | cuenta atrás      | según el tema                                                           |
+| 5     | Personaje | Jesse Livermore     | cuenta atrás      | ganó unos $100 M en el crac de 1929 y quebró en 1934                    |
+| 6     | Noticia   | ganador de `decide` | contradicción     | según el tema                                                           |
+| 7     | Personaje | Oseola McCarty      | vida de personaje | lavandera, donó unos $150.000 a una universidad                         |
+| 8     | Personaje | Isaac Newton        | contradicción     | el genio que perdió al menos £10.000 en la burbuja de los Mares del Sur |
+
+**Cambio del 11-nov (decisión del usuario, PROVISIONAL, n=11):** de alternar 1 a 1 a **3 personajes por cada noticia**.
+Score v3 ≥ 0,67: personaje 3 de 3 (ronald-wayne 0,84 · jesse-livermore 0,82 · buffett-deficit 0,67), noticia 2 de 8
+(midterm-rally 1,0 · gdp-annualized 0,73). La noticia de cada cuatro mantiene la comparación.
 
 En reserva: Grace Groner y Ronald Read (ya montados, **sin publicar**; sus guiones fallan G-COMODIN y G-TU:
 reescribir antes de renderizar) y Hetty Green (faltan cifras por cotejar).

@@ -287,7 +287,11 @@ def _contiene(texto: str, frase: str) -> bool:
 def _frases_guion(frases: list[dict]) -> list[dict]:
     """Frases para el storyboard. `giro` se conserva: producir.py repite G-GIRO sobre este guion."""
     return [
-        {"id": f["id"], "texto": f["texto"], **({"giro": True} if f.get("giro") else {})}
+        {
+            "id": f["id"],
+            "texto": f["texto"],
+            **({"giro": True} if f.get("giro") else {}),
+        }
         for f in frases
     ]
 
@@ -499,8 +503,12 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     ps = puertas(sb["guion"], previos=cierres_previos(proy, pub))
     fallan = [f"{p['id']}: {p['detalle']}" for p in ps if not p["ok"]]
-    if not sb.get("formato"):  # edicion.preparar exempts it from the repetition gate otherwise
-        fallan.append("G-FORMATO: falta `formato`, sin él no pasa por la puerta de edición")
+    if not sb.get(
+        "formato"
+    ):  # edicion.preparar exempts it from the repetition gate otherwise
+        fallan.append(
+            "G-FORMATO: falta `formato`, sin él no pasa por la puerta de edición"
+        )
     return not fallan, " · ".join(fallan) or f"{len(ps)} puertas de guion OK"
 
 
@@ -719,11 +727,52 @@ def _pedir_juicio(e: FaltaJuicio, cands: list[dict]) -> NoReturn:
     raise SystemExit(2)
 
 
+def reglas(proy: Path, publicados: list[str] | None = None) -> str:
+    """Everything the gates will check, with today's vetoes, BEFORE writing: the same gates failed
+    in 3 of 4 sessions (11-nov) and each failed run is a full-context turn."""
+    pub = refs_publicadas() if publicados is None else publicados
+    vetados = cierres_previos(proy, pub)[:CIERRE_VENTANA]
+    libres = [
+        c
+        for c in ("pregunta", "dicotomia", "imperativo", "dato", "afirmacion")
+        if c not in vetados
+    ]
+    previos = []
+    for ref in [r for r in pub if r != proy.name][:3]:
+        try:
+            adn = json.loads(
+                (proy.parent / ref / "adn.json").read_text(encoding="utf-8")
+            )
+        except (OSError, ValueError):
+            continue
+        previos.append(
+            f"{ref} ({adn.get('story_type')}, gancho {adn.get('hook_type')})"
+        )
+    p10 = int(HUECO_GIRO_MAX_S * PALABRAS_POR_S)
+    cierres = f"{', '.join(vetados) or 'ninguno'}. Libres: {', '.join(libres)}"
+    return f"""\
+G-LARGO    {PALABRAS_MIN}-{PALABRAS_MAX} palabras en total.
+G-GANCHO   1.ª oración: no empieza por número solo ni pronombre; nombre propio poco conocido con aposición ("Ronald Wayne, a ...").
+G-TU       you/your (o "most people") antes de la palabra {TU_PALABRA_MAX}.
+G-GIRO     un giro cada ≤{p10} palabras. Cuenta como giro: frase con cifra, o "giro": true (solo si de verdad gira).
+G-CIFRAS   ≤{CIFRAS_MAX} cifras protagonistas dichas en todo el guion (los años cuentan).
+G-BUCLE    la última frase comparte una palabra de contenido (≥4 letras, no cifra) con la 1.ª.
+G-CIERRE   tipos vetados (últimos {CIERRE_VENTANA} vídeos): {cierres}.
+G-COMODIN  prohibido: {", ".join(COMODINES)}.
+G-RELLENO  prohibido: {", ".join(RELLENO)}.
+Últimos publicados (no repetir estructura ni gancho): {"; ".join(previos) or "sin datos"}
+guiones.json: estructuras[2-3]{{id,nombre,frases[{{id,texto,giro?}}]}}, ganchos[3-5]{{id,texto}}, juicio{{<id>: {{una_idea,bucle_abierto,giro: 1-5, nota}}}}.
+Rellena ya el juicio de cada estructura; el de <estructura>+gN solo para la que gane (2 corridas en total)."""
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # consola de Windows en cp1252: ✓/✗/≈
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
     proy = Path(sys.argv[1]).resolve()
+    if "--reglas" in sys.argv:
+        print(reglas(proy))
+        return
     datos = json.loads((proy / "guiones.json").read_text(encoding="utf-8"))
     juicio = datos.get("juicio") or {}
     previos = cierres_previos(proy)

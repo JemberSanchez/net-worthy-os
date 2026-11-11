@@ -308,5 +308,27 @@ class TestDemo(unittest.TestCase):
                 self.assertEqual(fallan, [])
 
 
+class TestReglas(unittest.TestCase):
+    def test_dice_los_cierres_vetados_y_los_limites_antes_de_escribir(self):
+        with tempfile.TemporaryDirectory() as d:
+            for ref, cierre in (("a", "Would you sell?"), ("b", "He kept all of it.")):
+                (Path(d) / ref).mkdir()
+                sb = {
+                    "guion": [
+                        {"id": "h", "texto": "A hook."},
+                        {"id": "c", "texto": cierre},
+                    ]
+                }
+                (Path(d) / ref / "storyboard.json").write_text(
+                    json.dumps(sb), encoding="utf-8"
+                )
+            txt = G.reglas(Path(d) / "nuevo", publicados=["a", "b"])
+        self.assertIn("vetados (últimos 3 vídeos): pregunta, afirmacion.", txt)
+        self.assertIn("Libres: dicotomia, imperativo, dato", txt)
+        self.assertIn(f"{G.PALABRAS_MIN}-{G.PALABRAS_MAX} palabras", txt)
+        for p in G.puertas(["One line."]):  # every gate the run will apply is announced
+            self.assertIn(p["id"], txt)
+
+
 if __name__ == "__main__":
     unittest.main()

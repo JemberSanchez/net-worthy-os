@@ -20,7 +20,9 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 ## 2. Guion (inglés, 85-110 palabras ≈ 27-35 s)
 
-4. Alterna formato noticia/personaje con el último publicado. Elige una estructura distinta de la anterior: contradicción,
+4. **Antes de escribir una palabra:** `python video-v2/motor/guionista.py video-v2/<ref> --reglas`. Da los límites de cada
+   puerta, los cierres vetados hoy y los últimos publicados: no consultes la DB ni abras guiones o storyboards viejos para eso.
+   Formato: 3 personajes por cada noticia (decisión del 11-nov, `docs/VIRALIDAD.md` §7). Elige una estructura distinta de la anterior: contradicción,
    misterio, error común, cuenta atrás o vida de personaje. Frases cortas (cada una es un ancla); la parte honesta
    (riesgo, sesgo de superviviente) es obligatoria, sin fórmula de anuncio. Open loop que se cierra tarde, giro propio
    cada 8-10 s, última frase que enlaza con la primera. Cada cifra con URL en `cifras`; sin verificar, no se usa. Nada de
@@ -45,6 +47,8 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
    - Sonido: 4-7 efectos de `video-v2/motor/sfx.json`, solo si casan con lo que se ve (`"sfx"` en clip, `"sonidos"` en palabras).
    - Prueba: documento REAL que diga el dato, en `pruebas`, con la frase tal cual (`python tools/ocr_doc.py assets/t/<img>.jpg "<frase>"`).
    - Serie: `"serie": {"nombre": "Quiet Millionaires", "ep": N}` si es de gente corriente rica en silencio.
+   - Variedad (puerta): `foto` + `titulo` ≤ 70 % de las escenas y ≥ 4 tipos distintos. Donde el guion dice un dato, la escena
+     es de dato (`grafica`, `puntos`, `lista`, `anios`, `revelacion`), no otro clip con texto encima.
    - Nada genérico: metraje, documento o dato real. `"desde_anio"` solo con año verificado, si no "Yr N". Como mucho un `contador3d`.
    - Subtítulos sin gancho ni CTA; la `pregunta` del CTA antes que los `botones`.
    - `publicacion` (título ≤100, descripción, tags, hashtags; sin dicotomía, `comentario`); `adn` con `renderer_version: v2-hyperframes`.
@@ -79,4 +83,5 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
     momento) y páginas. Si una red tiene un render anterior, para: dilo al usuario, que lo borre a mano, y usa `--reemplazar <red>`.
 14. `python -m omega.cli record-dna video-v2/<ref>/adn.json`; `record-cost` con
     `{"production_ref": "<ref>", "research_hours": null, "script_hours": null, "edit_hours": null, "ai_cost_usd": null, "time_to_publish_h": null}`
-    (solo valores medidos, si no `null`); `estado-subir`.
+    (solo valores medidos, si no `null`); `python tools/costo_sesion.py video-v2/<ref>` (turnos y tokens de esta sesión →
+    `renders/costo.json`; meta ≤ 80 turnos, línea base 110-130); `estado-subir`.

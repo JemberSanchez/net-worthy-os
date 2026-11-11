@@ -196,6 +196,7 @@ class PuertaTest(unittest.TestCase):
                 mock.patch("medir_parecido.puerta_repeticion", return_value=(True, "")),
                 mock.patch("guionista.puerta_guion", return_value=(True, "")),
                 mock.patch("puertas.clips_sin_ver", return_value=[]),
+                mock.patch("puertas.variedad_escenas", return_value=[]),
             ):
                 c.construir(d2, solo_validar=True, sin_contraste=True)
             self.assertEqual((raiz / "usado.json").read_text(encoding="utf-8"), antes)

@@ -13,16 +13,18 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar
 from unittest import mock
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(RAIZ), str(RAIZ / "video-v2" / "motor"), str(RAIZ / "tools")]
 
-import construir as c  # noqa: E402 -- the path above must be set first
-import critico  # noqa: E402 -- the path above must be set first
-import medir_texto  # noqa: E402 -- the path above must be set first
-import puertas  # noqa: E402 -- the path above must be set first
-from omega import cli, config, publish, publish_meta  # noqa: E402 -- the path above must be set first
+import construir as c
+import critico
+import medir_texto
+import puertas
+
+from omega import cli, config, publish, publish_meta
 
 FIX = Path(__file__).parent / "fixtures" / "average401k"
 
@@ -83,16 +85,27 @@ class ReglasTest(unittest.TestCase):
         s = {"tipo": "foto", "t0": 0.0, "t1": 4.0, "texto_visible": []} | escena
         return {"escenas": [s], "words": [], "subtitulos": [0, 0]}
 
+    def test_variedad_rechaza_el_patron_clip_y_texto(self):
+        def esc(*ts):
+            return {"ref": "nuevo", "escenas": [{"tipo": t} for t in ts]}
+
+        mal = puertas.variedad_escenas(esc(*["foto", "titulo"] * 6, "cta"))
+        self.assertEqual(len(mal), 2, mal)  # 92 % in the pair and only 3 types
+        bien = esc(*["foto"] * 4, *["titulo"] * 3, "grafica", "puntos", "revelacion")
+        self.assertEqual(puertas.variedad_escenas(bien), [])
+        viejo = esc("foto", "titulo") | {"ref": "nvidia-weight"}
+        self.assertEqual(puertas.variedad_escenas(viejo), [])
+
     def test_otros_terminos_medidos_en_misaki(self):
         for mal in ("a 401(k)", "your 403(b)", "the 403b", "a 457(b)", "a 529 plan"):
-            self.assertTrue(
-                puertas.pronunciacion({"guion": [{"texto": mal}]}), mal
-            )
+            self.assertTrue(puertas.pronunciacion({"guion": [{"texto": mal}]}), mal)
         for bien in ("four-oh-one-k", "five twenty-nine plan", "401 people", "$529"):
-            self.assertEqual(puertas.pronunciacion({"guion": [{"texto": bien}]}), [], bien)
+            self.assertEqual(
+                puertas.pronunciacion({"guion": [{"texto": bien}]}), [], bien
+            )
 
     def test_rotulos_que_no_coinciden_no_se_solapan(self):
-        r = lambda en, **k: {"texto": "x", "en": en, **k}  # noqa: E731 -- local test shorthand
+        r = lambda en, **k: {"texto": "x", "en": en, **k}
         for rotulos in (
             [r(0.5, hasta=1.5), r(1.5)],  # one leaves as the other enters
             [r(0.5, top=200), r(1.0, top=900)],  # different height
@@ -111,7 +124,10 @@ class ReglasTest(unittest.TestCase):
 
     def test_voz_fuera_del_rango_de_subtitulos_sin_texto_en_escena(self):
         p = self._plan()
-        p["words"] = [{"text": "hola", "start": 1.0, "end": 1.2}, {"text": "x", "start": 9, "end": 9.1}]
+        p["words"] = [
+            {"text": "hola", "start": 1.0, "end": 1.2},
+            {"text": "x", "start": 9, "end": 9.1},
+        ]
         p["subtitulos"] = [1, 1]
         self.assertTrue(puertas.voz_sin_subtitulo(p))
 
@@ -137,9 +153,13 @@ class ValidarDeUnaVezTest(unittest.TestCase):
 
     def _validar(self, proy: Path, contraste=("contraste: sale mal",)):
         with (
-            mock.patch("medir_parecido.puerta_repeticion", return_value=(False, "repite X")),
+            mock.patch(
+                "medir_parecido.puerta_repeticion", return_value=(False, "repite X")
+            ),
             mock.patch("guionista.puerta_guion", return_value=(False, "G-CIERRE: mal")),
-            mock.patch.object(c, "errores_contraste", return_value=list(contraste)) as con,
+            mock.patch.object(
+                c, "errores_contraste", return_value=list(contraste)
+            ) as con,
             self.assertRaises(c.StoryboardError) as ctx,
         ):
             c.construir(proy, solo_validar=True)
@@ -200,8 +220,10 @@ class AvisoFinalL1Test(unittest.TestCase):
         "2025. Excludes IRAs, pensions and Social Security.",
         "Vanguard plans skew toward larger employers.",
     )
-    AV = {
-        "lineas": ["Not financial advice · Vanguard plans, 2025 · excludes IRAs, pensions"],
+    AV: ClassVar[dict] = {
+        "lineas": [
+            "Not financial advice · Vanguard plans, 2025 · excludes IRAs, pensions"
+        ],
         "completo": COMPLETO,
         "ventanas": [[5.0, 26.5]],
         "final": 33.2,
@@ -215,7 +237,9 @@ class AvisoFinalL1Test(unittest.TestCase):
         )
 
     def test_sin_completo_sigue_esperando_las_lineas(self):
-        esp = critico.esperados_aviso({**self.AV, "completo": None, "ventanas": []}, 34.6)
+        esp = critico.esperados_aviso(
+            {**self.AV, "completo": None, "ventanas": []}, 34.6
+        )
         self.assertEqual([e["texto"] for e in esp], self.AV["lineas"])
 
     def test_el_ocr_real_lee_el_aviso_completo(self):
@@ -224,7 +248,8 @@ class AvisoFinalL1Test(unittest.TestCase):
             for i, t in enumerate(self.OCR)
         ]
         r = medir_texto.analizar(
-            [{"t": 34.0, "ancho": 1080, "alto": 1920, "lineas": cajas}], critico.esperados_aviso({**self.AV, "ventanas": []}, 34.6)
+            [{"t": 34.0, "ancho": 1080, "alto": 1920, "lineas": cajas}],
+            critico.esperados_aviso({**self.AV, "ventanas": []}, 34.6),
         )
         self.assertEqual(r["no_leidos"], [])
 
@@ -253,8 +278,12 @@ class JuicioDeEseArchivoTest(unittest.TestCase):
         tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, tmp, True)
         self.assertFalse(critico.juicio_de(tmp, "abc"))
-        (tmp / "checklist.json").write_text('{"escenas": [], "cifras": []}', encoding="utf-8")
-        (tmp / "juicio.json").write_text('{"fallos": [], "mp4_sha256": "viejo"}', encoding="utf-8")
+        (tmp / "checklist.json").write_text(
+            '{"escenas": [], "cifras": []}', encoding="utf-8"
+        )
+        (tmp / "juicio.json").write_text(
+            '{"fallos": [], "mp4_sha256": "viejo"}', encoding="utf-8"
+        )
         self.assertFalse(critico.juicio_de(tmp, "abc"))
         self.assertTrue(critico.juicio_de(tmp, "viejo"))
 
@@ -272,7 +301,12 @@ class ExigirCriticoTest(unittest.TestCase):
     def _aprobar(self, aprobado=True):
         (self.dir / "aprobacion.json").write_text(
             json.dumps(
-                {publish.sha256_de(self.mp4): {"aprobado": aprobado, "motivo": "1 fallos alta"}}
+                {
+                    publish.sha256_de(self.mp4): {
+                        "aprobado": aprobado,
+                        "motivo": "1 fallos alta",
+                    }
+                }
             ),
             encoding="utf-8",
         )
@@ -330,8 +364,9 @@ class PublicarExigeCriticoTest(unittest.TestCase):
         self.tmp = tmp
 
     def _cli(self, fn, *args):
-        with mock.patch.object(sys, "argv", ["omega.cli", *args]), mock.patch(
-            "sys.stdout"
+        with (
+            mock.patch.object(sys, "argv", ["omega.cli", *args]),
+            mock.patch("sys.stdout"),
         ):
             try:
                 fn()
@@ -341,9 +376,24 @@ class PublicarExigeCriticoTest(unittest.TestCase):
     def test_las_cuatro_salidas_en_vivo_se_rechazan(self):
         casos = [
             (cli.cmd_publish, ("publish", "r"), publish, "upload_video"),
-            (cli.cmd_publish_fb, ("publish-fb", "r", "--publicar"), publish_meta, "upload_facebook_reel"),
-            (cli.cmd_publish_ig, ("publish-ig", "r", "--publicar"), publish_meta, "upload_instagram_reel"),
-            (cli.cmd_programar, ("programar", "r", "--ahora"), publish, "hacer_publico"),
+            (
+                cli.cmd_publish_fb,
+                ("publish-fb", "r", "--publicar"),
+                publish_meta,
+                "upload_facebook_reel",
+            ),
+            (
+                cli.cmd_publish_ig,
+                ("publish-ig", "r", "--publicar"),
+                publish_meta,
+                "upload_instagram_reel",
+            ),
+            (
+                cli.cmd_programar,
+                ("programar", "r", "--ahora"),
+                publish,
+                "hacer_publico",
+            ),
             (cli.cmd_programar, ("programar", "r"), publish, "programar"),
         ]
         for fn, args, mod, nombre in casos:
@@ -354,9 +404,13 @@ class PublicarExigeCriticoTest(unittest.TestCase):
     def test_carrusel_e_historia_en_vivo_se_rechazan(self):
         plan = {"carrusel": ["a.png"], "historia": "h.mp4"}
         with (
-            mock.patch.object(cli, "_proyecto_de", return_value=self.tmp / "video-v2" / "r"),
+            mock.patch.object(
+                cli, "_proyecto_de", return_value=self.tmp / "video-v2" / "r"
+            ),
             mock.patch.object(publish_meta, "plan_social", return_value=plan),
-            mock.patch.object(sys, "argv", ["omega.cli", "publish-social", "r", "--publicar"]),
+            mock.patch.object(
+                sys, "argv", ["omega.cli", "publish-social", "r", "--publicar"]
+            ),
             mock.patch("sys.stdout"),
             self.assertRaises(SystemExit),
         ):
@@ -370,7 +424,9 @@ class PublicarExigeCriticoTest(unittest.TestCase):
         with mock.patch.object(publish, "upload_video", return_value=ok) as yt:
             self._cli(cli.cmd_publish, "publish", "r")
         yt.assert_called_once()
-        with mock.patch.object(publish_meta, "upload_facebook_reel", return_value=ok) as fb:
+        with mock.patch.object(
+            publish_meta, "upload_facebook_reel", return_value=ok
+        ) as fb:
             self._cli(cli.cmd_publish_fb, "publish-fb", "r")
         fb.assert_called_once()
 

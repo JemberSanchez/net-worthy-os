@@ -48,6 +48,22 @@ PRONUNCIACION = (
 )
 TIPOS_CON_FONDO = ("titulo", "cta", "revelacion")
 
+# Storyboards written before the scene-mix gate (11-nov): re-rendering them must keep working. Closed list.
+ANTES_DE_VARIEDAD = frozenset(
+    {
+        "average-401k",
+        "buffett-deficit",
+        "holiday-debt",
+        "jesse-livermore",
+        "newton-bubble",
+        "nvidia-weight",
+    }
+)
+# PROVISIONAL, set by eye (user complaint 11-nov: every video looks like the same pattern). Measured that
+# day: `foto` + `titulo` were 87 % of 223 scenes and no video was under 76 %. Not shown to raise views.
+PAR_MAX = 0.70
+TIPOS_MIN = 4
+
 
 def pronunciacion(sb: dict) -> list[str]:
     return [
@@ -314,6 +330,27 @@ def tema_valido(sb: dict) -> list[str]:
     return []
 
 
+def variedad_escenas(sb: dict) -> list[str]:
+    """Clip + big text, clip + big text: the pattern that makes every video look machine-made."""
+    if sb.get("ref") in ANTES_DE_VARIEDAD:
+        return []
+    tipos = [e.get("tipo") for e in sb.get("escenas") or []]
+    if not tipos:
+        return []
+    par = sum(t in ("foto", "titulo") for t in tipos) / len(tipos)
+    out = []
+    if par > PAR_MAX:
+        out.append(
+            f"variedad: `foto` + `titulo` son el {par:.0%} de las escenas (≤{PAR_MAX:.0%}): cambia alguna por"
+            " `grafica`, `puntos`, `lista`, `anios`, `revelacion` o `contador3d` donde haya un dato real"
+        )
+    if len(set(tipos)) < TIPOS_MIN:
+        out.append(
+            f"variedad: {len(set(tipos))} tipos de escena distintos (≥{TIPOS_MIN})"
+        )
+    return out
+
+
 def clips_sin_ver(sb: dict, proy: Path) -> list[str]:
     """Polish banknotes and a crypto chart in jesse-livermore: clips picked from their description. The sheet is
     deleted when the source changes (broll.purgar_cambiados), so an old `visto` does not cover a new clip."""
@@ -337,6 +374,7 @@ def errores(sb: dict, p: dict) -> list[str]:
         return []
     return (
         tema_valido(sb)
+        + variedad_escenas(sb)
         + pronunciacion(sb)
         + voz_sin_subtitulo(p)
         + pantalla_vacia(p)
