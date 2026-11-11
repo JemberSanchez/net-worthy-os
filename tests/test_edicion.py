@@ -119,6 +119,24 @@ class SeleccionTest(unittest.TestCase):
             (e["punch"], e["camara"], e["sfx"]["thud"]), ("seco", ["push"], "thud")
         )
 
+    def test_tipografia_rota_y_los_videos_viejos_cuentan_como_serif(self):
+        # rows written before 11-nov have no `tipografia`: they all used the serif
+        primera = ed.elegir(sb_nuevo("r1"), [{}, {}])["tipografia"]
+        self.assertIn(primera, ("grotesca", "condensada"))
+        segunda = ed.elegir(sb_nuevo("r2"), [{"tipografia": [primera]}, {}])
+        self.assertNotIn(segunda["tipografia"], (primera, "serif"))
+        tercera = ed.elegir(
+            sb_nuevo("r3"),
+            [{"tipografia": [segunda["tipografia"]]}, {"tipografia": [primera]}, {}],
+        )
+        self.assertEqual(
+            tercera["tipografia"], "serif"
+        )  # the longest unused comes back
+        manual = sb_nuevo(edicion={"tipografia": "serif"})
+        self.assertEqual(ed.elegir(manual, [])["tipografia"], "serif")
+        malo = sb_nuevo(edicion={"tipografia": "comic"})
+        self.assertIn("tipografia", " ".join(ed.errores_manual(malo, {})))
+
     def test_tema_editorial_solo_transiciones_sobrias(self):
         e = ed.elegir(sb_nuevo(tema="editorial"), [])
         self.assertTrue(all(ed.TRANSICIONES[t]["sobria"] for t in e["transiciones"]))

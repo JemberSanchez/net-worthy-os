@@ -580,10 +580,12 @@ def hornear_arco(bed: Path, arco: list[dict], words: list[dict]) -> None:
             "-i",
             str(bed),
             "-filter_complex",
-            ("[0:a]aresample=48000,asetnsamples=256,asplit=2[a][o];"
-            f"[a]volume='pow(10,({g})/20)*({ab})':eval=frame[x];"
-            f"[o]lowpass=f=1100,volume='pow(10,({g})/20)*(1-({ab}))':eval=frame[y];"
-            "[x][y]amix=inputs=2:normalize=0"),
+            (
+                "[0:a]aresample=48000,asetnsamples=256,asplit=2[a][o];"
+                f"[a]volume='pow(10,({g})/20)*({ab})':eval=frame[x];"
+                f"[o]lowpass=f=1100,volume='pow(10,({g})/20)*(1-({ab}))':eval=frame[y];"
+                "[x][y]amix=inputs=2:normalize=0"
+            ),
             "-c:a",
             "pcm_s16le",
             str(tmp),
@@ -955,8 +957,12 @@ def asegurar_imagenes(proy: Path, imagenes: dict) -> None:
         ):  # real colour: the stacked green duotone was the top tell in the visual audit
             im = Image.open(crudo).convert("RGB")
             im.thumbnail((1600, 2640))
-            if v.get("ligero"):  # same as broll.GRADO_LIGERO: photos and clips must cut together
-                im = ImageEnhance.Color(ImageEnhance.Contrast(im).enhance(1.04)).enhance(0.94)
+            if v.get(
+                "ligero"
+            ):  # same as broll.GRADO_LIGERO: photos and clips must cut together
+                im = ImageEnhance.Color(
+                    ImageEnhance.Contrast(im).enhance(1.04)
+                ).enhance(0.94)
             im.save(proy / "assets" / "t" / f"{k}.jpg", quality=86)
             continue
         duotono(
@@ -1139,7 +1145,9 @@ def plan(sb: dict, words: list[dict]) -> dict:
                     "aparece": s["pregunta"]["en"] - 0.29,
                 }
             )
-    ed = sb.get("_edicion")  # edicion.py: None = video before the gate, legacy behaviour
+    ed = sb.get(
+        "_edicion"
+    )  # edicion.py: None = video before the gate, legacy behaviour
     trans = None
     if ed:
         edicion.asignar_camara(fotos, esc, ed)
@@ -1184,6 +1192,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
         "D": END,
         "tema": sb.get("tema", ""),
         "aspecto": sb.get("aspecto", ""),
+        # a frozen choice from before 11-nov has no typeface: it stays on the serif
+        "tipografia": (sb.get("_edicion") or {}).get("tipografia") or "serif",
         "voz_mix": bool((sb.get("voz") or {}).get("ride")),
         "fin_voz": fin_voz,
         "words": words,
@@ -1509,7 +1519,9 @@ def _html(p: dict) -> str:
         vm["impacto"] / VOL_MOTOR["impacto"]
     )  # los impactos de `impactos` escalan igual
     sfx = []
-    if not p.get("edicion"):  # with edicion.py these are recordings chosen per video, in `sonidos`
+    if not p.get(
+        "edicion"
+    ):  # with edicion.py these are recordings chosen per video, in `sonidos`
         sfx = [
             ("whoosh.wav", t - 0.12, vm["whoosh"]) for t in p["cortes"]
         ]  # whoosh = transición visual (motor.js)
@@ -1562,7 +1574,7 @@ def _html(p: dict) -> str:
     )
     rep = {
         "__PRUEBAS__": pruebas,
-        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')}".strip(),
+        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}".strip(),
         "__AVISOFIN__": (
             f'        <div id="avisofin">{html.escape(p["aviso"]["completo"])}</div>'
             if p["aviso"].get("completo")
@@ -1596,14 +1608,18 @@ def _puertas(
     """Gates that do not stop each other, so one run reports everything. Repetition and script only
     in --validar: a full build comes from producir.py, which already ran them."""
     errores = []
-    exento = proy.name in puertas.ANTERIORES  # by folder: older storyboards have no `ref` or another one
+    exento = (
+        proy.name in puertas.ANTERIORES
+    )  # by folder: older storyboards have no `ref` or another one
     if not exento:
         errores += puertas.clips_sin_ver(sb, proy)
     if not sin_plan:
         p = plan(sb, words)
         errores += [] if exento else puertas.errores(sb, p)
         if sb.get("_edicion"):
-            errores += [f"repite los últimos vídeos: {m}" for m in edicion.puerta(proy, p, sb)]
+            errores += [
+                f"repite los últimos vídeos: {m}" for m in edicion.puerta(proy, p, sb)
+            ]
     elif not exento:
         errores += puertas.pronunciacion(sb)
     if solo_validar and not exento:
@@ -1623,7 +1639,9 @@ def errores_contraste(proy: Path, reelegir: bool = False) -> list[str]:
     import producir
 
     try:
-        construir(proy, solo_html=True, con_musica=False, con_carve=False, reelegir=reelegir)
+        construir(
+            proy, solo_html=True, con_musica=False, con_carve=False, reelegir=reelegir
+        )
         ok, detalle = producir.auditar_contraste(proy, producir._entorno())
     except Exception as e:  # noqa: BLE001 -- an instrument that did not measure must not pass
         return [f"contraste: no medido ({e})"]
@@ -1643,15 +1661,21 @@ def construir(
     proy = Path(proy).resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
-    if sb.get("clips"):  # before the gates: a stale credit would veto the clip that replaced it
+    if sb.get(
+        "clips"
+    ):  # before the gates: a stale credit would veto the clip that replaced it
         import broll
 
         # undeclared credits only go in a real build of a new video: validating must not rewrite a published one's
         huerfanos = not solo_validar and proy.name not in puertas.ANTERIORES
-        for k in broll.purgar_cambiados(sb["clips"], proy / "assets" / "clips", huerfanos):
+        for k in broll.purgar_cambiados(
+            sb["clips"], proy / "assets" / "clips", huerfanos
+        ):
             print(f"✓ clip {k}: origen nuevo, caché anterior borrada")
     errores = validar(sb, words)
-    sin_plan = bool(errores)  # the other gates still report; only the plan needs valid anchors
+    sin_plan = bool(
+        errores
+    )  # the other gates still report; only the plan needs valid anchors
     if not errores and edicion.preparar(proy, sb, reelegir) is not None:
         errores = errores_seleccion(sb, proy)
     # ventanas del aviso: anclas -> segundos (van aparte porque son pares, no claves `en`)
@@ -1956,7 +1980,8 @@ def _carve(out: Path) -> None:
                 core,
             ],
             capture_output=True,
-            text=True, check=False,
+            text=True,
+            check=False,
         )
         print(
             "✓ carve (ducking)"

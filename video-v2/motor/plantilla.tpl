@@ -194,6 +194,9 @@
       #root.editorial .rot.nota { font-weight: 700; font-size: 44px; line-height: 1.2; }
       #root.editorial .scene.papel { background: #f2ecdf; box-shadow: 0 0 0 60px #f2ecdf; --ink: #17211c; --gold: #8a5f0a; --mute: #4c5a52; --red-txt: #bf2c17; color: var(--ink); }
       #root.editorial .graf { font-family: "NW Text", sans-serif; }
+      /* display typeface rotated per video by edicion.py (TIPOGRAFIA); tipo-serif is the base above */
+      #root.editorial.tipo-grotesca .huge, #root.editorial.tipo-grotesca .big, #root.editorial.tipo-grotesca .mid, #root.editorial.tipo-grotesca .rot.big, #root.editorial.tipo-grotesca .rot.huge, #root.editorial.tipo-grotesca .rot.mid, #root.editorial.tipo-grotesca .rot.mega, #root.editorial.tipo-grotesca #brand { font-family: "NW Text", sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+      #root.editorial.tipo-condensada .huge, #root.editorial.tipo-condensada .big, #root.editorial.tipo-condensada .mid, #root.editorial.tipo-condensada .rot.big, #root.editorial.tipo-condensada .rot.huge, #root.editorial.tipo-condensada .rot.mid, #root.editorial.tipo-condensada .rot.mega, #root.editorial.tipo-condensada #brand { font-family: "Anton", sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0; }
       #root.editorial .graf text { stroke: none; }
       #root.editorial .graf .anio { display: none; }
       #root.editorial .graf .tk { font-size: 32px; font-weight: 600; paint-order: stroke; stroke: #f2ecdf; stroke-width: 10px; }

@@ -13,7 +13,7 @@ Flow (construir.py):
 
 Exempt: storyboards without `formato` and videos marked `legacy` in usado.json (their re-render must
 not change). Manual override: `"edicion": {"transiciones": [...], "camara": [...], "punch": id,
-"texto": id, "sfx": {"thud": "thud"}, "motor": {"impacto": id}}`, a scene's `cam` or `transicion`,
+"texto": id, "tipografia": id, "sfx": {"thud": "thud"}, "motor": {"impacto": id}}`, a scene's `cam` or `transicion`,
 an explicit `musica.pista`. Overrides are still counted by the gate.
 """
 
@@ -283,6 +283,9 @@ TEXTO = {
 
 N_TRANS, N_TRANS_SOBRIA, N_CAM = 3, 2, 3
 # Same concept, different recording: safe to swap. Sounds with one meaning (caja, reloj) are not.
+# Display typeface of the editorial theme (plantilla.tpl, `tipo-<id>`); "serif" is the look every video
+# had until 11-nov. Not in DIMS_EDICION: three options cannot clear a repetition window, they only rotate.
+TIPOGRAFIA = ("serif", "grotesca", "condensada")
 ROLES_CAMBIABLES = ("impacto", "impacto_grande", "riser", "whoosh", "tic", "monedas")
 
 
@@ -337,6 +340,13 @@ def elegir(
         or _ordenar(ref, "cam", CAMARA, prev("camara"))[:N_CAM],
         "punch": man.get("punch") or _ordenar(ref, "punch", PUNCH, prev("punch"))[0],
         "texto": man.get("texto") or _ordenar(ref, "texto", TEXTO, prev("texto"))[0],
+        "tipografia": man.get("tipografia")
+        or _ordenar(
+            ref,
+            "tipo",
+            TIPOGRAFIA,
+            [set(f.get("tipografia") or ["serif"]) for f in previas],
+        )[0],
     }
     ya: set[str] = set()  # two roles of one video never land on the same recording
 
@@ -389,15 +399,26 @@ def _elegir_musica(
     if pista.get("commons"):
         return None  # manual
     # the older gate (puerta_repeticion) also rejects the same AUTHOR within VENTANA_SELLOS videos
-    recientes = [t for f in previas[: medir_parecido.VENTANA_SELLOS] for t in f.get("musica") or []]
+    recientes = [
+        t
+        for f in previas[: medir_parecido.VENTANA_SELLOS]
+        for t in f.get("musica") or []
+    ]
 
     def autor(titulo: str) -> str | None:
-        decl = next((v["autor"] for v in musica.values() if v["commons"] == "File:" + titulo), None)
+        decl = next(
+            (v["autor"] for v in musica.values() if v["commons"] == "File:" + titulo),
+            None,
+        )
         if decl:
             return decl.lower()
-        if "isrc usuan" in titulo.lower():  # Incompetech's ISRC registrant: Commons omits the name
+        if (
+            "isrc usuan" in titulo.lower()
+        ):  # Incompetech's ISRC registrant: Commons omits the name
             return "kevin macleod"
-        return medir_parecido._autor_musica({"musica": {"pista": {"commons": "File:" + titulo}}})
+        return medir_parecido._autor_musica(
+            {"musica": {"pista": {"commons": "File:" + titulo}}}
+        )
 
     autores = {autor(t) for t in recientes}
     mood = pista.get("mood")
@@ -425,6 +446,11 @@ def errores_manual(sb: dict, cat: dict) -> list[str]:
         ("camara", man.get("camara") or [], CAMARA),
         ("punch", [man["punch"]] if man.get("punch") else [], PUNCH),
         ("texto", [man["texto"]] if man.get("texto") else [], TEXTO),
+        (
+            "tipografia",
+            [man["tipografia"]] if man.get("tipografia") else [],
+            TIPOGRAFIA,
+        ),
         ("motor", list((man.get("motor") or {}).values()), cat),
         ("sfx", list((man.get("sfx") or {}).values()), cat),
     ):
@@ -541,7 +567,11 @@ def asignar_camara(fotos: list[dict], esc: list[dict], ed: dict) -> None:
             continue
         s = esc[int(re.match(r"ph(\d+)", f["id"]).group(1))]
         fondo = s.get("fondo")
-        manual = s.get("cam") if f.get("primer_plano") else (fondo.get("cam") if isinstance(fondo, dict) else None)
+        manual = (
+            s.get("cam")
+            if f.get("primer_plano")
+            else (fondo.get("cam") if isinstance(fondo, dict) else None)
+        )
         cid = manual or ed["camara"][i % len(ed["camara"])]
         i += 0 if manual else 1
         c = CAMARA[cid]
@@ -638,6 +668,7 @@ def firma(p: dict, sb: dict, cat: dict | None = None) -> dict:
         "camara": sorted(camara),
         "punch": punch,
         "texto": texto,
+        "tipografia": [(ed or {}).get("tipografia") or "serif"],
         "efectos": sorted(
             {_archivo(cat, n) for n in sonidos if cat[n].get("rol") != "riser"}
             | set(motor_ef)
