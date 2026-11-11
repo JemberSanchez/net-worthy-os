@@ -1,0 +1,496 @@
+{
+  "ref": "buffett-deficit",
+  "pronuncia_ok": [
+    "Buffett"
+  ],
+  "aspecto": "cine",
+  "tema": "editorial",
+  "formato": "documental-editorial",
+  "adn": {
+    "hook_type": "promise",
+    "story_type": "character_quote",
+    "cta_type": "imperative",
+    "renderer_version": "v2-hyperframes"
+  },
+  "fondos_auto": false,
+  "cifras": [
+    {
+      "dato": "July 7, 2011, live on CNBC with Becky Quick: 'I could end the deficit in five minutes. You just pass a law that says that any time there's a deficit of more than three percent of GDP, all sitting members of Congress are ineligible for re-election.'",
+      "fuente": "https://www.cnbc.com/2011/10/28/warren-buffetts-smile-missing-as-his-5minute-deficit-fix-hits-facebook.html"
+    },
+    {
+      "dato": "Berkshire Hathaway: the five-minute plan was 'not a serious proposal; just intended to emphasize the importance of proper incentives'",
+      "fuente": "https://www.cnbc.com/2011/10/28/warren-buffetts-smile-missing-as-his-5minute-deficit-fix-hits-facebook.html"
+    },
+    {
+      "dato": "FY 2026 federal deficit: $1,992,473 million (Monthly Treasury Statement, September 2026, Table 1, year-to-date)",
+      "fuente": "https://fiscaldata.treasury.gov/static-data/published-reports/mts/MonthlyTreasuryStatement_202609.pdf"
+    },
+    {
+      "dato": "FY 2026 deficit about 6.2% of GDP (CRFB estimate), about double the 3% line",
+      "fuente": "https://www.crfb.org/blogs/us-ran-2-trillion-deficit-last-year-we-estimate"
+    },
+    {
+      "dato": "Monthly Treasury Statement Table 1, FY 2026 Year-to-Date Deficit column: 1,992,473 (in $ millions)",
+      "fuente": "https://fiscaldata.treasury.gov/static-data/published-reports/mts/MonthlyTreasuryStatement_202609.pdf"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "Not financial advice · Buffett called it not a serious proposal"
+    ],
+    "ventanas": [
+      [
+        "5",
+        "10"
+      ]
+    ],
+    "final": true,
+    "completo": "Not financial advice. Quote: Warren Buffett on CNBC, July 7, 2011; Berkshire Hathaway later said it was not a serious proposal. FY 2026 deficit: $1.99 trillion, Monthly Treasury Statement, Sept 2026. 6.2% of GDP is a CRFB estimate.",
+    "placa": true,
+    "tam": 27
+  },
+  "subtitulos": [
+    "2",
+    "13"
+  ],
+  "calientes": [
+    "law",
+    "banned",
+    "double",
+    "seat",
+    "laugh",
+    "incentives"
+  ],
+  "golpes": [
+    "4:one",
+    "5:banned",
+    "9:nobody",
+    "10:laugh",
+    "13:job"
+  ],
+  "musica": {
+    "pista": {
+      "mood": "tension"
+    }
+  },
+  "sonidos": [
+    {
+      "sfx": "reloj",
+      "en": "0:minutes",
+      "dur": 1.0,
+      "vol": 0.12
+    },
+    {
+      "sfx": "sello",
+      "en": "5:banned"
+    },
+    {
+      "sfx": "monedas",
+      "en": "7:dollars"
+    },
+    {
+      "sfx": "portazo",
+      "en": "9:seat"
+    },
+    {
+      "sfx": "pagina",
+      "en": "11:company"
+    }
+  ],
+  "imagenes": {
+    "retrato": {
+      "commons": "File:Warren Buffett at the 2015 SelectUSA Investment Summit (cropped).jpg",
+      "color": true,
+      "ligero": true
+    },
+    "camara": {
+      "commons": "File:United States House of Representatives chamber.jpg",
+      "color": true,
+      "ligero": true
+    },
+    "capitol": {
+      "commons": "File:Capitol Building Full View.jpg",
+      "ligero": true,
+      "color": true
+    },
+    "mts": {
+      "documento": true,
+      "color": true
+    }
+  },
+  "clips": {
+    "reloj": {
+      "pexels": 8427422,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "urna": {
+      "pexels": 5925167,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "capitolio": {
+      "pexels": 29549360,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "billetes": {
+      "pexels": 6326861,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "pos": "baj",
+      "clip": "reloj",
+      "rotulos": [
+        {
+          "texto": "Warren Buffett",
+          "en": "0",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "0:said",
+      "pos": "ter",
+      "img": "retrato",
+      "rotulos": [
+        {
+          "texto": "End the deficit in *5 minutes*",
+          "en": "0:five",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "1",
+      "fondo": {
+        "clip": "reloj",
+        "opacidad": 0.22
+      },
+      "lineas": [
+        {
+          "texto": "You won't guess *how*",
+          "en": "1",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "lista",
+      "en": "2",
+      "icono": "x",
+      "fondo": {
+        "img": "capitol",
+        "opacidad": 0.35
+      },
+      "items": [
+        {
+          "texto": "Tax hike",
+          "en": "2:tax"
+        },
+        {
+          "texto": "Spending cut",
+          "en": "3:spending"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "4:one",
+      "fondo": {
+        "clip": "billetes",
+        "opacidad": 0.22
+      },
+      "lineas": [
+        {
+          "texto": "*One law*",
+          "en": "4:one",
+          "estilo": "huge",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "5",
+      "pos": "med",
+      "img": "camara",
+      "rotulos": [
+        {
+          "texto": "Deficit over *3% of GDP*",
+          "en": "5:three",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "5:every",
+      "pos": "sup",
+      "clip": "urna",
+      "rotulos": [
+        {
+          "texto": "Congress *can't run again*",
+          "en": "5:banned",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "6",
+      "linea1": {
+        "texto": "Last year's deficit"
+      },
+      "linea2": {
+        "texto": "$2 trillion",
+        "en": "7:two"
+      },
+      "golpe": "7:two"
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "img": "mts"
+    },
+    {
+      "tipo": "foto",
+      "en": "8:line$",
+      "pos": "sup",
+      "img": "camara",
+      "rotulos": [
+        {
+          "texto": "Nobody keeps *their seat*",
+          "en": "9:nobody",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "pos": "med",
+      "clip": "capitolio",
+      "rotulos": [
+        {
+          "texto": "Said *with a laugh*",
+          "en": "10:laugh",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "img": "retrato",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Berkshire:",
+          "en": "11",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*not a serious proposal*",
+          "en": "11:serious",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "12",
+      "pos": "med",
+      "clip": "billetes",
+      "rotulos": [
+        {
+          "texto": "The point: *incentives*",
+          "en": "12:incentives",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "13",
+      "fondo": {
+        "clip": "urna",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "People fix what costs",
+          "en": "13",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*their job*",
+          "en": "13:job",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "14",
+      "pos": "med",
+      "clip": "capitolio",
+      "rotulos": [
+        {
+          "texto": "Remember his *5 minutes*",
+          "en": "14:five",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    }
+  ],
+  "pruebas": [
+    {
+      "img": "mts",
+      "texto": "1,992,473",
+      "en": "8",
+      "marca": "8:double",
+      "hasta": "8:line$"
+    }
+  ],
+  "publicacion": {
+    "titulo": "Warren Buffett's 5-minute fix for the deficit",
+    "descripcion": "In a live CNBC interview on July 7, 2011, Warren Buffett said he could end the deficit in five minutes: pass a law that any time the deficit tops 3% of GDP, all sitting members of Congress are ineligible for re-election. He said it with a laugh, and Berkshire Hathaway later called it not a serious proposal, just a point about incentives. In fiscal 2026 the federal deficit was $1.99 trillion (Monthly Treasury Statement, September 2026), about 6.2% of GDP by CRFB's estimate. Not financial advice. Sources: CNBC, October 2011; U.S. Treasury Monthly Treasury Statement, Sept 2026; Committee for a Responsible Federal Budget, Oct 1, 2026.",
+    "tags": [
+      "Warren Buffett",
+      "national debt",
+      "federal deficit",
+      "Congress",
+      "US economy",
+      "Berkshire Hathaway",
+      "personal finance",
+      "economics explained"
+    ],
+    "hashtags": [
+      "#WarrenBuffett",
+      "#NationalDebt",
+      "#Shorts"
+    ],
+    "comentario": "If his five-minute law had passed in 2011, who would still be in Congress today?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "img:retrato",
+        "kicker": "CNBC, July 2011",
+        "titulo": "Buffett's *5-minute* fix for the deficit",
+        "texto": "No tax hike. No spending cut. One law."
+      },
+      {
+        "fondo": "img:camara",
+        "kicker": "The law",
+        "titulo": "Deficit over *3% of GDP*?",
+        "texto": "Every sitting member of Congress can't run for re-election."
+      },
+      {
+        "fondo": "clip:billetes@1",
+        "kicker": "Fiscal 2026 deficit",
+        "titulo": "*$1.99 trillion*",
+        "texto": "Monthly Treasury Statement, September 2026."
+      },
+      {
+        "fondo": "img:capitol",
+        "kicker": "Under his law",
+        "titulo": "About *double* his line",
+        "texto": "About 6.2% of GDP by CRFB's estimate. Nobody keeps their seat."
+      },
+      {
+        "fondo": "clip:capitolio@1",
+        "kicker": "The honest part",
+        "titulo": "*Not a serious proposal*",
+        "texto": "He said it with a laugh. Berkshire said the point was incentives."
+      },
+      {
+        "fondo": "clip:urna@1",
+        "kicker": "Your turn",
+        "titulo": "Would you *vote* for it?",
+        "texto": "If it had passed in 2011, who would still be in Congress?"
+      }
+    ],
+    "caption": "Warren Buffett said he could end the deficit in five minutes: one law that bars all of Congress from re-election whenever the deficit tops 3% of GDP. Fiscal 2026's deficit was $1.99 trillion, about double that line. He was joking, but his point about incentives stands. Would you vote for it?",
+    "historia": {
+      "hasta": "4:law$",
+      "cierre": "Full story in Reels"
+    }
+  },
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "Warren Buffett, the world's most famous investor, said he could end America's deficit in five minutes. You won't guess how."
+    },
+    {
+      "id": "nocut",
+      "texto": "No tax hike. No spending cut. One law.",
+      "giro": true
+    },
+    {
+      "id": "law",
+      "texto": "Any year the deficit tops three percent of the economy,",
+      "giro": true
+    },
+    {
+      "id": "punch",
+      "texto": "every sitting member of Congress is banned from re-election.",
+      "giro": true
+    },
+    {
+      "id": "now",
+      "texto": "Last year's deficit? Two trillion dollars.",
+      "giro": true
+    },
+    {
+      "id": "double",
+      "texto": "That's about double his line. Under his law, nobody in Congress keeps their seat.",
+      "giro": true
+    },
+    {
+      "id": "risk",
+      "texto": "The honest part: he said it with a laugh, live on CNBC. His own company called it not a serious proposal.",
+      "giro": true
+    },
+    {
+      "id": "point",
+      "texto": "The point was incentives. People fix what costs them their job.",
+      "giro": true
+    },
+    {
+      "id": "close",
+      "texto": "Remember his five minutes next time you vote."
+    }
+  ],
+  "mezcla": {
+    "impacto": 0.4
+  }
+}

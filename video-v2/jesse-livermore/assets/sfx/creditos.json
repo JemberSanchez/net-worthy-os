@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "golpe_hondo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Deep hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Deep_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "libro_blando.src",
+  "origen": "wikimedia",
+  "titulo": "File:Softcover books dropped.ogg",
+  "autor": "stilgar",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Softcover_books_dropped.ogg"
+ },
+ {
+  "archivo": "maquina.src",
+  "origen": "wikimedia",
+  "titulo": "File:WWS Typewriter.ogg",
+  "autor": "Work With Sounds / Konrad Gutkowski",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:WWS_Typewriter.ogg"
+ },
+ {
+  "archivo": "moneda_suelo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Coin dropped on wooden floor.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Coin_dropped_on_wooden_floor.ogg"
+ },
+ {
+  "archivo": "pagina.src",
+  "origen": "wikimedia",
+  "titulo": "File:Turning a page.ogg",
+  "autor": "planish",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg"
+ },
+ {
+  "archivo": "riser_viento.src",
+  "origen": "wikimedia",
+  "titulo": "File:Wind outside atmosphere (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Wind_outside_atmosphere_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "tajo_a.src",
+  "origen": "wikimedia",
+  "titulo": "File:Sword 1 (Gravity Sound).mp3",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sword_1_(Gravity_Sound).mp3"
+ },
+ {
+  "archivo": "timbal.src",
+  "origen": "wikimedia",
+  "titulo": "File:Timpani 64-c-p5.wav",
+  "autor": "spt3125",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Timpani_64-c-p5.wav"
+ }
+]

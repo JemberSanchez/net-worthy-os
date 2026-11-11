@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "caja.src",
+  "origen": "wikimedia",
+  "titulo": "File:WWS CashregisteratWolkoffHouseMuseum.ogg",
+  "autor": "Work With Sounds / Werstas",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:WWS_CashregisteratWolkoffHouseMuseum.ogg"
+ },
+ {
+  "archivo": "latigo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Whip-sound.ogg",
+  "autor": "Mike Koenig",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Whip-sound.ogg"
+ },
+ {
+  "archivo": "libro_blando.src",
+  "origen": "wikimedia",
+  "titulo": "File:Softcover books dropped.ogg",
+  "autor": "stilgar",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Softcover_books_dropped.ogg"
+ },
+ {
+  "archivo": "portazo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Slam closet door (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Slam_closet_door_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "rafaga.src",
+  "origen": "wikimedia",
+  "titulo": "File:Wind rustling (Gravity Sound).mp3",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Wind_rustling_(Gravity_Sound).mp3"
+ },
+ {
+  "archivo": "riser_cuerdas.src",
+  "origen": "wikimedia",
+  "titulo": "File:ARP-Solina Crescendo clean.ogg",
+  "autor": "MFbay",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:ARP-Solina_Crescendo_clean.ogg"
+ },
+ {
+  "archivo": "sala_servidores.src",
+  "origen": "wikimedia",
+  "titulo": "File:Server Room (Antti Luode).mp3",
+  "autor": "Antti Luode",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Server_Room_(Antti_Luode).mp3"
+ },
+ {
+  "archivo": "timbal.src",
+  "origen": "wikimedia",
+  "titulo": "File:Timpani 64-c-p5.wav",
+  "autor": "spt3125",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Timpani_64-c-p5.wav"
+ }
+]

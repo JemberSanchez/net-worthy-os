@@ -1,0 +1,165 @@
+{
+  "ref": "jesse-livermore",
+  "nota": "Turno 5 del calendario de docs/VIRALIDAD.md s7, adelantado: 32.560 vistas en 4 videos con su nombre frente a 503 de Anne Scheiber (youtube, 6-nov). decide dio 'checkup retirement': un solo articulo sindicado, demanda 0. Fuentes: TIME 19-mar-1934 (Fourth Down, leido entero), Wikipedia (Jesse Livermore).",
+  "estructuras": [
+    {
+      "id": "cuenta",
+      "nombre": "cuenta atras",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "You could call the nineteen twenty-nine crash and still go bankrupt. One man did."
+        },
+        {
+          "id": "who",
+          "texto": "Jesse Livermore traded behind a locked door with no name."
+        },
+        {
+          "id": "bet",
+          "texto": "In early nineteen twenty-nine, he bet against the whole boom.",
+          "giro": true
+        },
+        {
+          "id": "pain",
+          "texto": "By spring, he was down six million.",
+          "giro": true
+        },
+        {
+          "id": "crash",
+          "texto": "Then October hit. Legend says he made a hundred million.",
+          "giro": true
+        },
+        {
+          "id": "guard",
+          "texto": "The public blamed him, so he hired a bodyguard.",
+          "giro": true
+        },
+        {
+          "id": "fall",
+          "texto": "Under five years later, he filed for bankruptcy with his mansion gone.",
+          "giro": true
+        },
+        {
+          "id": "hole",
+          "texto": "And that hundred million? TIME's story on his bankruptcy never mentions it.",
+          "giro": true
+        },
+        {
+          "id": "risk",
+          "texto": "Betting against a market can cost you more than you put in."
+        },
+        {
+          "id": "close",
+          "texto": "He called the crash. That hundred million is still a legend."
+        }
+      ]
+    },
+    {
+      "id": "contradiccion",
+      "nombre": "contradiccion",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Being right about the 1929 crash should have made you rich forever. It didn't save him."
+        },
+        {
+          "id": "who",
+          "texto": "Jesse Livermore was Wall Street's most feared trader."
+        },
+        {
+          "id": "bet",
+          "texto": "In early 1929, he quietly bet against the boom.",
+          "giro": true
+        },
+        {
+          "id": "pain",
+          "texto": "By spring, that bet had him six million dollars down.",
+          "giro": true
+        },
+        {
+          "id": "crash",
+          "texto": "Then the market broke, and legend says he made a hundred million."
+        },
+        {
+          "id": "guard",
+          "texto": "His reward was blame, and a bodyguard.",
+          "giro": true
+        },
+        {
+          "id": "fall",
+          "texto": "Under five years later, he filed for bankruptcy.",
+          "giro": true
+        },
+        {
+          "id": "hole",
+          "texto": "TIME covered that bankruptcy. It never mentions a hundred million.",
+          "giro": true
+        },
+        {
+          "id": "risk",
+          "texto": "Betting against a market can cost you more than you put in."
+        },
+        {
+          "id": "close",
+          "texto": "Being right about a crash made him famous. That hundred million is still a legend."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "You could call the 1929 crash and still go bankrupt. One man did."
+    },
+    {
+      "id": "g2",
+      "texto": "Wall Street's biggest crash winner was bankrupt before you'd finish college."
+    },
+    {
+      "id": "g3",
+      "texto": "One trader called the 1929 crash, got death threats, and went broke anyway. Could you do better?"
+    },
+    {
+      "id": "g4",
+      "texto": "Your best trade ever could still end like this man's did after 1929."
+    }
+  ],
+  "juicio": {
+    "cuenta": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 5,
+      "nota": "La cifra abre a los 12 s y se rompe tarde; cada frase cambia la apuesta entre 3 y 20 s"
+    },
+    "contradiccion": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Defiende una tesis; el gancho promete mas moraleja que historia"
+    },
+    "cuenta+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Tension clara, habla al espectador, sin cifra inventada"
+    },
+    "cuenta+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "'biggest crash winner' no esta verificado"
+    },
+    "cuenta+g3": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Largo, la pregunta final es relleno"
+    },
+    "cuenta+g4": {
+      "una_idea": 2,
+      "bucle_abierto": 3,
+      "giro": 2,
+      "nota": "Vago: sin sujeto concreto"
+    }
+  }
+}

@@ -1,0 +1,571 @@
+{
+ "ref": "nvidia-weight",
+ "guion": [
+  {
+   "id": "hook",
+   "texto": "Monday, the stock market soared. A giant inside your index fund sank."
+  },
+  {
+   "id": "what",
+   "texto": "Nvidia fell four percent after its board opened an investigation into its own CEO."
+  },
+  {
+   "id": "split",
+   "texto": "Your fund still had a great day.",
+   "giro": true
+  },
+  {
+   "id": "myth",
+   "texto": "An index fund protects you from one company, right?"
+  },
+  {
+   "id": "weight",
+   "texto": "Not quite. Nvidia alone is over six percent of the S and P five hundred.",
+   "giro": true
+  },
+  {
+   "id": "dollars",
+   "texto": "That's over six cents of every dollar on one company.",
+   "giro": true
+  },
+  {
+   "id": "bull",
+   "texto": "That weight lifted your fund on the way up."
+  },
+  {
+   "id": "risk",
+   "texto": "It pulls the same way down, and one headline is enough.",
+   "giro": true
+  },
+  {
+   "id": "honest",
+   "texto": "Nobody knows how the investigation ends, and one day proves nothing."
+  },
+  {
+   "id": "close",
+   "texto": "An index fund spreads your money. It just doesn't spread it evenly."
+  }
+ ],
+ "voz": {
+  "motor": "kokoro",
+  "voz": "am_adam",
+  "speed": 0.95,
+  "pausa_s": 0.28
+ },
+ "aspecto": "cine",
+ "tema": "editorial",
+ "formato": "documental-editorial",
+ "fondos_auto": false,
+ "adn": {
+  "hook_type": "contrast",
+  "story_type": "news_explainer",
+  "cta_type": "statement",
+  "renderer_version": "v2-hyperframes"
+ },
+ "cifras": [
+  {
+   "dato": "Nvidia closed 4.27% lower on Monday, Nov 9, 2026, after its board opened an independent investigation into its CEO",
+   "fuente": "https://www.cnbc.com/2026/11/09/nvidia-jensen-huang-chinese-spy-investigation.html"
+  },
+  {
+   "dato": "Same day: S&P 500 +2.35%, Dow +1,104.02 points (+2.2%), Nasdaq Composite +2.74%",
+   "fuente": "https://www.fool.com/investing/2026/11/09/why-nvidia-stock-was-down-today/"
+  },
+  {
+   "dato": "NVIDIA CORP is the top holding of the SPDR S&P 500 ETF at 8.38% (as of 09/30/2026)",
+   "fuente": "https://www.ssga.com/library-content/products/factsheets/etfs/us/factsheet-us-en-spy.pdf"
+  },
+  {
+   "dato": "NVIDIA CORP 7.51% of iShares Core S&P 500 ETF (as of 06/30/2026)",
+   "fuente": "https://www.ishares.com/us/literature/fact-sheet/ivv-ishares-core-s-p-500-etf-fund-fact-sheet-en-us.pdf"
+  },
+  {
+   "dato": "Board statement: no reason to believe national security or NVIDIA secrets were compromised; the inquiry will examine all available information",
+   "fuente": "https://www.aljazeera.com/economy/2026/11/9/nvidia-shares-slump-amid-investigation-into-ceo-jensen-huang"
+  },
+  {
+   "dato": "Every source puts Nvidia above 6% of the S&P 500: 8.38% (SPDR, Sep 30), 7.51% (iShares, Jun 30), about 6% (MarketWatch headline, Nov 9, 2026)",
+   "fuente": "https://www.ssga.com/library-content/products/factsheets/etfs/us/factsheet-us-en-spy.pdf"
+  },
+  {
+   "dato": "The S&P 500 is a stock market index tracking the stock performance of 500 companies listed on U.S. exchanges",
+   "fuente": "https://en.wikipedia.org/wiki/S%26P_500"
+  }
+ ],
+ "aviso": {
+  "lineas": [
+   "Not financial advice · weight: SPDR fact sheet, Sep 30"
+  ],
+  "ventanas": [
+   [
+    "2",
+    "5"
+   ],
+   [
+    "7",
+    "10"
+   ]
+  ],
+  "final": true,
+  "placa": true,
+  "tam": 29,
+  "completo": "Not financial advice. Index weights change daily: 8.38% is the SPDR fact sheet of Sep 30, 2026. The investigation is ongoing, with no finding."
+ },
+ "subtitulos": [
+  "2",
+  "10"
+ ],
+ "calientes": [
+  "sank",
+  "investigation",
+  "six",
+  "nothing",
+  "evenly"
+ ],
+ "golpes": [
+  "1:sank",
+  "3:great",
+  "5",
+  "7:six",
+  "9:enough",
+  "12:evenly"
+ ],
+ "musica": {
+  "pista": {
+   "mood": "tension"
+  },
+  "volumen": 0.4
+ },
+ "sonidos": [
+  {
+   "sfx": "thud",
+   "en": "1:sank",
+   "vol": 0.2
+  },
+  {
+   "sfx": "sala_servidores",
+   "en": "2",
+   "dur": 1.5
+  },
+  {
+   "sfx": "escaner",
+   "en": "6"
+  },
+  {
+   "sfx": "caja",
+   "en": "7:six"
+  },
+  {
+   "sfx": "bombo_seco",
+   "en": "9:enough"
+  }
+ ],
+ "imagenes": {
+  "gpu": {
+   "commons": "File:GPU blade with glycol cooling (54685994424).jpg",
+   "color": true,
+   "ligero": true
+  },
+  "hq": {
+   "commons": "File:Nvidia HQ.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "spy": {
+   "documento": true,
+   "color": true
+  }
+ },
+ "clips": {
+  "nyse": {
+   "pexels": 4319342,
+   "desde": 0,
+   "ligero": true,
+   "visto": true
+  },
+  "placa": {
+   "pexels": 7609195,
+   "desde": 2,
+   "ligero": true,
+   "visto": true
+  },
+  "esquina": {
+   "pexels": 13801266,
+   "desde": 0,
+   "ligero": true,
+   "visto": true
+  },
+  "pantalla": {
+   "pexels": 39383796,
+   "desde": 3,
+   "ligero": true,
+   "visto": true
+  },
+  "mercado": {
+   "pexels": 38670063,
+   "desde": 2,
+   "ligero": true,
+   "visto": true
+  }
+ },
+ "escenas": [
+  {
+   "tipo": "revelacion",
+   "en": "0",
+   "linea1": {
+    "texto": "Dow, Monday"
+   },
+   "linea2": {
+    "texto": "+1,104 points",
+    "en": "0:soared"
+   },
+   "golpe": "0:soared",
+   "fondo": {
+    "clip": "nyse",
+    "opacidad": 0.55
+   }
+  },
+  {
+   "tipo": "titulo",
+   "en": "1",
+   "fondo": {
+    "clip": "nyse",
+    "opacidad": 0.35
+   },
+   "lineas": [
+    {
+     "texto": "A giant in your index fund",
+     "en": "1",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*sank*",
+     "en": "1:sank",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "2",
+   "fondo": {
+    "clip": "placa",
+    "opacidad": 0.35
+   },
+   "lineas": [
+    {
+     "texto": "Nvidia",
+     "en": "2",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*-4.27%*",
+     "en": "2:fell",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "2:after",
+   "pos": "sup",
+   "img": "hq",
+   "rotulos": [
+    {
+     "texto": "Its board opened *an investigation*",
+     "en": "2:board",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "2:into",
+   "fondo": {
+    "img": "gpu",
+    "opacidad": 0.22
+   },
+   "lineas": [
+    {
+     "texto": "into its own",
+     "en": "2:into",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*chief executive*",
+     "en": "2:own",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "revelacion",
+   "en": "3",
+   "linea1": {
+    "texto": "S&P 500, same day"
+   },
+   "linea2": {
+    "texto": "+2.35%",
+    "en": "3:great"
+   },
+   "golpe": "3:great"
+  },
+  {
+   "tipo": "foto",
+   "en": "4",
+   "pos": "med",
+   "clip": "esquina",
+   "rotulos": [
+    {
+     "texto": "An index fund *protects you?*",
+     "en": "4:index",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "5",
+   "lineas": [
+    {
+     "texto": "*Not quite*",
+     "en": "5",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "6",
+   "img": "spy"
+  },
+  {
+   "tipo": "puntos",
+   "en": "7",
+   "n": 100,
+   "etiqueta": "cents",
+   "cuenta": {
+    "en": "7"
+   },
+   "atenuar": {
+    "en": "7:six",
+    "n": 94,
+    "texto": "6+ on one company"
+   }
+  },
+  {
+   "tipo": "foto",
+   "en": "8",
+   "pos": "baj",
+   "clip": "mercado",
+   "rotulos": [
+    {
+     "texto": "That weight *lifted your fund*",
+     "en": "8:lifted",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "9",
+   "fondo": {
+    "img": "gpu",
+    "opacidad": 0.22
+   },
+   "lineas": [
+    {
+     "texto": "It pulls",
+     "en": "9",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*the same way down*",
+     "en": "9:same",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "9:and",
+   "fondo": {
+    "clip": "placa",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "One headline",
+     "en": "9:one",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*is enough*",
+     "en": "9:enough",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "10",
+   "pos": "baj",
+   "img": "hq",
+   "rotulos": [
+    {
+     "texto": "Nobody knows *how it ends*",
+     "en": "10:nobody",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "10:and",
+   "fondo": {
+    "clip": "esquina",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "One day",
+     "en": "10:one",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*proves nothing*",
+     "en": "10:proves",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "11",
+   "fondo": {
+    "clip": "mercado",
+    "opacidad": 0.35
+   },
+   "lineas": [
+    {
+     "texto": "An index fund",
+     "en": "11",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*spreads your money*",
+     "en": "11:spreads",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "revelacion",
+   "en": "12",
+   "linea1": {
+    "texto": "It spreads your money"
+   },
+   "linea2": {
+    "texto": "Just not evenly",
+    "en": "12:evenly"
+   },
+   "golpe": "12:evenly"
+  }
+ ],
+ "pruebas": [
+  {
+   "img": "spy",
+   "texto": "8.38",
+   "en": "6",
+   "marca": "6:six",
+   "hasta": "7"
+  }
+ ],
+ "publicacion": {
+  "titulo": "The market soared Monday. One giant in your index fund sank.",
+  "descripcion": "On Monday, Nov 9, 2026, the S&P 500 rose 2.35% and the Dow added 1,104 points. Nvidia closed 4.27% lower after its board opened an independent investigation into its CEO. Why it matters to index investors: Nvidia is the largest holding in S&P 500 funds, over six percent of the index (8.38% of the SPDR S&P 500 ETF as of Sep 30, 2026). That weight helped funds on the way up and works the same way down. The investigation is ongoing, no finding has been made, and one day of prices proves nothing. Index weights change daily. Not financial advice. Sources: CNBC and The Motley Fool, Nov 9, 2026; State Street SPDR S&P 500 ETF fact sheet.",
+  "tags": [
+   "Nvidia",
+   "S&P 500",
+   "index funds",
+   "stock market today",
+   "concentration risk",
+   "investing",
+   "personal finance",
+   "NVDA"
+  ],
+  "hashtags": [
+   "#StockMarket",
+   "#Investing",
+   "#Shorts"
+  ],
+  "comentario": "Did you know how much of your index fund was one company?"
+ },
+ "social": {
+  "carrusel": [
+   {
+    "fondo": "clip:nyse@1",
+    "kicker": "Monday, Nov 9",
+    "titulo": "The market soared. *One giant sank.*",
+    "texto": "And you probably own it."
+   },
+   {
+    "fondo": "clip:placa@3",
+    "kicker": "The drop",
+    "titulo": "Nvidia *-4.27%*",
+    "texto": "Its board opened an investigation into its own CEO."
+   },
+   {
+    "fondo": "clip:esquina@1",
+    "kicker": "Same day",
+    "titulo": "S&P 500 *+2.35%*",
+    "texto": "An index fund protects you from one company, right?"
+   },
+   {
+    "fondo": "img:gpu",
+    "kicker": "Not quite",
+    "titulo": "Over *6%* of the index",
+    "texto": "Nvidia is the largest holding in S&P 500 funds."
+   },
+   {
+    "fondo": "clip:pantalla@4",
+    "kicker": "Both ways",
+    "titulo": "It lifted your fund. *It can pull it down.*",
+    "texto": "Nobody knows how the investigation ends, and one day proves nothing."
+   },
+   {
+    "fondo": "img:hq",
+    "kicker": "Your turn",
+    "titulo": "Did you know *how much* was one company?",
+    "texto": "An index fund spreads your money. Just not evenly."
+   }
+  ],
+  "caption": "The market soared Monday while Nvidia sank. If you own an S&P 500 fund, more than six cents of every dollar ride on that one company. Did you know?",
+  "historia": {
+   "hasta": "1:sank$",
+   "cierre": "Full story in Reels"
+  }
+ },
+ "mezcla": {
+  "impacto": 0.3
+ }
+}

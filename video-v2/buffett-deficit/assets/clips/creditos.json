@@ -1,0 +1,46 @@
+[
+ {
+  "archivo": "urna.src",
+  "origen": "pexels",
+  "titulo": "pexels:5925167",
+  "autor": "Sora Shimazaki",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-putting-vote-in-a-ballot-box-5925167/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "capitolio.src",
+  "origen": "pexels",
+  "titulo": "pexels:29549360",
+  "autor": "Nika Navi",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/stunning-view-of-the-us-capitol-building-29549360/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "billetes.src",
+  "origen": "pexels",
+  "titulo": "pexels:6326861",
+  "autor": "https://kaboompics.com/",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/man-counting-banknotes-6326861/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "reloj.src",
+  "origen": "pexels",
+  "titulo": "pexels:8427422",
+  "autor": "cottonbro studio",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/video-of-a-chess-timer-8427422/",
+  "desde": 0.0
+ }
+]

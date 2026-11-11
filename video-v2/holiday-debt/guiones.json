@@ -1,0 +1,156 @@
+{
+  "ref": "holiday-debt",
+  "nota": "decide 8-nov: 'think inflation' (22 items, momentum 4.66; tambien 'americans think', 'holidays survey'). Noticia sindicada de InvestigateTV/Gray (6-nov-2026) sobre una encuesta de WalletHub: 52% cree que la inflacion arruinara las fiestas; 1 de cada 4 sigue pagando deuda de las fiestas pasadas. Dato propio: Fed G.19 (sept-2026), APR de tarjetas en cuentas con intereses 22,36% (Q3 2026). Formato noticia tras buffett-deficit (cita/personaje).",
+  "estructuras": [
+    {
+      "id": "error",
+      "nombre": "error comun",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Half of America says inflation will ruin the holidays. You might be blaming the wrong villain."
+        },
+        {
+          "id": "survey",
+          "texto": "In a new WalletHub survey, fifty-two percent said exactly that."
+        },
+        {
+          "id": "but",
+          "texto": "But the same survey hid a scarier answer.",
+          "giro": true
+        },
+        {
+          "id": "quarter",
+          "texto": "One in four people are still paying off last year's holidays.",
+          "giro": true
+        },
+        {
+          "id": "card",
+          "texto": "That debt usually lives on a credit card."
+        },
+        {
+          "id": "rate",
+          "texto": "And the Fed says cards that charge interest now average over twenty-two percent.",
+          "giro": true
+        },
+        {
+          "id": "once",
+          "texto": "Inflation raises the price once."
+        },
+        {
+          "id": "again",
+          "texto": "A balance you carry raises it again, every single month.",
+          "giro": true
+        },
+        {
+          "id": "fair",
+          "texto": "To be fair, prices really are higher, and a survey measures fears, not receipts.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "Inflation might dent these holidays. So which villain is still sitting on your card?"
+        }
+      ]
+    },
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "A holiday bill could be hiding on your credit card. It isn't for this year."
+        },
+        {
+          "id": "survey",
+          "texto": "A new WalletHub survey says fifty-two percent fear inflation will ruin the holidays."
+        },
+        {
+          "id": "quarter",
+          "texto": "But one in four are still paying for last year's.",
+          "giro": true
+        },
+        {
+          "id": "rate",
+          "texto": "On a card charging interest, the Fed's average is over twenty-two percent.",
+          "giro": true
+        },
+        {
+          "id": "you",
+          "texto": "So the gift you bought last December may still be getting more expensive.",
+          "giro": true
+        },
+        {
+          "id": "once",
+          "texto": "Inflation raises a price once. Interest keeps raising it.",
+          "giro": true
+        },
+        {
+          "id": "fair",
+          "texto": "To be fair, prices really are higher, and a survey measures fears, not receipts.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "This year's gifts cost more. Is last year's bill still on your card?"
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Half of America says inflation will ruin the holidays. You might be blaming the wrong villain."
+    },
+    {
+      "id": "g2",
+      "texto": "Half of Americans fear inflation will ruin the holidays. The real threat is already on your card."
+    },
+    {
+      "id": "g3",
+      "texto": "Inflation isn't the worst part of your holiday shopping. Last Christmas is."
+    },
+    {
+      "id": "g4",
+      "texto": "A holiday bill could be hiding on your credit card. It isn't for this year."
+    }
+  ],
+  "juicio": {
+    "error": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "'wrong villain' abre a 0 s y se resuelve tarde (~14 s, 22%); un solo villano: la deuda vieja"
+    },
+    "misterio": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "el misterio se resuelve a ~6 s; despues no queda bucle"
+    },
+    "error+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "dato de la noticia + 'wrong villain' sin revelar cual"
+    },
+    "error+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "'on your card' revela la respuesta en el gancho"
+    },
+    "error+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "'Last Christmas is' da la respuesta; sin el 52% de la noticia"
+    },
+    "error+g4": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "no casa con 'said exactly that' de la frase 2"
+    }
+  }
+}

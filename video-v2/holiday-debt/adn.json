@@ -1,0 +1,60 @@
+{
+  "production_ref": "holiday-debt",
+  "hook_type": "contrast",
+  "story_type": "news_explainer",
+  "cta_type": "question",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 37,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "lista,foto+clip",
+      "length_s": 5.05
+    },
+    {
+      "block": "survey",
+      "technique": "revelacion",
+      "length_s": 3.43
+    },
+    {
+      "block": "but",
+      "technique": "foto+clip",
+      "length_s": 2.42
+    },
+    {
+      "block": "quarter",
+      "technique": "titulo",
+      "length_s": 3.12
+    },
+    {
+      "block": "card",
+      "technique": "foto",
+      "length_s": 2.21
+    },
+    {
+      "block": "rate",
+      "technique": "foto",
+      "length_s": 4.34
+    },
+    {
+      "block": "once",
+      "technique": "foto+clip",
+      "length_s": 2.11
+    },
+    {
+      "block": "again",
+      "technique": "foto+clip",
+      "length_s": 3.74
+    },
+    {
+      "block": "fair",
+      "technique": "foto+clip,titulo",
+      "length_s": 4.68
+    },
+    {
+      "block": "close",
+      "technique": "foto+clip,titulo",
+      "length_s": 5.56
+    }
+  ]
+}

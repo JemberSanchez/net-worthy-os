@@ -1,0 +1,60 @@
+{
+  "production_ref": "nvidia-weight",
+  "hook_type": "contrast",
+  "story_type": "news_explainer",
+  "cta_type": "statement",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 38,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "revelacion,titulo",
+      "length_s": 4.46
+    },
+    {
+      "block": "what",
+      "technique": "titulo,foto",
+      "length_s": 5.48
+    },
+    {
+      "block": "split",
+      "technique": "revelacion",
+      "length_s": 1.96
+    },
+    {
+      "block": "myth",
+      "technique": "foto+clip",
+      "length_s": 3.06
+    },
+    {
+      "block": "weight",
+      "technique": "titulo,foto",
+      "length_s": 4.76
+    },
+    {
+      "block": "dollars",
+      "technique": "puntos",
+      "length_s": 3.3
+    },
+    {
+      "block": "bull",
+      "technique": "foto+clip",
+      "length_s": 2.28
+    },
+    {
+      "block": "risk",
+      "technique": "titulo",
+      "length_s": 3.36
+    },
+    {
+      "block": "honest",
+      "technique": "foto,titulo",
+      "length_s": 4.44
+    },
+    {
+      "block": "close",
+      "technique": "titulo,revelacion",
+      "length_s": 4.82
+    }
+  ]
+}

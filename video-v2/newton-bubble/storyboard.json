@@ -1,0 +1,591 @@
+{
+ "ref": "newton-bubble",
+ "guion": [
+  {
+   "id": "hook",
+   "texto": "You would never buy a stock at the top. Isaac Newton did."
+  },
+  {
+   "id": "who",
+   "texto": "He ran the Royal Mint."
+  },
+  {
+   "id": "sell",
+   "texto": "In April seventeen twenty, he decided the South Sea boom would end badly, and sold.",
+   "giro": true
+  },
+  {
+   "id": "profit",
+   "texto": "His profit was about twenty thousand pounds."
+  },
+  {
+   "id": "climb",
+   "texto": "But the stock kept climbing without him.",
+   "giro": true
+  },
+  {
+   "id": "back",
+   "texto": "By June, he put nearly everything back in, almost at the peak.",
+   "giro": true
+  },
+  {
+   "id": "crash",
+   "texto": "By October, the stock was worth under a quarter of that peak.",
+   "giro": true
+  },
+  {
+   "id": "loss",
+   "texto": "He lost the whole profit, and a good bit more.",
+   "giro": true
+  },
+  {
+   "id": "honest",
+   "texto": "He was still rich. Only with a third less than before the bubble.",
+   "giro": true
+  },
+  {
+   "id": "close",
+   "texto": "Even Newton bought at the top. Seeing the bubble was the easy part."
+  }
+ ],
+ "voz": {
+  "motor": "kokoro",
+  "voz": "am_adam",
+  "speed": 0.95,
+  "pausa_s": 0.28
+ },
+ "aspecto": "cine",
+ "tema": "editorial",
+ "formato": "documental-editorial",
+ "fondos_auto": false,
+ "adn": {
+  "hook_type": "contrast",
+  "story_type": "character_life",
+  "cta_type": "statement",
+  "renderer_version": "v2-hyperframes"
+ },
+ "cifras": [
+  {
+   "dato": "Newton was Master of the Mint from 1699 until his death in 1727",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  },
+  {
+   "dato": "April 1720: Newton liquidated his South Sea stake (instructions of 19 and 23 April), judging the mania would end badly",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  },
+  {
+   "dato": "Early profit of about £20,000",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  },
+  {
+   "dato": "June 1720: moved essentially all his financial assets back into South Sea stock, almost at the peak",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  },
+  {
+   "dato": "By October 1720 the stock was worth less than a quarter of its peak price",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  },
+  {
+   "dato": "He lost all his early profits and a good bit more besides",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  },
+  {
+   "dato": "Net worth just over £30,000 before the bubble; about £20,000 by mid-1721 (a third less)",
+   "fuente": "https://www-users.cse.umn.edu/~odlyzko/doc/mania13c.pdf"
+  },
+  {
+   "dato": "Odlyzko's article was published in Physics Today, July 2020",
+   "fuente": "https://physicstoday.aip.org/features/isaac-newton-and-the-perils-of-the-financial-south-sea"
+  }
+ ],
+ "aviso": {
+  "lineas": [
+   "Not financial advice · figures: Odlyzko (2020)"
+  ],
+  "ventanas": [
+   [
+    "2",
+    "9"
+   ]
+  ],
+  "final": true,
+  "placa": true,
+  "tam": 29,
+  "completo": "Not financial advice. Figures: Andrew Odlyzko, Physics Today (2020). Some of his 1720 trades are inferred from incomplete records."
+ },
+ "subtitulos": [
+  "2",
+  "10"
+ ],
+ "calientes": [
+  "sold",
+  "climbing",
+  "peak",
+  "quarter",
+  "rich"
+ ],
+ "golpes": [
+  "3:sold",
+  "5:climbing",
+  "6:peak",
+  "7:quarter",
+  "8:more",
+  "11:top"
+ ],
+ "musica": {
+  "pista": {
+   "mood": "documental"
+  }
+ },
+ "sonidos": [
+  {
+   "sfx": "monedas_mano",
+   "en": "2:royal"
+  },
+  {
+   "sfx": "libro_duro",
+   "en": "3:sold"
+  },
+  {
+   "sfx": "monedas_hucha",
+   "en": "4:twenty"
+  },
+  {
+   "sfx": "golpe_hondo",
+   "en": "7:quarter"
+  },
+  {
+   "sfx": "libro_blando",
+   "en": "10"
+  }
+ ],
+ "imagenes": {
+  "retrato": {
+   "commons": "File:Sir Isaac Newton by Sir Godfrey Kneller, Bt.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "burbuja": {
+   "commons": "File:South Sea Bubble.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "hogarth": {
+   "commons": "File:The South Sea Scheme (BM 1841,0809.230).jpg",
+   "color": true,
+   "ligero": true
+  },
+  "casa": {
+   "commons": "File:SouthSeaHouse Stowe'sSurveyOfLondon 1754.PNG",
+   "color": true,
+   "ligero": true
+  },
+  "callejon": {
+   "commons": "File:Exchange Alley - London.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "odlyzko": {
+   "documento": true,
+   "color": true
+  }
+ },
+ "clips": {
+  "pantalla": {
+   "pexels": 38859052,
+   "desde": 2,
+   "ligero": true,
+   "visto": true
+  },
+  "monedas": {
+   "pexels": 7080902,
+   "desde": 0,
+   "ligero": true,
+   "visto": true
+  },
+  "barco": {
+   "pexels": 36575613,
+   "desde": 2,
+   "ligero": true,
+   "visto": true
+  },
+  "pluma": {
+   "pexels": 11137423,
+   "desde": 2,
+   "ligero": true,
+   "visto": true
+  },
+  "olas": {
+   "pexels": 28945883,
+   "desde": 0,
+   "ligero": true,
+   "visto": true
+  }
+ },
+ "escenas": [
+  {
+   "tipo": "titulo",
+   "en": "0",
+   "fondo": {
+    "img": "burbuja",
+    "opacidad": 0.7
+   },
+   "lineas": [
+    {
+     "texto": "Buy a stock",
+     "en": "0",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*at the top?*",
+     "en": "0:top",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "1",
+   "pos": "ter",
+   "img": "retrato",
+   "rotulos": [
+    {
+     "texto": "Isaac Newton *did*",
+     "en": "1",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "2",
+   "pos": "baj",
+   "clip": "monedas",
+   "rotulos": [
+    {
+     "texto": "He ran the *Royal Mint*",
+     "en": "2:royal",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "3",
+   "pos": "sup",
+   "img": "casa",
+   "rotulos": [
+    {
+     "texto": "April 1720",
+     "en": "3",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "3:he",
+   "fondo": {
+    "img": "hogarth",
+    "opacidad": 0.45
+   },
+   "lineas": [
+    {
+     "texto": "The South Sea boom",
+     "en": "3:south",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*would end badly*",
+     "en": "3:would",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "3:sold",
+   "pos": "med",
+   "clip": "pluma",
+   "rotulos": [
+    {
+     "texto": "*He sold*",
+     "en": "3:sold",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "revelacion",
+   "en": "4",
+   "linea1": {
+    "texto": "His profit"
+   },
+   "linea2": {
+    "texto": "£20,000",
+    "en": "4:twenty"
+   },
+   "golpe": "4:twenty"
+  },
+  {
+   "tipo": "foto",
+   "en": "5",
+   "pos": "baj",
+   "clip": "barco",
+   "rotulos": [
+    {
+     "texto": "The stock *kept climbing*",
+     "en": "5:kept",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "6",
+   "pos": "sup",
+   "img": "callejon",
+   "rotulos": [
+    {
+     "texto": "June 1720",
+     "en": "6",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "6:nearly",
+   "fondo": {
+    "clip": "monedas",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "Nearly everything",
+     "en": "6:nearly",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*back in*",
+     "en": "6:back",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "6:almost",
+   "pos": "med",
+   "rotulos": [
+    {
+     "texto": "Almost at *the peak*",
+     "en": "6:almost",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ],
+   "clip": "pantalla"
+  },
+  {
+   "tipo": "foto",
+   "en": "7",
+   "pos": "sup",
+   "clip": "olas",
+   "rotulos": [
+    {
+     "texto": "October 1720",
+     "en": "7",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "7:the",
+   "fondo": {
+    "img": "hogarth",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "Worth under",
+     "en": "7:worth",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*a quarter of the peak*",
+     "en": "7:quarter",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "lista",
+   "en": "8",
+   "icono": "x",
+   "fondo": {
+    "clip": "pluma",
+    "opacidad": 0.35
+   },
+   "items": [
+    {
+     "texto": "The whole profit: *gone*",
+     "en": "8:whole"
+    },
+    {
+     "texto": "And *a good bit more*",
+     "en": "8:and"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "9",
+   "pos": "baj",
+   "img": "retrato",
+   "rotulos": [
+    {
+     "texto": "Still *rich*",
+     "en": "9:still",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "10",
+   "img": "odlyzko"
+  },
+  {
+   "tipo": "titulo",
+   "en": "11",
+   "fondo": {
+    "img": "burbuja",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "Even Newton",
+     "en": "11",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*bought at the top*",
+     "en": "11:bought",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "lista",
+   "en": "12",
+   "icono": "check",
+   "fondo": {
+    "clip": "pantalla",
+    "opacidad": 0.35
+   },
+   "items": [
+    {
+     "texto": "Seeing the bubble: *the easy part*",
+     "en": "12:was"
+    }
+   ]
+  }
+ ],
+ "pruebas": [
+  {
+   "img": "odlyzko",
+   "texto": "net worth was down",
+   "en": "10",
+   "marca": "10:third",
+   "hasta": "11"
+  }
+ ],
+ "publicacion": {
+  "titulo": "Isaac Newton sold before the crash. Then he bought back in.",
+  "descripcion": "In April 1720 Isaac Newton, Master of the Royal Mint, decided the South Sea boom would end badly and sold for a profit of about £20,000. The stock kept climbing. In June he moved nearly all his money back in, almost at the peak. By October the stock was worth less than a quarter of that peak, and he lost the whole profit and a good bit more. He was still rich: about £20,000 by mid-1721, against just over £30,000 before the bubble. Some of his 1720 trades are inferred from incomplete records. Not financial advice. Source: Andrew Odlyzko, Isaac Newton and the perils of the financial South Sea, Physics Today, July 2020.",
+  "tags": [
+   "Isaac Newton",
+   "South Sea Bubble",
+   "stock market bubble",
+   "financial history",
+   "investing history",
+   "FOMO",
+   "stock market crash",
+   "personal finance"
+  ],
+  "hashtags": [
+   "#Investing",
+   "#StockMarket",
+   "#Shorts"
+  ],
+  "comentario": "Would you have stayed out while everyone around you kept getting richer?"
+ },
+ "social": {
+  "carrusel": [
+   {
+    "fondo": "img:retrato",
+    "kicker": "London, 1720",
+    "titulo": "He sold before the crash. *Then he bought back in.*",
+    "texto": "His name was Isaac Newton."
+   },
+   {
+    "fondo": "img:casa",
+    "kicker": "April 1720",
+    "titulo": "He saw it *would end badly*",
+    "texto": "Newton ran the Royal Mint. He sold his South Sea shares."
+   },
+   {
+    "fondo": "clip:monedas@1",
+    "kicker": "The profit",
+    "titulo": "About *£20,000*",
+    "texto": "He walked away with a fortune."
+   },
+   {
+    "fondo": "clip:barco@2",
+    "kicker": "The problem",
+    "titulo": "The stock *kept climbing*",
+    "texto": "Without him."
+   },
+   {
+    "fondo": "img:burbuja",
+    "kicker": "June 1720",
+    "titulo": "Nearly everything *back in*",
+    "texto": "Almost at the peak. By October the stock was worth under a quarter of it."
+   },
+   {
+    "fondo": "img:hogarth",
+    "kicker": "Your turn",
+    "titulo": "Could you have *stayed out?*",
+    "texto": "He lost the whole profit and a good bit more. He was still rich, with a third less."
+   }
+  ],
+  "caption": "Isaac Newton saw the South Sea Bubble coming, sold, and made about £20,000. Then the stock kept climbing without him, and he bought back in almost at the peak. Could you have stayed out?",
+  "historia": {
+   "hasta": "1:did$",
+   "cierre": "Full story in Reels"
+  }
+ },
+ "mezcla": {
+  "impacto": 0.4
+ }
+}

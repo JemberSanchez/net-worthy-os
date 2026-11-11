@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "esquina.src",
+  "origen": "pexels",
+  "titulo": "pexels:13801266",
+  "autor": "Mizuno K",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/street-signs-on-the-corner-of-broad-st-and-wall-st-new-york-city-13801266/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "pantalla.src",
+  "origen": "pexels",
+  "titulo": "pexels:39383796",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-cryptocurrency-stock-market-display-39383796/",
+  "desde": 3.0
+ },
+ {
+  "archivo": "nyse.src",
+  "origen": "pexels",
+  "titulo": "pexels:4319342",
+  "autor": "CityXcape",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/finance-nyse-wall-street-new-york-city-4319342/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "placa.src",
+  "origen": "pexels",
+  "titulo": "pexels:7609195",
+  "autor": "Steve B",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-video-of-a-circuit-board-7609195/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "mercado.src",
+  "origen": "pexels",
+  "titulo": "pexels:38670063",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-financial-market-charts-on-screen-38670063/",
+  "desde": 2.0
+ }
+]

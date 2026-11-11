@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "bombo_seco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Kick 2 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Kick_2_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "golpe_hondo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Deep hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Deep_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "moneda_suelo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Coin dropped on wooden floor.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Coin_dropped_on_wooden_floor.ogg"
+ },
+ {
+  "archivo": "monedas_mano.src",
+  "origen": "wikimedia",
+  "titulo": "File:Shaking coins in palm.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Shaking_coins_in_palm.ogg"
+ },
+ {
+  "archivo": "nudillo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Knocking on wood or door.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Knocking_on_wood_or_door.ogg"
+ },
+ {
+  "archivo": "puerta_seca.src",
+  "origen": "wikimedia",
+  "titulo": "File:Close door (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Close_door_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "riser_barrido.src",
+  "origen": "wikimedia",
+  "titulo": "File:Sweep (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sweep_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "tajo_b.src",
+  "origen": "wikimedia",
+  "titulo": "File:Sword 5 (Gravity Sound).mp3",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sword_5_(Gravity_Sound).mp3"
+ }
+]

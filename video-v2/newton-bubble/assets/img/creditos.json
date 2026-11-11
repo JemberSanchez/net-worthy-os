@@ -1,0 +1,52 @@
+[
+ {
+  "archivo": "retrato.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Sir Isaac Newton by Sir Godfrey Kneller, Bt.jpg",
+  "autor": "Godfrey Kneller",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sir_Isaac_Newton_by_Sir_Godfrey_Kneller,_Bt.jpg"
+ },
+ {
+  "archivo": "burbuja.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:South Sea Bubble.jpg",
+  "autor": "Edward Matthew Ward",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:South_Sea_Bubble.jpg"
+ },
+ {
+  "archivo": "hogarth.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:The South Sea Scheme (BM 1841,0809.230).jpg",
+  "autor": "Print made by: William Hogarth Published by: Mrs Chilcot Published by: Richard Caldwell",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:The_South_Sea_Scheme_(BM_1841,0809.230).jpg"
+ },
+ {
+  "archivo": "casa.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:SouthSeaHouse Stowe'sSurveyOfLondon 1754.PNG",
+  "autor": "Creator:Thomas Bowles (born circa 1712)",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:SouthSeaHouse_Stowe%27sSurveyOfLondon_1754.PNG"
+ },
+ {
+  "archivo": "callejon.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Exchange Alley - London.jpg",
+  "autor": "Unknown",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Exchange_Alley_-_London.jpg"
+ }
+]

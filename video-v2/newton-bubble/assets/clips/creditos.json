@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "pantalla.src",
+  "origen": "pexels",
+  "titulo": "pexels:38859052",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-stock-market-analysis-in-dark-room-38859052/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "monedas.src",
+  "origen": "pexels",
+  "titulo": "pexels:7080902",
+  "autor": "RDNE Stock project",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/video-of-gold-coins-7080902/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "barco.src",
+  "origen": "pexels",
+  "titulo": "pexels:36575613",
+  "autor": "Joolsmagools  ®️",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/historic-tall-ship-sailing-in-open-water-36575613/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "pluma.src",
+  "origen": "pexels",
+  "titulo": "pexels:11137423",
+  "autor": "emirkhan bal",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-on-writing-with-ink-pen-11137423/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "olas.src",
+  "origen": "pexels",
+  "titulo": "pexels:28945883",
+  "autor": "Rahime Gül",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-waves-against-moving-ship-in-open-sea-28945883/",
+  "desde": 0.0
+ }
+]

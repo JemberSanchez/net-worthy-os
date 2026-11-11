@@ -1,0 +1,68 @@
+[
+ {
+  "archivo": "arbol.src",
+  "origen": "pexels",
+  "titulo": "pexels:35182425",
+  "autor": "Alex Ohan",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/festive-living-room-with-christmas-tree-and-gifts-35182425/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "envolver.src",
+  "origen": "pexels",
+  "titulo": "pexels:6098961",
+  "autor": "Laura James",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-shot-of-a-person-wrapping-a-christmas-present-6098961/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "bolsas.src",
+  "origen": "pexels",
+  "titulo": "pexels:6565836",
+  "autor": "Tim Douglas",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-holding-paper-bags-6565836/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "factura.src",
+  "origen": "pexels",
+  "titulo": "pexels:7545831",
+  "autor": "SHVETS production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-woman-holding-a-billing-statement-7545831/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "terminal.src",
+  "origen": "pexels",
+  "titulo": "pexels:11158789",
+  "autor": "Towfiqu barbhuiya",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/paying-with-card-on-card-reader-11158789/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "calc.src",
+  "origen": "pexels",
+  "titulo": "pexels:6964001",
+  "autor": "Mikhail Nilov",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-computing-using-a-calculator-6964001/",
+  "desde": 0.0
+ }
+]

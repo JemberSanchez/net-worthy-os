@@ -1,0 +1,46 @@
+{
+  "production_ref": "buffett-deficit",
+  "hook_type": "promise",
+  "story_type": "character_quote",
+  "cta_type": "imperative",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 36,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "nocut",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "law",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "punch",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "now",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "double",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "risk",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "point",
+      "technique": "v2-storyboard"
+    },
+    {
+      "block": "close",
+      "technique": "v2-storyboard"
+    }
+  ]
+}

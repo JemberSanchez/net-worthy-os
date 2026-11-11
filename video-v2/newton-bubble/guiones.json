@@ -1,0 +1,166 @@
+{
+  "ref": "newton-bubble",
+  "nota": "Personaje con caida (los dos mejores personajes medidos: ronald-wayne 0.84, jesse-livermore 0.82, ambos historias de perdida). Enlaza con la senal del dia ('stock sinks', todos en la misma accion). Fuente primaria leida: Odlyzko, Physics Today jul-2020 (DOI 10.1063/PT.3.4521). La frase 'madness of people' es 'allegedly': no se usa como cita.",
+  "estructuras": [
+    {
+      "id": "contradiccion",
+      "nombre": "contradiccion",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "You would never buy a stock at the top. Isaac Newton did."
+        },
+        {
+          "id": "who",
+          "texto": "He ran the Royal Mint."
+        },
+        {
+          "id": "sell",
+          "texto": "In April seventeen twenty, he decided the South Sea boom would end badly, and sold.",
+          "giro": true
+        },
+        {
+          "id": "profit",
+          "texto": "His profit was about twenty thousand pounds."
+        },
+        {
+          "id": "climb",
+          "texto": "But the stock kept climbing without him.",
+          "giro": true
+        },
+        {
+          "id": "back",
+          "texto": "By June, he put nearly everything back in, almost at the peak.",
+          "giro": true
+        },
+        {
+          "id": "crash",
+          "texto": "By October, the stock was worth under a quarter of that peak.",
+          "giro": true
+        },
+        {
+          "id": "loss",
+          "texto": "He lost the whole profit, and a good bit more.",
+          "giro": true
+        },
+        {
+          "id": "honest",
+          "texto": "He was still rich. Only with a third less than before the bubble.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "Even Newton bought at the top. Seeing the bubble was the easy part."
+        }
+      ]
+    },
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Your instincts say sell before the crash. Isaac Newton did exactly that, and still lost."
+        },
+        {
+          "id": "who",
+          "texto": "He ran the Royal Mint."
+        },
+        {
+          "id": "sell",
+          "texto": "That April, he sold his South Sea shares for a profit of about twenty thousand pounds.",
+          "giro": true
+        },
+        {
+          "id": "ask",
+          "texto": "So how did he lose?",
+          "giro": true
+        },
+        {
+          "id": "climb",
+          "texto": "The stock kept climbing without him.",
+          "giro": true
+        },
+        {
+          "id": "back",
+          "texto": "By June, he put nearly everything back in, almost at the peak.",
+          "giro": true
+        },
+        {
+          "id": "crash",
+          "texto": "By October, the stock was worth under a quarter of that peak.",
+          "giro": true
+        },
+        {
+          "id": "loss",
+          "texto": "The profit was gone, and a good bit more."
+        },
+        {
+          "id": "honest",
+          "texto": "He was still rich. Only with a third less than before the bubble.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "He sold before the crash. Staying out was the part he couldn't do."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "You would never buy a stock at the top. Isaac Newton did."
+    },
+    {
+      "id": "g2",
+      "texto": "You think smart people don't chase bubbles. Isaac Newton chased one twice."
+    },
+    {
+      "id": "g3",
+      "texto": "Your instincts say sell before the crash. Isaac Newton did exactly that, and still lost."
+    },
+    {
+      "id": "g4",
+      "texto": "Isaac Newton made twenty thousand pounds on one stock. Then you can guess what he did next."
+    }
+  ],
+  "juicio": {
+    "contradiccion": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Una sola idea (ver la burbuja no basta); el gancho abre 'como' y se cierra en la frase 6; vende, sube sin el, vuelve, cae, sigue rico"
+    },
+    "misterio": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "La pregunta 'So how did he lose?' es explicita pero gasta una frase; el gancho es mas largo"
+    },
+    "contradiccion+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Corto, habla al espectador, nombre conocido en 3 s"
+    },
+    "contradiccion+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "'twice' no es exacto: entro una vez y volvio"
+    },
+    "contradiccion+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Buen bucle pero 15 palabras y promete 'sell', no 'buy at the top' del cierre"
+    },
+    "contradiccion+g4": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 2,
+      "nota": "'you can guess' es relleno"
+    }
+  }
+}

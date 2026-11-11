@@ -1,0 +1,158 @@
+{
+  "ref": "nvidia-weight",
+  "nota": "decide 9-nov: 'stock sinks' (1.004, momentum 3.74). Detras: Nvidia -4.27% el 9-nov mientras el S&P 500 sube 2.35% y el Dow 1,104 puntos. El termino es un QUE: el explainer es la concentracion del indice (Nvidia ~6% del S&P 500). Noticia con estructura 'error comun' (turno 2 del calendario; midterm-rally, noticia, es el mejor medido: 1.00). No se cuenta el asunto personal del CEO: solo 'board opened an investigation into its CEO' (CNBC, Al Jazeera). Fuentes leidas: Motley Fool 9-nov (cierres), CNBC 9-nov, Al Jazeera 9-nov; peso ~6%: titular MarketWatch/Yahoo 9-nov.",
+  "estructuras": [
+    {
+      "id": "error",
+      "nombre": "error comun",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Monday, the stock market soared. A giant inside your index fund sank."
+        },
+        {
+          "id": "what",
+          "texto": "Nvidia fell four percent after its board opened an investigation into its own CEO."
+        },
+        {
+          "id": "split",
+          "texto": "Your fund still had a great day.",
+          "giro": true
+        },
+        {
+          "id": "myth",
+          "texto": "An index fund protects you from one company, right?"
+        },
+        {
+          "id": "weight",
+          "texto": "Not quite. Nvidia alone is over six percent of the S and P five hundred.",
+          "giro": true
+        },
+        {
+          "id": "dollars",
+          "texto": "That's over six cents of every dollar on one company.",
+          "giro": true
+        },
+        {
+          "id": "bull",
+          "texto": "That weight lifted your fund on the way up."
+        },
+        {
+          "id": "risk",
+          "texto": "It pulls the same way down, and one headline is enough.",
+          "giro": true
+        },
+        {
+          "id": "honest",
+          "texto": "Nobody knows how the investigation ends, and one day proves nothing."
+        },
+        {
+          "id": "close",
+          "texto": "An index fund spreads your money. It just doesn't spread it evenly."
+        }
+      ]
+    },
+    {
+      "id": "contradiccion",
+      "nombre": "contradiccion",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Your index fund had a great Monday. Its biggest worry had a terrible one."
+        },
+        {
+          "id": "what",
+          "texto": "Nvidia fell four percent after its board opened an investigation into its own CEO."
+        },
+        {
+          "id": "split",
+          "texto": "The same day, the rest of the market soared.",
+          "giro": true
+        },
+        {
+          "id": "weight",
+          "texto": "But Nvidia is over six percent of the S and P five hundred.",
+          "giro": true
+        },
+        {
+          "id": "dollars",
+          "texto": "That's over six cents of every dollar on one company.",
+          "giro": true
+        },
+        {
+          "id": "bull",
+          "texto": "That weight lifted your fund on the way up."
+        },
+        {
+          "id": "risk",
+          "texto": "It pulls the same way down, and one headline is enough.",
+          "giro": true
+        },
+        {
+          "id": "honest",
+          "texto": "Nobody knows how the investigation ends, and one day proves nothing."
+        },
+        {
+          "id": "close",
+          "texto": "A great Monday for your fund. And a reminder of how much of it is one stock."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Monday, the stock market soared. A giant inside your index fund sank."
+    },
+    {
+      "id": "g2",
+      "texto": "You own more Nvidia than you think. Monday showed why that matters."
+    },
+    {
+      "id": "g3",
+      "texto": "Your index fund had a great Monday. Its biggest worry had a terrible one."
+    },
+    {
+      "id": "g4",
+      "texto": "Six cents of every dollar in your index fund ride on one company. Monday, it sank."
+    }
+  ],
+  "juicio": {
+    "error": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una idea: el indice no reparte por igual. El mito se plantea a los 10 s y se rompe en la frase siguiente; la parte honesta no es formula"
+    },
+    "contradiccion": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "'Its biggest worry' es vago hasta la frase 2; el cierre repite el gancho sin anadir"
+    },
+    "error+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Contraste claro mercado sube / gigante cae; 'your index fund' en 3 s"
+    },
+    "error+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 2,
+      "nota": "Sin hecho ni contraste; 'Monday showed why' es comodin"
+    },
+    "error+g3": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Vago: sin sujeto concreto"
+    },
+    "error+g4": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Da la respuesta (6 centavos) en el gancho: mata el bucle"
+    }
+  }
+}

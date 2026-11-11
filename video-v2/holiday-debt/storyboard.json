@@ -1,0 +1,484 @@
+{
+  "ref": "holiday-debt",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "Half of America says inflation will ruin the holidays. You might be blaming the wrong villain."
+    },
+    {
+      "id": "survey",
+      "texto": "In a new WalletHub survey, fifty-two percent said exactly that."
+    },
+    {
+      "id": "but",
+      "texto": "But the same survey hid a scarier answer.",
+      "giro": true
+    },
+    {
+      "id": "quarter",
+      "texto": "One in four people are still paying off last year's holidays.",
+      "giro": true
+    },
+    {
+      "id": "card",
+      "texto": "That debt usually lives on a credit card."
+    },
+    {
+      "id": "rate",
+      "texto": "And the Fed says cards that charge interest now average over twenty-two percent.",
+      "giro": true
+    },
+    {
+      "id": "once",
+      "texto": "Inflation raises the price once."
+    },
+    {
+      "id": "again",
+      "texto": "A balance you carry raises it again, every single month.",
+      "giro": true
+    },
+    {
+      "id": "fair",
+      "texto": "To be fair, prices really are higher, and a survey measures fears, not receipts.",
+      "giro": true
+    },
+    {
+      "id": "close",
+      "texto": "Inflation might dent these holidays. So which villain is still sitting on your card?"
+    }
+  ],
+  "aspecto": "cine",
+  "tema": "editorial",
+  "formato": "documental-editorial",
+  "adn": {
+    "hook_type": "contrast",
+    "story_type": "news_explainer",
+    "cta_type": "question",
+    "renderer_version": "v2-hyperframes"
+  },
+  "fondos_auto": false,
+  "cifras": [
+    {
+      "dato": "WalletHub survey: about 52% of Americans think inflation will ruin their holiday season (InvestigateTV, Nov 6, 2026)",
+      "fuente": "https://www.wect.com/2026/11/06/52-americans-think-inflation-will-ruin-holidays-survey-finds/"
+    },
+    {
+      "dato": "Same survey: one in four say they are still paying off debt from last holiday season; 79% have a holiday budget the same size as last year or smaller",
+      "fuente": "https://www.wect.com/2026/11/06/52-americans-think-inflation-will-ruin-holidays-survey-finds/"
+    },
+    {
+      "dato": "WalletHub Early Holiday Shopping Survey, Oct 7, 2026: 'Is inflation going to ruin Christmas?' Yes 52%; 'still paying off debt from last holiday season?' Yes 25%; 220+ respondents",
+      "fuente": "https://wallethub.com/blog/early-holiday-shopping-survey/142151"
+    },
+    {
+      "dato": "Federal Reserve G.19 (Sept 2026 release): credit card plans, accounts assessed interest, Q3 2026 = 22.36% APR (all accounts 21.19%)",
+      "fuente": "https://www.federalreserve.gov/releases/g19/current/default.htm"
+    },
+    {
+      "dato": "LendingTree survey, 2025 holiday season: among holiday debtors, most debt is on credit cards (62%), then BNPL (35%) and store cards (32%)",
+      "fuente": "https://www.homepagenews.com/retail-articles/holiday-shoppers-report-took-on-more-debt-in-2025/"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "Not financial advice · survey = opinions"
+    ],
+    "ventanas": [
+      [
+        "2",
+        "9"
+      ]
+    ],
+    "final": true,
+    "completo": "Not financial advice. Survey: WalletHub, reported by InvestigateTV, Nov 6, 2026. Card rate: Federal Reserve G.19, Q3 2026, accounts assessed interest, 22.36% APR. Your rate may differ.",
+    "placa": true,
+    "tam": 27
+  },
+  "subtitulos": [
+    "2",
+    "10"
+  ],
+  "calientes": [
+    "scarier",
+    "four",
+    "credit",
+    "fed",
+    "once",
+    "month",
+    "fears"
+  ],
+  "golpes": [
+    "3:scarier",
+    "4:four",
+    "6:twenty-two",
+    "8:every",
+    "9:fair"
+  ],
+  "musica": {
+    "pista": {
+      "mood": "tension"
+    }
+  },
+  "sonidos": [
+    {
+      "sfx": "thud",
+      "en": "4:four",
+      "vol": 0.2
+    },
+    {
+      "sfx": "escaner",
+      "en": "6:fed"
+    },
+    {
+      "sfx": "monedas_mano",
+      "en": "7:price",
+      "vol": 0.12
+    },
+    {
+      "sfx": "tick",
+      "en": "8:every"
+    }
+  ],
+  "imagenes": {
+    "tarjetas": {
+      "commons": "File:Bunch of credit cards (49860171753).jpg",
+      "recorte": 0.03,
+      "color": true,
+      "ligero": true
+    },
+    "eccles": {
+      "commons": "File:Eccles Building (26088200676).jpg",
+      "recorte": 0.03,
+      "color": true,
+      "ligero": true
+    },
+    "g19": {
+      "documento": true,
+      "color": true
+    }
+  },
+  "clips": {
+    "arbol": {
+      "pexels": 35182425,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "envolver": {
+      "pexels": 6098961,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "bolsas": {
+      "pexels": 6565836,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "terminal": {
+      "pexels": 11158789,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "calc": {
+      "pexels": 6964001,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "factura": {
+      "pexels": 7545831,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "lista",
+      "en": "0",
+      "icono": "x",
+      "fondo": {
+        "clip": "arbol",
+        "opacidad": 0.6
+      },
+      "items": [
+        {
+          "texto": "Inflation will *ruin the holidays*",
+          "en": "0"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "1",
+      "pos": "sup",
+      "clip": "arbol",
+      "rotulos": [
+        {
+          "texto": "The *wrong villain?*",
+          "en": "1:wrong",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "2",
+      "linea1": {
+        "texto": "WalletHub survey"
+      },
+      "linea2": {
+        "texto": "52% agree",
+        "en": "2:fifty-two"
+      },
+      "golpe": "2:fifty-two"
+    },
+    {
+      "tipo": "foto",
+      "en": "3",
+      "pos": "sup",
+      "clip": "envolver",
+      "rotulos": [
+        {
+          "texto": "A *scarier* answer",
+          "en": "3:scarier",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "4",
+      "fondo": {
+        "clip": "factura",
+        "opacidad": 0.3
+      },
+      "lineas": [
+        {
+          "texto": "*1 in 4*",
+          "en": "4:four",
+          "estilo": "huge",
+          "color": "ink"
+        },
+        {
+          "texto": "still paying off last year",
+          "en": "4:paying",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "5",
+      "pos": "med",
+      "img": "tarjetas",
+      "rotulos": [
+        {
+          "texto": "On a *credit card*",
+          "en": "5:credit",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "6",
+      "pos": "sup",
+      "img": "eccles",
+      "rotulos": [
+        {
+          "texto": "Federal Reserve, *Q3 2026*",
+          "en": "6:fed",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "6:average",
+      "img": "g19"
+    },
+    {
+      "tipo": "foto",
+      "en": "7",
+      "pos": "med",
+      "clip": "terminal",
+      "rotulos": [
+        {
+          "texto": "Inflation: price up *once*",
+          "en": "7:once",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "pos": "med",
+      "clip": "calc",
+      "rotulos": [
+        {
+          "texto": "Interest: up *every month*",
+          "en": "8:month",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "pos": "med",
+      "clip": "bolsas",
+      "rotulos": [
+        {
+          "texto": "Prices *are* higher",
+          "en": "9:higher",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "9:survey",
+      "fondo": {
+        "clip": "factura",
+        "opacidad": 0.3
+      },
+      "lineas": [
+        {
+          "texto": "Surveys measure *fears*",
+          "en": "9:fears",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "not receipts",
+          "en": "9:receipts",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "pos": "med",
+      "clip": "envolver",
+      "rotulos": [
+        {
+          "texto": "Inflation *dents* the holidays",
+          "en": "10:dent",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "img": "tarjetas",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Which villain is",
+          "en": "11",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*on your card?*",
+          "en": "11:card",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    }
+  ],
+  "pruebas": [
+    {
+      "img": "g19",
+      "texto": "22.36",
+      "en": "6:average",
+      "marca": "6:twenty-two",
+      "hasta": "7"
+    }
+  ],
+  "publicacion": {
+    "titulo": "52% say inflation will ruin the holidays. Check last year's bill.",
+    "descripcion": "A WalletHub survey reported on Nov 6, 2026 found about 52% of Americans think inflation will ruin their holiday season. The same survey found one in four are still paying off debt from last holiday season, and 79% have a holiday budget the same size as last year or smaller. Holiday debt mostly sits on credit cards (62% of holiday debtors in LendingTree's 2025 survey): the Federal Reserve's G.19 release puts the average rate on card accounts assessed interest at 22.36% APR in Q3 2026 (all accounts: 21.19%). Inflation raises a price once; interest on a balance you carry keeps adding to it every month. WalletHub's online survey (published Oct 7, 2026) had just over 220 respondents, weighted to U.S. demographics, so treat the percentages as rough. Survey answers are opinions, not spending data, and your own card rate may differ. Not financial advice. Sources: WalletHub via InvestigateTV, Nov 6, 2026; LendingTree via HomePage News, Jan 5, 2026; Federal Reserve G.19 Consumer Credit, Sept 2026 release.",
+    "tags": [
+      "holiday debt",
+      "inflation",
+      "credit card interest",
+      "holiday shopping",
+      "WalletHub survey",
+      "Federal Reserve",
+      "personal finance",
+      "Christmas budget"
+    ],
+    "hashtags": [
+      "#Inflation",
+      "#CreditCards",
+      "#Shorts"
+    ],
+    "comentario": "Are you still paying off anything from last year's holidays? No numbers needed, just yes or no."
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:arbol@1",
+        "kicker": "WalletHub survey, Nov 2026",
+        "titulo": "52% say inflation will *ruin the holidays*",
+        "texto": "They might be blaming the wrong villain."
+      },
+      {
+        "fondo": "clip:envolver@1",
+        "kicker": "Same survey",
+        "titulo": "*1 in 4* still paying off last year",
+        "texto": "Debt from last holiday season is still on the books."
+      },
+      {
+        "fondo": "img:tarjetas",
+        "kicker": "Where it lives",
+        "titulo": "Usually on a *credit card*",
+        "texto": "Holiday spending often goes on plastic."
+      },
+      {
+        "fondo": "img:eccles",
+        "kicker": "Federal Reserve G.19, Q3 2026",
+        "titulo": "*22.36%* APR",
+        "texto": "Average rate on card accounts that pay interest."
+      },
+      {
+        "fondo": "clip:calc@1",
+        "kicker": "The difference",
+        "titulo": "Inflation: *once*. Interest: *every month*",
+        "texto": "A carried balance keeps raising the price. Survey answers are fears, not receipts."
+      },
+      {
+        "fondo": "clip:bolsas@1",
+        "kicker": "Your turn",
+        "titulo": "Which villain is *on your card?*",
+        "texto": "Still paying for last year's holidays? Yes or no."
+      }
+    ],
+    "caption": "52% of Americans say inflation will ruin the holidays (WalletHub). The same survey says 1 in 4 are still paying off last year's, and the Fed puts card interest at 22.36% APR. Which villain is on your card? Not financial advice.",
+    "historia": {
+      "hasta": "1:villain$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}

@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "monedas.src",
+  "origen": "wikimedia",
+  "titulo": "File:Bag of coins.ogg",
+  "autor": "cori",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Bag_of_coins.ogg"
+ },
+ {
+  "archivo": "pagina.src",
+  "origen": "wikimedia",
+  "titulo": "File:Turning a page.ogg",
+  "autor": "planish",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg"
+ },
+ {
+  "archivo": "portazo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Slam closet door (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Slam_closet_door_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "reloj.src",
+  "origen": "wikimedia",
+  "titulo": "File:Clock ticking.ogg",
+  "autor": "natalie",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Clock_ticking.ogg"
+ },
+ {
+  "archivo": "riser_crash_corto.src",
+  "origen": "wikimedia",
+  "titulo": "File:Crash hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Crash_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ },
+ {
+  "archivo": "tajo_c.src",
+  "origen": "wikimedia",
+  "titulo": "File:Sword 10 (Gravity Sound).mp3",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sword_10_(Gravity_Sound).mp3"
+ },
+ {
+  "archivo": "thud.src",
+  "origen": "wikimedia",
+  "titulo": "File:Dull thud.ogg",
+  "autor": "gregoryweir",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Dull_thud.ogg"
+ }
+]

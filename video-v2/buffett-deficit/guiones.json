@@ -1,0 +1,158 @@
+{
+  "ref": "buffett-deficit",
+  "nota": "Idea elegida por el detector nuevo `outliers` (7-nov): 'How to Fix the National Debt, by Warren Buffett' hizo 500x los subs de su canal (10,3 M vistas, 20.700 subs, like 4,2 %, el mas alto del top 20). Se copia la IDEA, no el clip. Fuentes: CNBC 28-oct-2011 (cita textual de la entrevista del 7-jul-2011 y declaracion de Berkshire), CRFB 1-oct-2026 (deficit FY2026 $2,0 billones = 6,2 % del PIB; intereses $1,1 billones, mas que defensa), CRFB 16-oct-2026 (Treasury confirma $2 billones).",
+  "estructuras": [
+    {
+      "id": "contradiccion",
+      "nombre": "contradiccion",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Warren Buffett, the world's most famous investor, said he could end America's deficit in five minutes. You won't guess how."
+        },
+        {
+          "id": "nocut",
+          "texto": "No tax hike. No spending cut. One law.",
+          "giro": true
+        },
+        {
+          "id": "law",
+          "texto": "Any year the deficit tops three percent of the economy,",
+          "giro": true
+        },
+        {
+          "id": "punch",
+          "texto": "every sitting member of Congress is banned from re-election.",
+          "giro": true
+        },
+        {
+          "id": "now",
+          "texto": "Last year's deficit? Two trillion dollars.",
+          "giro": true
+        },
+        {
+          "id": "double",
+          "texto": "That's about double his line. Under his law, nobody in Congress keeps their seat.",
+          "giro": true
+        },
+        {
+          "id": "risk",
+          "texto": "The honest part: he said it with a laugh, live on CNBC. His own company called it not a serious proposal.",
+          "giro": true
+        },
+        {
+          "id": "point",
+          "texto": "The point was incentives. People fix what costs them their job.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "Remember his five minutes next time you vote."
+        }
+      ]
+    },
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Warren Buffett, the billionaire investor, had a five-minute fix for the deficit. Congress would hate it, and you might love it."
+        },
+        {
+          "id": "when",
+          "texto": "July twenty eleven. A live TV interview in Idaho."
+        },
+        {
+          "id": "law",
+          "texto": "He said: pass one law. If the deficit tops three percent of the economy,",
+          "giro": true
+        },
+        {
+          "id": "punch",
+          "texto": "every sitting member of Congress can't run again.",
+          "giro": true
+        },
+        {
+          "id": "now",
+          "texto": "Fast forward. Last year, America borrowed two trillion dollars.",
+          "giro": true
+        },
+        {
+          "id": "interest",
+          "texto": "Interest on the debt now costs more than the military.",
+          "giro": true
+        },
+        {
+          "id": "risk",
+          "texto": "The catch: Buffett was joking. His company said it was never a serious plan.",
+          "giro": true
+        },
+        {
+          "id": "point",
+          "texto": "His real point? When nobody pays for failure, failure keeps happening."
+        },
+        {
+          "id": "close",
+          "texto": "Remember those five minutes next time you vote."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Warren Buffett, the world's most famous investor, said he could end America's deficit in five minutes. You won't guess how."
+    },
+    {
+      "id": "g2",
+      "texto": "Warren Buffett, the billionaire investor, says one law fixes the national debt, and you'd vote for it."
+    },
+    {
+      "id": "g3",
+      "texto": "The richest investor of his era gave Congress a five-minute fix. They ignored it, and you pay for it."
+    },
+    {
+      "id": "g4",
+      "texto": "Warren Buffett, the investor, wrote a deficit plan that fires all of Congress. You'd sign it."
+    }
+  ],
+  "juicio": {
+    "contradiccion": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una sola ley; el bucle 'you won't guess how' se resuelve a los ~9 s y abre otro: ¿qué pasaría hoy? Se cierra con 'nobody keeps their seat' a ~17 s"
+    },
+    "misterio": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "La fecha y el lugar frenan el arranque; el cierre no retoma el gancho"
+    },
+    "contradiccion+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Promesa concreta (5 minutos) + misterio del cómo; habla al espectador"
+    },
+    "contradiccion+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "'says' en presente es falso: lo dijo en 2011; revela 'one law' demasiado pronto"
+    },
+    "contradiccion+g3": {
+      "una_idea": 3,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "'richest investor of his era' no verificado; quita el nombre que es el imán"
+    },
+    "contradiccion+g4": {
+      "una_idea": 2,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "'wrote a plan' es falso: fue una frase en TV, no un plan escrito"
+    }
+  }
+}

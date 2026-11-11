@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "centro_comercial.src",
+  "origen": "wikimedia",
+  "titulo": "File:Shopping mall less crowded.ogg",
+  "autor": "natalie",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Shopping_mall_less_crowded.ogg"
+ },
+ {
+  "archivo": "clic_raton.src",
+  "origen": "wikimedia",
+  "titulo": "File:Computer Mouse Click.wav",
+  "autor": "FlowgerWikiCommons",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Computer_Mouse_Click.wav"
+ },
+ {
+  "archivo": "escaner.src",
+  "origen": "wikimedia",
+  "titulo": "File:Alien technology scanning device.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Alien_technology_scanning_device.ogg"
+ },
+ {
+  "archivo": "golpe_hueco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hollow hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hollow_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "libro_duro.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hardcover books dropped.ogg",
+  "autor": "stilgar",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hardcover_books_dropped.ogg"
+ },
+ {
+  "archivo": "monedas_hucha.src",
+  "origen": "wikimedia",
+  "titulo": "File:Coins dropped in metallic moneybox 0.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Coins_dropped_in_metallic_moneybox_0.ogg"
+ },
+ {
+  "archivo": "riser_gong_largo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Gong55.ogg",
+  "autor": "stephan",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Gong55.ogg"
+ },
+ {
+  "archivo": "ventana.src",
+  "origen": "wikimedia",
+  "titulo": "File:Flapping window closing.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Flapping_window_closing.ogg"
+ }
+]

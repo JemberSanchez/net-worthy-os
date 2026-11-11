@@ -1,0 +1,62 @@
+[
+ {
+  "archivo": "retrato.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Jesse Livermore (c. 1923).jpg",
+  "autor": "Unknown authorUnknown author",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Jesse_Livermore_(c._1923).jpg"
+ },
+ {
+  "archivo": "multitud.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Crowds gathering outside New York Stock Exchange.jpg",
+  "autor": "Associated Press",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Crowds_gathering_outside_New_York_Stock_Exchange.jpg"
+ },
+ {
+  "archivo": "corredores.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Stockbrokers at the New York Stock Exchange.jpg",
+  "autor": "Associated Press",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Stockbrokers_at_the_New_York_Stock_Exchange.jpg"
+ },
+ {
+  "archivo": "calle1929.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Beurskrach New York, Wall Street, 1929, SFA001006911.jpg",
+  "autor": "Unknown authorUnknown author",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Beurskrach_New_York,_Wall_Street,_1929,_SFA001006911.jpg"
+ },
+ {
+  "archivo": "barrido.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Economie, aandelen, beurzen, SFA001018144.jpg",
+  "autor": "Unknown authorUnknown author",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Economie,_aandelen,_beurzen,_SFA001018144.jpg"
+ },
+ {
+  "archivo": "nyse.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Crowd outside nyse.jpg",
+  "autor": "US-gov",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Crowd_outside_nyse.jpg"
+ }
+]

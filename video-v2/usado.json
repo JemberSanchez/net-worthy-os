@@ -525,6 +525,327 @@
      "desde": 133.0
     }
    }
+  },
+  {
+   "ref": "jesse-livermore",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "continuo",
+     "cortina"
+    ],
+    "camara": [
+     "baja",
+     "der",
+     "deriva"
+    ],
+    "punch": [
+     "rampa"
+    ],
+    "texto": [
+     "foco"
+    ],
+    "efectos": [
+     "Coin dropped on wooden floor.ogg",
+     "Deep hit (Gravity Sound).wav",
+     "Softcover books dropped.ogg",
+     "Sword 1 (Gravity Sound).mp3",
+     "Timpani 64-c-p5.wav",
+     "Turning a page.ogg",
+     "WWS Typewriter.ogg"
+    ],
+    "riser": [
+     "Wind outside atmosphere (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Alex-Productions - Deep (Dark Ambient Background music).oga"
+    ]
+   },
+   "eleccion": {
+    "semilla": "jesse-livermore",
+    "transiciones": [
+     "cortina",
+     "continuo"
+    ],
+    "camara": [
+     "deriva",
+     "baja",
+     "der"
+    ],
+    "punch": "rampa",
+    "texto": "foco",
+    "sfx": {
+     "thud": "libro_blando",
+     "moneda_suelo": "moneda_suelo",
+     "nudillo": "timbal"
+    },
+    "motor": {
+     "whoosh": "tajo_a",
+     "impacto": "golpe_hondo",
+     "riser": "riser_viento"
+    },
+    "musica": {
+     "commons": "File:Alex-Productions - Deep (Dark Ambient Background music).oga",
+     "desde": 71.0
+    }
+   }
+  },
+  {
+   "ref": "buffett-deficit",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "inercia_der",
+     "push_arriba"
+    ],
+    "camara": [
+     "pull",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "doble"
+    ],
+    "texto": [
+     "tracking"
+    ],
+    "efectos": [
+     "Bag of coins.ogg",
+     "Clock ticking.ogg",
+     "Dull thud.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Slam closet door (Gravity Sound).wav",
+     "Sword 10 (Gravity Sound).mp3",
+     "Turning a page.ogg"
+    ],
+    "riser": [
+     "Crash hit (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Crypto (ISRC USUAN1600013).mp3"
+    ]
+   },
+   "eleccion": {
+    "semilla": "buffett-deficit",
+    "transiciones": [
+     "inercia_der",
+     "push_arriba"
+    ],
+    "camara": [
+     "sube",
+     "push",
+     "pull"
+    ],
+    "punch": "doble",
+    "texto": "tracking",
+    "sfx": {
+     "monedas": "monedas",
+     "portazo": "thud"
+    },
+    "motor": {
+     "whoosh": "tajo_c",
+     "impacto": "portazo",
+     "riser": "riser_crash_corto"
+    },
+    "musica": {
+     "commons": "File:Crypto (ISRC USUAN1600013).mp3",
+     "desde": 13.0
+    }
+   }
+  },
+  {
+   "ref": "holiday-debt",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "iris",
+     "luma_baja"
+    ],
+    "camara": [
+     "arco_der",
+     "izq",
+     "tenso"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "corte"
+    ],
+    "efectos": [
+     "Alien technology scanning device.ogg",
+     "Coins dropped in metallic moneybox 0.ogg",
+     "Computer Mouse Click.wav",
+     "Flapping window closing.ogg",
+     "Hardcover books dropped.ogg",
+     "Hollow hit (Gravity Sound).wav"
+    ],
+    "riser": [
+     "Gong55.ogg"
+    ],
+    "musica": [
+     "Komiku - 12 - Tension.ogg"
+    ]
+   },
+   "eleccion": {
+    "semilla": "holiday-debt",
+    "transiciones": [
+     "luma_baja",
+     "iris"
+    ],
+    "camara": [
+     "izq",
+     "arco_der",
+     "tenso"
+    ],
+    "punch": "seco",
+    "texto": "corte",
+    "sfx": {
+     "thud": "libro_duro",
+     "escaner": "ventana",
+     "monedas_mano": "monedas_hucha",
+     "tick": "clic_raton"
+    },
+    "motor": {
+     "whoosh": "escaner",
+     "impacto": "golpe_hueco",
+     "riser": "riser_gong_largo"
+    },
+    "musica": {
+     "commons": "File:Komiku - 12 - Tension.ogg",
+     "desde": 51.0
+    }
+   }
+  },
+  {
+   "ref": "newton-bubble",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "diagonal",
+     "push_izq"
+    ],
+    "camara": [
+     "arco_izq",
+     "diag_asc",
+     "diag_desc"
+    ],
+    "punch": [
+     "rebote"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "efectos": [
+     "Close door (Gravity Sound).wav",
+     "Coin dropped on wooden floor.ogg",
+     "Deep hit (Gravity Sound).wav",
+     "Kick 2 (Gravity Sound).wav",
+     "Knocking on wood or door.ogg",
+     "Shaking coins in palm.ogg",
+     "Sword 5 (Gravity Sound).mp3"
+    ],
+    "riser": [
+     "Sweep (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Infraction - Distant (Cinematic Documentary Drone style).opus"
+    ]
+   },
+   "eleccion": {
+    "semilla": "newton-bubble",
+    "transiciones": [
+     "push_izq",
+     "diagonal"
+    ],
+    "camara": [
+     "diag_asc",
+     "diag_desc",
+     "arco_izq"
+    ],
+    "punch": "rebote",
+    "texto": "sube",
+    "sfx": {
+     "monedas_mano": "monedas_mano",
+     "libro_duro": "nudillo",
+     "monedas_hucha": "moneda_suelo",
+     "golpe_hondo": "puerta_seca",
+     "libro_blando": "bombo_seco"
+    },
+    "motor": {
+     "whoosh": "tajo_b",
+     "impacto": "golpe_hondo",
+     "riser": "riser_barrido"
+    },
+    "musica": {
+     "commons": "File:Infraction - Distant (Cinematic Documentary Drone style).opus",
+     "desde": 34.0
+    }
+   }
+  },
+  {
+   "ref": "nvidia-weight",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "continuo",
+     "cortina"
+    ],
+    "camara": [
+     "asentar",
+     "baja",
+     "der"
+    ],
+    "punch": [
+     "inclinado"
+    ],
+    "texto": [
+     "mascara"
+    ],
+    "efectos": [
+     "Server Room (Antti Luode).mp3",
+     "Slam closet door (Gravity Sound).wav",
+     "Softcover books dropped.ogg",
+     "Timpani 64-c-p5.wav",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg",
+     "Whip-sound.ogg",
+     "Wind rustling (Gravity Sound).mp3"
+    ],
+    "riser": [
+     "ARP-Solina Crescendo clean.ogg"
+    ],
+    "musica": [
+     "PeriTune - Investigation2(Suspense-Royalty Free Music).opus"
+    ]
+   },
+   "eleccion": {
+    "semilla": "nvidia-weight",
+    "transiciones": [
+     "continuo",
+     "cortina"
+    ],
+    "camara": [
+     "asentar",
+     "baja",
+     "der"
+    ],
+    "punch": "inclinado",
+    "texto": "mascara",
+    "sfx": {
+     "thud": "timbal",
+     "escaner": "rafaga",
+     "bombo_seco": "libro_blando"
+    },
+    "motor": {
+     "whoosh": "latigo",
+     "impacto": "portazo",
+     "riser": "riser_cuerdas"
+    },
+    "musica": {
+     "commons": "File:PeriTune - Investigation2(Suspense-Royalty Free Music).opus",
+     "desde": 74.0
+    }
+   }
   }
  ]
 }

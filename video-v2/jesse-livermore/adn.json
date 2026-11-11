@@ -1,0 +1,60 @@
+{
+  "production_ref": "jesse-livermore",
+  "hook_type": "contrast",
+  "story_type": "character_life",
+  "cta_type": "statement",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 37,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "anios,foto",
+      "length_s": 4.86
+    },
+    {
+      "block": "who",
+      "technique": "foto,foto+clip",
+      "length_s": 3.46
+    },
+    {
+      "block": "bet",
+      "technique": "foto+clip,titulo",
+      "length_s": 3.54
+    },
+    {
+      "block": "pain",
+      "technique": "foto+clip,foto",
+      "length_s": 2.76
+    },
+    {
+      "block": "crash",
+      "technique": "foto,foto+clip",
+      "length_s": 3.47
+    },
+    {
+      "block": "guard",
+      "technique": "foto,titulo",
+      "length_s": 2.95
+    },
+    {
+      "block": "fall",
+      "technique": "foto+clip",
+      "length_s": 4.14
+    },
+    {
+      "block": "hole",
+      "technique": "titulo,foto",
+      "length_s": 4.14
+    },
+    {
+      "block": "risk",
+      "technique": "foto+clip",
+      "length_s": 3.62
+    },
+    {
+      "block": "close",
+      "technique": "titulo,lista",
+      "length_s": 4.44
+    }
+  ]
+}

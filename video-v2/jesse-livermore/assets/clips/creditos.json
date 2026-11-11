@@ -1,0 +1,79 @@
+[
+ {
+  "archivo": "grafica.src",
+  "origen": "pexels",
+  "titulo": "pexels:3945008",
+  "autor": "Oleg Gamulinskii",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/waves-on-graph-and-arrows-falling-down-3945008/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "esquina.src",
+  "origen": "pexels",
+  "titulo": "pexels:13801266",
+  "autor": "Mizuno K",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/street-signs-on-the-corner-of-broad-st-and-wall-st-new-york-city-13801266/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "telefono.src",
+  "origen": "pexels",
+  "titulo": "pexels:1721320",
+  "autor": "Videogrammer .com",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-ringing-vintage-telephone-1721320/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "mazo.src",
+  "origen": "pexels",
+  "titulo": "pexels:6101365",
+  "autor": "KATRIN  BOLOVTSOVA",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-gavel-and-a-document-on-a-table-6101365/",
+  "desde": 3.0
+ },
+ {
+  "archivo": "casa.src",
+  "origen": "pexels",
+  "titulo": "pexels:13426989",
+  "autor": "Florian Delée",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/drone-video-of-an-abandoned-old-house-13426989/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "puerta.src",
+  "origen": "pexels",
+  "titulo": "pexels:7646797",
+  "autor": "Alena Darmel",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/person-opening-the-door-7646797/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "billetes.src",
+  "origen": "pexels",
+  "titulo": "pexels:32383787",
+  "autor": "TimePRO TV",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-of-hundred-dollar-bills-on-table-32383787/",
+  "desde": 0.0
+ }
+]

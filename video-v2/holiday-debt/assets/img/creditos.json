@@ -1,0 +1,22 @@
+[
+ {
+  "archivo": "tarjetas.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Bunch of credit cards (49860171753).jpg",
+  "autor": "Yuri Samoilov",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Bunch_of_credit_cards_(49860171753).jpg"
+ },
+ {
+  "archivo": "eccles.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Eccles Building (26088200676).jpg",
+  "autor": "Federalreserve",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Eccles_Building_(26088200676).jpg"
+ }
+]

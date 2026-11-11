@@ -1,0 +1,607 @@
+{
+ "ref": "jesse-livermore",
+ "guion": [
+  {
+   "id": "hook",
+   "texto": "You could call the nineteen twenty-nine crash and still go bankrupt. One man did."
+  },
+  {
+   "id": "who",
+   "texto": "Jesse Livermore traded behind a locked door with no name."
+  },
+  {
+   "id": "bet",
+   "texto": "In early nineteen twenty-nine, he bet against the whole boom.",
+   "giro": true
+  },
+  {
+   "id": "pain",
+   "texto": "By spring, he was down six million.",
+   "giro": true
+  },
+  {
+   "id": "crash",
+   "texto": "Then October hit. Legend says he made a hundred million.",
+   "giro": true
+  },
+  {
+   "id": "guard",
+   "texto": "The public blamed him, so he hired a bodyguard.",
+   "giro": true
+  },
+  {
+   "id": "fall",
+   "texto": "Under five years later, he filed for bankruptcy with his mansion gone.",
+   "giro": true
+  },
+  {
+   "id": "hole",
+   "texto": "And that hundred million? TIME's story on his bankruptcy never mentions it.",
+   "giro": true
+  },
+  {
+   "id": "risk",
+   "texto": "Betting against a market can cost you more than you put in."
+  },
+  {
+   "id": "close",
+   "texto": "He called the crash. That hundred million is still a legend."
+  }
+ ],
+ "voz": {
+  "motor": "kokoro",
+  "voz": "am_adam",
+  "speed": 0.95,
+  "pausa_s": 0.28
+ },
+ "aspecto": "cine",
+ "tema": "editorial",
+ "formato": "documental-editorial",
+ "pronuncia_ok": [
+  "TIME"
+ ],
+ "adn": {
+  "hook_type": "contrast",
+  "story_type": "character_life",
+  "cta_type": "statement",
+  "renderer_version": "v2-hyperframes"
+ },
+ "fondos_auto": false,
+ "cifras": [
+  {
+   "dato": "Early 1929: Livermore built huge short positions; by spring he was down over $6 million on paper",
+   "fuente": "https://en.wikipedia.org/wiki/Jesse_Livermore"
+  },
+  {
+   "dato": "Accounts say he netted about $100 million in the 1929 crash (later accounts; TIME's 1934 report does not give this figure)",
+   "fuente": "https://en.wikipedia.org/wiki/Jesse_Livermore"
+  },
+  {
+   "dato": "Filed for bankruptcy in March 1934 (TIME, Mar 19, 1934); liabilities $2,259,212.48",
+   "fuente": "https://time.com/archive/6894439/business-fourth-down"
+  },
+  {
+   "dato": "Great Neck estate sold at auction before the March 1934 filing",
+   "fuente": "https://time.com/archive/6894439/business-fourth-down"
+  },
+  {
+   "dato": "NYT front page, Oct 30, 1929: Stocks collapse in 16,410,030-share day",
+   "fuente": "https://commons.wikimedia.org/wiki/File:19291030_Crash_of_%2729_-_New_York_Times.jpg"
+  }
+ ],
+ "aviso": {
+  "lineas": [
+   "Not financial advice · $100M figure unverified"
+  ],
+  "ventanas": [
+   [
+    "2",
+    "12"
+   ]
+  ],
+  "final": true,
+  "completo": "Not financial advice. The $100 million figure comes from later accounts and is not confirmed by TIME's 1934 report. Short selling can lose more than the amount invested.",
+  "placa": true,
+  "tam": 27
+ },
+ "subtitulos": [
+  "2",
+  "12"
+ ],
+ "calientes": [
+  "locked",
+  "boom",
+  "blamed",
+  "bodyguard",
+  "mansion",
+  "legend"
+ ],
+ "golpes": [
+  "2:locked",
+  "3:boom",
+  "4:six",
+  "6:hundred",
+  "8:bankruptcy",
+  "10:never"
+ ],
+ "musica": {
+  "pista": {
+   "mood": "oscuro"
+  }
+ },
+ "sonidos": [
+  {
+   "sfx": "thud",
+   "en": "0:bankrupt",
+   "vol": 0.2
+  },
+  {
+   "sfx": "pagina",
+   "en": "5:october"
+  },
+  {
+   "sfx": "moneda_suelo",
+   "en": "6:hundred"
+  },
+  {
+   "sfx": "nudillo",
+   "en": "8:filed"
+  },
+  {
+   "sfx": "maquina",
+   "en": "10:story",
+   "dur": 1.0
+  }
+ ],
+ "imagenes": {
+  "retrato": {
+   "commons": "File:Jesse Livermore (c. 1923).jpg",
+   "color": true,
+   "ligero": true
+  },
+  "nyt": {
+   "documento": true,
+   "color": true
+  },
+  "multitud": {
+   "commons": "File:Crowds gathering outside New York Stock Exchange.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "corredores": {
+   "commons": "File:Stockbrokers at the New York Stock Exchange.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "calle1929": {
+   "commons": "File:Beurskrach New York, Wall Street, 1929, SFA001006911.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "barrido": {
+   "commons": "File:Economie, aandelen, beurzen, SFA001018144.jpg",
+   "color": true,
+   "ligero": true
+  },
+  "nyse": {
+   "commons": "File:Crowd outside nyse.jpg",
+   "color": true,
+   "ligero": true
+  }
+ },
+ "clips": {
+  "grafica": {
+   "pexels": 3945008,
+   "desde": 2,
+   "ligero": true
+  },
+  "puerta": {
+   "pexels": 7646797,
+   "desde": 0,
+   "ligero": true
+  },
+  "esquina": {
+   "pexels": 13801266,
+   "desde": 0,
+   "ligero": true
+  },
+  "billetes": {
+   "pexels": 32383787,
+   "desde": 0,
+   "ligero": true
+  },
+  "mazo": {
+   "pexels": 6101365,
+   "desde": 3,
+   "ligero": true
+  },
+  "casa": {
+   "pexels": 13426989,
+   "desde": 0,
+   "ligero": true
+  }
+ },
+ "escenas": [
+  {
+   "tipo": "anios",
+   "en": "0",
+   "desde": 1929,
+   "hasta": 1934,
+   "cuenta": {
+    "en": "0"
+   },
+   "fin": "0:crash",
+   "kicker": "You could call the crash",
+   "fondo": {
+    "img": "calle1929",
+    "opacidad": 0.55
+   }
+  },
+  {
+   "tipo": "titulo",
+   "en": "0:and",
+   "fondo": {
+    "img": "multitud",
+    "opacidad": 0.45
+   },
+   "lineas": [
+    {
+     "texto": "and still go",
+     "en": "0:and",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*bankrupt*",
+     "en": "0:bankrupt",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "1:one",
+   "img": "multitud",
+   "pos": "baj",
+   "rotulos": [
+    {
+     "texto": "One man *did*",
+     "en": "1:one",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "2",
+   "pos": "ter",
+   "img": "retrato",
+   "rotulos": [
+    {
+     "texto": "Jesse Livermore",
+     "en": "2",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "2:behind",
+   "pos": "baj",
+   "clip": "puerta",
+   "rotulos": [
+    {
+     "texto": "A door with *no name*",
+     "en": "2:no",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "3",
+   "pos": "sup",
+   "clip": "esquina",
+   "rotulos": [
+    {
+     "texto": "Early 1929",
+     "en": "3",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "3:he",
+   "lineas": [
+    {
+     "texto": "He bet against",
+     "en": "3:he",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*the whole boom*",
+     "en": "3:whole",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ],
+   "fondo": {
+    "img": "corredores",
+    "opacidad": 0.45
+   }
+  },
+  {
+   "tipo": "foto",
+   "en": "4",
+   "pos": "med",
+   "rotulos": [
+    {
+     "texto": "*Down $6 million*",
+     "en": "4:six",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ],
+   "img": "barrido"
+  },
+  {
+   "tipo": "foto",
+   "en": "5",
+   "img": "nyt"
+  },
+  {
+   "tipo": "foto",
+   "en": "6:legend",
+   "pos": "med",
+   "clip": "billetes",
+   "rotulos": [
+    {
+     "texto": "*$100 million*",
+     "en": "6:hundred",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "7",
+   "pos": "sup",
+   "img": "calle1929",
+   "rotulos": [
+    {
+     "texto": "Blamed for *the crash*",
+     "en": "7:blamed",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "7:so",
+   "fondo": {
+    "clip": "puerta",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "He hired",
+     "en": "7:so",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*a bodyguard*",
+     "en": "7:bodyguard",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "8",
+   "pos": "med",
+   "clip": "mazo",
+   "rotulos": [
+    {
+     "texto": "Bankrupt: March 1934",
+     "en": "8:filed",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "8:his",
+   "pos": "baj",
+   "clip": "casa",
+   "rotulos": [
+    {
+     "texto": "Mansion *gone*",
+     "en": "8:mansion",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "9",
+   "fondo": {
+    "clip": "billetes",
+    "opacidad": 0.35
+   },
+   "lineas": [
+    {
+     "texto": "That",
+     "en": "9",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*$100 million?*",
+     "en": "9:hundred",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "10:time's",
+   "fondo": {
+    "img": "nyse",
+    "opacidad": 0.4
+   },
+   "lineas": [
+    {
+     "texto": "TIME, 1934:",
+     "en": "10:time's",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*not a word*",
+     "en": "10:never",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "foto",
+   "en": "11",
+   "pos": "med",
+   "clip": "grafica",
+   "rotulos": [
+    {
+     "texto": "Can cost *more than you put in*",
+     "en": "11:cost",
+     "estilo": "mid",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "titulo",
+   "en": "12",
+   "fondo": {
+    "clip": "grafica",
+    "opacidad": 0.35
+   },
+   "lineas": [
+    {
+     "texto": "He called",
+     "en": "12",
+     "estilo": "mid",
+     "color": "ink"
+    },
+    {
+     "texto": "*the crash.*",
+     "en": "12:crash",
+     "estilo": "big",
+     "color": "ink"
+    }
+   ]
+  },
+  {
+   "tipo": "lista",
+   "en": "13",
+   "icono": "x",
+   "fondo": {
+    "clip": "esquina",
+    "opacidad": 0.35
+   },
+   "items": [
+    {
+     "texto": "$100 million: *still a legend*",
+     "en": "13:still"
+    }
+   ]
+  }
+ ],
+ "pruebas": [
+  {
+   "img": "nyt",
+   "texto": "COLLAPSE",
+   "en": "5",
+   "marca": "5:october",
+   "hasta": "6:says"
+  }
+ ],
+ "publicacion": {
+  "titulo": "He called the 1929 crash and still went bankrupt",
+  "descripcion": "Jesse Livermore built huge short positions in early 1929 and by spring was down over $6 million on paper. Later accounts say the crash netted him about $100 million. The public blamed him and he hired an armed bodyguard. In March 1934 he filed for bankruptcy with liabilities of $2,259,212.48, and his Great Neck estate had gone at auction. TIME's report that month never mentions a $100 million fortune, so treat that figure as legend. How he lost his money is still unknown. Short selling can lose more than the amount invested. Not financial advice. Sources: TIME, Mar 19, 1934; Wikipedia; New York Times, Oct 30, 1929.",
+  "tags": [
+   "Jesse Livermore",
+   "1929 crash",
+   "Wall Street history",
+   "short selling",
+   "stock market crash",
+   "investing history",
+   "personal finance",
+   "trading"
+  ],
+  "hashtags": [
+   "#StockMarket",
+   "#Investing",
+   "#Shorts"
+  ],
+  "comentario": "Would you have kept trading after calling the crash of the century?"
+ },
+ "social": {
+  "carrusel": [
+   {
+    "fondo": "img:calle1929",
+    "kicker": "Wall Street, 1929",
+    "titulo": "He called the crash. *He still went bankrupt.*",
+    "texto": "His name was Jesse Livermore."
+   },
+   {
+    "fondo": "clip:puerta@1",
+    "kicker": "The trader",
+    "titulo": "A door with *no name*",
+    "texto": "TIME described his office: locked, guarded, no outgoing word."
+   },
+   {
+    "fondo": "img:barrido",
+    "kicker": "Spring 1929",
+    "titulo": "Down *$6 million*",
+    "texto": "He had bet against the whole boom, and the boom kept going."
+   },
+   {
+    "fondo": "img:multitud",
+    "kicker": "October 1929",
+    "titulo": "Stocks *collapse*",
+    "texto": "Later accounts say he made $100 million. The public blamed him, and he hired a bodyguard."
+   },
+   {
+    "fondo": "clip:mazo@1",
+    "kicker": "March 1934",
+    "titulo": "*Bankrupt*",
+    "texto": "He listed $2.26 million in debts. His mansion had gone at auction."
+   },
+   {
+    "fondo": "clip:grafica@1",
+    "kicker": "Your turn",
+    "titulo": "Where did *$100 million* go?",
+    "texto": "TIME's 1934 report never mentions it. Would you have kept trading?"
+   }
+  ],
+  "caption": "Jesse Livermore bet against the 1929 boom, and legend says the crash paid him $100 million. Under five years later he was bankrupt, and TIME's report never mentions that fortune. Would you have kept trading?",
+  "historia": {
+   "hasta": "2:name$",
+   "cierre": "Full story in Reels"
+  }
+ }
+}
