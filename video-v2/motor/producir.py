@@ -577,6 +577,8 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
             hfversion.npx(
                 "check",
                 "--json",
+                # only `contrast` and `runtime` are read; the craft pass was 85 -> 27 s, same 62 texts (huang-exit)
+                "--no-craft",
                 "--timeout",
                 "60000",
                 "--at",
@@ -608,14 +610,22 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
 
 def ocr_previo(salida: Path, instantes: list[float]) -> list[dict]:
     """OCR of the preview frames at `instantes`, in the shape of medir_texto.ocr_frames (the file name has the second)."""
-    import medir_cuadros
+    from concurrent.futures import ProcessPoolExecutor
 
-    frames = []
+    import medir_cuadros
+    import medir_texto
+
+    quiere = {}
     for f in sorted(salida.glob("frame-*.png")):
         t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
         if any(abs(t - x) < 0.011 for x in instantes):
-            frames.append({"t": t, **medir_cuadros.ocr_imagen(f)})
-    return frames
+            quiere[t] = f
+    if not quiere:
+        return []
+    # one RapidOCR per process, as the critic's ocr_frames (same model and detection limit)
+    with ProcessPoolExecutor(min(medir_texto.PROCESOS_OCR, len(quiere))) as ex:
+        lecturas = list(ex.map(medir_cuadros.ocr_imagen, quiere.values()))
+    return [{"t": t, **r} for t, r in zip(quiere, lecturas, strict=True)]
 
 
 def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
@@ -638,6 +648,9 @@ def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
     )
 
 
+GANCHO_MARGEN_LUMA = 3.5  # snapshot vs MP4 luma gap measured +3.2 (huang-exit): see gancho_previo
+
+
 def instantes_gancho(u: dict) -> list[float]:
     """The hook frames the critic reads on the MP4 (medir_cuadros.FPS over `gancho_s`)."""
     import medir_cuadros as mc
@@ -647,7 +660,9 @@ def instantes_gancho(u: dict) -> list[float]:
 
 def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
     """The critic's C1 dark/flat hook on the preview frames, same function and limits, before the render.
-    PNG luma is full range; the MP4's Y plane is limited (16-235), so the frames are mapped to it first."""
+    Measured on huang-exit (12-nov, 10 frames): the snapshot reads luma +3.2 above the MP4 and contrast 6 %
+    below it. Contrast is then already stricter; luma must clear the limit by GANCHO_MARGEN_LUMA so the
+    preview never passes a hook the critic fails. PROVISIONAL, n=1: re-measure on the next Shorts."""
     import medir_cuadros as mc
     import numpy as np
     from PIL import Image
@@ -658,15 +673,18 @@ def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
         t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
         if any(abs(t - x) < 0.011 for x in quiere):
             g = Image.open(f).convert("L").resize(mc.TAM, Image.BILINEAR)
-            fr[t] = 16 + np.asarray(g, np.float64) * 219 / 255
+            fr[t] = np.asarray(g, np.float64)
     if len(fr) < len(quiere):
         return False, f"faltan fotogramas del gancho: {len(fr)} de {len(quiere)}"
     g = mc.gancho(np.stack([fr[t] for t in sorted(fr)]), u)
-    ok = g["luma"] >= u["gancho_luma_min"] and g["contraste"] >= u["gancho_contraste_min"]
+    ok = (
+        g["luma"] >= u["gancho_luma_min"] + GANCHO_MARGEN_LUMA
+        and g["contraste"] >= u["gancho_contraste_min"]
+    )
     return ok, (
         f"luma {g['luma']}, contraste {g['contraste']}"
         if ok
-        else f"gancho oscuro o plano: luma {g['luma']} (mín. {u['gancho_luma_min']}), "
+        else f"gancho oscuro o plano: luma {g['luma']} (mín. {u['gancho_luma_min']} + {GANCHO_MARGEN_LUMA} de margen), "
         f"contraste {g['contraste']} (mín. {u['gancho_contraste_min']}): más opacidad del fondo o un clip más claro"
     )
 
@@ -926,7 +944,7 @@ def producir(proy: Path) -> dict:
             "-c:v",
             "libx264",
             "-preset",
-            "slow",
+            "veryfast",  # 31 -> 10 s, SSIM 0.988 vs 0.989 against the final (huang-exit, 12-nov)
             "-crf",
             "24",
             "-c:a",
