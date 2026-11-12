@@ -164,6 +164,7 @@ class TramosOcrTest(unittest.TestCase):
 
     def test_video_corto_no_crea_tramos_vacios(self):
         self.assertEqual(T.tramos(20, 15, 6), [(0, 15), (15, 20)])
+        self.assertEqual(T.tramos(0, 15, 6), [(0, 0)])  # no frame count: one range, read to the end
 
 
 class OrdenLecturaTest(unittest.TestCase):

@@ -261,7 +261,7 @@ PROCESOS_OCR = max(1, min(6, (os.cpu_count() or 2) // 2))
 
 def tramos(n: int, paso: int, partes: int) -> list[tuple[int, int]]:
     """[i0, i1) ranges of frame indices with about the same number of sampled frames (i % paso == 0) each."""
-    muestras = list(range(0, n, paso))
+    muestras = list(range(0, n, paso)) or [0]  # a container without a frame count reports 0: read it all
     k = max(1, min(partes, len(muestras)))
     cortes = [muestras[len(muestras) * j // k] for j in range(k)] + [n]
     return list(itertools.pairwise(cortes))

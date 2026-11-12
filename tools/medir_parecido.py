@@ -389,10 +389,8 @@ def parecido_estatico(sa: dict, otros: list[Path], previos: list[dict]) -> list[
     `visual` needs the MP4 and stays with the critic."""
     p1 = json.loads(RUBRICA.read_text(encoding="utf-8"))["criterios"]["P1"]
     motivos = []
+    filas = [(comparar(sa, so), p.name) for p, so in zip(otros, previos, strict=True)]
     for k in ("guion", "estructura", "recursos"):
-        filas = [
-            (comparar(sa, so), p.name) for p, so in zip(otros, previos, strict=True)
-        ]
         c, ref = max(filas, key=lambda f: f[0][k], default=(None, None))
         if c and c[k] > p1[f"{k}_max"]:
             extra = (
