@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "gpu.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:GPU blade with glycol cooling (54685994424).jpg",
+  "autor": "Steve Jurvetson",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:GPU_blade_with_glycol_cooling_(54685994424).jpg"
+ },
+ {
+  "archivo": "hq.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Nvidia HQ.jpg",
+  "autor": "Kevin McCarthy",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Nvidia_HQ.jpg"
+ },
+ {
+  "archivo": "empac.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:EMPACBalcony.JPG",
+  "autor": "UpstateNYer",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:EMPACBalcony.JPG"
+ }
+]

@@ -1048,6 +1048,77 @@
      "desde": 55.0
     }
    }
+  },
+  {
+   "ref": "huang-exit",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "izq",
+     "sube",
+     "zoom"
+    ],
+    "camara": [
+     "asentar",
+     "der",
+     "diag_desc"
+    ],
+    "punch": [
+     "rebote"
+    ],
+    "texto": [
+     "corte"
+    ],
+    "tipografia": [
+     "grotesca"
+    ],
+    "efectos": [
+     "Alien technology scanning device.ogg",
+     "Deep hit (Gravity Sound).wav",
+     "Flapping window closing.ogg",
+     "Knocking on wood or door.ogg",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Server Room (Antti Luode).mp3",
+     "Timpani 64-c-p5.wav",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg"
+    ],
+    "riser": [
+     "Wind outside atmosphere (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Infraction - Distant (Cinematic Documentary Drone style).opus"
+    ]
+   },
+   "eleccion": {
+    "semilla": "huang-exit",
+    "transiciones": [
+     "sube",
+     "izq",
+     "zoom"
+    ],
+    "camara": [
+     "diag_desc",
+     "der",
+     "asentar"
+    ],
+    "punch": "rebote",
+    "texto": "corte",
+    "tipografia": "grotesca",
+    "sfx": {
+     "thud": "nudillo",
+     "escaner": "ventana",
+     "bombo_seco": "golpe_hondo"
+    },
+    "motor": {
+     "whoosh": "escaner",
+     "impacto": "timbal",
+     "riser": "riser_viento"
+    },
+    "musica": {
+     "commons": "File:Infraction - Distant (Cinematic Documentary Drone style).opus",
+     "desde": 21.0
+    }
+   }
   }
  ]
 }

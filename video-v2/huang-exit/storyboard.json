@@ -1,0 +1,570 @@
+{
+  "ref": "huang-exit",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "Curtis Priem, a co-founder of the biggest chip maker in your index fund, sold every share."
+    },
+    {
+      "id": "today",
+      "texto": "That chip maker is Nvidia. Today its boss, Jensen Huang, quit, and the stock slid.",
+      "giro": true
+    },
+    {
+      "id": "cto",
+      "texto": "Priem was Nvidia's first chief technology officer."
+    },
+    {
+      "id": "left",
+      "texto": "He retired early and sold out."
+    },
+    {
+      "id": "math",
+      "texto": "If he had held, Forbes says, he'd be worth seventy billion."
+    },
+    {
+      "id": "real",
+      "texto": "His actual fortune? About thirty million.",
+      "giro": true
+    },
+    {
+      "id": "worst",
+      "texto": "The worst sale in tech history, right?"
+    },
+    {
+      "id": "gift",
+      "texto": "Not to him. He gave forty million to his old college.",
+      "giro": true
+    },
+    {
+      "id": "rival",
+      "texto": "Hindsight cheats. Back then, Nvidia's rival looked unbeatable."
+    },
+    {
+      "id": "bust",
+      "texto": "It went bust, and Nvidia bought what was left.",
+      "giro": true
+    },
+    {
+      "id": "nobody",
+      "texto": "Nobody gets to sell only the losers."
+    },
+    {
+      "id": "close",
+      "texto": "Would you have held every share?"
+    }
+  ],
+  "pronuncia_ok": [
+    "Curtis",
+    "Huang",
+    "Jensen",
+    "Priem"
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "adn": {
+    "hook_type": "story",
+    "story_type": "character",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "cifras": [
+    {
+      "dato": "Curtis Priem co-founded NVIDIA in 1993 and served as chief technical officer from 1993 to 2003",
+      "fuente": "https://ecse.rpi.edu/about/hall-of-fame/curtis-r-priem"
+    },
+    {
+      "dato": "Priem retired from Nvidia in 2003 and sold all of his shares by 2006; co-founded with Jensen Huang and Chris Malachowsky",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "Forbes (Nov 2023): Priem's net worth about $30 million; had he kept his Nvidia shares, about $70 billion (shown on screen as 70, in billions of dollars)",
+      "fuente": "https://www.forbes.com/sites/phoebeliu/2023/11/26/this-nvidia-cofounder-could-have-been-worth-70-billion-instead-he-lives-off-the-grid"
+    },
+    {
+      "dato": "In 2004 Priem announced a $40 million unrestricted gift to Rensselaer Polytechnic Institute, his alma mater",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "3dfx (Voodoo cards) lost market leadership to Nvidia in the late 90s; Nvidia acquired most of 3dfx's assets on Dec 15, 2000; 3dfx filed for bankruptcy in 2002",
+      "fuente": "https://en.wikipedia.org/wiki/3dfx"
+    },
+    {
+      "dato": "Nov 12, 2026: Nvidia CEO Jensen Huang resigned and Nvidia stock fell",
+      "fuente": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNTVNwbUF0dnZ3TUV6OTl2cWE0clBuRE93ZEdlcjZxNjhlTWN6emg0ZlYwOUtIVmVMMlltc2dlbjhZOEstOXoxMDl5VDFON05QNFctSkw2TGI2VGdxT2d3eHZsSndTS054ZHZYZjZwM2RtNnFNN0k5a3pDR1luMUN4dl9aWUI?oc=5"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "$70B and ~$30M: Forbes estimates, Nov 2023",
+      "Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "5",
+        "8"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 33,
+    "completo": "Not financial advice. $70 billion and about $30 million are Forbes estimates (Nov 2023); values have changed since."
+  },
+  "subtitulos": [
+    "1",
+    "14"
+  ],
+  "calientes": [
+    "Nvidia",
+    "quit",
+    "slid",
+    "seventy",
+    "thirty",
+    "worst",
+    "forty",
+    "hindsight",
+    "unbeatable",
+    "bust",
+    "losers"
+  ],
+  "musica": {
+    "oscuro": [
+      "11",
+      "13"
+    ],
+    "pista": {
+      "mood": "documental"
+    }
+  },
+  "golpes": [
+    "2:quit",
+    "7:thirty",
+    "9:not",
+    "13:bust",
+    "14:losers"
+  ],
+  "sonidos": [
+    {
+      "sfx": "sala_servidores",
+      "en": "0",
+      "dur": 1.5,
+      "vol": 0.255
+    },
+    {
+      "sfx": "thud",
+      "en": "2:slid",
+      "vol": 0.2
+    },
+    {
+      "sfx": "escaner",
+      "en": "3"
+    },
+    {
+      "sfx": "caja",
+      "en": "5:billion"
+    },
+    {
+      "sfx": "sello",
+      "en": "13:bust",
+      "vol": 0.425
+    },
+    {
+      "sfx": "bombo_seco",
+      "en": "14:losers"
+    }
+  ],
+  "imagenes": {
+    "gpu": {
+      "commons": "File:GPU blade with glycol cooling (54685994424).jpg",
+      "color": true,
+      "ligero": true
+    },
+    "empac": {
+      "commons": "File:EMPACBalcony.JPG",
+      "color": true
+    },
+    "rpi": {
+      "documento": true,
+      "color": true
+    }
+  },
+  "clips": {
+    "placa": {
+      "pexels": 7609195,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "nyse": {
+      "pexels": 35039725,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "pantalla": {
+      "pexels": 38771102,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "mercado": {
+      "pexels": 39020626,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "retro": {
+      "pexels": 15069622,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "oficina": {
+      "pexels": 8347240,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    }
+  },
+  "pruebas": [
+    {
+      "img": "rpi",
+      "texto": "chief technical officer",
+      "en": "3",
+      "marca": "3:chief",
+      "hasta": "4"
+    }
+  ],
+  "formato": "documental-editorial",
+  "escenas": [
+    {
+      "tipo": "titulo",
+      "en": "0",
+      "fondo": {
+        "clip": "placa",
+        "opacidad": 0.8
+      },
+      "lineas": [
+        {
+          "texto": "Nvidia co-founder",
+          "en": "0",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*Sold every share*",
+          "en": "0:sold",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "1",
+      "fondo": {
+        "clip": "nyse",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Nvidia's boss",
+          "en": "2:today-0.87",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*just quit*",
+          "en": "2:quit-0.27",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo_suave": true,
+      "fondo_opacidad": 0.3
+    },
+    {
+      "tipo": "foto",
+      "en": "2:and",
+      "pos": "med",
+      "clip": "pantalla",
+      "rotulos": [
+        {
+          "texto": "The stock *slid*",
+          "en": "2:and",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "3",
+      "img": "rpi"
+    },
+    {
+      "tipo": "anios",
+      "en": "4",
+      "desde": 1993,
+      "hasta": 2006,
+      "cuenta": {
+        "en": "4"
+      },
+      "fin": "4:out",
+      "kicker": "Priem and Nvidia",
+      "hitos": [
+        [
+          1993,
+          "Co-founds Nvidia"
+        ],
+        [
+          2003,
+          "Retires"
+        ],
+        [
+          2006,
+          "Every share sold"
+        ]
+      ]
+    },
+    {
+      "tipo": "contador3d",
+      "en": "5:worth",
+      "valor": 70,
+      "prefijo": "$",
+      "llega": "5:billion",
+      "kicker": {
+        "texto": "If he had held",
+        "en": "5"
+      },
+      "pill": {
+        "texto": "billion · Forbes est.",
+        "en": "5:billion"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "fondo": {
+        "img": "gpu",
+        "opacidad": 0.25
+      },
+      "lineas": [
+        {
+          "texto": "His actual fortune",
+          "en": "6",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*~$30M*",
+          "en": "7:thirty",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "8",
+      "linea1": {
+        "texto": "Worst sale in tech history?"
+      },
+      "linea2": {
+        "texto": "Not to him.",
+        "en": "9:not"
+      },
+      "golpe": "9:not",
+      "fondo": {
+        "clip": "oficina",
+        "opacidad": 0.4
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "10:gave",
+      "fondo": {
+        "img": "empac",
+        "opacidad": 0.3
+      },
+      "kicker": {
+        "texto": "Gift to Rensselaer, 2004",
+        "en": "10:gave"
+      },
+      "lineas": [
+        {
+          "texto": "*$40M*",
+          "en": "10:forty",
+          "estilo": "huge"
+        },
+        {
+          "texto": "to his old college",
+          "en": "10:forty",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "retro",
+        "opacidad": 0.4
+      },
+      "lineas": [
+        {
+          "texto": "Hindsight cheats",
+          "en": "11",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "Late 90s: *3dfx Voodoo*",
+          "en": "12:rival",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "13",
+      "lineas": [
+        {
+          "texto": "The one to beat",
+          "en": "13",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*Bust.*",
+          "en": "13:bust",
+          "estilo": "huge"
+        },
+        {
+          "texto": "Nvidia bought its assets",
+          "en": "13:bust",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ],
+      "fondo_suave": true,
+      "fondo_opacidad": 0.3
+    },
+    {
+      "tipo": "titulo",
+      "en": "14",
+      "fondo": {
+        "clip": "mercado",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Nobody gets to sell",
+          "en": "14",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*only the losers*",
+          "en": "14:losers",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "cta",
+      "en": "15",
+      "a": {
+        "texto": "Held",
+        "en": "15:held"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Sold",
+        "en": "15:every"
+      },
+      "pregunta": {
+        "texto": "Would you have held every share?",
+        "en": "15"
+      },
+      "sub": "tell me in the comments",
+      "fondo": {
+        "clip": "placa",
+        "opacidad": 0.4
+      }
+    }
+  ],
+  "publicacion": {
+    "titulo": "The Nvidia co-founder who sold every share",
+    "descripcion": "Curtis Priem co-founded Nvidia in 1993 and was its chief technical officer until 2003. He retired and had sold all of his shares by 2006. Forbes estimated in 2023 that, had he held, he'd be worth about $70 billion; his actual fortune was about $30 million. He gave $40 million to Rensselaer, his old college. Today Jensen Huang stepped down and Nvidia slid. But hindsight cheats: in the late 90s, 3dfx looked unbeatable, and it went bust.\n\nSources: Rensselaer ECSE Hall of Fame; Forbes (Nov 2023); Wikipedia (Curtis Priem, 3dfx); NBC News (Nov 12, 2026). Not financial advice.",
+    "tags": [
+      "curtis priem",
+      "nvidia",
+      "jensen huang",
+      "nvidia stock",
+      "hindsight bias",
+      "investing",
+      "stocks"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#nvidia",
+      "#investing",
+      "#stocks"
+    ],
+    "comentario": "Forbes put his what-if at $70 billion. 3dfx, the rival everyone feared in the 90s, went bust. If you had been in his seat in 2003, what would you have done with the shares?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:placa@2",
+        "kicker": "Nvidia co-founder",
+        "titulo": "He sold *every share*",
+        "texto": "Curtis Priem co-founded Nvidia in 1993 and was its chief technical officer until 2003."
+      },
+      {
+        "fondo": "img:rpi",
+        "kicker": "The record",
+        "titulo": "CTO, *1993 to 2003*",
+        "texto": "He retired in 2003 and had sold all of his Nvidia shares by 2006."
+      },
+      {
+        "fondo": "img:gpu",
+        "kicker": "Forbes, 2023",
+        "titulo": "*$70B* vs ~$30M",
+        "texto": "What his shares would have been worth versus his estimated actual fortune."
+      },
+      {
+        "fondo": "img:empac",
+        "kicker": "Not a regret",
+        "titulo": "*$40M* to his old college",
+        "texto": "He gave an unrestricted gift to Rensselaer in 2004."
+      },
+      {
+        "fondo": "clip:retro@3",
+        "kicker": "Hindsight cheats",
+        "titulo": "3dfx looked *unbeatable*",
+        "texto": "Nvidia's late-90s rival went bust; Nvidia bought its assets in 2000. Not financial advice."
+      },
+      {
+        "fondo": "clip:mercado@2",
+        "kicker": "Your turn",
+        "titulo": "Held *or* sold?",
+        "texto": "Would you have held every share? Today Jensen Huang stepped down and the stock slid."
+      }
+    ],
+    "caption": "Curtis Priem co-founded Nvidia and sold every share by 2006. Forbes: that stake could have been $70 billion. But in the 90s, the rival everyone feared went bust.\n\nHeld or sold: what would you have done? 👇",
+    "historia": {
+      "hasta": "2:slid$",
+      "cierre": "The founder who *sold out*"
+    }
+  },
+  "mezcla": {
+    "whoosh": 0.057,
+    "impacto": 0.15
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "ref": "huang-exit",
+  "nota": "Personaje (VIRALIDAD §7, 3 personajes por noticia: tras hot-inflation van oseola-mccarty y anne-scheiber, este es el 3.º). Tema atado a la demanda de hoy (decide: 'jensen huang' / 'huang resigns', 12-nov-2026; 'inflation report' ya cubierto por hot-inflation). Fuentes: Wikipedia Curtis_Priem (cofundó Nvidia en 1993 con Jensen Huang y Chris Malachowsky, CTO 1993-2003, se retiró en 2003, vendió todas sus acciones para 2006, regalo de $40M a Rensselaer en 2004); Forbes 26-nov-2023 (patrimonio ~$30M; con sus acciones, ~$70B); Wikipedia 3dfx (rival dominante que quebró y cuyos activos compró Nvidia en 2000); NBC News 12-nov-2026 (Nvidia cae tras la dimisión de Huang). Giro honesto: retrospectiva sesgada, el rival que parecía ganador quebró.",
+  "estructuras": [
+    {
+      "id": "contradiccion",
+      "nombre": "contradicción",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Curtis Priem, a co-founder of the biggest chip maker in your index fund, sold every single share."
+        },
+        {
+          "id": "today",
+          "texto": "That chip maker is Nvidia. Today its boss, Jensen Huang, quit, and the stock slid.",
+          "giro": true
+        },
+        {
+          "id": "cto",
+          "texto": "Priem was Nvidia's first chief technology officer."
+        },
+        {
+          "id": "left",
+          "texto": "He retired early and sold out."
+        },
+        {
+          "id": "math",
+          "texto": "Had he held, Forbes says, he'd be worth seventy billion dollars."
+        },
+        {
+          "id": "real",
+          "texto": "His actual fortune? About thirty million.",
+          "giro": true
+        },
+        {
+          "id": "worst",
+          "texto": "The worst sale in tech history, right?"
+        },
+        {
+          "id": "gift",
+          "texto": "Not to him. He gave forty million to his old college.",
+          "giro": true
+        },
+        {
+          "id": "rival",
+          "texto": "Hindsight cheats. Back then, Nvidia's rival looked unbeatable."
+        },
+        {
+          "id": "bust",
+          "texto": "It went bust, and Nvidia bought what was left.",
+          "giro": true
+        },
+        {
+          "id": "nobody",
+          "texto": "Nobody gets to sell only the losers."
+        },
+        {
+          "id": "close",
+          "texto": "So, would you have held every share?"
+        }
+      ]
+    },
+    {
+      "id": "error_comun",
+      "nombre": "error común",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Curtis Priem, a co-founder of the biggest chip maker in your index fund, is called the man who sold too soon."
+        },
+        {
+          "id": "you",
+          "texto": "That giant is Nvidia, and you'd probably call him that too.",
+          "giro": true
+        },
+        {
+          "id": "math",
+          "texto": "Forbes figured his old shares would be worth seventy billion dollars."
+        },
+        {
+          "id": "real",
+          "texto": "He has about thirty million.",
+          "giro": true
+        },
+        {
+          "id": "today",
+          "texto": "And today, as Jensen Huang steps down, that gap looks even crueler."
+        },
+        {
+          "id": "but",
+          "texto": "But the mistake is in how we judge him.",
+          "giro": true
+        },
+        {
+          "id": "rival",
+          "texto": "In the nineties, Nvidia's biggest rival looked like the sure winner."
+        },
+        {
+          "id": "bust",
+          "texto": "It went bust. Nvidia bought the pieces."
+        },
+        {
+          "id": "gift",
+          "texto": "Priem cashed out and gave forty million to his old college.",
+          "giro": true
+        },
+        {
+          "id": "luck",
+          "texto": "Holding only looks genius after the winner is known."
+        },
+        {
+          "id": "close",
+          "texto": "Too soon is a label we only hand out later, after the winner is called."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Curtis Priem, a co-founder of the biggest chip maker in your index fund, sold every single share."
+    },
+    {
+      "id": "g2",
+      "texto": "Curtis Priem, a co-founder of the biggest chip maker in your index fund, walked away from seventy billion dollars."
+    },
+    {
+      "id": "g3",
+      "texto": "Curtis Priem, the quiet third founder of the chip giant in your index fund, owns none of it today."
+    },
+    {
+      "id": "g4",
+      "texto": "Curtis Priem, the first tech chief of the chip giant in your index fund, sold out before the boom."
+    }
+  ],
+  "juicio": {
+    "contradiccion": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una idea (vender al ganador), el bucle 'worst sale?' se cierra tarde con el rival quebrado; la noticia de hoy da el porqué-ahora."
+    },
+    "error_comun": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Más abstracta; el cierre es frase de póster y la noticia llega tarde."
+    },
+    "contradiccion+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Gancho concreto y con 'your'; cierre retoma 'share'."
+    },
+    "contradiccion+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Adelanta la cifra y quema el giro de Forbes."
+    },
+    "contradiccion+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "'owns none' bonito pero choca con 'sold every share' después."
+    },
+    "contradiccion+g4": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "'before the boom' resume el final antes de tiempo."
+    }
+  }
+}

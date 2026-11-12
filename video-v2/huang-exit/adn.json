@@ -1,0 +1,70 @@
+{
+  "production_ref": "huang-exit",
+  "hook_type": "story",
+  "story_type": "character",
+  "cta_type": "comment",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 37,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "revelacion",
+      "length_s": 5.3
+    },
+    {
+      "block": "today",
+      "technique": "titulo,foto+clip",
+      "length_s": 5.02
+    },
+    {
+      "block": "cto",
+      "technique": "foto",
+      "length_s": 1.97
+    },
+    {
+      "block": "left",
+      "technique": "anios",
+      "length_s": 2.23
+    },
+    {
+      "block": "math",
+      "technique": "contador3d",
+      "length_s": 2.72
+    },
+    {
+      "block": "real",
+      "technique": "titulo",
+      "length_s": 2.28
+    },
+    {
+      "block": "worst",
+      "technique": "revelacion",
+      "length_s": 1.63
+    },
+    {
+      "block": "gift",
+      "technique": "titulo",
+      "length_s": 3.23
+    },
+    {
+      "block": "rival",
+      "technique": "titulo",
+      "length_s": 4.66
+    },
+    {
+      "block": "bust",
+      "technique": "revelacion",
+      "length_s": 2.78
+    },
+    {
+      "block": "nobody",
+      "technique": "titulo",
+      "length_s": 2.22
+    },
+    {
+      "block": "close",
+      "technique": "cta",
+      "length_s": 2.58
+    }
+  ]
+}
