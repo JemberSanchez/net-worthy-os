@@ -88,5 +88,5 @@
       }
     }
   },
-  "severidad_bloquea": ["alta"]
+  "severidad_bloquea": ["alta", "media"]
 }

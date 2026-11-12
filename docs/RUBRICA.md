@@ -93,4 +93,9 @@ Por qué esos números: los 9 vídeos previos dan cámara ≥ 0,75 y punch/texto
 
 `estructura` bajó de 0,85 a 0,70: 0 de 45 pares superaban 0,85 (máximo 0,846), porque foto + titulo son el 81-94 % de las
 escenas desde #9. Secuencias barajadas al azar con la misma composición dan media 0,448 y p95 0,692: por encima de 0,70 sí
-es más parecido que el azar (11 de 45 pares). Sigue siendo `media`, no bloquea.
+es más parecido que el azar (11 de 45 pares). Sigue siendo `media`.
+
+**12-nov (decisión del usuario): `media` también bloquea la publicación** (`severidad_bloquea`).
+`baja` sigue de aviso: su fallo más común, L1 "cae bajo la interfaz" (115 de los publicados), dio un
+falso positivo comprobado en anne-scheiber t=6,5 s (subtítulo a ~1300 px, la UI empieza en ~1570). La
+franja derecha usa x > 0,86 (151 px) y ESTADO dice ~120 px: validar con una captura real del móvil.

@@ -37,6 +37,16 @@ v3 (5-nov-2026): MISMA fórmula, otros datos
   (engaged views / vistas: 37,5 % frente al 37,9 % de Studio en aws-profit, 33 % frente a 38,5 % en
   gdp-annualized, así que es una aproximación).
 
+v4 (12-nov-2026): entra "se quedaron"
+-------------------------------------
+    success = 0.35 · min(1, se_quedaron / 0.50) + 0.40 · retención_norm + 0.25 · alcance_norm
+
+`se_quedaron` = engaged views / vistas de YouTube, la señal con la que el feed de Shorts reparte.
+Validado contra Studio el 12-nov en 7 vídeos (0 % a 54 %): diferencia máxima 5 puntos (midterm-rally,
+45,8 % en la DB frente a 51,0 % en Studio, la DB era de días antes). Solo existe si YouTube llega a
+`MIN_VISTAS`; si no, se usan los pesos de v3 y `partes` no lleva `se_quedaron_norm`.
+Umbral 0,50 = suposición (lo mejor del canal es 54 %), PROVISIONAL.
+
 QUÉ *NO* HACE
 -------------
 No convierte v1 en v2. Un `success` v1 y uno v2 **no son comparables**, así que cada outcome guarda
@@ -47,7 +57,7 @@ from __future__ import annotations
 
 import sqlite3
 
-SCORE_VERSION = "v3-plataformas"
+SCORE_VERSION = "v4-se-quedaron"
 
 # Retención media que el algoritmo pide para empujar un Short de 30-60 s (benchmark 2026).
 UMBRAL_RETENCION = 0.50
@@ -58,6 +68,10 @@ ALCANCE_REF = 750
 PESO_RETENCION = 0.70
 PESO_ALCANCE = 0.30
 
+# v4: "se quedaron" (engaged/vistas de YouTube). Umbral = suposición, PROVISIONAL.
+UMBRAL_SE_QUEDARON = 0.50
+PESOS_V4 = (0.35, 0.40, 0.25)  # se quedaron, retención, alcance
+
 # PROVISIONAL: por debajo, un par de personas en bucle mueven la media. Sin calibrar (n bajo).
 MIN_VISTAS = 30
 
@@ -66,7 +80,9 @@ class MuestraInsuficiente(ValueError):
     """Ninguna plataforma llega a MIN_VISTAS: el vídeo no tiene score, no un score malo."""
 
 
-def calcular(*, retention_avg: float | None, views: int | None) -> tuple[float, dict]:
+def calcular(
+    *, retention_avg: float | None, views: int | None, se_quedaron: float | None = None
+) -> tuple[float, dict]:
     """Devuelve (success, partes). `partes` deja por escrito de dónde sale el número.
 
     Si no hay retención registrada NO se inventa: se calcula solo con alcance y se marca
@@ -104,6 +120,11 @@ def calcular(*, retention_avg: float | None, views: int | None) -> tuple[float, 
         return round(r_norm, 4), partes
 
     partes["parcial"] = False
+    if se_quedaron is not None:
+        q_norm = min(1.0, se_quedaron / UMBRAL_SE_QUEDARON)
+        partes["se_quedaron_norm"] = round(q_norm, 4)
+        pq, pr, pa = PESOS_V4
+        return round(pq * q_norm + pr * r_norm + pa * a_norm, 4), partes
     score = PESO_RETENCION * r_norm + PESO_ALCANCE * a_norm
     return round(score, 4), partes
 
@@ -155,6 +176,8 @@ def desde_analytics(con: sqlite3.Connection, production_ref: str) -> tuple[float
         if medibles
         else None
     )
-    score, partes = calcular(retention_avg=retencion, views=total)
+    yt_p = plataformas.get("youtube")
+    quedaron = yt_p["se_quedaron"] if yt_p and yt_p["cuenta"] else None
+    score, partes = calcular(retention_avg=retencion, views=total, se_quedaron=quedaron)
     partes["plataformas"] = plataformas
     return score, partes

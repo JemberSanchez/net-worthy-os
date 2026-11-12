@@ -64,9 +64,11 @@ falta, el script da el comando). Ningún motor se elige unilateralmente: siempre
 Alineamiento real con `tools/alinear_voz.py` (`.align.json`). **El LEAD no es la palanca**: se ajustó
 seis veces en vano; el error era dispersión, no offset.
 
-## Score v3 (5-nov, `omega/creative/scoring.py`)
+## Score v4 (12-nov, `omega/creative/scoring.py`)
 
-`0.70·min(1, retención/0.50) + 0.30·min(1, alcance/750)`, ahora con YouTube, Facebook e Instagram
+`0.35·min(1, se_quedaron/0.50) + 0.40·ret_norm + 0.25·alcance_norm`; se_quedaron = engaged/vistas de
+YouTube (validado contra Studio en 7 vídeos, ±5 pts). Sin YouTube ≥30 vistas, pesos v3:
+`0.70·min(1, retención/0.50) + 0.30·min(1, alcance/750)`, con YouTube, Facebook e Instagram
 (alcance = suma, retención = media ponderada por vistas). Una plataforma solo aporta con ≥30 vistas
 (PROVISIONAL); sin ninguna no hay score. Cada una queda en `score_parts`. Se calcula con `rescore`, no
 se teclea. v1, v2 y v3 no son comparables: mirar `score_version`. Una "vista" de Shorts incluye

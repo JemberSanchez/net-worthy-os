@@ -267,6 +267,22 @@ class VeredictoTest(unittest.TestCase):
         self.assertFalse(v["aprobado"])
         self.assertEqual(len(v["bloqueantes"]), 1)
 
+    def test_la_rubrica_bloquea_fallos_medios(self):
+        """User decision 12-nov: medium faults (voice masked, mid-phrase silence) do not ship.
+        Low stays a warning until L1's Shorts-UI zone is checked against a real phone capture."""
+        rubrica = Path(critico.__file__).with_name("rubrica.json")
+        bloquean = json.loads(rubrica.read_text(encoding="utf-8"))["severidad_bloquea"]
+        self.assertFalse(
+            critico.veredicto(self._ronda("media"), bloquean, con_juicio=True)[
+                "aprobado"
+            ]
+        )
+        self.assertTrue(
+            critico.veredicto(self._ronda("baja"), bloquean, con_juicio=True)[
+                "aprobado"
+            ]
+        )
+
     def test_sin_mirar_el_video_no_aprueba(self):
         v = critico.veredicto(self._ronda(), ["alta"], con_juicio=False)
         self.assertFalse(v["aprobado"])

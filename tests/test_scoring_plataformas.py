@@ -63,6 +63,34 @@ class ScorePorPlataforma(unittest.TestCase):
         _, partes = scoring.desde_analytics(self.con, "r")
         self.assertAlmostEqual(partes["plataformas"]["youtube"]["se_quedaron"], 0.375)
 
+    def test_se_quedaron_entra_al_score(self):
+        """Same retention and reach: the video more people stayed on must score higher."""
+
+        def con_engaged(ref, engaged):
+            production_dna.record_analytics(
+                self.con,
+                production_ref=ref,
+                retention_avg=0.6,
+                views=100,
+                engaged_views=engaged,
+            )
+            return scoring.desde_analytics(self.con, ref)
+
+        alto, partes = con_engaged("alto", 50)
+        bajo, _ = con_engaged("bajo", 10)
+        self.assertGreater(alto - bajo, 0.2)
+        self.assertAlmostEqual(partes["se_quedaron_norm"], 1.0)
+
+    def test_sin_youtube_medible_no_inventa_se_quedaron(self):
+        production_dna.record_analytics(
+            self.con, production_ref="r", retention_avg=0.6, views=10, engaged_views=9
+        )
+        production_dna.record_social(
+            self.con, "r", "facebook", {"views": 300, "avg_watch_s": 12.0}
+        )
+        _, partes = scoring.desde_analytics(self.con, "r")
+        self.assertNotIn("se_quedaron_norm", partes)
+
     def test_tiempo_visto_con_bucles_no_pasa_de_uno(self):
         production_dna.record_social(
             self.con, "r", "facebook", {"views": 50, "avg_watch_s": 90.0}
