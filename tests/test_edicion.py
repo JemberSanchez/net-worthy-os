@@ -17,6 +17,7 @@ sys.path[:0] = [str(RAIZ / "video-v2" / "motor"), str(RAIZ / "tools")]
 import construir as c
 import edicion as ed
 import medir_parecido as mp
+import puertas
 
 LISTA = {"Public domain", "Public Domain", "CC0", "CC BY 3.0", "CC BY 4.0"}
 FRASES = [
@@ -249,8 +250,16 @@ class PuertaTest(unittest.TestCase):
     def test_todos_los_publicados_siguen_validando(self):
         sbs = sorted((RAIZ / "video-v2").glob("*/storyboard.json"))
         # a checkout has no renders or local base and both history gates order by storyboard mtime (their documented
-        # shortcut), so a touched storyboard fails on an older video's turn: history is tested in this class's own cases
+        # shortcut), so a touched storyboard fails on an older video's turn: history is tested in this class's own cases.
+        # Clip sheets are gitignored local files: keep the `visto` check, drop only "sheet missing" (tested in test_motor_raiz)
+        sin_ver = puertas.clips_sin_ver
         with (
+            mock.patch(
+                "puertas.clips_sin_ver",
+                side_effect=lambda sb, proy: [
+                    e for e in sin_ver(sb, proy) if "sin hoja" not in e
+                ],
+            ),
             mock.patch(
                 "guionista.refs_publicadas", return_value=[f.parent.name for f in sbs]
             ),
