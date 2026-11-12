@@ -157,10 +157,21 @@ def es_disenado(texto: str, t: float, diseno: list[dict]) -> bool:
     return False
 
 
-def en_orden(lineas: list[dict], alto: int) -> list[dict]:
-    """Reading order, not the detector's: pieces of one line ("$1001", "million?") can come back in any order."""
-    fila = 0.03 * alto  # shortcut: fixed row height, two lines closer than 3 % of the frame may swap
-    return sorted(lineas, key=lambda l: (round((l["caja"][1] + l["caja"][3]) / 2 / fila), l["caja"][0]))
+def en_orden(lineas: list[dict]) -> list[dict]:
+    """Reading order, not the detector's: pieces of one line ("$1001", "million?") can come back in any order.
+    A piece joins the row above when its centre is within half a line height of the row's; a fixed band
+    (3 % of the frame) put two lines 44 px apart in one row and swapped them (huang-exit, 12-nov)."""
+    def cy(l):
+        return (l["caja"][1] + l["caja"][3]) / 2
+
+    filas: list[list[dict]] = []
+    for l in sorted(lineas, key=cy):
+        h = l["caja"][3] - l["caja"][1]
+        if filas and abs(cy(l) - cy(filas[-1][0])) < 0.5 * max(h, filas[-1][0]["caja"][3] - filas[-1][0]["caja"][1]):
+            filas[-1].append(l)
+        else:
+            filas.append([l])
+    return [l for f in filas for l in sorted(f, key=lambda l: l["caja"][0])]
 
 
 def analizar(frames: list[dict], esperados: list[dict], u: dict | None = None,
@@ -195,7 +206,7 @@ def analizar(frames: list[dict], esperados: list[dict], u: dict | None = None,
                 if p > mejor:
                     mejor, t_mejor = p, f["t"]
             # el texto puede partirse en varias líneas: probar también la unión del frame
-            p = parecido(e["texto"], " ".join(l["texto"] for l in en_orden(f["lineas"], f["alto"])))
+            p = parecido(e["texto"], " ".join(l["texto"] for l in en_orden(f["lineas"])))
             if p > mejor:
                 mejor, t_mejor = p, f["t"]
         if not en_ventana:

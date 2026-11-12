@@ -620,8 +620,8 @@ def ocr_previo(salida: Path, instantes: list[float]) -> list[dict]:
         t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
         if any(abs(t - x) < 0.011 for x in instantes):
             quiere[t] = f
-    if not quiere:
-        return []
+    if len(quiere) <= 1:  # a process pool would only add start-up
+        return [{"t": t, **medir_cuadros.ocr_imagen(f)} for t, f in quiere.items()]
     # one RapidOCR per process, as the critic's ocr_frames (same model and detection limit)
     with ProcessPoolExecutor(min(medir_texto.PROCESOS_OCR, len(quiere))) as ex:
         lecturas = list(ex.map(medir_cuadros.ocr_imagen, quiere.values()))

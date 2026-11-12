@@ -166,5 +166,20 @@ class TramosOcrTest(unittest.TestCase):
         self.assertEqual(T.tramos(20, 15, 6), [(0, 15), (15, 20)])
 
 
+class OrdenLecturaTest(unittest.TestCase):
+    def test_lineas_con_interlineado_menor_que_la_banda_no_se_cruzan(self):
+        """huang-exit end card at 33 px (12-nov): lines 44 px apart fell in one 57.6 px band and were sorted by x."""
+        L = [{"texto": "million are", "caja": [65, 1384, 882, 1427]},
+             {"texto": "Not financial", "caja": [66, 1340, 818, 1382]},
+             {"texto": "performance", "caja": [65, 1474, 784, 1518]},
+             {"texto": "Nvidia's", "caja": [64, 1428, 700, 1473]}]
+        self.assertEqual([x["texto"] for x in T.en_orden(L)],
+                         ["Not financial", "million are", "Nvidia's", "performance"])
+
+    def test_trozos_de_una_misma_linea_van_por_x(self):
+        L = [{"texto": "million?", "caja": [520, 802, 900, 880]}, {"texto": "$1001", "caja": [100, 800, 500, 884]}]
+        self.assertEqual([x["texto"] for x in T.en_orden(L)], ["$1001", "million?"])
+
+
 if __name__ == "__main__":
     unittest.main()
