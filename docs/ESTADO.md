@@ -46,9 +46,15 @@ cruzaba líneas a menos de 57.6 px y daba un aviso legible por "no leído".
 **Hueco a 5 min (sin rebajar nada):** previo 228 s + render-y-crítico 612 s ≈ 14 min de máquina
 con UNA sola ronda, más la voz (~2 min) y los turnos de Claude. Con la red completa (render high +
 crítico) **< 5 min no es alcanzable hoy**: render 114 s + OCR del crítico ~200 s ya son 5 min.
-Lo que queda por decidir con el usuario (cambia cómo trabaja): (1) cola de temas preparada de
-antemano (investigación + cifras + guion fuera del reloj); (2) preview para aprobar con render
-`draft` + puertas (~200-240 s) y el crítico completo corriendo detrás, antes de publicar.
+**Preview rápida (12-nov, elegida por el usuario):** `producir.py <ref> --auto --rapido` = puertas
+estáticas + build + lint + contraste + render `draft` + gancho sobre ese MP4 → `renders/<ref>-rapido.mp4`.
+Medido en huang-exit con la máquina libre: **154 s** (puertas 7, contraste 32, render 109, loudnorm 4,
+gancho 1). Con otra sesión renderizando a la vez: 350-383 s (no lanzar dos producciones juntas).
+Draft = mismo 1080x1920, 30 fps y fotogramas, SSIM 0.973 vs high. `/producir` la manda al usuario y
+lanza `--sin-subir` (render alto + crítico, ~10 min) detrás; publicar sigue exigiendo la aprobación
+del crítico sobre el MP4 final. Storyboard listo → preview en ~2.6 min; tema → preview sigue
+dependiendo de los turnos de Claude (guion, medios, voz ~2 min).
+Pendiente de decidir: cola de temas preparada de antemano (investigación + cifras + guion fuera del reloj).
 Sin medir aún: worker de voz persistente (Kokoro se recarga en cada toma), social y ritmo en
 paralelo con el crítico, anclas desnudas que derivan (no hay arreglo estático todavía).
 
