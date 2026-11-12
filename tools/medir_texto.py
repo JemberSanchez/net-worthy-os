@@ -281,6 +281,52 @@ def ocr_frames(mp4: Path, fps: float = 2.0) -> list[dict]:
     return frames
 
 
+REMEDIR_S = 0.15  # past the caption fade-in (0.1 s from start - 0.05, motor.js)
+
+
+def confirmar_contraste(bc: list[dict], medir_en, umbral: float = UMBRALES["contraste_min"]) -> list[dict]:
+    """Low-contrast texts seen in ONE sample may have been caught mid fade-in: a 3-word caption lives
+    ~0.45 s, a 2 fps sample can land in its first 0.1 s (huang-exit "IT WENT BUST", 12-nov). Re-measure
+    those once, REMEDIR_S later; the fault stays unless the same text then passes the same bar.
+    `medir_en(t)` -> [{texto, contraste}] lines OCR'd at t."""
+    out = []
+    for x in bc:
+        if x.get("t_fin", x["t"]) == x["t"]:
+            lineas = medir_en(round(x["t"] + REMEDIR_S, 2))
+            c = max((l.get("contraste") or 0.0 for l in lineas if parecido(x["texto"], l["texto"]) >= 0.8), default=0.0)
+            if c >= umbral:
+                continue
+        out.append(x)
+    return out
+
+
+def ocr_en(mp4: Path):
+    """medir_en for confirmar_contraste: OCR of the single frame at t (seek, no full pass)."""
+    import logging
+
+    import cv2
+    from rapidocr import RapidOCR
+    logging.getLogger("RapidOCR").setLevel(logging.ERROR)
+    motor = RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920})
+
+    def medir_en(t: float) -> list[dict]:
+        cap = cv2.VideoCapture(str(mp4))
+        cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+        ok, fr = cap.read()
+        cap.release()
+        if not ok:
+            return []
+        rgb = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+        res = motor(rgb)
+        out = []
+        for caja, txt in zip(res.boxes, res.txts) if res.boxes is not None else []:
+            xs, ys = [p[0] for p in caja], [p[1] for p in caja]
+            out.append({"texto": txt, "contraste": contraste_caja(rgb, [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))])})
+        return out
+
+    return medir_en
+
+
 def medir(mp4: Path, proy: Path | None = None, fps: float = 2.0, umbrales: dict | None = None) -> dict:
     esperados = esperados_de_proyecto(proy) if proy else []
     return analizar(ocr_frames(mp4, fps), esperados, umbrales)

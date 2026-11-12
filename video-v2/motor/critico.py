@@ -1007,6 +1007,9 @@ def revisar(
         {k: u[k] for k in medir_texto.UMBRALES if k in u},
         diseno=diseno,
     )
+    rt["bajo_contraste"] = medir_texto.confirmar_contraste(
+        rt["bajo_contraste"], medir_texto.ocr_en(mp4), u.get("contraste_min", medir_texto.UMBRALES["contraste_min"])
+    )
     rt["aviso_lineas"] = av.get("lineas") or []
     med["texto"] = {k: rt[k] for k in ("leidos_pct", "esperados", "n_frames")}
     fallos += revisar_texto(rt, vs, u)

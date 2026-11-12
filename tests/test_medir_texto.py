@@ -123,6 +123,36 @@ class ContrasteTest(unittest.TestCase):
         self.assertAlmostEqual(self.caja((255, 215, 0), (255, 255, 255)), 1.40, delta=0.05)
 
 
+class ConfirmarContrasteTest(unittest.TestCase):
+    """A caption seen in ONE 2 fps sample can be caught mid fade-in (huang-exit, 12-nov: "IT WENT BUST"
+    at 29.00 s, fade 28.99-29.09 s, 2.64:1). Re-measure that text once, just after; never relax the bar."""
+
+    BC = ({"t": 29.0, "t_fin": 29.0, "texto": "IT WENT BUST", "contraste": 2.64},)
+
+    def test_unico_frame_en_fundido_se_confirma_bien(self):
+        out = T.confirmar_contraste(list(self.BC), lambda t: [{"texto": "IT WENT BUST", "contraste": 7.1}])
+        self.assertEqual(out, [])
+
+    def test_sigue_bajo_se_queda(self):
+        out = T.confirmar_contraste(list(self.BC), lambda t: [{"texto": "IT WENT BUST", "contraste": 2.2}])
+        self.assertEqual(len(out), 1)
+
+    def test_no_reencontrado_se_queda(self):
+        out = T.confirmar_contraste(list(self.BC), lambda t: [{"texto": "NOBODY GETS", "contraste": 9.0}])
+        self.assertEqual(len(out), 1)
+
+    def test_varios_frames_no_se_remide(self):
+        visto = []
+        bc = [{"t": 5.0, "t_fin": 6.0, "texto": "JUST QUIT", "contraste": 2.0}]
+        out = T.confirmar_contraste(bc, lambda t: visto.append(t) or [])
+        self.assertEqual((out, visto), (bc, []))
+
+    def test_remide_despues_del_fundido(self):
+        visto = []
+        T.confirmar_contraste(list(self.BC), lambda t: visto.append(t) or [])
+        self.assertEqual(visto, [29.15])
+
+
 @unittest.skipUnless(importlib.util.find_spec("rapidocr") and os.path.exists(FUENTE), "sin RapidOCR")
 class OcrRealTest(unittest.TestCase):
     """Validación del instrumento con el OCR de verdad: lo grande y contrastado se lee; lo diminuto
