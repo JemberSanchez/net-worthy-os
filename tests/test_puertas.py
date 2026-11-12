@@ -447,5 +447,15 @@ class PublicarExigeCriticoTest(unittest.TestCase):
         fb.assert_called_once()
 
 
+class ContadorAnchoTest(unittest.TestCase):
+    def test_contador_mas_ancho_que_el_cuadro_falla_antes_del_build(self):
+        sb = {"escenas": [{"tipo": "foto"}, {"tipo": "contador3d", "valor": 70_000_000_000}]}
+        (e,) = puertas.contador_ancho(sb)
+        self.assertIn("escena 1", e)
+        sb["escenas"][1]["valor"] = 70
+        self.assertEqual(puertas.contador_ancho(sb), [])
+        self.assertEqual(puertas.contador_ancho({"escenas": [{"tipo": "contador3d", "valor": 180_000_000}]}), [])
+
+
 if __name__ == "__main__":
     unittest.main()
