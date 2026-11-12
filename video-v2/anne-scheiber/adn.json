@@ -1,0 +1,65 @@
+{
+  "production_ref": "anne-scheiber",
+  "hook_type": "story",
+  "story_type": "character",
+  "cta_type": "comment",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 39,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "foto+clip",
+      "length_s": 4.4
+    },
+    {
+      "block": "died",
+      "technique": "contador3d",
+      "length_s": 3.04
+    },
+    {
+      "block": "legend",
+      "technique": "lista",
+      "length_s": 5.14
+    },
+    {
+      "block": "piece",
+      "technique": "revelacion",
+      "length_s": 2.9
+    },
+    {
+      "block": "return",
+      "technique": "foto+clip,anios",
+      "length_s": 3.94
+    },
+    {
+      "block": "div",
+      "technique": "v2-storyboard",
+      "length_s": 2.94
+    },
+    {
+      "block": "bigger",
+      "technique": "titulo",
+      "length_s": 3.18
+    },
+    {
+      "block": "avg",
+      "technique": "titulo",
+      "length_s": 2.2
+    },
+    {
+      "block": "you",
+      "technique": "foto",
+      "length_s": 3.56
+    },
+    {
+      "block": "time",
+      "technique": "foto+clip",
+      "length_s": 2.64
+    },
+    {
+      "block": "close",
+      "technique": "cta",
+      "length_s": 5.14
+    }
+  ]
+}

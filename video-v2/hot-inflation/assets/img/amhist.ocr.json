@@ -1,0 +1,148 @@
+{
+ "tam": [
+  3840,
+  2160
+ ],
+ "lineas": [
+  {
+   "texto": "NATIONALMUSEUMOF",
+   "conf": 1.0,
+   "caja": [
+    1169,
+    114,
+    3360,
+    254
+   ]
+  },
+  {
+   "texto": "AMERICANHISTORY",
+   "conf": 1.0,
+   "caja": [
+    1289,
+    288,
+    3244,
+    420
+   ]
+  },
+  {
+   "texto": "KENNETHE.BEHRINGCENTER",
+   "conf": 0.978,
+   "caja": [
+    1465,
+    559,
+    3062,
+    658
+   ]
+  },
+  {
+   "texto": "IENTRANCE",
+   "conf": 0.953,
+   "caja": [
+    87,
+    990,
+    321,
+    1044
+   ]
+  },
+  {
+   "texto": "ENTRANC",
+   "conf": 1.0,
+   "caja": [
+    461,
+    992,
+    666,
+    1040
+   ]
+  },
+  {
+   "texto": "THE MUSEUM",
+   "conf": 0.999,
+   "caja": [
+    1891,
+    1215,
+    2201,
+    1278
+   ]
+  },
+  {
+   "texto": "IS CLOSED",
+   "conf": 0.999,
+   "caja": [
+    1895,
+    1270,
+    2133,
+    1331
+   ]
+  },
+  {
+   "texto": "TODAY",
+   "conf": 1.0,
+   "caja": [
+    1895,
+    1319,
+    2057,
+    1382
+   ]
+  },
+  {
+   "texto": "EL MUSEO",
+   "conf": 0.991,
+   "caja": [
+    1899,
+    1390,
+    2129,
+    1453
+   ]
+  },
+  {
+   "texto": "ESTÁ CERRADO",
+   "conf": 0.98,
+   "caja": [
+    1901,
+    1435,
+    2243,
+    1502
+   ]
+  },
+  {
+   "texto": "HOY",
+   "conf": 1.0,
+   "caja": [
+    1899,
+    1491,
+    2011,
+    1554
+   ]
+  },
+  {
+   "texto": "SI-VISITOR",
+   "conf": 0.987,
+   "caja": [
+    2086,
+    1648,
+    2175,
+    1674
+   ]
+  },
+  {
+   "texto": "AMERICANHISTORY",
+   "conf": 0.994,
+   "caja": [
+    2086,
+    1662,
+    2230,
+    1693
+   ]
+  },
+  {
+   "texto": "AMHISTORYMUSEUM",
+   "conf": 0.999,
+   "caja": [
+    2088,
+    1680,
+    2237,
+    1711
+   ]
+  }
+ ]
+}

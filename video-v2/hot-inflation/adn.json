@@ -1,0 +1,65 @@
+{
+  "production_ref": "hot-inflation",
+  "hook_type": "contrast",
+  "story_type": "mystery_explainer",
+  "cta_type": "imperative",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 38,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "foto+clip,titulo",
+      "length_s": 5.14
+    },
+    {
+      "block": "what",
+      "technique": "revelacion",
+      "length_s": 2.93
+    },
+    {
+      "block": "gap",
+      "technique": "grafica",
+      "length_s": 2.97
+    },
+    {
+      "block": "twist1",
+      "technique": "v2-storyboard",
+      "length_s": 1.45
+    },
+    {
+      "block": "why1",
+      "technique": "foto",
+      "length_s": 3.63
+    },
+    {
+      "block": "why2",
+      "technique": "lista",
+      "length_s": 2.79
+    },
+    {
+      "block": "data",
+      "technique": "revelacion",
+      "length_s": 5.25
+    },
+    {
+      "block": "fed",
+      "technique": "foto",
+      "length_s": 3.23
+    },
+    {
+      "block": "risk",
+      "technique": "titulo",
+      "length_s": 4.27
+    },
+    {
+      "block": "you",
+      "technique": "foto+clip",
+      "length_s": 2.5
+    },
+    {
+      "block": "close",
+      "technique": "titulo",
+      "length_s": 3.6
+    }
+  ]
+}

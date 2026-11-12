@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "maquina.src",
+  "origen": "pexels",
+  "titulo": "pexels:8870091",
+  "autor": "MART  PRODUCTION",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-close-up-video-of-vintage-typewriter-8870091/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "apt.src",
+  "origen": "pexels",
+  "titulo": "pexels:4777926",
+  "autor": "cottonbro studio",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/exterior-design-of-an-old-apartment-building-4777926/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "monedas.src",
+  "origen": "pexels",
+  "titulo": "pexels:39597264",
+  "autor": "Tolga deniz Aran",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/vintage-letters-and-stamps-close-up-39597264/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "arena.src",
+  "origen": "pexels",
+  "titulo": "pexels:37223287",
+  "autor": "Dominiquemel16 Ramos",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/time-passing-with-sand-hourglasses-at-sunset-37223287/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "vela.src",
+  "origen": "pexels",
+  "titulo": "pexels:10480415",
+  "autor": "Attila Pergel",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/old-map-and-book-on-table-with-candle-10480415/",
+  "desde": 0.0
+ }
+]

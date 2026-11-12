@@ -1,0 +1,79 @@
+[
+ {
+  "archivo": "lavar.src",
+  "origen": "pexels",
+  "titulo": "pexels:6843727",
+  "autor": "Teona Swift",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-close-up-video-of-a-person-washing-cloths-in-a-basin-6843727/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "planchar.src",
+  "origen": "pexels",
+  "titulo": "pexels:9472843",
+  "autor": "Liliana Drew",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-ironing-a-brown-shirt-on-a-table-9472843/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "caminar.src",
+  "origen": "pexels",
+  "titulo": "pexels:3999370",
+  "autor": "K",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-person-wearing-black-shoes-while-walking-3999370/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "tele.src",
+  "origen": "pexels",
+  "titulo": "pexels:11999581",
+  "autor": "Caleb Minear",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/television-screen-noise-11999581/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "tendedero.src",
+  "origen": "pexels",
+  "titulo": "pexels:39559635",
+  "autor": "Meike",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/peaceful-countryside-clothesline-in-gentle-breeze-39559635/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "campus.src",
+  "origen": "pexels",
+  "titulo": "pexels:7490421",
+  "autor": "Taryn Elliott",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/aerial-footage-of-a-university-7490421/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "graduacion.src",
+  "origen": "pexels",
+  "titulo": "pexels:39346269",
+  "autor": "ginalis10",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/aerial-view-of-graduation-ceremony-celebration-39346269/",
+  "desde": 0.0
+ }
+]

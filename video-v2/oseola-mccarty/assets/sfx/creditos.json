@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "barrido_sint.src",
+  "origen": "wikimedia",
+  "titulo": "File:Lead - swish rave (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Lead_-_swish_rave_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "bombo_mini.src",
+  "origen": "wikimedia",
+  "titulo": "File:Kick 3 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Kick_3_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "ding.src",
+  "origen": "wikimedia",
+  "titulo": "File:406243 stubb typewriter-ding-near-mono.wav",
+  "autor": "_stubb",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:406243_stubb_typewriter-ding-near-mono.wav"
+ },
+ {
+  "archivo": "latido.src",
+  "origen": "wikimedia",
+  "titulo": "File:Heartbeat.ogg",
+  "autor": "HerbertBoland",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Heartbeat.ogg"
+ },
+ {
+  "archivo": "riser_gong.src",
+  "origen": "wikimedia",
+  "titulo": "File:Gong or bell vibrant (short).ogg",
+  "autor": "PDSounds description: http://www.pdsounds.org/sounds/gong_or_bell_vibrant",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Gong_or_bell_vibrant_(short).ogg"
+ },
+ {
+  "archivo": "riser_platillo.src",
+  "origen": "wikimedia",
+  "titulo": "File:CrashCymbalSample.ogg",
+  "autor": "RyGuy 8======D",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:CrashCymbalSample.ogg"
+ },
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ },
+ {
+  "archivo": "thud.src",
+  "origen": "wikimedia",
+  "titulo": "File:Dull thud.ogg",
+  "autor": "gregoryweir",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Dull_thud.ogg"
+ }
+]

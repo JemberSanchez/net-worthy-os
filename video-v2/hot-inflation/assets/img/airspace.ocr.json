@@ -1,0 +1,218 @@
+{
+ "tam": [
+  3840,
+  2560
+ ],
+ "lineas": [
+  {
+   "texto": "NATIONAL",
+   "conf": 1.0,
+   "caja": [
+    1653,
+    258,
+    2321,
+    418
+   ]
+  },
+  {
+   "texto": "AIRANDSPACE",
+   "conf": 0.995,
+   "caja": [
+    1649,
+    372,
+    2907,
+    518
+   ]
+  },
+  {
+   "texto": "AIR AND SPACE",
+   "conf": 0.988,
+   "caja": [
+    1639,
+    380,
+    2913,
+    581
+   ]
+  },
+  {
+   "texto": "MUSEUM",
+   "conf": 1.0,
+   "caja": [
+    2272,
+    536,
+    2907,
+    699
+   ]
+  },
+  {
+   "texto": "Smithsonian",
+   "conf": 1.0,
+   "caja": [
+    2284,
+    719,
+    2907,
+    837
+   ]
+  },
+  {
+   "texto": "Smithsonian",
+   "conf": 1.0,
+   "caja": [
+    2381,
+    760,
+    2897,
+    823
+   ]
+  },
+  {
+   "texto": "Smithsonian",
+   "conf": 1.0,
+   "caja": [
+    1806,
+    1048,
+    2172,
+    1124
+   ]
+  },
+  {
+   "texto": "All Smithsonian museums and the",
+   "conf": 1.0,
+   "caja": [
+    1701,
+    1193,
+    2282,
+    1239
+   ]
+  },
+  {
+   "texto": "National Zoo are closed today due to the",
+   "conf": 0.997,
+   "caja": [
+    1641,
+    1235,
+    2342,
+    1278
+   ]
+  },
+  {
+   "texto": "government shutdown.",
+   "conf": 1.0,
+   "caja": [
+    1786,
+    1286,
+    2189,
+    1335
+   ]
+  },
+  {
+   "texto": "We apologize for the inconvenience.",
+   "conf": 0.989,
+   "caja": [
+    1684,
+    1353,
+    2299,
+    1400
+   ]
+  },
+  {
+   "texto": "Scan the QR code or visit si.edu",
+   "conf": 1.0,
+   "caja": [
+    1779,
+    1467,
+    2203,
+    1508
+   ]
+  },
+  {
+   "texto": "for updates on our operating status.",
+   "conf": 0.991,
+   "caja": [
+    1752,
+    1500,
+    2228,
+    1546
+   ]
+  },
+  {
+   "texto": "Escanee el código QR o visite si.edu para obtener",
+   "conf": 0.987,
+   "caja": [
+    1670,
+    1737,
+    2319,
+    1794
+   ]
+  },
+  {
+   "texto": "información actualizada sobre nuestro estado operativo.",
+   "conf": 0.999,
+   "caja": [
+    1626,
+    1770,
+    2361,
+    1829
+   ]
+  },
+  {
+   "texto": "Todos los museos del Smithsonian y el",
+   "conf": 1.0,
+   "caja": [
+    1665,
+    1904,
+    2325,
+    1979
+   ]
+  },
+  {
+   "texto": "Zoológico Nacional están cerrados hoy",
+   "conf": 1.0,
+   "caja": [
+    1657,
+    1949,
+    2332,
+    2026
+   ]
+  },
+  {
+   "texto": "debido al cierre del gobic",
+   "conf": 0.968,
+   "caja": [
+    1740,
+    2001,
+    2166,
+    2038
+   ]
+  },
+  {
+   "texto": "debido al cierre del gobierno.",
+   "conf": 1.0,
+   "caja": [
+    1742,
+    2000,
+    2247,
+    2069
+   ]
+  },
+  {
+   "texto": "Pedimos disculpas por las molestias que",
+   "conf": 0.988,
+   "caja": [
+    1645,
+    2060,
+    2348,
+    2142
+   ]
+  },
+  {
+   "texto": "esto pueda causar.",
+   "conf": 1.0,
+   "caja": [
+    1827,
+    2117,
+    2162,
+    2178
+   ]
+  }
+ ]
+}

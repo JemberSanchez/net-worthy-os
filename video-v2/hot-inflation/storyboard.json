@@ -1,0 +1,631 @@
+{
+  "ref": "hot-inflation",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "The government agency that tracks your prices just released an inflation report with a hole in it."
+    },
+    {
+      "id": "what",
+      "texto": "Prices rose zero point four percent in one month."
+    },
+    {
+      "id": "gap",
+      "texto": "But the yearly inflation rate everyone quotes isn't there."
+    },
+    {
+      "id": "twist1",
+      "texto": "Not late. Missing.",
+      "giro": true
+    },
+    {
+      "id": "why1",
+      "texto": "Last October, the government shut down, and nobody collected prices."
+    },
+    {
+      "id": "why2",
+      "texto": "So this October has nothing to compare against.",
+      "giro": true
+    },
+    {
+      "id": "data",
+      "texto": "The Fed reads the short trend instead: core prices near three point seven percent a year."
+    },
+    {
+      "id": "fed",
+      "texto": "That's why officials talk about a December hike."
+    },
+    {
+      "id": "risk",
+      "texto": "Honest part: one hot month is noisy, and today's yearly figures are estimates.",
+      "giro": true
+    },
+    {
+      "id": "you",
+      "texto": "For you, borrowing could get pricier first."
+    },
+    {
+      "id": "close",
+      "texto": "Watch next month's report: the hole closes."
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam",
+    "speed": 0.95,
+    "pausa_s": 0.28
+  },
+  "aspecto": "cine",
+  "tema": "editorial",
+  "formato": "documental-editorial",
+  "fondos_auto": false,
+  "adn": {
+    "hook_type": "contrast",
+    "story_type": "mystery_explainer",
+    "cta_type": "imperative",
+    "renderer_version": "v2-hyperframes"
+  },
+  "cifras": [
+    {
+      "dato": "October 2026 CPI-U all items, seasonally adjusted: 337.476 vs 336.298 in September = +0.35%, published as +0.4%",
+      "fuente": "https://data.bls.gov/timeseries/CUSR0000SA0"
+    },
+    {
+      "dato": "No CPI value exists for October 2025 (BLS series shows a gap between Sep 2025 and Nov 2025), so no official 12-month change for October 2026",
+      "fuente": "https://data.bls.gov/timeseries/CUUR0000SA0"
+    },
+    {
+      "dato": "Smithsonian museums closed on Oct 15, 2025 due to the government shutdown (dated photo of the sign)",
+      "fuente": "https://commons.wikimedia.org/wiki/File:Air_and_Space_Museum_closed_government_shutdown_Washington_DC_2025-10-15_12-15-27_1.jpg"
+    },
+    {
+      "dato": "Core CPI (less food and energy, SA): 336.789 in July 2026 to 339.900 in October 2026 = 3.75% annualized, about 3.7% three-month pace",
+      "fuente": "https://data.bls.gov/timeseries/CUSR0000SA0L1E"
+    },
+    {
+      "dato": "October CPI report clears the way for a December rate hike",
+      "fuente": "https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect"
+    },
+    {
+      "dato": "CPI-U all items SA: 318.961 in January 2025 to 337.476 in October 2026 = +5.8% cumulative",
+      "fuente": "https://data.bls.gov/timeseries/CUSR0000SA0"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "Not financial advice · data: BLS CPI series"
+    ],
+    "ventanas": [
+      [
+        "1",
+        "3"
+      ],
+      [
+        "7",
+        "9"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 29,
+    "completo": "Not financial advice. Data: BLS CPI-U and core CPI, seasonally adjusted. No official October 2025 data exists; any yearly figure for October 2026 is an estimate."
+  },
+  "subtitulos": [
+    "1",
+    "10"
+  ],
+  "calientes": [
+    "hole",
+    "missing",
+    "shut",
+    "noisy",
+    "closes"
+  ],
+  "golpes": [
+    "1:four",
+    "4:missing",
+    "6:compare",
+    "7:three",
+    "9:noisy",
+    "11:closes"
+  ],
+  "musica": {
+    "pista": {
+      "mood": "tension"
+    },
+    "volumen": 0.4
+  },
+  "sonidos": [
+    {
+      "sfx": "moneda_suelo",
+      "en": "1:four"
+    },
+    {
+      "sfx": "portazo",
+      "en": "5:shut",
+      "vol": 0.25
+    },
+    {
+      "sfx": "clic_fino",
+      "en": "6:compare"
+    },
+    {
+      "sfx": "tick",
+      "en": "7:three"
+    },
+    {
+      "sfx": "timbal",
+      "en": "11:closes",
+      "vol": 0.25
+    }
+  ],
+  "imagenes": {
+    "airspace": {
+      "commons": "File:Air and Space Museum closed government shutdown Washington DC 2025-10-15 12-15-27 1.jpg",
+      "documento": true,
+      "color": true
+    },
+    "amhist": {
+      "commons": "File:American History Museum closed government shutdown Washington DC 2025-10-15 11-17-56.jpg",
+      "color": true,
+      "ligero": true
+    },
+    "eccles": {
+      "commons": "File:Eccles Building (26088200676).jpg",
+      "color": true,
+      "ligero": true
+    }
+  },
+  "clips": {
+    "bomba": {
+      "pexels": 29576552,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "factura": {
+      "pexels": 7545831,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "super": {
+      "pexels": 39221932,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "terminal": {
+      "pexels": 6406033,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "pos": "baj",
+      "clip": "bomba",
+      "rotulos": [
+        {
+          "texto": "The agency that tracks *your prices*",
+          "en": "0",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "0:inflation",
+      "fondo": {
+        "clip": "factura",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "An inflation report",
+          "en": "0:inflation",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*with a hole in it*",
+          "en": "0:hole",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "1",
+      "linea1": {
+        "texto": "October, one month"
+      },
+      "linea2": {
+        "texto": "+0.4%",
+        "en": "1:four"
+      },
+      "golpe": "1:four"
+    },
+    {
+      "tipo": "grafica",
+      "papel": true,
+      "en": "2",
+      "lineas": [
+        {
+          "nombre": "CPI",
+          "color": "#17324d",
+          "puntos": [
+            [
+              2025.0,
+              0.0
+            ],
+            [
+              2025.083,
+              0.23
+            ],
+            [
+              2025.167,
+              0.26
+            ],
+            [
+              2025.25,
+              0.42
+            ],
+            [
+              2025.333,
+              0.52
+            ],
+            [
+              2025.417,
+              0.78
+            ],
+            [
+              2025.5,
+              1.01
+            ],
+            [
+              2025.583,
+              1.36
+            ],
+            [
+              2025.667,
+              1.66
+            ],
+            [
+              2025.833,
+              1.91
+            ],
+            [
+              2025.917,
+              2.22
+            ],
+            [
+              2026.0,
+              2.39
+            ],
+            [
+              2026.083,
+              2.66
+            ],
+            [
+              2026.167,
+              3.55
+            ],
+            [
+              2026.25,
+              4.22
+            ],
+            [
+              2026.333,
+              4.71
+            ],
+            [
+              2026.417,
+              4.27
+            ],
+            [
+              2026.5,
+              4.34
+            ],
+            [
+              2026.583,
+              4.76
+            ],
+            [
+              2026.667,
+              5.44
+            ],
+            [
+              2026.75,
+              5.8
+            ]
+          ],
+          "estados": [
+            {
+              "en": "3",
+              "ancho": 12
+            }
+          ]
+        }
+      ],
+      "rejilla": [
+        0,
+        2,
+        4,
+        6
+      ],
+      "ticks": [
+        2025,
+        2026
+      ],
+      "ymin": -0.6,
+      "ymax": 6.8,
+      "avance": [
+        {
+          "anio": 2025.0,
+          "en": "2"
+        },
+        {
+          "anio": 2025.667,
+          "en": "3"
+        },
+        {
+          "anio": 2026.75,
+          "en": "4:missing$"
+        }
+      ],
+      "marcas": [
+        {
+          "anio": 2025.75,
+          "texto": "Oct 2025: never collected",
+          "en": "3",
+          "golpe": true
+        }
+      ],
+      "rotulos": [
+        {
+          "texto": "Consumer prices since Jan 2025 (BLS)",
+          "en": "2",
+          "estilo": "nota",
+          "color": "ink",
+          "hasta": "4"
+        },
+        {
+          "texto": "Yearly rate: *missing*",
+          "en": "4",
+          "estilo": "big",
+          "color": "red",
+          "top": 230
+        }
+      ],
+      "unidad": "%"
+    },
+    {
+      "tipo": "foto",
+      "en": "5:government",
+      "img": "airspace"
+    },
+    {
+      "tipo": "foto",
+      "en": "5:nobody",
+      "pos": "baj",
+      "img": "amhist",
+      "rotulos": [
+        {
+          "texto": "Nobody *collected prices*",
+          "en": "5:nobody",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "lista",
+      "en": "6",
+      "icono": "x",
+      "items": [
+        {
+          "texto": "October 2025 prices",
+          "en": "6"
+        },
+        {
+          "texto": "A yearly comparison",
+          "en": "6:compare"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "7",
+      "linea1": {
+        "texto": "Core prices, 3-month pace"
+      },
+      "linea2": {
+        "texto": "~3.7% a year",
+        "en": "7:three"
+      },
+      "golpe": "7:three",
+      "fondo": {
+        "clip": "super",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "pos": "baj",
+      "img": "eccles",
+      "rotulos": [
+        {
+          "texto": "A December *rate hike?*",
+          "en": "8:december",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "9",
+      "fondo": {
+        "clip": "factura",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "One hot month",
+          "en": "9:one",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*is noisy*",
+          "en": "9:month",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "9:today's",
+      "fondo": {
+        "clip": "super",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Today's yearly figures",
+          "en": "9:today's",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*are estimates*",
+          "en": "9:estimates",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "pos": "baj",
+      "clip": "terminal",
+      "rotulos": [
+        {
+          "texto": "Borrowing *could get pricier*",
+          "en": "10:borrowing",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "bomba",
+        "opacidad": 0.3
+      },
+      "lineas": [
+        {
+          "texto": "Watch next month's report",
+          "en": "11",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*The hole closes*",
+          "en": "11:closes",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    }
+  ],
+  "pruebas": [
+    {
+      "img": "airspace",
+      "texto": "government shutdown",
+      "en": "5:government",
+      "marca": "5:shut",
+      "hasta": "5:nobody"
+    }
+  ],
+  "publicacion": {
+    "titulo": "The inflation report has a hole in it. Here is why.",
+    "descripcion": "The BLS October 2026 CPI report shows prices up 0.4% in one month (CPI-U, seasonally adjusted). But the yearly inflation rate is missing: prices were never collected in October 2025, during the government shutdown, so October 2026 has nothing to be compared against. Instead, the Fed watches the short trend: core prices rose at about a 3.7% annualized pace over the last three months (July to October 2026). That is why a December rate hike is being discussed. One hot month is noisy, and any yearly figure for October you read today is an estimate, not an official number. The yearly comparison returns with next month's report. Not financial advice. Sources: BLS CPI-U and core CPI series (CUSR0000SA0, CUSR0000SA0L1E); Kiplinger, Nov 2026.",
+    "tags": [
+      "inflation",
+      "CPI",
+      "October CPI",
+      "inflation report",
+      "Federal Reserve",
+      "rate hike",
+      "government shutdown",
+      "personal finance",
+      "economy"
+    ],
+    "hashtags": [
+      "#Inflation",
+      "#Economy",
+      "#Shorts"
+    ],
+    "comentario": "Did you notice the yearly inflation number was missing this month?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:bomba@1",
+        "kicker": "October CPI",
+        "titulo": "The inflation report *has a hole in it*",
+        "texto": "Swipe to see what's missing."
+      },
+      {
+        "fondo": "clip:factura@1",
+        "kicker": "One month",
+        "titulo": "Prices *+0.4%*",
+        "texto": "BLS, October 2026, seasonally adjusted."
+      },
+      {
+        "fondo": "img:amhist",
+        "kicker": "The hole",
+        "titulo": "No yearly rate *this month*",
+        "texto": "Prices were never collected in October 2025, during the shutdown."
+      },
+      {
+        "fondo": "img:eccles",
+        "kicker": "So the Fed looks closer",
+        "titulo": "Core: *~3.7%* a year",
+        "texto": "Annualized pace of the last three months."
+      },
+      {
+        "fondo": "clip:super@2",
+        "kicker": "Honest part",
+        "titulo": "One hot month *is noisy*",
+        "texto": "Any yearly figure for October today is an estimate."
+      },
+      {
+        "fondo": "clip:terminal@1",
+        "kicker": "Your turn",
+        "titulo": "Did you notice *the missing number?*",
+        "texto": "It comes back with next month's report."
+      }
+    ],
+    "caption": "The October inflation report came without its yearly number: prices were never collected in October 2025. Here is what the Fed is watching instead. Not financial advice.",
+    "historia": {
+      "hasta": "0:it$",
+      "cierre": "Full story in Reels"
+    }
+  },
+  "mezcla": {
+    "impacto": 0.3
+  }
+}

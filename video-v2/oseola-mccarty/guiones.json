@@ -1,0 +1,149 @@
+{
+  "ref": "oseola-mccarty",
+  "nota": "Cambio de tema 11-nov (decision del usuario via sesion padre): personaje, Quiet Millionaires ep 4 (Scheiber ep 3). VIRALIDAD §7 turno 7: vida de personaje. Fuente primaria leida el 11-nov: Mississippi Encyclopedia (Karen Saucier Lundy, USM), la referencia que cita Wikipedia: $150,000 en 1995, mas de la mitad de un patrimonio de $280,000; dejo la escuela en sexto; tres cuartos de siglo lavando y planchando; retiro a los 86 por artritis; nunca tuvo coche; TV con un solo canal; vivia a pocas cuadras y no piso el campus hasta agosto de 1995; empresarios locales igualaron la donacion; para 2014 el fondo supero $700,000 y 44 estudiantes recibieron becas; cita 'I don't regret one penny I gave'. Lo de las monedas de diez centavos (60%) solo en fuentes secundarias: NO se usa.",
+  "estructuras": [
+    {
+      "id": "vida",
+      "nombre": "vida de personaje",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Miss McCarty, a washerwoman, handed a university one hundred fifty thousand dollars."
+        },
+        {
+          "id": "school",
+          "texto": "You might guess she studied there. She left school in the sixth grade.",
+          "giro": true
+        },
+        {
+          "id": "work",
+          "texto": "For three-quarters of a century, she washed and ironed other people's clothes."
+        },
+        {
+          "id": "car",
+          "texto": "She never owned a car. She walked everywhere."
+        },
+        {
+          "id": "tv",
+          "texto": "One TV channel. Most of what she earned, she saved.",
+          "giro": true
+        },
+        {
+          "id": "half",
+          "texto": "Then she gave more than half of it away."
+        },
+        {
+          "id": "campus",
+          "texto": "The campus was blocks from her house. She had never set foot on it.",
+          "giro": true
+        },
+        {
+          "id": "rare",
+          "texto": "Her story is rare. That saving cost her decades of comfort.",
+          "giro": true
+        },
+        {
+          "id": "quote",
+          "texto": "She still said she didn't regret one penny."
+        },
+        {
+          "id": "close",
+          "texto": "Forty-four students have since earned scholarships at that university.",
+          "giro": true
+        }
+      ]
+    },
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Oseola McCarty, a Mississippi woman who lived blocks from a university, never set foot on its campus. Then she funded it."
+        },
+        {
+          "id": "you",
+          "texto": "You might expect a rich alumna. She left school in the sixth grade.",
+          "giro": true
+        },
+        {
+          "id": "work",
+          "texto": "She washed and ironed clothes for three-quarters of a century."
+        },
+        {
+          "id": "car",
+          "texto": "No car. One TV channel. She walked everywhere and saved what she earned."
+        },
+        {
+          "id": "gift",
+          "texto": "Then she gave the university a hundred and fifty thousand dollars.",
+          "giro": true
+        },
+        {
+          "id": "match",
+          "texto": "Local businesses matched it."
+        },
+        {
+          "id": "rare",
+          "texto": "Her story is rare, and that saving cost her decades of comfort.",
+          "giro": true
+        },
+        {
+          "id": "quote",
+          "texto": "She said she didn't regret one penny."
+        },
+        {
+          "id": "close",
+          "texto": "Forty-four students later studied at that university on her savings.",
+          "giro": true
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Miss McCarty, a washerwoman, handed a university one hundred fifty thousand dollars."
+    },
+    {
+      "id": "g2",
+      "texto": "Oseola McCarty, a woman who never owned a car, gave a university one hundred fifty thousand dollars."
+    },
+    {
+      "id": "g3",
+      "texto": "Oseola McCarty, a washerwoman who left school in sixth grade, ended up funding a university."
+    }
+  ],
+  "juicio": {
+    "vida": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una idea: ahorro silencioso que paga la escuela que ella no tuvo. Bucle: por que una universidad; se cierra en 'campus never set foot' y el dato final."
+    },
+    "misterio": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Gancho largo (20+ palabras) y la cifra llega tarde; el giro del campus se gasta en la frase 1."
+    },
+    "vida+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Cifra concreta en 4 s y contraste oficio/donacion; abre el por que."
+    },
+    "vida+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "El coche adelanta un detalle que luego se repite; mas largo."
+    },
+    "vida+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "'funding a university' es vago; pierde la cifra y adelanta el giro del sexto grado."
+    }
+  }
+}

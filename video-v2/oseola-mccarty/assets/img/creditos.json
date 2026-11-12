@@ -1,0 +1,42 @@
+[
+ {
+  "archivo": "tabla.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:PikiWiki Israel 60538 washbasin and washboard.jpg",
+  "autor": "ישראל פרקר Israel Preker",
+  "licencia": "CC BY 2.5",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.5",
+  "fuente": "https://commons.wikimedia.org/wiki/File:PikiWiki_Israel_60538_washbasin_and_washboard.jpg"
+ },
+ {
+  "archivo": "aereo.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Hattiesburg 1964.jpg",
+  "autor": "US Geological Survey",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hattiesburg_1964.jpg"
+ },
+ {
+  "archivo": "ciudad.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Hattiesburg, Mississippi.jpg",
+  "autor": "Quintin Soloviev",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hattiesburg,_Mississippi.jpg"
+ },
+ {
+  "archivo": "dorms.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Hillcrest Dorms, University of Southern Mississippi, 2009.jpg",
+  "autor": "hattiesburgmemory",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hillcrest_Dorms,_University_of_Southern_Mississippi,_2009.jpg"
+ }
+]

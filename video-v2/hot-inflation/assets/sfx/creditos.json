@@ -1,0 +1,82 @@
+[
+ {
+  "archivo": "bombo_seco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Kick 2 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Kick_2_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "clicker.src",
+  "origen": "wikimedia",
+  "titulo": "File:Clicker sound.ogg",
+  "autor": "Maddy",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Clicker_sound.ogg"
+ },
+ {
+  "archivo": "golpe_hueco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hollow hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hollow_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "golpecito.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hit 1 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hit_1_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "libro_duro.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hardcover books dropped.ogg",
+  "autor": "stilgar",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hardcover_books_dropped.ogg"
+ },
+ {
+  "archivo": "monedas.src",
+  "origen": "wikimedia",
+  "titulo": "File:Bag of coins.ogg",
+  "autor": "cori",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Bag_of_coins.ogg"
+ },
+ {
+  "archivo": "riser_chisporroteo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Zzrrrp sizzle.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Zzrrrp_sizzle.ogg"
+ },
+ {
+  "archivo": "tajo_a.src",
+  "origen": "wikimedia",
+  "titulo": "File:Sword 1 (Gravity Sound).mp3",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sword_1_(Gravity_Sound).mp3"
+ }
+]

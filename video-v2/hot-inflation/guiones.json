@@ -1,0 +1,165 @@
+{
+  "estructuras": [
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "The government agency that tracks your prices just released an inflation report with a hole in it."
+        },
+        {
+          "id": "what",
+          "texto": "Prices rose zero point four percent in one month."
+        },
+        {
+          "id": "gap",
+          "texto": "But the yearly inflation rate everyone quotes isn't there."
+        },
+        {
+          "id": "twist1",
+          "texto": "Not late. Missing.",
+          "giro": true
+        },
+        {
+          "id": "why1",
+          "texto": "Last October, the government shut down, and nobody collected prices."
+        },
+        {
+          "id": "why2",
+          "texto": "So this October has nothing to compare against.",
+          "giro": true
+        },
+        {
+          "id": "data",
+          "texto": "The Fed reads the short trend instead: core prices near three point seven percent a year."
+        },
+        {
+          "id": "fed",
+          "texto": "That's why officials talk about a December hike."
+        },
+        {
+          "id": "risk",
+          "texto": "Honest part: one hot month is noisy, and today's yearly figures are estimates.",
+          "giro": true
+        },
+        {
+          "id": "you",
+          "texto": "For you, borrowing could get pricier first."
+        },
+        {
+          "id": "close",
+          "texto": "Watch next month's report: the hole closes."
+        }
+      ]
+    },
+    {
+      "id": "error",
+      "nombre": "error comun",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Most people check one inflation number, the yearly rate, and this month it simply does not exist."
+        },
+        {
+          "id": "what",
+          "texto": "The Bureau of Labor Statistics said prices rose zero point four percent in October."
+        },
+        {
+          "id": "gap",
+          "texto": "Your headline yearly rate? Blank.",
+          "giro": true
+        },
+        {
+          "id": "why",
+          "texto": "A year ago, a government shutdown stopped the price collectors cold."
+        },
+        {
+          "id": "why2",
+          "texto": "No prices then means no comparison now."
+        },
+        {
+          "id": "data",
+          "texto": "So the Fed watches the three-month trend: core near three point seven percent a year.",
+          "giro": true
+        },
+        {
+          "id": "fed",
+          "texto": "That keeps a December rate hike on the table."
+        },
+        {
+          "id": "risk",
+          "texto": "The honest part: one month can mislead, and every yearly number you read today is an estimate."
+        },
+        {
+          "id": "close",
+          "texto": "Next month the yearly inflation number returns. Check it before you borrow."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "The government agency that tracks your prices just released an inflation report with a hole in it."
+    },
+    {
+      "id": "g2",
+      "texto": "Your government just published an inflation report with its most important number missing."
+    },
+    {
+      "id": "g3",
+      "texto": "The agency behind your inflation number just admitted one month of prices never got counted."
+    }
+  ],
+  "juicio": {
+    "misterio": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una idea: falta el dato anual. El agujero se plantea a 3 s y la causa llega a los 12 s; cierre retoma 'hole' y 'report'"
+    },
+    "error": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Da la ausencia en el gancho y la causa enseguida; el bucle dura poco"
+    },
+    "misterio+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Agujero concreto a 3 s; causa a los 12 s; cierre retoma hole/report"
+    },
+    "misterio+g2": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Dice 'missing' en el gancho: adelanta el giro de los 8 s"
+    },
+    "misterio+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Da la causa (mes no contado) en el gancho: mata el bucle"
+    },
+    "error+g1": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Estructura error con gancho del agujero"
+    },
+    "error+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "igual"
+    },
+    "error+g3": {
+      "una_idea": 3,
+      "bucle_abierto": 2,
+      "giro": 3,
+      "nota": "Da la causa en el gancho"
+    }
+  }
+}

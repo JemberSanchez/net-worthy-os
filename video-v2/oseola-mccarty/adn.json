@@ -1,0 +1,60 @@
+{
+  "production_ref": "oseola-mccarty",
+  "hook_type": "story",
+  "story_type": "character_life",
+  "cta_type": "statement",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 37,
+  "blocks": [
+    {
+      "block": "hook",
+      "technique": "titulo,contador3d",
+      "length_s": 5.34
+    },
+    {
+      "block": "school",
+      "technique": "titulo",
+      "length_s": 3.74
+    },
+    {
+      "block": "work",
+      "technique": "titulo",
+      "length_s": 4.46
+    },
+    {
+      "block": "car",
+      "technique": "lista",
+      "length_s": 2.74
+    },
+    {
+      "block": "tv",
+      "technique": "titulo",
+      "length_s": 3.28
+    },
+    {
+      "block": "half",
+      "technique": "revelacion",
+      "length_s": 2.16
+    },
+    {
+      "block": "campus",
+      "technique": "foto,titulo",
+      "length_s": 3.88
+    },
+    {
+      "block": "rare",
+      "technique": "titulo",
+      "length_s": 3.86
+    },
+    {
+      "block": "quote",
+      "technique": "titulo",
+      "length_s": 2.52
+    },
+    {
+      "block": "close",
+      "technique": "puntos,foto+clip",
+      "length_s": 4.54
+    }
+  ]
+}

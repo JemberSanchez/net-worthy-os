@@ -1,0 +1,98 @@
+{
+ "tam": [
+  680,
+  310
+ ],
+ "lineas": [
+  {
+   "texto": "OseolaMcCarty",
+   "conf": 1.0,
+   "caja": [
+    5,
+    0,
+    271,
+    39
+   ]
+  },
+  {
+   "texto": "(1908-1999) Philanthropist",
+   "conf": 0.993,
+   "caja": [
+    6,
+    39,
+    204,
+    64
+   ]
+  },
+  {
+   "texto": "03 minutes to read",
+   "conf": 0.966,
+   "caja": [
+    20,
+    111,
+    143,
+    131
+   ]
+  },
+  {
+   "texto": "In 1995 Oseola McCarty surprised the University of Southern Mississippi and gained",
+   "conf": 0.999,
+   "caja": [
+    7,
+    170,
+    606,
+    189
+   ]
+  },
+  {
+   "texto": "national renown when she donated $150,000 of her life savings to the university. The",
+   "conf": 0.986,
+   "caja": [
+    7,
+    191,
+    611,
+    210
+   ]
+  },
+  {
+   "texto": "attention and honor that resulted from the gift took her by complete surprise, but to those",
+   "conf": 0.995,
+   "caja": [
+    7,
+    212,
+    641,
+    232
+   ]
+  },
+  {
+   "texto": "who were amazed by her decision to give more than half of her $280,000 estate to a",
+   "conf": 0.993,
+   "caja": [
+    7,
+    233,
+    598,
+    253
+   ]
+  },
+  {
+   "texto": "scholarship fund for African American students, she said, \"I don't regret one penny I gave. I",
+   "conf": 0.995,
+   "caja": [
+    5,
+    252,
+    655,
+    275
+   ]
+  },
+  {
+   "texto": "just wish I had more to give.\"",
+   "conf": 0.982,
+   "caja": [
+    3,
+    273,
+    216,
+    296
+   ]
+  }
+ ]
+}

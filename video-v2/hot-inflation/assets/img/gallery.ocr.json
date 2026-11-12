@@ -1,0 +1,178 @@
+{
+ "tam": [
+  3840,
+  2560
+ ],
+ "lineas": [
+  {
+   "texto": "National",
+   "conf": 1.0,
+   "caja": [
+    2224,
+    28,
+    3449,
+    366
+   ]
+  },
+  {
+   "texto": "Gallery",
+   "conf": 0.989,
+   "caja": [
+    2243,
+    321,
+    3172,
+    518
+   ]
+  },
+  {
+   "texto": "Gallery",
+   "conf": 1.0,
+   "caja": [
+    2243,
+    380,
+    3172,
+    622
+   ]
+  },
+  {
+   "texto": "ofArt",
+   "conf": 1.0,
+   "caja": [
+    2235,
+    549,
+    2963,
+    861
+   ]
+  },
+  {
+   "texto": "11X",
+   "conf": 0.726,
+   "caja": [
+    2367,
+    760,
+    2754,
+    815
+   ]
+  },
+  {
+   "texto": "Closed due",
+   "conf": 0.99,
+   "caja": [
+    1016,
+    1311,
+    1732,
+    1658
+   ]
+  },
+  {
+   "texto": "tofederal",
+   "conf": 0.949,
+   "caja": [
+    1084,
+    1552,
+    1692,
+    1831
+   ]
+  },
+  {
+   "texto": "East",
+   "conf": 1.0,
+   "caja": [
+    2245,
+    1573,
+    2930,
+    1916
+   ]
+  },
+  {
+   "texto": "government",
+   "conf": 1.0,
+   "caja": [
+    1142,
+    1784,
+    1852,
+    2038
+   ]
+  },
+  {
+   "texto": "Duildinc",
+   "conf": 0.836,
+   "caja": [
+    2284,
+    1892,
+    3497,
+    2038
+   ]
+  },
+  {
+   "texto": "government",
+   "conf": 0.982,
+   "caja": [
+    1183,
+    1900,
+    1833,
+    2020
+   ]
+  },
+  {
+   "texto": "Building",
+   "conf": 1.0,
+   "caja": [
+    2222,
+    1900,
+    3583,
+    2284
+   ]
+  },
+  {
+   "texto": "shutdown",
+   "conf": 1.0,
+   "caja": [
+    1208,
+    1993,
+    1806,
+    2221
+   ]
+  },
+  {
+   "texto": "Wecan't wait to welcomeyouback!",
+   "conf": 0.909,
+   "caja": [
+    1266,
+    2262,
+    1901,
+    2394
+   ]
+  },
+  {
+   "texto": "1",
+   "conf": 0.723,
+   "caja": [
+    0,
+    2280,
+    345,
+    2560
+   ]
+  },
+  {
+   "texto": "We can't waito welele youbak!",
+   "conf": 0.827,
+   "caja": [
+    1258,
+    2280,
+    1910,
+    2396
+   ]
+  },
+  {
+   "texto": "Visit ngao forupdates.",
+   "conf": 0.949,
+   "caja": [
+    1270,
+    2350,
+    1798,
+    2522
+   ]
+  }
+ ]
+}

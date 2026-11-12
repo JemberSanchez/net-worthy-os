@@ -846,6 +846,208 @@
      "desde": 74.0
     }
    }
+  },
+  {
+   "ref": "oseola-mccarty",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "inercia_der",
+     "push_arriba"
+    ],
+    "camara": [
+     "deriva",
+     "pull",
+     "sube"
+    ],
+    "punch": [
+     "rampa"
+    ],
+    "texto": [
+     "lateral"
+    ],
+    "tipografia": [
+     "grotesca"
+    ],
+    "efectos": [
+     "406243 stubb typewriter-ding-near-mono.wav",
+     "Dull thud.ogg",
+     "Heartbeat.ogg",
+     "Kick 3 (Gravity Sound).wav",
+     "Lead - swish rave (Gravity Sound).wav",
+     "Rubber seal dabbed on ink pad.ogg"
+    ],
+    "riser": [
+     "CrashCymbalSample.ogg",
+     "Gong or bell vibrant (short).ogg"
+    ],
+    "musica": [
+     "Chris Zabriskie - 03 - Prelude No 3.ogg"
+    ]
+   },
+   "eleccion": {
+    "semilla": "oseola-mccarty",
+    "transiciones": [
+     "push_arriba",
+     "inercia_der"
+    ],
+    "camara": [
+     "deriva",
+     "pull",
+     "sube"
+    ],
+    "punch": "rampa",
+    "texto": "lateral",
+    "tipografia": "grotesca",
+    "sfx": {
+     "tick": "bombo_mini",
+     "swell_corto": "riser_gong"
+    },
+    "motor": {
+     "whoosh": "barrido_sint",
+     "impacto": "thud",
+     "riser": "riser_platillo"
+    },
+    "musica": {
+     "commons": "File:Chris Zabriskie - 03 - Prelude No 3.ogg",
+     "desde": 3.0
+    }
+   }
+  },
+  {
+   "ref": "hot-inflation",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "iris",
+     "luma_baja"
+    ],
+    "camara": [
+     "arco_der",
+     "izq",
+     "push"
+    ],
+    "punch": [
+     "doble"
+    ],
+    "texto": [
+     "foco"
+    ],
+    "tipografia": [
+     "condensada"
+    ],
+    "efectos": [
+     "Bag of coins.ogg",
+     "Clicker sound.ogg",
+     "Hardcover books dropped.ogg",
+     "Hit 1 (Gravity Sound).wav",
+     "Hollow hit (Gravity Sound).wav",
+     "Kick 2 (Gravity Sound).wav",
+     "Sword 1 (Gravity Sound).mp3"
+    ],
+    "riser": [
+     "Zzrrrp sizzle.ogg"
+    ],
+    "musica": [
+     "Crypto (ISRC USUAN1600013).mp3"
+    ]
+   },
+   "eleccion": {
+    "semilla": "hot-inflation",
+    "transiciones": [
+     "iris",
+     "luma_baja"
+    ],
+    "camara": [
+     "push",
+     "izq",
+     "arco_der"
+    ],
+    "punch": "doble",
+    "texto": "foco",
+    "tipografia": "condensada",
+    "sfx": {
+     "moneda_suelo": "monedas",
+     "portazo": "golpe_hueco",
+     "clic_fino": "clicker",
+     "tick": "golpecito",
+     "timbal": "libro_duro"
+    },
+    "motor": {
+     "whoosh": "tajo_a",
+     "impacto": "bombo_seco",
+     "riser": "riser_chisporroteo"
+    },
+    "musica": {
+     "commons": "File:Crypto (ISRC USUAN1600013).mp3",
+     "desde": 62.0
+    }
+   }
+  },
+  {
+   "ref": "anne-scheiber",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "giro",
+     "whip_baja",
+     "whip_izq"
+    ],
+    "camara": [
+     "arco_izq",
+     "diag_asc",
+     "tenso"
+    ],
+    "punch": [
+     "seco"
+    ],
+    "texto": [
+     "tracking"
+    ],
+    "tipografia": [
+     "serif"
+    ],
+    "efectos": [
+     "Clock ticking.ogg",
+     "Close door (Gravity Sound).wav",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Sword 10 (Gravity Sound).mp3",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg"
+    ],
+    "riser": [
+     "Crash hit 3 (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Scott Buckley - Signal To Noise (nomelody mix).oga"
+    ]
+   },
+   "eleccion": {
+    "semilla": "anne-scheiber",
+    "transiciones": [
+     "giro",
+     "whip_izq",
+     "whip_baja"
+    ],
+    "camara": [
+     "tenso",
+     "diag_asc",
+     "arco_izq"
+    ],
+    "punch": "seco",
+    "texto": "tracking",
+    "tipografia": "serif",
+    "sfx": {},
+    "motor": {
+     "whoosh": "tajo_c",
+     "impacto": "puerta_seca",
+     "riser": "riser_crash"
+    },
+    "musica": {
+     "commons": "File:Scott Buckley - Signal To Noise (nomelody mix).oga",
+     "desde": 55.0
+    }
+   }
   }
  ]
 }

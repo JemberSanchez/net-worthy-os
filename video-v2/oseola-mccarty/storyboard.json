@@ -1,0 +1,542 @@
+{
+  "ref": "oseola-mccarty",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "Miss McCarty, a washerwoman, handed a university one hundred fifty thousand dollars."
+    },
+    {
+      "id": "school",
+      "texto": "You might guess she studied there. She left school in the sixth grade.",
+      "giro": true
+    },
+    {
+      "id": "work",
+      "texto": "For three-quarters of a century, she washed and ironed other people's clothes."
+    },
+    {
+      "id": "car",
+      "texto": "She never owned a car. She walked everywhere."
+    },
+    {
+      "id": "tv",
+      "texto": "One TV channel. Most of what she earned, she saved.",
+      "giro": true
+    },
+    {
+      "id": "half",
+      "texto": "Then she gave more than half of it away."
+    },
+    {
+      "id": "campus",
+      "texto": "The campus was blocks from her house. She had never set foot on it.",
+      "giro": true
+    },
+    {
+      "id": "rare",
+      "texto": "Her story is rare. That saving cost her decades of comfort.",
+      "giro": true
+    },
+    {
+      "id": "quote",
+      "texto": "She still said she didn't regret one penny."
+    },
+    {
+      "id": "close",
+      "texto": "Forty-four students have since earned scholarships at that university.",
+      "giro": true
+    }
+  ],
+  "pronuncia_ok": [
+    "McCarty"
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam",
+    "speed": 0.95,
+    "pausa_s": 0.28
+  },
+  "aspecto": "cine",
+  "tema": "editorial",
+  "formato": "documental-editorial",
+  "adn": {
+    "hook_type": "story",
+    "story_type": "character_life",
+    "cta_type": "statement",
+    "renderer_version": "v2-hyperframes"
+  },
+  "serie": {
+    "nombre": "Quiet Millionaires",
+    "ep": 4
+  },
+  "fondos_auto": false,
+  "cifras": [
+    {
+      "dato": "Oseola McCarty, Hattiesburg washerwoman, gave $150,000 of her life savings to the University of Southern Mississippi in 1995",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    },
+    {
+      "dato": "More than half of her $280,000 estate",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    },
+    {
+      "dato": "Left school in the sixth grade; three-quarters of a century (75 years) taking in washing and ironing; retired at 86",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    },
+    {
+      "dato": "Never owned a car, walked everywhere; TV with only one local channel",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    },
+    {
+      "dato": "Lived blocks from the university and did not set foot on campus until August 1995",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    },
+    {
+      "dato": "Quote: 'I don't regret one penny I gave.'",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    },
+    {
+      "dato": "By 2014 the fund topped $700,000 and 44 students had received McCarty Scholarships",
+      "fuente": "https://mississippiencyclopedia.org/entries/oseola-mccarty/"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "Not financial advice · Rare case, not a typical outcome"
+    ],
+    "ventanas": [
+      [
+        "11",
+        "14"
+      ]
+    ],
+    "final": true,
+    "completo": "Not financial advice. A rare case: her saving cost decades of going without.",
+    "placa": true,
+    "tam": 27
+  },
+  "subtitulos": [
+    "1",
+    "14"
+  ],
+  "calientes": [
+    "washerwoman",
+    "sixth",
+    "ironed",
+    "car",
+    "saved",
+    "half",
+    "blocks",
+    "rare",
+    "comfort",
+    "penny",
+    "scholarships"
+  ],
+  "golpes": [
+    "0:dollars",
+    "2:sixth",
+    "4:car",
+    "7:saved",
+    "8:away",
+    "10:never",
+    "14:forty-four"
+  ],
+  "musica": {
+    "pista": {
+      "mood": "reflexivo"
+    }
+  },
+  "clips": {
+    "lavar": {
+      "pexels": 6843727,
+      "desde": 0,
+      "visto": true
+    },
+    "planchar": {
+      "pexels": 9472843,
+      "desde": 0,
+      "visto": true
+    },
+    "caminar": {
+      "pexels": 3999370,
+      "desde": 0,
+      "visto": true
+    },
+    "tele": {
+      "pexels": 11999581,
+      "desde": 0,
+      "visto": true
+    },
+    "tendedero": {
+      "pexels": 39559635,
+      "desde": 0,
+      "visto": true
+    },
+    "campus": {
+      "pexels": 7490421,
+      "desde": 0,
+      "visto": true
+    },
+    "graduacion": {
+      "pexels": 39346269,
+      "desde": 0,
+      "visto": true
+    }
+  },
+  "imagenes": {
+    "tabla": {
+      "commons": "File:PikiWiki Israel 60538 washbasin and washboard.jpg",
+      "color": true,
+      "ligero": true
+    },
+    "aereo": {
+      "commons": "File:Hattiesburg 1964.jpg",
+      "archivo": true
+    },
+    "ciudad": {
+      "commons": "File:Hattiesburg, Mississippi.jpg",
+      "color": true,
+      "ligero": true
+    },
+    "dorms": {
+      "commons": "File:Hillcrest Dorms, University of Southern Mississippi, 2009.jpg",
+      "color": true,
+      "ligero": true
+    },
+    "enciclopedia": {
+      "documento": true,
+      "color": true
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "titulo",
+      "en": "0",
+      "fondo": {
+        "clip": "lavar",
+        "opacidad": 0.55
+      },
+      "lineas": [
+        {
+          "texto": "Oseola McCarty",
+          "en": "0",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*washerwoman*",
+          "en": "0:washerwoman",
+          "estilo": "mid",
+          "color": "ink",
+          "tam": 120
+        }
+      ]
+    },
+    {
+      "tipo": "contador3d",
+      "en": "0:one",
+      "valor": 150000,
+      "prefijo": "$",
+      "llega": "0:dollars",
+      "kicker": {
+        "texto": "To a university",
+        "en": "0:university"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "fondo": {
+        "img": "tabla",
+        "opacidad": 0.3
+      },
+      "lineas": [
+        {
+          "texto": "Left school in *6th grade*",
+          "en": "2:left",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "fondo": {
+        "clip": "planchar",
+        "opacidad": 0.45
+      },
+      "lineas": [
+        {
+          "texto": "*75 years*",
+          "en": "3:three-quarters",
+          "estilo": "huge",
+          "color": "ink"
+        },
+        {
+          "texto": "washing and ironing",
+          "en": "3:washed",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "lista",
+      "en": "4",
+      "icono": "x",
+      "fondo": {
+        "clip": "caminar",
+        "opacidad": 0.4
+      },
+      "items": [
+        {
+          "texto": "No car",
+          "en": "4:car"
+        },
+        {
+          "texto": "One TV channel",
+          "en": "6"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "7:most",
+      "fondo": {
+        "clip": "tendedero",
+        "opacidad": 0.45
+      },
+      "lineas": [
+        {
+          "texto": "Most of it",
+          "en": "7:most",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*saved*",
+          "en": "7:saved",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "8",
+      "linea1": {
+        "texto": "Then she gave"
+      },
+      "linea2": {
+        "texto": "more than half away",
+        "en": "8:half"
+      },
+      "golpe": "8:away"
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "img": "aereo",
+      "rotulos": [
+        {
+          "texto": "Campus: *blocks away*",
+          "en": "9:blocks",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "pos": "sup"
+    },
+    {
+      "tipo": "titulo",
+      "en": "10:she",
+      "fondo": {
+        "clip": "campus",
+        "opacidad": 0.45
+      },
+      "lineas": [
+        {
+          "texto": "Never set foot",
+          "en": "10:never",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "*on it*",
+          "en": "10:on",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "tele",
+        "opacidad": 0.35
+      },
+      "kicker": {
+        "texto": "Honest part",
+        "en": "11"
+      },
+      "lineas": [
+        {
+          "texto": "Rare story",
+          "en": "11:rare",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "Cost: *decades of comfort*",
+          "en": "12:cost",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "13",
+      "fondo": {
+        "img": "ciudad",
+        "opacidad": 0.4
+      },
+      "kicker": {
+        "texto": "In her words",
+        "en": "13"
+      },
+      "lineas": [
+        {
+          "texto": "“I don't regret",
+          "en": "13:didn't",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*one penny*”",
+          "en": "13:penny",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "puntos",
+      "en": "14",
+      "n": 44,
+      "etiqueta": "students",
+      "cuenta": {
+        "en": "14:forty-four"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "14:scholarships",
+      "clip": "graduacion",
+      "rotulos": [
+        {
+          "texto": "*44* students, by 2014",
+          "en": "14:scholarships",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "pos": "sup"
+    }
+  ],
+  "sonidos": [
+    {
+      "sfx": "tick",
+      "en": "2:sixth"
+    },
+    {
+      "sfx": "sello",
+      "en": "8:away"
+    },
+    {
+      "sfx": "swell_corto",
+      "en": "10:never"
+    },
+    {
+      "sfx": "latido",
+      "en": "11:rare",
+      "dur": 1.2,
+      "vol": 0.25
+    },
+    {
+      "sfx": "ding",
+      "en": "13:penny"
+    }
+  ],
+  "publicacion": {
+    "titulo": "She washed clothes for 75 years, then gave a university $150,000",
+    "descripcion": "Oseola McCarty left school in the sixth grade and spent three-quarters of a century washing and ironing other people's clothes in Hattiesburg, Mississippi. She never owned a car and had a TV with one local channel. In 1995 she gave $150,000, more than half of her $280,000 estate, to the University of Southern Mississippi, a campus blocks from her house that she had never visited. By 2014 the scholarship fund topped $700,000 and 44 students had received McCarty Scholarships. Her story is rare: saving like that cost her decades of comfort. Not financial advice.\n\nSource: Mississippi Encyclopedia, https://mississippiencyclopedia.org/entries/oseola-mccarty/",
+    "tags": [
+      "oseola mccarty",
+      "quiet millionaires",
+      "saving money",
+      "frugal living",
+      "philanthropy",
+      "personal finance"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#savingmoney",
+      "#personalfinance",
+      "#quietmillionaires"
+    ],
+    "comentario": "She said she didn't regret one penny. Could you give away half of what you saved?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:lavar@1",
+        "kicker": "Quiet Millionaires",
+        "titulo": "She gave a university *$150,000*",
+        "texto": "Oseola McCarty was a washerwoman."
+      },
+      {
+        "fondo": "img:tabla",
+        "kicker": "School",
+        "titulo": "Left in the *sixth grade*",
+        "texto": "Then three-quarters of a century of washing and ironing."
+      },
+      {
+        "fondo": "clip:caminar@1",
+        "kicker": "Her life",
+        "titulo": "No car. *One TV channel.*",
+        "texto": "Most of what she earned, she saved."
+      },
+      {
+        "fondo": "img:aereo",
+        "kicker": "1995",
+        "titulo": "More than *half* of her estate",
+        "texto": "$150,000 of $280,000, to a campus blocks from her house she had never visited."
+      },
+      {
+        "fondo": "img:dorms",
+        "kicker": "By 2014",
+        "titulo": "*44* scholarship students",
+        "texto": "The fund topped $700,000. Rare story: it cost her decades of comfort. Not financial advice."
+      },
+      {
+        "fondo": "clip:tendedero@1",
+        "kicker": "Your turn",
+        "titulo": "Could you give away *half*?",
+        "texto": "Tell us in the comments."
+      }
+    ],
+    "caption": "Oseola McCarty washed and ironed clothes for three-quarters of a century, never owned a car, and gave $150,000 to the University of Southern Mississippi in 1995. By 2014, 44 students had received her scholarship. Rare story: it cost her decades of comfort. Not financial advice. Source: Mississippi Encyclopedia.\n\n#quietmillionaires #savingmoney #personalfinance"
+  },
+  "pruebas": [
+    {
+      "img": "enciclopedia",
+      "texto": "she donated $150,000",
+      "en": "1",
+      "marca": "1:guess",
+      "hasta": "2:school"
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "ref": "anne-scheiber",
+  "nota": "Personaje (VIRALIDAD §7, turno 3: Anne Scheiber, misterio). Serie Quiet Millionaires ep 3. Fuentes: AP via Seattle Times 4-dic-1995 (nunca mas de $4,000/ano, $5,000 de ahorros, se retiro en 1944, murio en enero a los 101, $22M, blue chips Coca-Cola y Paramount, nunca ascendida); J. Weekly 8-dic-1995 (apartamento de renta estabilizada, 140 valores, salario maximo $3,150: conflicto con AP, se dice 'never earned over four thousand'); financialwisdomforum (ref. 3 de Wikipedia): el albacea Benjamin Clark, declaracion de 1936 con $900 en dividendos => ~$21,000 en bolsa en 1936, la cifra de $5,000 de Money era la apertura de su cuenta en Merrill. Giro honesto: no fue genio, fue tiempo; rentabilidad ~ la del mercado.",
+  "estructuras": [
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Anne Scheiber, an IRS auditor, never earned over four thousand a year."
+        },
+        {
+          "id": "died",
+          "texto": "She died with twenty-two million. You've heard the legend."
+        },
+        {
+          "id": "legend",
+          "texto": "Five thousand dollars in savings, a cheap apartment, and decades of blue-chip stocks.",
+          "giro": true
+        },
+        {
+          "id": "piece",
+          "texto": "It's a perfect story. It's also missing a piece.",
+          "giro": true
+        },
+        {
+          "id": "return",
+          "texto": "Her executor found a tax return from years before she retired."
+        },
+        {
+          "id": "div",
+          "texto": "She was already collecting stock dividends back then."
+        },
+        {
+          "id": "bigger",
+          "texto": "Her real starting pile was likely several times bigger.",
+          "giro": true
+        },
+        {
+          "id": "avg",
+          "texto": "So her return? Roughly the market's average.",
+          "giro": true
+        },
+        {
+          "id": "you",
+          "texto": "That's the honest version, and it's better news for you."
+        },
+        {
+          "id": "time",
+          "texto": "She didn't need genius. She needed decades.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "Start early, because time did for Anne Scheiber what her salary never could."
+        }
+      ]
+    },
+    {
+      "id": "error",
+      "nombre": "error comun",
+      "frases": [
+        {
+          "id": "hook",
+          "texto": "Anne Scheiber, an IRS auditor, turned five thousand dollars into twenty-two million. Or so you've heard."
+        },
+        {
+          "id": "myth",
+          "texto": "Most people tell her story as proof you need a genius stock picker."
+        },
+        {
+          "id": "life",
+          "texto": "She lived alone in a small apartment and was never promoted.",
+          "giro": true
+        },
+        {
+          "id": "salary",
+          "texto": "Her pay never topped four thousand a year."
+        },
+        {
+          "id": "twist",
+          "texto": "But her executor found an old tax return.",
+          "giro": true
+        },
+        {
+          "id": "div",
+          "texto": "Years before she retired, she was already earning stock dividends."
+        },
+        {
+          "id": "bigger",
+          "texto": "Her real start was likely several times bigger.",
+          "giro": true
+        },
+        {
+          "id": "avg",
+          "texto": "Her return? Close to the market average.",
+          "giro": true
+        },
+        {
+          "id": "time",
+          "texto": "No genius. Just decades of leaving it alone.",
+          "giro": true
+        },
+        {
+          "id": "close",
+          "texto": "Start early, because time did for Anne Scheiber what her salary never could."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Anne Scheiber, an IRS auditor, never earned over four thousand a year."
+    },
+    {
+      "id": "g2",
+      "texto": "Anne Scheiber, a tax auditor the IRS never promoted, died a secret multimillionaire."
+    },
+    {
+      "id": "g3",
+      "texto": "Anne Scheiber, an IRS auditor, lived on almost nothing. Her estate shocked a university."
+    }
+  ],
+  "juicio": {
+    "misterio": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Una idea: la leyenda de los $5,000 esconde un comienzo mayor; el misterio se abre a 3 s ('how?') y se cierra con 'decades' a ~28 s; cierre enlaza por su nombre"
+    },
+    "error": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "'Or so you've heard' cebo; gancho con dos cifras; 'leaving it alone' no verificado (no sabemos que nunca vendiera)"
+    },
+    "misterio+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Contraste sueldo minimo vs $22M en 6 s abre el 'how'; cifra verificada (AP)"
+    },
+    "misterio+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "'secret multimillionaire' es formula; adelanta el final sin la cifra"
+    },
+    "misterio+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "'shocked a university' vago; 'almost nothing' sin cifra"
+    }
+  }
+}

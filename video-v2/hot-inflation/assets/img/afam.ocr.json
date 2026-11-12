@@ -1,0 +1,78 @@
+{
+ "tam": [
+  3840,
+  2560
+ ],
+ "lineas": [
+  {
+   "texto": "Smithuscian",
+   "conf": 0.853,
+   "caja": [
+    1366,
+    969,
+    1450,
+    998
+   ]
+  },
+  {
+   "texto": "Museum Temporarily Closed",
+   "conf": 0.991,
+   "caja": [
+    1270,
+    1471,
+    1668,
+    1554
+   ]
+  },
+  {
+   "texto": "Scan the QR code or visit",
+   "conf": 1.0,
+   "caja": [
+    1357,
+    1512,
+    1591,
+    1569
+   ]
+  },
+  {
+   "texto": "www.NMAAHC.si.edu for more information.",
+   "conf": 0.999,
+   "caja": [
+    1270,
+    1532,
+    1670,
+    1601
+   ]
+  },
+  {
+   "texto": "Museo Temporalmente Cerrado",
+   "conf": 0.999,
+   "caja": [
+    1256,
+    1585,
+    1686,
+    1658
+   ]
+  },
+  {
+   "texto": "Escanee el código QR o visite",
+   "conf": 0.998,
+   "caja": [
+    1341,
+    1626,
+    1616,
+    1691
+   ]
+  },
+  {
+   "texto": "www,NMAAHC.si.edu para más información.",
+   "conf": 0.988,
+   "caja": [
+    1272,
+    1644,
+    1674,
+    1725
+   ]
+  }
+ ]
+}

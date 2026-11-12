@@ -1,0 +1,52 @@
+[
+ {
+  "archivo": "airspace.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Air and Space Museum closed government shutdown Washington DC 2025-10-15 12-15-27 1.jpg",
+  "autor": "G. Edward Johnson",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Air_and_Space_Museum_closed_government_shutdown_Washington_DC_2025-10-15_12-15-27_1.jpg"
+ },
+ {
+  "archivo": "amhist.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:American History Museum closed government shutdown Washington DC 2025-10-15 11-17-56.jpg",
+  "autor": "G. Edward Johnson",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:American_History_Museum_closed_government_shutdown_Washington_DC_2025-10-15_11-17-56.jpg"
+ },
+ {
+  "archivo": "gallery.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:National Gallery of Art closed government shutdown Washington DC 2025-10-15 11-42-21 1.jpg",
+  "autor": "G. Edward Johnson",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:National_Gallery_of_Art_closed_government_shutdown_Washington_DC_2025-10-15_11-42-21_1.jpg"
+ },
+ {
+  "archivo": "afam.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:African American History Museum closed government shutdown Washington DC 2025-10-15 11-08-19 1.jpg",
+  "autor": "G. Edward Johnson",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:African_American_History_Museum_closed_government_shutdown_Washington_DC_2025-10-15_11-08-19_1.jpg"
+ },
+ {
+  "archivo": "eccles.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Eccles Building (26088200676).jpg",
+  "autor": "Federalreserve",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Eccles_Building_(26088200676).jpg"
+ }
+]

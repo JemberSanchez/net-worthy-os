@@ -1,0 +1,42 @@
+[
+ {
+  "archivo": "f1040.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Form 1040, 1941.jpg",
+  "autor": "U.S. Internal Revenue Service",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Form_1040,_1941.jpg"
+ },
+ {
+  "archivo": "coke.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Coca Cola 1929.JPG",
+  "autor": "Unbekannte Autoren und Grafiker; Scan vom EDHAC e.V.",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Coca_Cola_1929.JPG"
+ },
+ {
+  "archivo": "irs.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:The Internal Revenue Service Building, located in the center of the Federal Triangle complex in Washington, D.C LCCN2013634107.tif",
+  "autor": "Carol M. Highsmith",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:The_Internal_Revenue_Service_Building,_located_in_the_center_of_the_Federal_Triangle_complex_in_Washington,_D.C_LCCN2013634107.tif"
+ },
+ {
+  "archivo": "stern.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Stern College for Women - Yeshiva University (51878226726).jpg",
+  "autor": "ajay_suresh",
+  "licencia": "CC BY 2.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Stern_College_for_Women_-_Yeshiva_University_(51878226726).jpg"
+ }
+]
