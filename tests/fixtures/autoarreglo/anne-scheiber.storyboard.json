@@ -1,0 +1,488 @@
+{
+  "ref": "anne-scheiber",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "Anne Scheiber, an IRS auditor, never earned over four thousand a year."
+    },
+    {
+      "id": "died",
+      "texto": "She died with twenty-two million. You've heard the legend."
+    },
+    {
+      "id": "legend",
+      "texto": "Five thousand dollars in savings, a cheap apartment, and decades of blue-chip stocks.",
+      "giro": true
+    },
+    {
+      "id": "piece",
+      "texto": "It's a perfect story. It's also missing a piece.",
+      "giro": true
+    },
+    {
+      "id": "return",
+      "texto": "Her executor found a tax return from years before she retired."
+    },
+    {
+      "id": "div",
+      "texto": "She was already collecting stock dividends back then."
+    },
+    {
+      "id": "bigger",
+      "texto": "Her real starting pile was likely several times bigger.",
+      "giro": true
+    },
+    {
+      "id": "avg",
+      "texto": "So her return? Roughly the market's average.",
+      "giro": true
+    },
+    {
+      "id": "you",
+      "texto": "That's the honest version, and it's better news for you."
+    },
+    {
+      "id": "time",
+      "texto": "She didn't need genius. She needed decades.",
+      "giro": true
+    },
+    {
+      "id": "close",
+      "texto": "Start early, because time did for Anne Scheiber what her salary never could."
+    }
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam",
+    "cortes": {
+      "hook": [
+        "Anne Shyber, an IRS auditor, never earned over four thousand a year."
+      ],
+      "close": [
+        "Start early, because time did for Anne Shyber what her salary never could."
+      ]
+    }
+  },
+  "pronuncia_ok": [
+    "Scheiber"
+  ],
+  "adn": {
+    "hook_type": "story",
+    "story_type": "character",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "serie": {
+    "nombre": "Quiet Millionaires",
+    "ep": 3
+  },
+  "cifras": [
+    {
+      "dato": "Anne Scheiber, IRS auditor, never earned more than $4,000 a year (J. Weekly gives highest salary $3,150; 'never over $4,000' is true under both)",
+      "fuente": "https://archive.seattletimes.com/archive/19951204/2156028/gift-is-borne-of-bitterness----anne-scheiber-left-22-million-to-benefit-women-because-she-felt-she-was-unfairly-denied-promotion"
+    },
+    {
+      "dato": "She built her $5,000 savings into a stock portfolio; retired in 1944; died in January 1995 at 101; portfolio valued at $22 million, left to Yeshiva University",
+      "fuente": "https://archive.seattletimes.com/archive/19951204/2156028/gift-is-borne-of-bitterness----anne-scheiber-left-22-million-to-benefit-women-because-she-felt-she-was-unfairly-denied-promotion"
+    },
+    {
+      "dato": "Held blue chips such as Coca-Cola and Paramount; never promoted in 23 years at the IRS",
+      "fuente": "https://archive.seattletimes.com/archive/19951204/2156028/gift-is-borne-of-bitterness----anne-scheiber-left-22-million-to-benefit-women-because-she-felt-she-was-unfairly-denied-promotion"
+    },
+    {
+      "dato": "Rent-stabilized apartment; portfolio of 140 securities",
+      "fuente": "https://jweekly.com/1995/12/08/22-million-gift-to-yeshiva-u-sparks-big-fund-raising-effort/"
+    },
+    {
+      "dato": "Executor Benjamin Clark: 1936 tax return showed $900 in dividends; at the 1936 average 4.3% yield that implies ~$21,000 in stocks, about four times the $5,000; the $5,000 was the opening balance of her Merrill account",
+      "fuente": "http://www.financialwisdomforum.org/gummy-stuff/Scheiber.htm"
+    },
+    {
+      "dato": "From ~$21,000 to $22 million over almost 60 years = a return slightly higher than the S&P 500",
+      "fuente": "https://en.wikipedia.org/wiki/Anne_Scheiber"
+    },
+    {
+      "dato": "Form 1040 shown is the 1941 edition (illustrative, not her return)",
+      "fuente": "https://commons.wikimedia.org/wiki/File:Form_1040,_1941.jpg"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "~$21,000 start is the executor's estimate",
+      "Past returns are no guarantee · Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "6",
+        "8"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 30
+  },
+  "subtitulos": [
+    "1",
+    "9"
+  ],
+  "calientes": [
+    "twenty-two",
+    "legend",
+    "perfect",
+    "missing",
+    "executor",
+    "already",
+    "bigger",
+    "average",
+    "honest",
+    "genius",
+    "decades"
+  ],
+  "musica": {
+    "oscuro": [
+      "3",
+      "7"
+    ],
+    "pista": {
+      "mood": "documental"
+    }
+  },
+  "golpes": [
+    "3:missing",
+    "9:decades"
+  ],
+  "sonidos": [
+    {
+      "sfx": "maquina",
+      "en": "0"
+    },
+    {
+      "sfx": "caja",
+      "en": "1:million"
+    },
+    {
+      "sfx": "pagina",
+      "en": "4:tax"
+    },
+    {
+      "sfx": "sello",
+      "en": "6:bigger"
+    },
+    {
+      "sfx": "reloj",
+      "en": "9",
+      "dur": 1.6
+    }
+  ],
+  "imagenes": {
+    "f1040": {
+      "commons": "File:Form 1040, 1941.jpg",
+      "recorte": 0.0,
+      "documento": true
+    },
+    "coke": {
+      "commons": "File:Coca Cola 1929.JPG",
+      "recorte": 0.01,
+      "documento": true
+    },
+    "irs": {
+      "commons": "File:The Internal Revenue Service Building, located in the center of the Federal Triangle complex in Washington, D.C LCCN2013634107.tif",
+      "recorte": 0.0
+    },
+    "stern": {
+      "commons": "File:Stern College for Women - Yeshiva University (51878226726).jpg",
+      "recorte": 0.0
+    }
+  },
+  "clips": {
+    "maquina": {
+      "pexels": 8870091,
+      "desde": 0,
+      "sfx": "maquina"
+    },
+    "apt": {
+      "pexels": 4777926,
+      "desde": 0
+    },
+    "monedas": {
+      "pexels": 39597264,
+      "desde": 0
+    },
+    "arena": {
+      "pexels": 37223287,
+      "desde": 0
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0",
+      "clip": "maquina",
+      "kicker": {
+        "texto": "IRS auditor",
+        "en": "0:irs"
+      },
+      "titulo": {
+        "texto": "Never over *$4,000* a year",
+        "en": "0:four"
+      }
+    },
+    {
+      "tipo": "contador3d",
+      "en": "1",
+      "valor": 22000000,
+      "prefijo": "$",
+      "llega": "1:million",
+      "kicker": {
+        "texto": "She died with",
+        "en": "1"
+      },
+      "pill": {
+        "texto": "Top salary: $4,000/yr",
+        "en": "1:you've"
+      }
+    },
+    {
+      "tipo": "lista",
+      "en": "2",
+      "icono": "check",
+      "fondo": {
+        "clip": "apt",
+        "opacidad": 0.4
+      },
+      "items": [
+        {
+          "texto": "$5,000 in savings",
+          "en": "2"
+        },
+        {
+          "texto": "A cheap apartment",
+          "en": "2:cheap"
+        },
+        {
+          "texto": "Decades of blue chips",
+          "en": "2:decades",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "3",
+      "linea1": {
+        "texto": "A perfect story."
+      },
+      "linea2": {
+        "texto": "Missing a piece.",
+        "en": "3:also"
+      },
+      "golpe": "3:missing"
+    },
+    {
+      "tipo": "foto",
+      "en": "4",
+      "img": "f1040",
+      "kicker": {
+        "texto": "Her executor found",
+        "en": "4"
+      },
+      "titulo": {
+        "texto": "An older tax return",
+        "en": "4:tax"
+      }
+    },
+    {
+      "tipo": "anios",
+      "en": "4:before",
+      "desde": 1936,
+      "hasta": 1995,
+      "cuenta": {
+        "en": "5"
+      },
+      "fin": "5:then$",
+      "kicker": "Already in the market",
+      "hitos": [
+        [
+          1936,
+          "$900 in dividends"
+        ],
+        [
+          1944,
+          "Retires · the $5,000"
+        ],
+        [
+          1995,
+          "Dies · $22M"
+        ]
+      ],
+      "etiqueta": {
+        "texto": "Years before she retired",
+        "en": "5:dividends"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "fondo": "coke",
+      "kicker": {
+        "texto": "Real starting pile (est.)",
+        "en": "6"
+      },
+      "lineas": [
+        {
+          "texto": "$5,000",
+          "en": "6",
+          "estilo": "big",
+          "color": "mute"
+        },
+        {
+          "texto": "*~$21,000*",
+          "en": "6:several",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "fondo": "irs",
+      "lineas": [
+        {
+          "texto": "Her return?",
+          "en": "7",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*≈ the market*",
+          "en": "7:roughly",
+          "estilo": "huge"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "clip": "monedas",
+      "titulo": {
+        "texto": "Better news for *you*",
+        "en": "8:better"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "9",
+      "clip": "arena",
+      "kicker": {
+        "texto": "Not genius.",
+        "en": "9"
+      },
+      "titulo": {
+        "texto": "*Decades.*",
+        "en": "9:decades"
+      }
+    },
+    {
+      "tipo": "cta",
+      "en": "10",
+      "a": {
+        "texto": "Time",
+        "en": "10:time"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Salary",
+        "en": "10:salary"
+      },
+      "pregunta": {
+        "texto": "What built her fortune?",
+        "en": "10:start"
+      },
+      "botones": [
+        {
+          "texto": "Time",
+          "en": "10:could$"
+        },
+        {
+          "texto": "Salary",
+          "en": "10:could$+0.35"
+        }
+      ],
+      "sub": "drop your answer ↓"
+    }
+  ],
+  "publicacion": {
+    "titulo": "The IRS auditor who died with $22 million",
+    "descripcion": "Anne Scheiber never earned more than $4,000 a year at the IRS. She died in 1995 at 101 with a $22 million stock portfolio. The famous story says she started with $5,000 in 1944, but her executor found a 1936 tax return: she was already investing, likely with about four times that. Her real edge was not genius. It was decades.\n\nSources: AP via Seattle Times (Dec 4, 1995); J. Weekly (Dec 8, 1995); executor Benjamin Clark via financialwisdomforum.org. Not financial advice.",
+    "tags": [
+      "anne scheiber",
+      "quiet millionaires",
+      "compound interest",
+      "buy and hold",
+      "personal finance",
+      "investing"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#investing",
+      "#compoundinterest",
+      "#personalfinance"
+    ],
+    "comentario": "The $5,000 legend is the opening balance of one brokerage account. Her 1936 tax return already showed $900 in dividends. Does that make her story more or less inspiring to you?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:maquina@2",
+        "kicker": "IRS auditor",
+        "titulo": "Never over *$4,000* a year",
+        "texto": "Anne Scheiber died in 1995 at 101 with a $22 million stock portfolio."
+      },
+      {
+        "fondo": "clip:apt@3",
+        "kicker": "The legend",
+        "titulo": "*$5,000* and a cheap apartment",
+        "texto": "Savings, frugal living and decades of blue-chip stocks like Coca-Cola."
+      },
+      {
+        "fondo": "img:f1040",
+        "kicker": "The missing piece",
+        "titulo": "An *older* tax return",
+        "texto": "Her executor found her 1936 return: $900 in dividends, years before she retired."
+      },
+      {
+        "fondo": "img:coke",
+        "kicker": "Real start (est.)",
+        "titulo": "*~$21,000*, not $5,000",
+        "texto": "About four times the famous number. Her return was roughly the market's."
+      },
+      {
+        "fondo": "clip:arena@4",
+        "kicker": "The honest lesson",
+        "titulo": "Not genius. *Decades.*",
+        "texto": "Time did what her salary never could. Not financial advice."
+      },
+      {
+        "fondo": "img:stern",
+        "kicker": "Your turn",
+        "titulo": "Time *or* salary?",
+        "texto": "What built her fortune? She left it to Yeshiva University for women students."
+      }
+    ],
+    "caption": "An IRS auditor who never earned over $4,000 a year died with $22 million. The famous $5,000 start story is missing a piece: her 1936 tax return.\n\nTime or salary: what built her fortune? 👇",
+    "historia": {
+      "hasta": "1:legend$",
+      "cierre": "How an auditor made *$22M*"
+    }
+  },
+  "formato": "expediente",
+  "pruebas": [
+    {
+      "img": "f1040",
+      "texto": "INCOME TAX RETURN",
+      "en": "6:found",
+      "marca": "6:return",
+      "hasta": "6:before"
+    }
+  ]
+}

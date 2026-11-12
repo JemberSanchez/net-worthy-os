@@ -12,6 +12,8 @@ Encadena (cada paso es una puerta: si falla, se para y sale con código 1):
   7. medir_ritmo --max 2.5        el cuadro nunca muerto más de 2,5 s
   8. preview <30 MB + publish_<ref>.json (PRIVADO) + adn.json
   9. si hay token de YouTube: sube el MP4 como PRIVADO (borrador; `--sin-subir` lo evita)
+`--auto`: antes de cada repetición aplica SOLO arreglos mecánicos (autoarreglo.py) y vuelve a pasar
+las MISMAS puertas, hasta RONDAS_AUTO veces; para e imprime lo que no es mecánico.
 `--previo` para antes del render: puertas + una hoja de contactos por escena (<1 min). Sin `--sin-critico`,
 al final corre los medidores del crítico. Solo imprime fallos, con segundo y escena; todo queda en
 `renders/qa.json` (puertas, con su duración) y `renders/corridas.jsonl` (una línea por corrida).
@@ -38,6 +40,8 @@ from construir import COLA_S
 MOTOR = Path(__file__).resolve().parent
 RAIZ = MOTOR.parents[1]
 PY = sys.executable
+RONDAS_AUTO = 3  # --auto: fix-and-retry rounds; each later one may cost a render
+DETALLES: dict[str, tuple[bool, str]] = {}  # last run, full gate detail (qa.json keeps 600 chars)
 
 
 def _run(
@@ -731,6 +735,7 @@ def producir(proy: Path) -> dict:
     renders.mkdir(exist_ok=True)
 
     reloj = [time.monotonic()]
+    DETALLES.clear()
 
     def puerta(nombre: str, ok: bool, detalle: str, seguir: bool = False) -> None:
         ahora = time.monotonic()
@@ -743,6 +748,7 @@ def producir(proy: Path) -> dict:
             }
         )
         reloj[0] = ahora
+        DETALLES[nombre] = (ok, detalle)
         if not ok:
             print(f"✗ {nombre}: {detalle.strip()}")
         (renders / "qa.json").write_text(
@@ -965,6 +971,55 @@ def producir(proy: Path) -> dict:
     return qa
 
 
+def producir_auto(proy: Path, critico_: bool = True) -> dict:
+    """--auto: mechanical fixes BEFORE the same gates, never instead of them. Each round runs the
+    whole production; a failed gate or a blocking critic fault goes to autoarreglo; whatever it
+    cannot fix stops the loop and is printed for Claude."""
+    import autoarreglo
+
+    bloquean, voz_rehecha = ("alta",), False
+    for ronda in range(RONDAS_AUTO + 1):
+        t0, fallo, qa = time.time(), None, None
+        try:
+            qa = producir(proy)
+        except SystemExit as e:
+            fallo = e
+        fallidas = {n: d for n, (ok, d) in DETALLES.items() if not ok}
+        informe = None
+        inf = proy / "renders" / "critica" / "informe.json"
+        if critico_ and fallo is None and inf.exists() and inf.stat().st_mtime >= t0:
+            import critico
+
+            informe = json.loads(inf.read_text(encoding="utf-8"))
+            bloquean = tuple(
+                critico.cargar_rubrica(proy).get("severidad_bloquea") or ["alta"]
+            )
+        if fallo is None and informe is None:
+            return qa
+        if fallo is not None and not fallidas:
+            raise fallo  # not a gate (a crash, a missing file): nothing to fix mechanically
+        hechos, pendientes, rehacer_voz = autoarreglo.arreglar(
+            proy, fallidas, informe, bloquean
+        )
+        if fallo is None and not hechos and not pendientes and not rehacer_voz:
+            return qa
+        rehacer_voz = rehacer_voz and not voz_rehecha
+        for h in hechos:
+            print(f"🔧 auto {ronda + 1}: {h}")
+        if not (hechos or rehacer_voz) or ronda == RONDAS_AUTO:
+            for x in pendientes:
+                print(f"  pendiente: {x}")
+            raise SystemExit(
+                f"✗ --auto: {len(pendientes)} fallo(s) sin arreglo mecánico tras {ronda + 1} ronda(s)"
+                + (" (el último arreglo no se volvió a medir)" if hechos else "")
+            )
+        if rehacer_voz:
+            voz_rehecha = True
+            r = _run([PY, str(MOTOR / "voz.py"), str(proy), "--forzar"])
+            print(f"🔧 auto {ronda + 1}: voz re-sintetizada ({r.returncode})")
+    raise AssertionError("unreachable")
+
+
 if __name__ == "__main__":
     sys.stdout.reconfigure(
         encoding="utf-8"
@@ -973,7 +1028,13 @@ if __name__ == "__main__":
         raise SystemExit(__doc__)
     t0, fallo = time.time(), None
     try:
-        producir(Path(sys.argv[1]))
+        if "--auto" in sys.argv:
+            producir_auto(
+                Path(sys.argv[1]).resolve(),
+                "--sin-critico" not in sys.argv and "--previo" not in sys.argv,
+            )
+        else:
+            producir(Path(sys.argv[1]))
     except SystemExit as e:
         fallo = str(e)
         raise
