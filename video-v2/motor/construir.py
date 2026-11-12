@@ -1576,7 +1576,7 @@ def _html(p: dict) -> str:
         "__PRUEBAS__": pruebas,
         "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}".strip(),
         "__AVISOFIN__": (
-            f'        <div id="avisofin">{html.escape(p["aviso"]["completo"])}</div>'
+            f'        <div id="avisofin"{estilo_avisofin(p["aviso"])}>{html.escape(p["aviso"]["completo"])}</div>'
             if p["aviso"].get("completo")
             else ""
         ),
@@ -1946,6 +1946,12 @@ def estilo_aviso(av: dict) -> str:
     if av.get("tam"):
         css.append(f"font-size:{int(av['tam'])}px")
     return f' style="{";".join(css)}"' if css else ""
+
+
+def estilo_avisofin(av: dict) -> str:
+    """The end card is 30 px (plantilla); a larger `tam` applies there too, or raising it fixed nothing
+    (huang-exit: tam 31 -> 33 and "future results." still measured 34 px < 35)."""
+    return f' style="font-size:{int(av["tam"])}px"' if (av.get("tam") or 0) > 30 else ""
 
 
 def _carve(out: Path) -> None:

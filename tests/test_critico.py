@@ -1,21 +1,24 @@
 """Tests de video-v2/motor/critico.py: revisiones puras, anclas inversas, parches y juicio."""
+
 from __future__ import annotations
 
 import json
-import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "video-v2" / "motor"))
 sys.path.insert(0, str(RAIZ / "tools"))
 
-import anclas  # noqa: E402
-import critico as C  # noqa: E402
+import anclas
+import critico as C
 
-RUB = json.loads((RAIZ / "video-v2" / "motor" / "rubrica.json").read_text(encoding="utf-8"))
+RUB = json.loads(
+    (RAIZ / "video-v2" / "motor" / "rubrica.json").read_text(encoding="utf-8")
+)
 U = {k: v for c in RUB["criterios"].values() for k, v in c.items() if k != "nombre"}
 
 
@@ -23,9 +26,18 @@ def w(text, s, e):
     return {"text": text, "start": s, "end": e}
 
 
-WORDS = [w("This", 0.4, 0.42), w("janitor", 0.42, 0.8), w("died", 0.8, 1.1), w("rich.", 1.1, 1.6),
-         w("He", 2.0, 2.2), w("bought", 2.2, 2.6), w("stocks", 2.6, 3.0), w("and", 3.0, 3.2),
-         w("bought", 3.2, 3.6), w("more.", 3.6, 4.0)]
+WORDS = [
+    w("This", 0.4, 0.42),
+    w("janitor", 0.42, 0.8),
+    w("died", 0.8, 1.1),
+    w("rich.", 1.1, 1.6),
+    w("He", 2.0, 2.2),
+    w("bought", 2.2, 2.6),
+    w("stocks", 2.6, 3.0),
+    w("and", 3.0, 3.2),
+    w("bought", 3.2, 3.6),
+    w("more.", 3.6, 4.0),
+]
 VS = [(0.0, 1.9), (1.9, 4.5)]
 
 
@@ -41,7 +53,7 @@ class AnclaInversaTest(unittest.TestCase):
         self.assertAlmostEqual(anclas.t(WORDS, a), 3.2)
 
     def test_salta_palabras_no_medidas_y_respeta_el_rango(self):
-        self.assertNotEqual(C.ancla_de(WORDS, 0.4), "0:this")       # "This" dura 0,02 s
+        self.assertNotEqual(C.ancla_de(WORDS, 0.4), "0:this")  # "This" dura 0,02 s
         self.assertIsNone(C.ancla_de(WORDS, 1.0, desde=5, hasta=6))
 
 
@@ -53,10 +65,15 @@ class RevisionesTest(unittest.TestCase):
         self.assertTrue(1.8 <= anclas.t(WORDS, f[0]["parche"]["ancla"]) <= 4.2)
 
     def test_ritmo_dentro_del_limite_no_es_fallo(self):
-        self.assertEqual(C.revisar_ritmo({"max_s": 1.6, "desde_s": 0}, WORDS, VS, U), [])
+        self.assertEqual(
+            C.revisar_ritmo({"max_s": 1.6, "desde_s": 0}, WORDS, VS, U), []
+        )
 
     def test_hueco_sin_regancho(self):
-        largo = [w(f"w{i}{'.' if i % 5 == 4 else ''}", i * 0.5, i * 0.5 + 0.4) for i in range(60)]
+        largo = [
+            w(f"w{i}{'.' if i % 5 == 4 else ''}", i * 0.5, i * 0.5 + 0.4)
+            for i in range(60)
+        ]
         f = C.revisar_reganchos({"golpes": [2.0], "fin_voz": 29.9}, largo, U)
         self.assertEqual(len(f), 1)
         self.assertEqual((f[0]["t"], f[0]["t_fin"]), (2.0, 29.9))
@@ -65,16 +82,32 @@ class RevisionesTest(unittest.TestCase):
     # Requirement changed on 5-nov (docs/mejora/guion/linea_base.md): a number in sentence 0 is optional.
     # All 5 measured videos have one, so it cannot be tested; the only blind test (#9) went against it.
     def test_gancho_sin_cifra_no_falla_y_sin_texto_si(self):
-        self.assertEqual(C.revisar_gancho(WORDS, [{"t": 0.0, "lineas": ["RICH"]}], U), [])
-        f = C.revisar_gancho(WORDS, [{"t": 0.0, "lineas": []}, {"t": 0.5, "lineas": []}], U)
+        self.assertEqual(
+            C.revisar_gancho(WORDS, [{"t": 0.0, "lineas": ["RICH"]}], U), []
+        )
+        f = C.revisar_gancho(
+            WORDS, [{"t": 0.0, "lineas": []}, {"t": 0.5, "lineas": []}], U
+        )
         self.assertEqual([(x["criterio"], x["severidad"]) for x in f], [("G1", "alta")])
 
     def test_gancho_con_cifra_sola_falla_y_con_contraste_no(self):
-        sola = [w("Forty", 0.1, 0.4), w("percent", 0.4, 0.8), w("of", 0.8, 0.9), w("homes.", 0.9, 1.3)]
+        sola = [
+            w("Forty", 0.1, 0.4),
+            w("percent", 0.4, 0.8),
+            w("of", 0.8, 0.9),
+            w("homes.", 0.9, 1.3),
+        ]
         f = C.revisar_gancho(sola, [{"t": 0.0, "lineas": ["40%"]}], U)
-        self.assertEqual([(x["criterio"], x["severidad"]) for x in f], [("G1", "media")])
+        self.assertEqual(
+            [(x["criterio"], x["severidad"]) for x in f], [("G1", "media")]
+        )
         self.assertIn("cifra sola", f[0]["detalle"])
-        con = sola[:3] + [w("homes,", 0.9, 1.3), w("but", 1.3, 1.5), w("none", 1.5, 1.8), w("sold.", 1.8, 2.2)]
+        con = sola[:3] + [
+            w("homes,", 0.9, 1.3),
+            w("but", 1.3, 1.5),
+            w("none", 1.5, 1.8),
+            w("sold.", 1.8, 2.2),
+        ]
         self.assertEqual(C.revisar_gancho(con, [{"t": 0.0, "lineas": ["40%"]}], U), [])
 
     def test_rubrica_y_juicio_no_exigen_cifra_ni_dicotomia(self):
@@ -83,9 +116,20 @@ class RevisionesTest(unittest.TestCase):
         self.assertNotIn("con su cifra", C.JUICIO)
 
     def test_mezcla_culpa_al_efecto_que_suena_y_no_a_la_musica(self):
-        rm = {"pct_tapada": 50.0, "n_ventanas": 4, "mediana_db": 8, "ventanas": [
-            {"t": 0.0, "db": 20}, {"t": 0.5, "db": 2.0}, {"t": 1.0, "db": 4.0}, {"t": 1.5, "db": 20}]}
-        ev = [{"t0": 0.6, "t1": 0.9, "fuente": "sonidos[0] caja", "sonido": 0, "vol": 0.6}]
+        rm = {
+            "pct_tapada": 50.0,
+            "n_ventanas": 4,
+            "mediana_db": 8,
+            "ventanas": [
+                {"t": 0.0, "db": 20},
+                {"t": 0.5, "db": 2.0},
+                {"t": 1.0, "db": 4.0},
+                {"t": 1.5, "db": 20},
+            ],
+        }
+        ev = [
+            {"t0": 0.6, "t1": 0.9, "fuente": "sonidos[0] caja", "sonido": 0, "vol": 0.6}
+        ]
         f = C.revisar_mezcla(rm, None, 0.5, VS, U, ev)
         por = {x["detalle"].split(" tapa")[0]: x for x in f}
         self.assertEqual(set(por), {"sonidos[0] caja", "música"})
@@ -97,22 +141,50 @@ class RevisionesTest(unittest.TestCase):
     def test_con_dos_efectos_a_la_vez_culpa_al_que_mas_suena(self):
         import numpy as np
         import soundfile as sf
+
         with tempfile.TemporaryDirectory() as d:
             sr = 16000
             t = np.arange(sr) / sr
             sf.write(f"{d}/flojo.wav", 0.01 * np.sin(2 * np.pi * 1000 * t), sr)
             sf.write(f"{d}/fuerte.wav", 0.5 * np.sin(2 * np.pi * 1000 * t), sr)
-            ev = [{"t0": 0.0, "t1": 1.0, "fuente": "flojo", "archivo": f"{d}/flojo.wav", "vol": 0.6},
-                  {"t0": 0.2, "t1": 1.2, "fuente": "fuerte", "archivo": f"{d}/fuerte.wav", "vol": 0.38}]
+            ev = [
+                {
+                    "t0": 0.0,
+                    "t1": 1.0,
+                    "fuente": "flojo",
+                    "archivo": f"{d}/flojo.wav",
+                    "vol": 0.6,
+                },
+                {
+                    "t0": 0.2,
+                    "t1": 1.2,
+                    "fuente": "fuerte",
+                    "archivo": f"{d}/fuerte.wav",
+                    "vol": 0.38,
+                },
+            ]
             self.assertEqual(C.culpable({"t": 0.5}, ev)["fuente"], "fuerte")
 
     def test_efecto_del_motor_se_parchea_con_su_perilla(self):
-        rm = {"pct_tapada": 50.0, "n_ventanas": 2, "mediana_db": 8, "ventanas": [{"t": 0.0, "db": -5}, {"t": 0.5, "db": 20}]}
-        ev = [{"t0": 0.0, "t1": 0.3, "fuente": "motor whoosh (corte)", "motor": "whoosh", "vol": 0.38}]
+        rm = {
+            "pct_tapada": 50.0,
+            "n_ventanas": 2,
+            "mediana_db": 8,
+            "ventanas": [{"t": 0.0, "db": -5}, {"t": 0.5, "db": 20}],
+        }
+        ev = [
+            {
+                "t0": 0.0,
+                "t1": 0.3,
+                "fuente": "motor whoosh (corte)",
+                "motor": "whoosh",
+                "vol": 0.38,
+            }
+        ]
         p = C.revisar_mezcla(rm, None, 0.5, VS, U, ev)[0]["parche"]
         self.assertEqual((p["op"], p["efecto"]), ("motor_vol", "whoosh"))
         self.assertAlmostEqual(p["valor"], round(0.38 * 10 ** (-C.PASO_MAX_DB / 20), 3))
-        sb2, hechos = C.aplicar({}, [p])
+        sb2, _hechos = C.aplicar({}, [p])
         self.assertEqual(sb2["mezcla"]["whoosh"], p["valor"])
 
     def test_loudness_y_pico(self):
@@ -120,16 +192,33 @@ class RevisionesTest(unittest.TestCase):
         self.assertEqual(len(f), 2)
 
     def test_puerta_de_contraste_de_producir_a_fallos_con_segundo(self):
-        qa = {"puertas": [{"puerta": "contraste", "ok": False, "detalle":
-              '2 textos ilegibles: "Illustrative · ~$170/mo reinve" 4.19:1 (< 4.5) en t≈13.97s; "75 years later" 2.2:1 (< 3) en t≈1.2s'}],
-              "_aviso": ["Illustrative · ~$170/mo reinvested at ~10%/yr nominal"]}
+        qa = {
+            "puertas": [
+                {
+                    "puerta": "contraste",
+                    "ok": False,
+                    "detalle": '2 textos ilegibles: "Illustrative · ~$170/mo reinve" 4.19:1 (< 4.5) en t≈13.97s; "75 years later" 2.2:1 (< 3) en t≈1.2s',
+                }
+            ],
+            "_aviso": ["Illustrative · ~$170/mo reinvested at ~10%/yr nominal"],
+        }
         f = C.fallos_de_qa(qa, VS)
-        self.assertEqual([(x["t"], x["escena"]) for x in f], [(13.97, "aviso"), (1.2, 0)])
+        self.assertEqual(
+            [(x["t"], x["escena"]) for x in f], [(13.97, "aviso"), (1.2, 0)]
+        )
         self.assertEqual([x["parche"]["op"] for x in f], ["aviso_placa", "fondo_suave"])
 
     def test_palabra_corta_contenida_en_el_aviso_no_es_el_aviso(self):
-        qa = {"puertas": [{"puerta": "contraste", "ok": False, "detalle": '"for" 2.14:1 (< 3) en t≈1.0s'}],
-              "_aviso": ["One real stock · ~15.2%/yr nominal for 75 years"]}
+        qa = {
+            "puertas": [
+                {
+                    "puerta": "contraste",
+                    "ok": False,
+                    "detalle": '"for" 2.14:1 (< 3) en t≈1.0s',
+                }
+            ],
+            "_aviso": ["One real stock · ~15.2%/yr nominal for 75 years"],
+        }
         self.assertEqual(C.fallos_de_qa(qa, VS)[0]["escena"], 0)
 
     def test_datos_sin_aviso_ni_fuentes(self):
@@ -139,45 +228,95 @@ class RevisionesTest(unittest.TestCase):
 
 
 class ParchesTest(unittest.TestCase):
-    SB = {"golpes": ["0:rich"], "aviso": {"lineas": ["x"]}, "musica": {"volumen": 0.5},
-          "sonidos": [{"sfx": "caja", "en": "0:rich", "vol": 0.6}],
-          "escenas": [{"tipo": "foto"}, {"tipo": "titulo"}]}
+    SB: ClassVar[dict] = {
+        "golpes": ["0:rich"],
+        "aviso": {"lineas": ["x"]},
+        "musica": {"volumen": 0.5},
+        "sonidos": [{"sfx": "caja", "en": "0:rich", "vol": 0.6}],
+        "escenas": [{"tipo": "foto"}, {"tipo": "titulo"}],
+    }
 
     def test_aplica_cada_operacion_del_catalogo_sobre_una_copia(self):
-        sb2, hechos = C.aplicar(self.SB, [
-            {"op": "golpe", "ancla": "1:bought#2"}, {"op": "aviso_placa"}, {"op": "aviso_tam", "valor": 30},
-            {"op": "musica_volumen", "valor": 0.3}, {"op": "sfx_vol", "indice": 0, "valor": 0.3},
-            {"op": "fondo_suave", "escena": 1}, {"op": "set", "ruta": "escenas.1.posicion", "valor": "arriba"}])
+        sb2, hechos = C.aplicar(
+            self.SB,
+            [
+                {"op": "golpe", "ancla": "1:bought#2"},
+                {"op": "aviso_placa"},
+                {"op": "aviso_tam", "valor": 30},
+                {"op": "musica_volumen", "valor": 0.3},
+                {"op": "sfx_vol", "indice": 0, "valor": 0.3},
+                {"op": "fondo_suave", "escena": 1},
+                {"op": "set", "ruta": "escenas.1.posicion", "valor": "arriba"},
+            ],
+        )
         self.assertEqual(len(hechos), 7)
         self.assertEqual(sb2["golpes"], ["0:rich", "1:bought#2"])
         self.assertEqual((sb2["aviso"]["placa"], sb2["aviso"]["tam"]), (True, 30))
-        self.assertEqual((sb2["musica"]["volumen"], sb2["sonidos"][0]["vol"]), (0.3, 0.3))
-        self.assertEqual((sb2["escenas"][1]["fondo_suave"], sb2["escenas"][1]["posicion"]), (True, "arriba"))
-        self.assertNotIn("placa", self.SB["aviso"])                  # el original no se toca
+        self.assertEqual(
+            (sb2["musica"]["volumen"], sb2["sonidos"][0]["vol"]), (0.3, 0.3)
+        )
+        self.assertEqual(
+            (sb2["escenas"][1]["fondo_suave"], sb2["escenas"][1]["posicion"]),
+            (True, "arriba"),
+        )
+        self.assertNotIn("placa", self.SB["aviso"])  # el original no se toca
 
     def test_lo_que_no_cambia_nada_o_no_esta_permitido_no_cuenta(self):
-        _, hechos = C.aplicar(self.SB, [
-            {"op": "golpe", "ancla": "0:rich"},                         # ya estaba
-            {"op": "musica_volumen", "valor": 0.9},                     # nunca SUBE la música
-            {"op": "fondo_suave", "escena": 0},                         # una `foto` no tiene fondo
-            {"op": "set", "ruta": "guion.0.texto", "valor": "otro"},    # el guion no se toca a ciegas
-            {"op": "borrar_todo"}])
+        _, hechos = C.aplicar(
+            self.SB,
+            [
+                {"op": "golpe", "ancla": "0:rich"},  # ya estaba
+                {"op": "musica_volumen", "valor": 0.9},  # nunca SUBE la música
+                {"op": "fondo_suave", "escena": 0},  # una `foto` no tiene fondo
+                {
+                    "op": "set",
+                    "ruta": "guion.0.texto",
+                    "valor": "otro",
+                },  # el guion no se toca a ciegas
+                {"op": "borrar_todo"},
+            ],
+        )
         self.assertEqual(hechos, [])
+
+    def test_aviso_final_pequeno_se_reconoce_y_sube_lo_necesario(self):
+        """huang-exit (12-nov): "future results." of the end card measured 34 px < 35; it went to scene 12 with
+        no patch, and a fixed `valor` 30 was below the tam 33 already set, so nothing could fix it."""
+        rt = {
+            "pequenos": [{"texto": "future results.", "alto": 34 / 1920, "t": 3.0}],
+            "aviso_lineas": [
+                "Not financial advice",
+                "Past performance does not predict future results.",
+            ],
+            "aviso_px": 33,
+        }
+        f = C.revisar_texto(rt, VS, U)[0]
+        self.assertEqual(f["escena"], "aviso")
+        self.assertEqual(f["parche"]["op"], "aviso_tam")
+        self.assertGreaterEqual(f["parche"]["valor"] * 34 / 33, U["alto_min"] * 1920)
+        sb2, hechos = C.aplicar({"aviso": {"lineas": ["x"], "tam": 33}}, [f["parche"]])
+        self.assertEqual((len(hechos), sb2["aviso"]["tam"]), (1, f["parche"]["valor"]))
 
     def test_volcar_conserva_la_sangria_del_original(self):
         orig = '{\n "a": 1,\n "b": [\n  2\n ]\n}\n'
         self.assertEqual(C.volcar({"a": 1, "b": [2]}, orig), orig)
 
     def test_volumen_baja_como_mucho_un_paso_por_ronda(self):
-        rm = {"pct_tapada": 50.0, "n_ventanas": 2, "mediana_db": 0, "ventanas": [{"t": 0.0, "db": -30}, {"t": 0.5, "db": 20}]}
-        ev = [{"t0": 0.0, "t1": 0.3, "fuente": "sonidos[0] caja", "sonido": 0, "vol": 0.6}]
+        rm = {
+            "pct_tapada": 50.0,
+            "n_ventanas": 2,
+            "mediana_db": 0,
+            "ventanas": [{"t": 0.0, "db": -30}, {"t": 0.5, "db": 20}],
+        }
+        ev = [
+            {"t0": 0.0, "t1": 0.3, "fuente": "sonidos[0] caja", "sonido": 0, "vol": 0.6}
+        ]
         v = C.revisar_mezcla(rm, None, 0.5, VS, U, ev)[0]["parche"]["valor"]
         self.assertAlmostEqual(v, round(0.6 * 10 ** (-C.PASO_MAX_DB / 20), 3))
 
     def test_fondo_ya_suave_escala_a_mas_tenue_hasta_un_minimo(self):
         sb = {"escenas": [{"tipo": "puntos", "fondo_suave": True}]}
         for esperado in (0.6, 0.36, 0.3):
-            sb, hechos = C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}])
+            sb, _hechos = C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}])
             self.assertEqual(sb["escenas"][0]["fondo_opacidad"], esperado)
         self.assertEqual(C.aplicar(sb, [{"op": "fondo_suave", "escena": 0}])[1], [])
 
@@ -187,16 +326,43 @@ class ParchesTest(unittest.TestCase):
         self.assertEqual(sb2["escenas"][0]["fondo_opacidad"], 0.6)
 
     def test_puntuacion_por_severidad(self):
-        self.assertEqual(C.puntuar([{"severidad": "alta"}, {"severidad": "media"}, {"severidad": "baja"}]), 6)
+        self.assertEqual(
+            C.puntuar(
+                [{"severidad": "alta"}, {"severidad": "media"}, {"severidad": "baja"}]
+            ),
+            6,
+        )
 
 
 class JuicioYPlanTest(unittest.TestCase):
     def test_juicio_solo_admite_parches_del_catalogo(self):
         with tempfile.TemporaryDirectory() as d:
-            Path(d, "juicio.json").write_text(json.dumps({"fallos": [
-                {"criterio": "J2", "severidad": "media", "t": 4.2, "escena": 2, "detalle": "plano no casa",
-                 "parche": {"op": "set", "ruta": "escenas.2.img", "valor": "otra"}},
-                {"criterio": "J6", "severidad": "baja", "detalle": "x", "parche": {"op": "rm -rf"}}]}))
+            Path(d, "juicio.json").write_text(
+                json.dumps(
+                    {
+                        "fallos": [
+                            {
+                                "criterio": "J2",
+                                "severidad": "media",
+                                "t": 4.2,
+                                "escena": 2,
+                                "detalle": "plano no casa",
+                                "parche": {
+                                    "op": "set",
+                                    "ruta": "escenas.2.img",
+                                    "valor": "otra",
+                                },
+                            },
+                            {
+                                "criterio": "J6",
+                                "severidad": "baja",
+                                "detalle": "x",
+                                "parche": {"op": "rm -rf"},
+                            },
+                        ]
+                    }
+                )
+            )
             f = C.leer_juicio(Path(d))
         self.assertEqual([x["origen"] for x in f], ["juicio", "juicio"])
         self.assertEqual(f[0]["parche"]["op"], "set")
@@ -220,7 +386,9 @@ class BucleTest(unittest.TestCase):
         (self.proy / "renders").mkdir(parents=True)
         self.sb0 = '{\n "aviso": {\n  "lineas": [\n   "x"\n  ]\n },\n "escenas": [\n  {\n   "tipo": "titulo"\n  }\n ]\n}\n'
         (self.proy / "storyboard.json").write_text(self.sb0)
-        (self.proy / "index.html").write_text('<script>window.PLAN = {"escenas": [{"t0": 0, "t1": 2}]};</script>')
+        (self.proy / "index.html").write_text(
+            '<script>window.PLAN = {"escenas": [{"t0": 0, "t1": 2}]};</script>'
+        )
         self.orig = (C.render, C.revisar, C.preparar_juicio)
         C.preparar_juicio = lambda *a, **k: None
 
@@ -234,29 +402,63 @@ class BucleTest(unittest.TestCase):
         return f
 
     def test_puerta_fallida_se_parchea_y_la_mejor_ronda_medida_gana(self):
-        renders = iter([(None, {"puertas": [{"puerta": "contraste", "ok": False,
-                                             "detalle": '"Big title" 2.0:1 (< 3) en t≈1.0s'}]}, "✗ contraste"),
-                        (self.mp4(2), {"puertas": []}, "ok")])
+        renders = iter(
+            [
+                (
+                    None,
+                    {
+                        "puertas": [
+                            {
+                                "puerta": "contraste",
+                                "ok": False,
+                                "detalle": '"Big title" 2.0:1 (< 3) en t≈1.0s',
+                            }
+                        ]
+                    },
+                    "✗ contraste",
+                ),
+                (self.mp4(2), {"puertas": []}, "ok"),
+            ]
+        )
         C.render = lambda proy: next(renders)
         puntos = {"v0": 10, "r2": 4}
         C.revisar = lambda proy, mp4, rub, qa, juicio=None, sb=None, html=None: {
-            "fallos": [], "medidas": {}, "puntuacion": puntos.get(mp4.stem, 10),
-            **({"fallos": [C.fallo("L1", "alta", "aviso", parche={"op": "aviso_placa"})]} if mp4.stem == "r0" else {})}
+            "fallos": [],
+            "medidas": {},
+            "puntuacion": puntos.get(mp4.stem, 10),
+            **(
+                {
+                    "fallos": [
+                        C.fallo("L1", "alta", "aviso", parche={"op": "aviso_placa"})
+                    ]
+                }
+                if mp4.stem == "r0"
+                else {}
+            ),
+        }
         inf = C.bucle(self.proy, 2, self.mp4(0))
         self.assertEqual([r["puntuacion"] for r in inf["rondas"]], [10, None, 4])
         self.assertEqual(inf["elegida"], 2)
         d = self.proy / "renders" / "critica"
         self.assertTrue((d / "r0.mp4").exists() and (d / "r2.mp4").exists())
-        self.assertEqual((d / "storyboard.r0.json").read_text(), self.sb0)          # instantánea intacta
-        final = (self.proy / "storyboard.json").read_text()                       # se queda la mejor
+        self.assertEqual(
+            (d / "storyboard.r0.json").read_text(), self.sb0
+        )  # instantánea intacta
+        final = (self.proy / "storyboard.json").read_text()  # se queda la mejor
         self.assertIn('"placa": true', final)
-        self.assertIn('"fondo_suave": true', final)                                 # parche de la puerta
+        self.assertIn('"fondo_suave": true', final)  # parche de la puerta
 
     def test_ronda_que_empeora_vuelve_al_storyboard_anterior(self):
         C.render = lambda proy: (self.mp4(1), {"puertas": []}, "ok")
         C.revisar = lambda proy, mp4, rub, qa, juicio=None, sb=None, html=None: (
-            {"fallos": [C.fallo("L1", "alta", "a", parche={"op": "aviso_placa"})], "medidas": {}, "puntuacion": 5}
-            if mp4.stem == "r0" else {"fallos": [], "medidas": {}, "puntuacion": 9})
+            {
+                "fallos": [C.fallo("L1", "alta", "a", parche={"op": "aviso_placa"})],
+                "medidas": {},
+                "puntuacion": 5,
+            }
+            if mp4.stem == "r0"
+            else {"fallos": [], "medidas": {}, "puntuacion": 9}
+        )
         inf = C.bucle(self.proy, 2, self.mp4(0))
         self.assertEqual(inf["elegida"], 0)
         self.assertEqual((self.proy / "storyboard.json").read_text(), self.sb0)
@@ -269,18 +471,29 @@ class VozDeLaMezclaTest(unittest.TestCase):
             (proy / "assets").mkdir()
             (proy / "assets" / "voice-mix.wav").write_bytes(b"stale")
             self.assertEqual(C.voz_de_la_mezcla(proy, {}).name, "voice.mp3")
-            self.assertEqual(C.voz_de_la_mezcla(proy, {"voz": {"ride": []}}).name, "voice.mp3")
-            self.assertEqual(C.voz_de_la_mezcla(proy, {"voz": {"ride": [{"en": "0:a", "db": 1}]}}).name, "voice-mix.wav")
+            self.assertEqual(
+                C.voz_de_la_mezcla(proy, {"voz": {"ride": []}}).name, "voice.mp3"
+            )
+            self.assertEqual(
+                C.voz_de_la_mezcla(
+                    proy, {"voz": {"ride": [{"en": "0:a", "db": 1}]}}
+                ).name,
+                "voice-mix.wav",
+            )
 
 
 class HojaContactosTest(unittest.TestCase):
     def _fotos(self, d, n):
         from PIL import Image
+
         for i in range(n):
-            Image.new("RGB", (540, 960), (250, 250, 250)).save(Path(d) / f"f_{i:06.2f}.jpg")
+            Image.new("RGB", (540, 960), (250, 250, 250)).save(
+                Path(d) / f"f_{i:06.2f}.jpg"
+            )
 
     def test_cabe_en_el_limite_y_cuesta_menos_que_las_sueltas(self):
         from PIL import Image
+
         for n in (1, 23, 40):
             with tempfile.TemporaryDirectory() as d:
                 self._fotos(d, n)
@@ -290,11 +503,14 @@ class HojaContactosTest(unittest.TestCase):
 
     def test_celda_rotulada_se_ve_sobre_fondo_claro(self):
         from PIL import Image
+
         with tempfile.TemporaryDirectory() as d:
             self._fotos(d, 4)
             with Image.open(C.hoja_contactos(Path(d))) as h:
                 esquina = h.convert("L").crop((0, 0, 60, 24)).getextrema()
-            self.assertLess(esquina[0], 100)  # the label's dark outline, on a near-white frame
+            self.assertLess(
+                esquina[0], 100
+            )  # the label's dark outline, on a near-white frame
 
     def test_sin_fotogramas_no_hay_hoja(self):
         with tempfile.TemporaryDirectory() as d:

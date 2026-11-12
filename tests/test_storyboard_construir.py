@@ -792,5 +792,12 @@ class PruebaTest(unittest.TestCase):
         )
 
 
+class AvisoFinTest(unittest.TestCase):
+    def test_tam_mayor_que_la_tarjeta_final_tambien_la_agranda(self):
+        self.assertEqual(c.estilo_avisofin({"tam": 33}), ' style="font-size:33px"')
+        self.assertEqual(c.estilo_avisofin({"tam": 27}), "")  # never shrinks the 30 px end card
+        self.assertEqual(c.estilo_avisofin({}), "")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

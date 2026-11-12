@@ -251,7 +251,16 @@ def revisar_texto(rt: dict, vs: list[tuple[float, float]], u: dict) -> list[dict
                 t=x["t"],
                 t_fin=x.get("t_fin"),
                 escena="aviso" if es_aviso else esc,
-                parche={"op": "aviso_tam", "valor": 30} if es_aviso else None,
+                # the end card is 30 px unless tam is larger (construir); raise by the measured shortfall
+                parche={
+                    "op": "aviso_tam",
+                    "valor": math.ceil(
+                        rt.get("aviso_px", 30) * u["alto_min"] / x["alto"]
+                    )
+                    + 1,
+                }
+                if es_aviso
+                else None,
             )
         )
     for x in rt.get("zona_ui") or []:
@@ -369,7 +378,7 @@ def revisar_previo(sb: dict, plan: dict, words: list[dict], frames: list[dict], 
     textos = muestreo_previo(sb, plan, words, [])["textos"]
     diseno = textos_previstos(sb, plan, words)[1]
     rt = medir_texto.analizar(frames, textos, {k: u[k] for k in medir_texto.UMBRALES if k in u}, diseno=diseno)
-    rt["aviso_lineas"] = (plan.get("aviso") or {}).get("lineas") or []
+    rt.update(lineas_aviso(plan.get("aviso") or {}))
     return revisar_texto(rt, vs, u) + pf.sobre_documento(frames, diseno, plan, vs, u, fallo, escena_en)
 
 
@@ -382,6 +391,16 @@ def esperados_aviso(av: dict, fin: float) -> list[dict]:
         t0 = av["final"] + 0.4  # tras su fundido
         esp += [(texto, t0, fin) for texto in ([av["completo"]] if av.get("completo") else lineas)]
     return [{"texto": x, "escena": "aviso", "t0": a, "t1": b} for x, a, b in esp]
+
+
+def lineas_aviso(av: dict) -> dict:
+    """What _es_aviso matches: the end card shows `completo`, not `lineas` (motor.js). `aviso_px`: the
+    largest size either is drawn at, the base the aviso_tam patch scales from."""
+    return {
+        "aviso_lineas": (av.get("lineas") or [])
+        + ([av["completo"]] if av.get("completo") else []),
+        "aviso_px": max(int(av.get("tam") or 0), 30),
+    }
 
 
 def _es_aviso(texto: str, rt: dict) -> bool:
@@ -1007,7 +1026,7 @@ def revisar(
         {k: u[k] for k in medir_texto.UMBRALES if k in u},
         diseno=diseno,
     )
-    rt["aviso_lineas"] = av.get("lineas") or []
+    rt.update(lineas_aviso(av))
     med["texto"] = {k: rt[k] for k in ("leidos_pct", "esperados", "n_frames")}
     fallos += revisar_texto(rt, vs, u)
     fallos += revisar_gancho(words, frames, u)
