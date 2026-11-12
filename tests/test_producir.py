@@ -173,6 +173,11 @@ class GanchoPrevioTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             self.assertFalse(producir.gancho_previo(Path(d), self.U)[0])
 
+    def test_sobre_el_mp4_sin_margen_y_sobre_el_snapshot_con_margen(self):
+        g = {"luma": 32.0, "contraste": 30.0}
+        self.assertTrue(producir.veredicto_gancho(g, self.U)[0])  # --rapido: the MP4, critic's exact limits
+        self.assertFalse(producir.veredicto_gancho(g, self.U, producir.GANCHO_MARGEN_LUMA)[0])
+
     def test_instantes_del_gancho_a_la_cadencia_del_critico(self):
         self.assertEqual(producir.instantes_gancho(self.U), [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8])
 

@@ -41,7 +41,9 @@ MOTOR = Path(__file__).resolve().parent
 RAIZ = MOTOR.parents[1]
 PY = sys.executable
 RONDAS_AUTO = 3  # --auto: fix-and-retry rounds; each later one may cost a render
-DETALLES: dict[str, tuple[bool, str]] = {}  # last run, full gate detail (qa.json keeps 600 chars)
+DETALLES: dict[
+    str, tuple[bool, str]
+] = {}  # last run, full gate detail (qa.json keeps 600 chars)
 
 
 def _run(
@@ -648,7 +650,9 @@ def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
     )
 
 
-GANCHO_MARGEN_LUMA = 3.5  # snapshot vs MP4 luma gap measured +3.2 (huang-exit): see gancho_previo
+GANCHO_MARGEN_LUMA = (
+    3.5  # snapshot vs MP4 luma gap measured +3.2 (huang-exit): see gancho_previo
+)
 
 
 def instantes_gancho(u: dict) -> list[float]:
@@ -676,17 +680,54 @@ def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
             fr[t] = np.asarray(g, np.float64)
     if len(fr) < len(quiere):
         return False, f"faltan fotogramas del gancho: {len(fr)} de {len(quiere)}"
-    g = mc.gancho(np.stack([fr[t] for t in sorted(fr)]), u)
+    return veredicto_gancho(
+        mc.gancho(np.stack([fr[t] for t in sorted(fr)]), u), u, GANCHO_MARGEN_LUMA
+    )
+
+
+def veredicto_gancho(g: dict, u: dict, margen: float = 0.0) -> tuple[bool, str]:
     ok = (
-        g["luma"] >= u["gancho_luma_min"] + GANCHO_MARGEN_LUMA
+        g["luma"] >= u["gancho_luma_min"] + margen
         and g["contraste"] >= u["gancho_contraste_min"]
     )
+    extra = f" + {margen} de margen" if margen else ""
     return ok, (
         f"luma {g['luma']}, contraste {g['contraste']}"
         if ok
-        else f"gancho oscuro o plano: luma {g['luma']} (mín. {u['gancho_luma_min']} + {GANCHO_MARGEN_LUMA} de margen), "
+        else f"gancho oscuro o plano: luma {g['luma']} (mín. {u['gancho_luma_min']}{extra}), "
         f"contraste {g['contraste']} (mín. {u['gancho_contraste_min']}): más opacidad del fondo o un clip más claro"
     )
+
+
+def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
+    """--rapido: a draft render to judge by eye while the full run (high render + critic) goes on behind.
+    Draft = same 1080x1920, 30 fps and frames, 3.9 Mbps; SSIM 0.973 vs high (huang-exit). Publishing still needs
+    the critic's approval of the final MP4: this file is never published."""
+    import critico
+    import medir_cuadros as mc
+
+    crudo, rap = (
+        proy / "renders" / f"{ref}-rapido-crudo.mp4",
+        proy / "renders" / f"{ref}-rapido.mp4",
+    )
+    r = _run(
+        hfversion.npx("render", "--quality", "draft", "--output", str(crudo)),
+        cwd=proy,
+        env=env,
+    )
+    puerta(
+        "render",
+        r.returncode == 0 and crudo.exists(),
+        (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
+    )
+    puerta("loudnorm", *loudnorm_2pasos(crudo, rap))
+    crudo.unlink(missing_ok=True)
+    rub = critico.cargar_rubrica(proy)
+    u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+    puerta(
+        "gancho", *veredicto_gancho(mc.gancho(mc.leer_grises(rap), u), u)
+    )  # the MP4: the critic's exact limits
+    return rap
 
 
 def hoja_previa(
@@ -865,7 +906,12 @@ def producir(proy: Path) -> dict:
             instantes_escena((proy / "index.html").read_text(encoding="utf-8")),
         )
         rub = critico.cargar_rubrica(proy)
-        u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+        u = {
+            k: v
+            for c in rub["criterios"].values()
+            for k, v in c.items()
+            if k != "nombre"
+        }
         muestreo["todos"] = sorted(set(muestreo["todos"]) | set(instantes_gancho(u)))
     with ThreadPoolExecutor(1) as ex:
         hoja = (
@@ -880,12 +926,18 @@ def producir(proy: Path) -> dict:
     if previo:
         if muestreo and ok_hoja:
             puerta("texto", *texto_previo(proy, sb, muestreo), seguir=True)
-            puerta("gancho", *gancho_previo(proy / "renders" / "previo", u), seguir=True)
+            puerta(
+                "gancho", *gancho_previo(proy / "renders" / "previo", u), seguir=True
+            )
         if sb.get("social") and not exento:
             puerta("social", *social_previo(proy, env), seguir=True)
         if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
             raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
         print(f"✓ previo en {sum(p['s'] for p in qa['puertas']):.0f} s · {detalle}")
+        return qa
+    if "--rapido" in sys.argv:
+        rap = render_rapido(proy, ref, env, puerta)
+        print(f"✓ rápido en {sum(p['s'] for p in qa['puertas']):.0f} s · {rap}")
         return qa
     crudo, final, prev = (
         renders / f"{ref}.mp4",
@@ -1106,11 +1158,16 @@ if __name__ == "__main__":
                     "t": int(t0),
                     "s": round(time.time() - t0),
                     "previo": "--previo" in sys.argv,
+                    "rapido": "--rapido" in sys.argv,
                     "fallo": fallo,
                 }
                 qa_f = reg.parent / "qa.json"
-                if qa_f.exists() and qa_f.stat().st_mtime >= t0:  # seconds per gate of the last round
+                if (
+                    qa_f.exists() and qa_f.stat().st_mtime >= t0
+                ):  # seconds per gate of the last round
                     q = json.loads(qa_f.read_text(encoding="utf-8"))
-                    linea["puertas"] = {x["puerta"]: x["s"] for x in q.get("puertas") or []}
+                    linea["puertas"] = {
+                        x["puerta"]: x["s"] for x in q.get("puertas") or []
+                    }
                     linea["critico_s"] = q.get("critico_s")
                 f.write(json.dumps(linea, ensure_ascii=False) + "\n")
