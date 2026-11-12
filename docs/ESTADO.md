@@ -18,6 +18,40 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## Velocidad de /producir (12-nov, rama `claude/heuristic-jennings-f19905`)
+
+Meta del usuario: tema → preview en < 5 min sin perder calidad. Medido en `huang-exit` (RTX 5050,
+12 núcleos; ruido de render ±20-30 % entre corridas). La sesión real de huang-exit: 69 min de reloj =
+~40 min esperando procesos en segundo plano + ~15 min de herramientas + ~13 min generando Claude.
+
+| Etapa                            | Antes (s)                      | Después (s)   | Cambio                              | Efecto en calidad (medido)                                 |
+| -------------------------------- | ------------------------------ | ------------- | ----------------------------------- | ---------------------------------------------------------- |
+| Puertas estáticas + build + lint | 8-20                           | 9-25          | + P1 del storyboard, contador ancho | más fallos cazados antes de la voz                         |
+| Contraste (`check`)              | 65-85                          | 27-52         | `--no-craft`                        | mismos 62 textos                                           |
+| OCR del previo                   | 123                            | 68            | 6 procesos                          | mismo modelo y límite                                      |
+| **`--previo` entero**            | **312** (282-444 en la sesión) | **228**       |                                     | + puerta `gancho` (C1)                                     |
+| Render `--quality high`          | 133-173                        | 114           | sin cambio (dentro del ruido)       | —                                                          |
+| Preview ffmpeg                   | 31                             | ~7            | `veryfast`                          | SSIM 0.988 vs 0.989                                        |
+| Ritmo / loudness / social        | 36 / 12 / 128                  | 39 / 12 / 126 | sin cambio                          | —                                                          |
+| Crítico (OCR + medidores)        | 364-443                        | 239           | OCR en 6 procesos                   | 74/74 fotogramas idénticos                                 |
+| **`--sin-subir` entero**         | **924**                        | **612**       |                                     | igual o mejor                                              |
+| Rondas evitadas                  | —                              | —             | P1, aviso, gancho, contador         | huang-exit: 3 bloqueantes que costaron un render de 1157 s |
+
+Fallos que ya no llegan al render: P1 recursos/guion/estructura (puerta `repeticion`, mismos
+máximos de la rúbrica), contador3d más ancho que el cuadro (`puertas.contador_ancho`), gancho oscuro
+C1 (puerta `gancho` del previo, margen de luma +3.5 PROVISIONAL n=1), aviso final pequeño (`tam`
+ahora llega a `#avisofin` y el parche escala lo medido). Bug del instrumento arreglado: `en_orden`
+cruzaba líneas a menos de 57.6 px y daba un aviso legible por "no leído".
+
+**Hueco a 5 min (sin rebajar nada):** previo 228 s + render-y-crítico 612 s ≈ 14 min de máquina
+con UNA sola ronda, más la voz (~2 min) y los turnos de Claude. Con la red completa (render high +
+crítico) **< 5 min no es alcanzable hoy**: render 114 s + OCR del crítico ~200 s ya son 5 min.
+Lo que queda por decidir con el usuario (cambia cómo trabaja): (1) cola de temas preparada de
+antemano (investigación + cifras + guion fuera del reloj); (2) preview para aprobar con render
+`draft` + puertas (~200-240 s) y el crítico completo corriendo detrás, antes de publicar.
+Sin medir aún: worker de voz persistente (Kokoro se recarga en cada toma), social y ritmo en
+paralelo con el crítico, anclas desnudas que derivan (no hay arreglo estático todavía).
+
 ## Vídeos (DB local `data/omega.sqlite`, 5-nov)
 
 Filas: `production_video` 39, `production_dna` 6, `production_outcome` 5, `production_cost` **0**.
