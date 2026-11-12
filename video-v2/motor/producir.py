@@ -638,6 +638,39 @@ def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
     )
 
 
+def instantes_gancho(u: dict) -> list[float]:
+    """The hook frames the critic reads on the MP4 (medir_cuadros.FPS over `gancho_s`)."""
+    import medir_cuadros as mc
+
+    return [round(k / mc.FPS, 2) for k in range(int(u["gancho_s"] * mc.FPS))]
+
+
+def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
+    """The critic's C1 dark/flat hook on the preview frames, same function and limits, before the render.
+    PNG luma is full range; the MP4's Y plane is limited (16-235), so the frames are mapped to it first."""
+    import medir_cuadros as mc
+    import numpy as np
+    from PIL import Image
+
+    quiere = instantes_gancho(u)
+    fr = {}
+    for f in salida.glob("frame-*.png"):
+        t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
+        if any(abs(t - x) < 0.011 for x in quiere):
+            g = Image.open(f).convert("L").resize(mc.TAM, Image.BILINEAR)
+            fr[t] = 16 + np.asarray(g, np.float64) * 219 / 255
+    if len(fr) < len(quiere):
+        return False, f"faltan fotogramas del gancho: {len(fr)} de {len(quiere)}"
+    g = mc.gancho(np.stack([fr[t] for t in sorted(fr)]), u)
+    ok = g["luma"] >= u["gancho_luma_min"] and g["contraste"] >= u["gancho_contraste_min"]
+    return ok, (
+        f"luma {g['luma']}, contraste {g['contraste']}"
+        if ok
+        else f"gancho oscuro o plano: luma {g['luma']} (mín. {u['gancho_luma_min']}), "
+        f"contraste {g['contraste']} (mín. {u['gancho_contraste_min']}): más opacidad del fondo o un clip más claro"
+    )
+
+
 def hoja_previa(
     proy: Path, env: dict, ts: list[float] | None = None
 ) -> tuple[bool, str]:
@@ -813,6 +846,9 @@ def producir(proy: Path) -> dict:
             json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8")),
             instantes_escena((proy / "index.html").read_text(encoding="utf-8")),
         )
+        rub = critico.cargar_rubrica(proy)
+        u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+        muestreo["todos"] = sorted(set(muestreo["todos"]) | set(instantes_gancho(u)))
     with ThreadPoolExecutor(1) as ex:
         hoja = (
             ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
@@ -826,6 +862,7 @@ def producir(proy: Path) -> dict:
     if previo:
         if muestreo and ok_hoja:
             puerta("texto", *texto_previo(proy, sb, muestreo), seguir=True)
+            puerta("gancho", *gancho_previo(proy / "renders" / "previo", u), seguir=True)
         if sb.get("social") and not exento:
             puerta("social", *social_previo(proy, env), seguir=True)
         if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
@@ -964,7 +1001,12 @@ def producir(proy: Path) -> dict:
         f"✓ puertas OK · {final.name} · preview {qa['preview_mb']} MB · YouTube: {qa['borrador_youtube']}"
     )
     if "--sin-critico" not in sys.argv:
+        t_c = time.monotonic()
         fallos = medir_critico(proy, final)
+        qa["critico_s"] = round(time.monotonic() - t_c, 1)
+        (renders / "qa.json").write_text(
+            json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         print(f"crítico: {len(fallos)} líneas · hoja renders/critica/r0/hoja.jpg")
         for x in fallos:
             print("  " + x)
@@ -1048,4 +1090,9 @@ if __name__ == "__main__":
                     "previo": "--previo" in sys.argv,
                     "fallo": fallo,
                 }
+                qa_f = reg.parent / "qa.json"
+                if qa_f.exists() and qa_f.stat().st_mtime >= t0:  # seconds per gate of the last round
+                    q = json.loads(qa_f.read_text(encoding="utf-8"))
+                    linea["puertas"] = {x["puerta"]: x["s"] for x in q.get("puertas") or []}
+                    linea["critico_s"] = q.get("critico_s")
                 f.write(json.dumps(linea, ensure_ascii=False) + "\n")

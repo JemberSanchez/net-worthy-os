@@ -145,6 +145,38 @@ class GpuRenderTest(unittest.TestCase):
         self.assertEqual(producir.gpu_render(linea.replace("(NVIDIA)", "(Intel)")), "Intel")   # dropped to the iGPU
         self.assertIsNone(producir.gpu_render("rendered in 1m 56s"))
 
+class GanchoPrevioTest(unittest.TestCase):
+    """C1 (dark hook) was found only by the critic on the MP4 (huang-exit, 12-nov): one render run lost."""
+
+    U = {"gancho_s": 2.0, "gancho_luma_min": 30, "gancho_contraste_min": 25}
+
+    def _frames(self, d: Path, alto: int) -> None:
+        import numpy as np
+        from PIL import Image
+
+        rng = np.random.default_rng(0)
+        for k in range(12):
+            img = (rng.random((192, 108)) * alto).astype(np.uint8)
+            Image.fromarray(img).save(d / f"frame-{k:02d}-at-{0.2 * k:.2f}s.png")
+
+    def test_gancho_oscuro_falla_y_uno_claro_pasa(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._frames(Path(d), 40)
+            ok, det = producir.gancho_previo(Path(d), self.U)
+            self.assertFalse(ok)
+            self.assertIn("gancho oscuro", det)
+        with tempfile.TemporaryDirectory() as d:
+            self._frames(Path(d), 255)
+            self.assertTrue(producir.gancho_previo(Path(d), self.U)[0])
+
+    def test_sin_fotogramas_del_gancho_no_aprueba(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertFalse(producir.gancho_previo(Path(d), self.U)[0])
+
+    def test_instantes_del_gancho_a_la_cadencia_del_critico(self):
+        self.assertEqual(producir.instantes_gancho(self.U), [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
