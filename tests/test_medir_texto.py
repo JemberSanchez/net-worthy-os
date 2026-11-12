@@ -152,5 +152,19 @@ class OcrRealTest(unittest.TestCase):
         self.assertLess(T.parecido("No hot tips", self.leer(60, (60, 60, 60), (55, 55, 55))), 0.8)
 
 
+class TramosOcrTest(unittest.TestCase):
+    def test_cada_muestra_cae_en_un_solo_tramo_y_se_reparten(self):
+        n, paso = 1099, 15
+        ts = T.tramos(n, paso, 6)
+        self.assertEqual(len(ts), 6)
+        en = [sum(a <= i < b for a, b in ts) for i in range(0, n, paso)]
+        self.assertEqual(set(en), {1})
+        por = [len(range(a + (-a) % paso, b, paso)) for a, b in ts]
+        self.assertLessEqual(max(por) - min(por), 1)
+
+    def test_video_corto_no_crea_tramos_vacios(self):
+        self.assertEqual(T.tramos(20, 15, 6), [(0, 15), (15, 20)])
+
+
 if __name__ == "__main__":
     unittest.main()
