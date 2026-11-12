@@ -182,5 +182,35 @@ class OcrRealTest(unittest.TestCase):
         self.assertLess(T.parecido("No hot tips", self.leer(60, (60, 60, 60), (55, 55, 55))), 0.8)
 
 
+class TramosOcrTest(unittest.TestCase):
+    def test_cada_muestra_cae_en_un_solo_tramo_y_se_reparten(self):
+        n, paso = 1099, 15
+        ts = T.tramos(n, paso, 6)
+        self.assertEqual(len(ts), 6)
+        en = [sum(a <= i < b for a, b in ts) for i in range(0, n, paso)]
+        self.assertEqual(set(en), {1})
+        por = [len(range(a + (-a) % paso, b, paso)) for a, b in ts]
+        self.assertLessEqual(max(por) - min(por), 1)
+
+    def test_video_corto_no_crea_tramos_vacios(self):
+        self.assertEqual(T.tramos(20, 15, 6), [(0, 15), (15, 20)])
+        self.assertEqual(T.tramos(0, 15, 6), [(0, 0)])  # no frame count: one range, read to the end
+
+
+class OrdenLecturaTest(unittest.TestCase):
+    def test_lineas_con_interlineado_menor_que_la_banda_no_se_cruzan(self):
+        """huang-exit end card at 33 px (12-nov): lines 44 px apart fell in one 57.6 px band and were sorted by x."""
+        L = [{"texto": "million are", "caja": [65, 1384, 882, 1427]},
+             {"texto": "Not financial", "caja": [66, 1340, 818, 1382]},
+             {"texto": "performance", "caja": [65, 1474, 784, 1518]},
+             {"texto": "Nvidia's", "caja": [64, 1428, 700, 1473]}]
+        self.assertEqual([x["texto"] for x in T.en_orden(L)],
+                         ["Not financial", "million are", "Nvidia's", "performance"])
+
+    def test_trozos_de_una_misma_linea_van_por_x(self):
+        L = [{"texto": "million?", "caja": [520, 802, 900, 880]}, {"texto": "$1001", "caja": [100, 800, 500, 884]}]
+        self.assertEqual([x["texto"] for x in T.en_orden(L)], ["$1001", "million?"])
+
+
 if __name__ == "__main__":
     unittest.main()

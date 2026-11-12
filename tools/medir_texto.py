@@ -31,7 +31,9 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import itertools
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -155,10 +157,21 @@ def es_disenado(texto: str, t: float, diseno: list[dict]) -> bool:
     return False
 
 
-def en_orden(lineas: list[dict], alto: int) -> list[dict]:
-    """Reading order, not the detector's: pieces of one line ("$1001", "million?") can come back in any order."""
-    fila = 0.03 * alto  # shortcut: fixed row height, two lines closer than 3 % of the frame may swap
-    return sorted(lineas, key=lambda l: (round((l["caja"][1] + l["caja"][3]) / 2 / fila), l["caja"][0]))
+def en_orden(lineas: list[dict]) -> list[dict]:
+    """Reading order, not the detector's: pieces of one line ("$1001", "million?") can come back in any order.
+    A piece joins the row above when its centre is within half a line height of the row's; a fixed band
+    (3 % of the frame) put two lines 44 px apart in one row and swapped them (huang-exit, 12-nov)."""
+    def cy(l):
+        return (l["caja"][1] + l["caja"][3]) / 2
+
+    filas: list[list[dict]] = []
+    for l in sorted(lineas, key=cy):
+        h = l["caja"][3] - l["caja"][1]
+        if filas and abs(cy(l) - cy(filas[-1][0])) < 0.5 * max(h, filas[-1][0]["caja"][3] - filas[-1][0]["caja"][1]):
+            filas[-1].append(l)
+        else:
+            filas.append([l])
+    return [l for f in filas for l in sorted(f, key=lambda l: l["caja"][0])]
 
 
 def analizar(frames: list[dict], esperados: list[dict], u: dict | None = None,
@@ -193,7 +206,7 @@ def analizar(frames: list[dict], esperados: list[dict], u: dict | None = None,
                 if p > mejor:
                     mejor, t_mejor = p, f["t"]
             # el texto puede partirse en varias líneas: probar también la unión del frame
-            p = parecido(e["texto"], " ".join(l["texto"] for l in en_orden(f["lineas"], f["alto"])))
+            p = parecido(e["texto"], " ".join(l["texto"] for l in en_orden(f["lineas"])))
             if p > mejor:
                 mejor, t_mejor = p, f["t"]
         if not en_ventana:
@@ -243,6 +256,48 @@ def esperados_de_proyecto(proy: Path) -> list[dict]:
     return out
 
 
+PROCESOS_OCR = max(1, min(6, (os.cpu_count() or 2) // 2))
+
+
+def tramos(n: int, paso: int, partes: int) -> list[tuple[int, int]]:
+    """[i0, i1) ranges of frame indices with about the same number of sampled frames (i % paso == 0) each."""
+    muestras = list(range(0, n, paso)) or [0]  # a container without a frame count reports 0: read it all
+    k = max(1, min(partes, len(muestras)))
+    cortes = [muestras[len(muestras) * j // k] for j in range(k)] + [n]
+    return list(itertools.pairwise(cortes))
+
+
+def _ocr_tramo(mp4: str, paso: int, tramo: tuple[int, int]) -> list[dict]:
+    import logging
+    import cv2
+    from rapidocr import RapidOCR
+    logging.getLogger("RapidOCR").setLevel(logging.ERROR)
+    motor = RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920})
+    cap = cv2.VideoCapture(mp4)
+    fps_v = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    frames = []
+    for i in range(tramo[1]):
+        if not (i >= tramo[0] and i % paso == 0):
+            if not cap.grab():  # skipped frames are not decoded
+                break
+            continue
+        ok, fr = cap.read()
+        if not ok:
+            break
+        H, W = fr.shape[:2]
+        rgb = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+        res = motor(rgb)
+        lin = []
+        for caja, txt, conf in zip(res.boxes, res.txts, res.scores) if res.boxes is not None else []:
+            xs, ys = [p[0] for p in caja], [p[1] for p in caja]
+            c = [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))]
+            lin.append({"texto": txt, "conf": round(float(conf), 3), "caja": c,
+                        "contraste": contraste_caja(rgb, c)})
+        frames.append({"t": round(i / fps_v, 2), "ancho": W, "alto": H, "lineas": lin})
+    cap.release()
+    return frames
+
+
 def ocr_frames(mp4: Path, fps: float = 2.0) -> list[dict]:
     """OCR de un frame cada 1/fps s (a resolución completa), cacheado en <mp4>.ocr.json."""
     cache = mp4.with_suffix(".ocr.json")
@@ -251,32 +306,17 @@ def ocr_frames(mp4: Path, fps: float = 2.0) -> list[dict]:
         d = json.loads(cache.read_text(encoding="utf-8"))
         if d.get("clave") == clave:
             return d["frames"]
-    import logging
     import cv2
-    from rapidocr import RapidOCR
-    logging.getLogger("RapidOCR").setLevel(logging.ERROR)
-    motor = RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920})
     cap = cv2.VideoCapture(str(mp4))
-    fps_v = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    paso = max(1, round(fps_v / fps))
-    frames, i = [], 0
-    while True:
-        ok, fr = cap.read()
-        if not ok:
-            break
-        if i % paso == 0:
-            H, W = fr.shape[:2]
-            rgb = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
-            res = motor(rgb)
-            lin = []
-            for caja, txt, conf in zip(res.boxes, res.txts, res.scores) if res.boxes is not None else []:
-                xs, ys = [p[0] for p in caja], [p[1] for p in caja]
-                c = [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))]
-                lin.append({"texto": txt, "conf": round(float(conf), 3), "caja": c,
-                            "contraste": contraste_caja(rgb, c)})
-            frames.append({"t": round(i / fps_v, 2), "ancho": W, "alto": H, "lineas": lin})
-        i += 1
+    fps_v, n = cap.get(cv2.CAP_PROP_FPS) or 30.0, int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
+    paso = max(1, round(fps_v / fps))
+    from concurrent.futures import ProcessPoolExecutor
+    # one RapidOCR per process: 4.91 -> 2.58 s/frame with 6 on huang-exit (12 cores), identical text (12-nov)
+    ts = tramos(n, paso, PROCESOS_OCR)
+    ts[-1] = (ts[-1][0], 10**9)  # FRAME_COUNT is an estimate: the last range reads to the end of the file
+    with ProcessPoolExecutor(len(ts)) as ex:
+        frames = [f for parte in ex.map(_ocr_tramo, [str(mp4)] * len(ts), [paso] * len(ts), ts) for f in parte]
     cache.write_text(json.dumps({"clave": clave, "frames": frames}, ensure_ascii=False), encoding="utf-8")
     return frames
 

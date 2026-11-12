@@ -158,6 +158,30 @@ def rotulos_solapados(p: dict) -> list[str]:
     return out
 
 
+ANCHO_UTIL = 1080 - 2 * 72  # the motor's side margin (#aviso, #avisofin, editorial titles)
+
+
+def contador_ancho(sb: dict) -> list[str]:
+    """A contador3d wider than the frame: .money is Anton 172 px (plantilla) and motor.js writes the prefix plus
+    the value with thousands separators. huang-exit: "$70,000,000,000" is 1137 px, seen only on the contact sheet."""
+    from PIL import ImageFont
+
+    fuente = ImageFont.truetype(
+        str(Path(__file__).resolve().parent / "assets" / "fonts" / "anton.woff2"), 172
+    )
+    out = []
+    for k, e in enumerate(sb.get("escenas") or []):
+        if e.get("tipo") != "contador3d" or not isinstance(e.get("valor"), (int, float)):
+            continue
+        t = f"{e.get('prefijo', '$')}{round(e['valor']):,}"
+        if (w := fuente.getlength(t)) > ANCHO_UTIL:
+            out.append(
+                f'escena {k}: el contador "{t}" mide {w:.0f}px (> {ANCHO_UTIL}): pon el valor en millones/miles de '
+                'millones ("valor": 70) y la unidad en `pill` ("billion"), con el dato así en `cifras`'
+            )
+    return out
+
+
 def contador_adelantado(p: dict) -> list[str]:
     """A counter that runs before the voice says the figure spoils it: first average-401k started 0.69 s early
     (corrected: 0.09 s). A figure the voice never says has nothing to be early for: `sin_fuente` still sees it."""
@@ -381,6 +405,7 @@ def errores(sb: dict, p: dict) -> list[str]:
         + texto_breve(p)
         + rotulos_solapados(p)
         + contador_adelantado(p)
+        + contador_ancho(sb)
         + prueba_breve(sb, p)
         + forma_hablada_escrita(sb, p)
         + publicacion(sb)

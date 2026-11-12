@@ -190,7 +190,9 @@ def _edicion_registrada(sa: dict, proy: Path, raiz: Path) -> dict | None:
     fila = next((v for v in reg["videos"] if v["ref"] == ref), None)
     if not fila or fila.get("legacy"):
         return None
-    return repeticion_edicion(fila["firma"], previas_registro(reg, ref, sa.get("marca")))
+    return repeticion_edicion(
+        fila["firma"], previas_registro(reg, ref, sa.get("marca"))
+    )
 
 
 def previas_registro(reg: dict, ref: str, marca) -> list[dict]:
@@ -382,6 +384,22 @@ def tabla_repeticion(raiz: Path) -> list[dict]:
     ]
 
 
+def parecido_estatico(sa: dict, otros: list[Path], previos: list[dict]) -> list[str]:
+    """The critic's P1 on the storyboard-only keys, same maxima: caught before voice and render, not after.
+    `visual` needs the MP4 and stays with the critic."""
+    p1 = json.loads(RUBRICA.read_text(encoding="utf-8"))["criterios"]["P1"]
+    motivos = []
+    filas = [(comparar(sa, so), p.name) for p, so in zip(otros, previos, strict=True)]
+    for k in ("guion", "estructura", "recursos"):
+        c, ref = max(filas, key=lambda f: f[0][k], default=(None, None))
+        if c and c[k] > p1[f"{k}_max"]:
+            extra = (
+                f": {', '.join(c['recursos_comunes'][:4])}" if k == "recursos" else ""
+            )
+            motivos.append(f"parecido {k} {c[k]} con {ref} (> {p1[f'{k}_max']}){extra}")
+    return motivos
+
+
 def puerta_repeticion(proy: Path) -> tuple[bool, str]:
     sa = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     if not sa.get("formato"):
@@ -399,13 +417,10 @@ def puerta_repeticion(proy: Path) -> tuple[bool, str]:
         key=lambda p: (p / "storyboard.json").stat().st_mtime,
         reverse=True,
     )
-    motivos = repeticiones(
-        sa,
-        [
-            json.loads((p / "storyboard.json").read_text(encoding="utf-8"))
-            for p in otros
-        ],
-    )
+    previos = [
+        json.loads((p / "storyboard.json").read_text(encoding="utf-8")) for p in otros
+    ]
+    motivos = repeticiones(sa, previos) + parecido_estatico(sa, otros, previos)
     return (
         not motivos,
         " · ".join(motivos) or f"sin repetición contra {len(otros)} vídeos",

@@ -58,11 +58,14 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 **Siempre en segundo plano** (`run_in_background`): el aviso llega solo. Nada de `tail`, `sleep` ni `Monitor`.
 
-8. `python video-v2/motor/producir.py video-v2/<ref> --previo`: todas las puertas estáticas a la vez, build, lint, contraste,
-   hoja de contactos, texto sobre documentos y carrusel. Un ⚠ de L1 solo avisa: mira ese segundo en la hoja. Mira la hoja que imprime (solapes, textos que no caben, imagen = palabra). Agrupa todos los
-   arreglos y repite; nunca renderices con un defecto visible en la hoja.
-9. `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`: render (3-4 min), loudness, ritmo, preview, carrusel e historia, y
-   medidores del crítico, que sigue siendo la red final. Imprime solo fallos, con segundo y escena. No sube: lo hace `publicar` en el paso 13.
+8. `python video-v2/motor/producir.py video-v2/<ref> --auto --rapido`: puertas estáticas (parecido P1, contador, anclas...),
+   build, lint, contraste, render `draft` y gancho medido sobre ese MP4 → `renders/<ref>-rapido.mp4` (~3 min). Mira 2 fotogramas
+   (gancho y un dato) y **mándaselo al usuario en cuanto exista** (SendUserFile): es la preview para opinar, no la que se publica.
+   Si algo falla, agrupa los arreglos y repite. `--previo` (hoja de contactos + OCR sobre documentos + carrusel) solo si dudas
+   de un texto sobre documento: cuesta ~4 min.
+9. **Sin esperar a la nota**, lanza `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`: render alto, loudness, ritmo,
+   preview, carrusel e historia, y medidores del crítico, que sigue siendo la red final (~10 min). Imprime solo fallos, con segundo
+   y escena. No sube: lo hace `publicar` en el paso 13, y solo con la aprobación del crítico sobre ESTE MP4.
 10. **Juicio** sobre `renders/critica/r0/hoja.jpg` (no fotogramas sueltos, salvo para dudar de un segundo): escribe
     `renders/critica/r0/juicio.json` con J1-J6 y el `mp4_sha256` que da `juicio.md` (gancho, imagen = palabra, exactitud contra
     la fuente, cierre). Luego `python video-v2/motor/critico.py video-v2/<ref> --mp4 video-v2/<ref>/renders/critica/r0.mp4`

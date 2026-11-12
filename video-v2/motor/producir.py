@@ -41,7 +41,9 @@ MOTOR = Path(__file__).resolve().parent
 RAIZ = MOTOR.parents[1]
 PY = sys.executable
 RONDAS_AUTO = 3  # --auto: fix-and-retry rounds; each later one may cost a render
-DETALLES: dict[str, tuple[bool, str]] = {}  # last run, full gate detail (qa.json keeps 600 chars)
+DETALLES: dict[
+    str, tuple[bool, str]
+] = {}  # last run, full gate detail (qa.json keeps 600 chars)
 
 
 def _run(
@@ -577,6 +579,8 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
             hfversion.npx(
                 "check",
                 "--json",
+                # only `contrast` and `runtime` are read; the craft pass was 85 -> 27 s, same 62 texts (huang-exit)
+                "--no-craft",
                 "--timeout",
                 "60000",
                 "--at",
@@ -608,14 +612,22 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
 
 def ocr_previo(salida: Path, instantes: list[float]) -> list[dict]:
     """OCR of the preview frames at `instantes`, in the shape of medir_texto.ocr_frames (the file name has the second)."""
-    import medir_cuadros
+    from concurrent.futures import ProcessPoolExecutor
 
-    frames = []
+    import medir_cuadros
+    import medir_texto
+
+    quiere = {}
     for f in sorted(salida.glob("frame-*.png")):
         t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
         if any(abs(t - x) < 0.011 for x in instantes):
-            frames.append({"t": t, **medir_cuadros.ocr_imagen(f)})
-    return frames
+            quiere[t] = f
+    if len(quiere) <= 1:  # a process pool would only add start-up
+        return [{"t": t, **medir_cuadros.ocr_imagen(f)} for t, f in quiere.items()]
+    # one RapidOCR per process, as the critic's ocr_frames (same model and detection limit)
+    with ProcessPoolExecutor(min(medir_texto.PROCESOS_OCR, len(quiere))) as ex:
+        lecturas = list(ex.map(medir_cuadros.ocr_imagen, quiere.values()))
+    return [{"t": t, **r} for t, r in zip(quiere, lecturas, strict=True)]
 
 
 def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
@@ -636,6 +648,86 @@ def texto_previo(proy: Path, sb: dict, m: dict) -> tuple[bool, str]:
         not any(f["severidad"] == "alta" and f["criterio"] != "L1" for f in fallos),
         "\n".join(lineas) or f"{len(frames)} fotogramas leídos, sin fallos",
     )
+
+
+GANCHO_MARGEN_LUMA = (
+    3.5  # snapshot vs MP4 luma gap measured +3.2 (huang-exit): see gancho_previo
+)
+
+
+def instantes_gancho(u: dict) -> list[float]:
+    """The hook frames the critic reads on the MP4 (medir_cuadros.FPS over `gancho_s`)."""
+    import medir_cuadros as mc
+
+    return [round(k / mc.FPS, 2) for k in range(int(u["gancho_s"] * mc.FPS))]
+
+
+def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
+    """The critic's C1 dark/flat hook on the preview frames, same function and limits, before the render.
+    Measured on huang-exit (12-nov, 10 frames): the snapshot reads luma +3.2 above the MP4 and contrast 6 %
+    below it. Contrast is then already stricter; luma must clear the limit by GANCHO_MARGEN_LUMA so the
+    preview never passes a hook the critic fails. PROVISIONAL, n=1: re-measure on the next Shorts."""
+    import medir_cuadros as mc
+    import numpy as np
+    from PIL import Image
+
+    quiere = instantes_gancho(u)
+    fr = {}
+    for f in salida.glob("frame-*.png"):
+        t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
+        if any(abs(t - x) < 0.011 for x in quiere):
+            g = Image.open(f).convert("L").resize(mc.TAM, Image.BILINEAR)
+            fr[t] = np.asarray(g, np.float64)
+    if len(fr) < len(quiere):
+        return False, f"faltan fotogramas del gancho: {len(fr)} de {len(quiere)}"
+    return veredicto_gancho(
+        mc.gancho(np.stack([fr[t] for t in sorted(fr)]), u), u, GANCHO_MARGEN_LUMA
+    )
+
+
+def veredicto_gancho(g: dict, u: dict, margen: float = 0.0) -> tuple[bool, str]:
+    ok = (
+        g["luma"] >= u["gancho_luma_min"] + margen
+        and g["contraste"] >= u["gancho_contraste_min"]
+    )
+    extra = f" + {margen} de margen" if margen else ""
+    return ok, (
+        f"luma {g['luma']}, contraste {g['contraste']}"
+        if ok
+        else f"gancho oscuro o plano: luma {g['luma']} (mín. {u['gancho_luma_min']}{extra}), "
+        f"contraste {g['contraste']} (mín. {u['gancho_contraste_min']}): más opacidad del fondo o un clip más claro"
+    )
+
+
+def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
+    """--rapido: a draft render to judge by eye while the full run (high render + critic) goes on behind.
+    Draft = same 1080x1920, 30 fps and frames, 3.9 Mbps; SSIM 0.973 vs high (huang-exit). Publishing still needs
+    the critic's approval of the final MP4: this file is never published."""
+    import critico
+    import medir_cuadros as mc
+
+    crudo, rap = (
+        proy / "renders" / f"{ref}-rapido-crudo.mp4",
+        proy / "renders" / f"{ref}-rapido.mp4",
+    )
+    r = _run(
+        hfversion.npx("render", "--quality", "draft", "--output", str(crudo)),
+        cwd=proy,
+        env=env,
+    )
+    puerta(
+        "render",
+        r.returncode == 0 and crudo.exists(),
+        (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
+    )
+    puerta("loudnorm", *loudnorm_2pasos(crudo, rap))
+    crudo.unlink(missing_ok=True)
+    rub = critico.cargar_rubrica(proy)
+    u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+    puerta(
+        "gancho", *veredicto_gancho(mc.gancho(mc.leer_grises(rap), u), u)
+    )  # the MP4: the critic's exact limits
+    return rap
 
 
 def hoja_previa(
@@ -813,6 +905,14 @@ def producir(proy: Path) -> dict:
             json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8")),
             instantes_escena((proy / "index.html").read_text(encoding="utf-8")),
         )
+        rub = critico.cargar_rubrica(proy)
+        u = {
+            k: v
+            for c in rub["criterios"].values()
+            for k, v in c.items()
+            if k != "nombre"
+        }
+        muestreo["todos"] = sorted(set(muestreo["todos"]) | set(instantes_gancho(u)))
     with ThreadPoolExecutor(1) as ex:
         hoja = (
             ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
@@ -826,11 +926,18 @@ def producir(proy: Path) -> dict:
     if previo:
         if muestreo and ok_hoja:
             puerta("texto", *texto_previo(proy, sb, muestreo), seguir=True)
+            puerta(
+                "gancho", *gancho_previo(proy / "renders" / "previo", u), seguir=True
+            )
         if sb.get("social") and not exento:
             puerta("social", *social_previo(proy, env), seguir=True)
         if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
             raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
         print(f"✓ previo en {sum(p['s'] for p in qa['puertas']):.0f} s · {detalle}")
+        return qa
+    if "--rapido" in sys.argv:
+        rap = render_rapido(proy, ref, env, puerta)
+        print(f"✓ rápido en {sum(p['s'] for p in qa['puertas']):.0f} s · {rap}")
         return qa
     crudo, final, prev = (
         renders / f"{ref}.mp4",
@@ -889,7 +996,7 @@ def producir(proy: Path) -> dict:
             "-c:v",
             "libx264",
             "-preset",
-            "slow",
+            "veryfast",  # 31 -> 10 s, SSIM 0.988 vs 0.989 against the final (huang-exit, 12-nov)
             "-crf",
             "24",
             "-c:a",
@@ -964,7 +1071,12 @@ def producir(proy: Path) -> dict:
         f"✓ puertas OK · {final.name} · preview {qa['preview_mb']} MB · YouTube: {qa['borrador_youtube']}"
     )
     if "--sin-critico" not in sys.argv:
+        t_c = time.monotonic()
         fallos = medir_critico(proy, final)
+        qa["critico_s"] = round(time.monotonic() - t_c, 1)
+        (renders / "qa.json").write_text(
+            json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         print(f"crítico: {len(fallos)} líneas · hoja renders/critica/r0/hoja.jpg")
         for x in fallos:
             print("  " + x)
@@ -1046,6 +1158,16 @@ if __name__ == "__main__":
                     "t": int(t0),
                     "s": round(time.time() - t0),
                     "previo": "--previo" in sys.argv,
+                    "rapido": "--rapido" in sys.argv,
                     "fallo": fallo,
                 }
+                qa_f = reg.parent / "qa.json"
+                if (
+                    qa_f.exists() and qa_f.stat().st_mtime >= t0
+                ):  # seconds per gate of the last round
+                    q = json.loads(qa_f.read_text(encoding="utf-8"))
+                    linea["puertas"] = {
+                        x["puerta"]: x["s"] for x in q.get("puertas") or []
+                    }
+                    linea["critico_s"] = q.get("critico_s")
                 f.write(json.dumps(linea, ensure_ascii=False) + "\n")
