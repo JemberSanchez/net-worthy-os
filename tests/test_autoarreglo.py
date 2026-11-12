@@ -10,9 +10,11 @@ import copy
 import importlib
 import io
 import json
+import os
 import shutil
 import sys
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -307,7 +309,9 @@ class ProyectoTemporal(unittest.TestCase):
         _, pend, voz = A.arreglar(self.proy, {}, informe, ("alta", "media"))
         self.assertTrue(voz)
         self.assertEqual(self.sb()["musica"]["volumen"], 0.2)
-        self.assertEqual([x.split()[1] for x in pend], ["V1", "G1"])  # V1 pending until re-measured
+        self.assertEqual(
+            [x.split()[1] for x in pend], ["V1", "G1"]
+        )  # V1 pending until re-measured
 
     def test_otra_puerta_es_pendiente_y_no_escribe(self):
         antes = (self.proy / "storyboard.json").read_text(encoding="utf-8")
@@ -371,6 +375,69 @@ class BucleProducirTest(unittest.TestCase):
         with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
             producir.producir_auto(self.tmp, critico_=False)
         self.assertEqual(len(llamadas), producir.RONDAS_AUTO + 1)
+
+    def critico_falla(self, veces):
+        """Gates pass; the critic writes a fresh informe.json each round, with a fault `veces` times."""
+        inf = self.tmp / "renders" / "critica" / "informe.json"
+        inf.parent.mkdir(parents=True)
+        (self.tmp / "rubrica.json").write_text(
+            '{"severidad_bloquea": ["alta", "media"]}', encoding="utf-8"
+        )
+        llamadas = []
+
+        def falso(proy):
+            llamadas.append(proy)
+            producir.DETALLES.clear()
+            fallos = [{"id": "M1"}] if len(llamadas) <= veces else []
+            inf.write_text(json.dumps({"fallos": fallos}), encoding="utf-8")
+            t = time.time() + 1  # Windows mtime ticks ~15 ms: same-tick writes look older than t0
+            os.utime(inf, (t, t))
+            return {"ok": True}
+
+        producir.producir = falso
+        return llamadas
+
+    def test_critico_arregla_resintetiza_una_vez_y_pasa(self):
+        llamadas = self.critico_falla(2)
+        recibido, voces = [], []
+
+        def arreglar(proy, fallidas, informe, bloquean):
+            recibido.append((fallidas, informe, bloquean))
+            return (["parche"], [], True) if informe["fallos"] else ([], [], False)
+
+        A.arreglar = arreglar
+        orig_run = producir._run
+        producir._run = lambda cmd: (
+            voces.append(cmd) or type("R", (), {"returncode": 0})
+        )
+        try:
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(producir.producir_auto(self.tmp), {"ok": True})
+        finally:
+            producir._run = orig_run
+        self.assertEqual(len(llamadas), 3)
+        self.assertEqual(
+            recibido[0], ({}, {"fallos": [{"id": "M1"}]}, ("alta", "media"))
+        )
+        self.assertEqual(len(voces), 1)  # voice is re-synthesized at most once per run
+
+    def test_informe_viejo_del_critico_no_cuenta(self):
+        llamadas = self.critico_falla(0)
+        inf = self.tmp / "renders" / "critica" / "informe.json"
+        inf.write_text('{"fallos": [{"id": "M1"}]}', encoding="utf-8")
+        llamadas.clear()
+
+        def falso(proy):  # the critic did not run this round: the old informe stays
+            llamadas.append(proy)
+            producir.DETALLES.clear()
+            return {"ok": True}
+
+        producir.producir = falso
+        os.utime(inf, (0, 0))
+        A.arreglar = lambda *a, **k: self.fail("a stale informe must not be fixed")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(producir.producir_auto(self.tmp), {"ok": True})
+        self.assertEqual(len(llamadas), 1)
 
 
 if __name__ == "__main__":
