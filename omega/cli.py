@@ -238,10 +238,7 @@ def cmd_youtube_evergreen() -> None:
     print("\nLos 8 evergreen más rápidos DE TU LIGA (el formato que aguanta meses):")
     for v in sorted(videos, key=lambda x: x.get("views_per_day", 0), reverse=True)[:8]:
         edad = (
-            time.time()
-            - datetime.fromisoformat(
-                v["published_at"]
-            ).timestamp()
+            time.time() - datetime.fromisoformat(v["published_at"]).timestamp()
         ) / 86400
         like = v.get("likes", 0) / max(v.get("views", 1), 1)
         print(
@@ -1698,6 +1695,8 @@ def cmd_analytics_sync() -> None:
             if r.get("engaged_views") is not None
             else ""
         )
+        if r.get("subs_gained") is not None:
+            eng += f" · +{r['subs_gained']} subs"
         bus = ", ".join(f"'{t}' {n}" for t, n in r["busquedas"]) or "—"
         print(
             f"  {ref}: {r['views']} vistas{eng} · visto {r['avg_view_pct_raw']:.0%} · {pc}\n"

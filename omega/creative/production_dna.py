@@ -129,7 +129,12 @@ def init(con: sqlite3.Connection) -> None:
     _ensure_columns(
         con,
         "production_analytics",
-        {"views": "INTEGER", "engaged_views": "INTEGER", "avg_view_pct_raw": "REAL"},
+        {
+            "views": "INTEGER",
+            "engaged_views": "INTEGER",
+            "avg_view_pct_raw": "REAL",
+            "subs_gained": "INTEGER",
+        },
     )
     if "renderer_version" in _ensure_columns(
         con, "production_dna", {"renderer_version": "TEXT"}
@@ -198,6 +203,7 @@ def record_analytics(
     retention_by_block: dict | None = None,
     engaged_views: int | None = None,
     avg_view_pct_raw: float | None = None,
+    subs_gained: int | None = None,
     now: int | None = None,
 ) -> None:
     """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome.
@@ -229,8 +235,8 @@ def record_analytics(
     now = now or int(time.time())
     con.execute(
         "INSERT OR REPLACE INTO production_analytics (production_ref, ctr, avd_pct, retention_avg, "
-        "views, traffic_source, retention_by_block, engaged_views, avg_view_pct_raw, measured_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?)",
+        "views, traffic_source, retention_by_block, engaged_views, avg_view_pct_raw, subs_gained, "
+        "measured_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         (
             production_ref,
             ctr,
@@ -243,6 +249,7 @@ def record_analytics(
             else None,
             engaged_views,
             avg_view_pct_raw,
+            subs_gained,
             now,
         ),
     )

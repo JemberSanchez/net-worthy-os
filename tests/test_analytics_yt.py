@@ -43,8 +43,8 @@ class FakeYT:
 
 
 class FakeYTA:
-    def __init__(self, sin_engaged=False):
-        self.sin_engaged, self.llamadas = sin_engaged, []
+    def __init__(self, sin_engaged=False, sin_subs=False):
+        self.sin_engaged, self.sin_subs, self.llamadas = sin_engaged, sin_subs, []
 
     def reports(self):
         return self
@@ -53,6 +53,10 @@ class FakeYTA:
         self.llamadas.append(kw)
         dims = kw.get("dimensions")
         if dims is None:
+            if kw["metrics"] == "subscribersGained":
+                if self.sin_subs:
+                    raise RuntimeError("Unknown metric subscribersGained")
+                return _Exec(_resp(["subscribersGained"], [[7]]))
             if "engagedViews" in kw["metrics"]:
                 if self.sin_engaged:
                     raise RuntimeError("Unknown metric engagedViews")
@@ -118,6 +122,7 @@ class ConsultarGuardarTest(unittest.TestCase):
         r = ay.guardar(self.con, "r7", datos, now=1)
         row = self.con.execute("SELECT * FROM production_analytics WHERE production_ref='r7'").fetchone()
         self.assertEqual((row["views"], row["engaged_views"], row["retention_avg"]), (500, 210, 1.0))
+        self.assertEqual(row["subs_gained"], 7)
         self.assertEqual(set(json.loads(row["retention_by_block"])), {"hook", "cuerpo"})
         self.assertEqual(self.con.execute("SELECT COUNT(*) FROM production_retention").fetchone()[0], 100)
         self.assertEqual(r["busquedas"][0], ("ronald read janitor", 50))
@@ -127,6 +132,13 @@ class ConsultarGuardarTest(unittest.TestCase):
         # re-sincronizar reemplaza, no duplica
         ay.guardar(self.con, "r7", datos, now=2)
         self.assertEqual(self.con.execute("SELECT COUNT(*) FROM production_search_terms").fetchone()[0], 2)
+
+    def test_sin_subs_sigue(self):
+        datos = ay.consultar("vid", FakeYT(), FakeYTA(sin_subs=True))
+        self.assertEqual(datos["estado"], "ok")
+        ay.guardar(self.con, "r9", datos, now=1)
+        row = self.con.execute("SELECT subs_gained FROM production_analytics WHERE production_ref='r9'").fetchone()
+        self.assertIsNone(row["subs_gained"])
 
     def test_sin_engaged_views_sigue(self):
         datos = ay.consultar("vid", FakeYT(), FakeYTA(sin_engaged=True))

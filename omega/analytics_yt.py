@@ -140,6 +140,9 @@ def resumen(
         "retention_avg": frac,
         "traffic_source": trafico_dominante(filas_trafico),
         "retention_by_block": por_bloques(curva, blocks, dur) or None,
+        "subs_gained": int(basicas["subscribersGained"])
+        if basicas.get("subscribersGained") is not None
+        else None,
     }
 
 
@@ -217,6 +220,12 @@ def consultar(video_id: str, yt=None, yta=None, hoy: date | None = None) -> dict
         )
     if not basicas or not basicas[0].get("views"):
         return {"estado": "sin_datos", "duracion": dur, "published_at": publicado}
+    try:  # separate query: an unsupported combo must not drop engagedViews
+        subs = q(metrics="subscribersGained", filters=base)
+        if subs:
+            basicas[0]["subscribersGained"] = subs[0].get("subscribersGained")
+    except Exception:  # noqa: BLE001 -- followers are optional; the rest still syncs
+        pass
     ret = q(
         dimensions="elapsedVideoTimeRatio",
         metrics="audienceWatchRatio,relativeRetentionPerformance",
