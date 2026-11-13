@@ -170,7 +170,8 @@
       .graf .mc { font-size: 36px; font-weight: 900; fill: #17211c; }
 
       /* subtítulos */
-      #caps { position: absolute; left: 50px; right: 50px; top: 1200px; height: 200px; }
+      /* right edge stops before the Shorts like/comment column (x >= 0.86): tests/test_zona_segura.py */
+      #caps { position: absolute; left: 50px; right: 180px; top: 1200px; height: 200px; }
       .cg { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 40px; opacity: 0; }
       .w { font-weight: 900; font-size: 76px; text-transform: uppercase; color: var(--ink); letter-spacing: -0.01em; display: inline-block;
            text-shadow: 0 6px 0 rgba(0,0,0,0.6), 0 0 30px rgba(0,0,0,0.7); }
@@ -203,7 +204,7 @@
       #root.editorial .graf .val { font-size: 40px; font-weight: 800; }
       #root.editorial .graf .mc { font-weight: 800; }
       #root.editorial .prueba .foco { border-radius: 0; }
-      #root.editorial #caps { left: 72px; width: 858px; right: auto; top: 1276px; height: 150px; }
+      #root.editorial #caps { left: 72px; width: 800px; right: auto; top: 1276px; height: 150px; }
       #root.editorial .cg { display: block; text-wrap: balance; font-weight: 700; font-size: 62px; line-height: 1.26; letter-spacing: -0.008em; }
       #root.editorial .cg .ln { background: rgba(10,26,20,0.94); padding: 6px 16px; margin-left: -16px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
       #root.editorial .w { display: inline; font-weight: 700; font-size: 62px; text-transform: none; letter-spacing: inherit; color: #f2ecdf; text-shadow: none; padding: 0 6px; }
