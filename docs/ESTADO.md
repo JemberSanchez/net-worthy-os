@@ -18,6 +18,28 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## Fallos recurrentes imposibles por construcción (13-nov, sin commitear)
+
+Medido el 13-nov: 45 de 99 corridas fallaron (173 de 583 min). Tres defectos dejan de depender del
+crítico: **M1** `construir.duck_sfx`/`tope_vol` baja cada efecto (whoosh, `barrido_sint`, caja…) lo
+justo para que la voz quede `voz_sobre_fondo_db` + 3 dB por encima en cada ventana que mide
+`tools/medir_mezcla.py` (en average-401k: `barrido_sint` 0.032 → 0.011, 3 de 18 efectos bajados;
+el plan guarda los volúmenes reales en `sfx_mezcla`). **V1** `voz.py` hace UNA toma entera y re-sintetiza
+solo la frase con un silencio V1 dentro (regla del crítico, comas incluidas), hasta 3 intentos medidos
+por energía sobre el clip, nivel igualado y un solo realineamiento; sigue bloqueando solo la pausa sin
+puntuación (`pausas_rotas`). **Log** `renders/corridas.jsonl` lleva `reglas` (regla exacta por puerta) y
+`pendientes` (lo que --auto no arregló); `python tools/resumen_corridas.py` lo agrega (las corridas
+anteriores solo tienen el nombre de la puerta: storyboard 27, repetición 11). Tests:
+`test_sfx_ducking`, `test_voz_reparar`, `test_corridas_log`. Sin verificar aún en una producción real
+(ni render ni Kokoro): confirmar M1/V1 en el informe del crítico del próximo Short.
+**Puerta storyboard, reglas exactas** (sacadas de los transcripts: qa.json solo guarda la última corrida,
+que pasó): 25 de los 27 fallos son ANTERIORES a `autoarreglo` (12-nov) y sus tres reglas más frecuentes
+(ancla en otra frase o dentro de palabra con guion 37, ambiente sin `dur` 8, texto < 0,5 s 7) ya las
+arregla `--auto`. Los 2 posteriores (huang-resigns): "voz sin subtítulo" sin arreglo mecánico → a mano
+`"subtitulos": ["0:now", …]`, que `validar` aceptaba y `plan()` reventaba con `int()`. Ahora `plan()`
+acepta anclas en `subtitulos` y `--auto` ensancha `subtitulos` a la frase muda (salvo escena `limpio`).
+No hay más regla frecuente que convertir en valor por defecto con estos datos: medir con el log nuevo.
+
 ## Velocidad de /producir (12-nov, rama `claude/heuristic-jennings-f19905`)
 
 Meta del usuario: tema → preview en < 5 min sin perder calidad. Medido en `huang-exit` (RTX 5050,

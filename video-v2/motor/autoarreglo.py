@@ -172,7 +172,12 @@ def _pantalla_vacia(sb, words, p, m):
 
 
 def _prueba_breve(sb, words, p, m):
-    img, visto, desde, pide = m.group(1), float(m.group(2)), float(m.group(3)), float(m.group(4))
+    img, visto, desde, pide = (
+        m.group(1),
+        float(m.group(2)),
+        float(m.group(3)),
+        float(m.group(4)),
+    )
     # the same document can be shown twice: the one the gate measured starts at `desde`
     x = next(
         (
@@ -232,6 +237,34 @@ def _solapados(sb, words, p, m):
     return f'escena {k}: "{a["texto"]}" hasta {b["en"]!r}'
 
 
+def _sin_subtitulo(sb, words, p, m):
+    """Uncaptioned voice on a scene with no text of its own: widen `subtitulos` to its sentences.
+    A `limpio` scene hides captions anyway (removing `limpio` is a design call: not mechanical)."""
+    k, t0, t1 = int(m.group(1)), float(m.group(2)), float(m.group(3))
+    sub = sb.get("subtitulos")
+    if (
+        sb["escenas"][k].get("limpio")
+        or not sub
+        or not all(str(x).isdigit() for x in sub)
+    ):
+        return None
+    ks = [
+        j
+        for j, f in enumerate(anclas.frases(words))
+        if any(
+            t0 - MARGEN <= (words[i]["start"] + words[i]["end"]) / 2 <= t1 + MARGEN
+            for i in f
+        )
+    ]
+    if not ks:
+        return None
+    nuevo = [str(min(int(sub[0]), ks[0])), str(max(int(sub[1]), ks[-1]))]
+    if nuevo == [str(x) for x in sub]:
+        return None
+    sb["subtitulos"] = nuevo
+    return f"subtitulos {sub} -> {nuevo}"
+
+
 def _contador(sb, words, p, m):
     k = int(m.group(1))
     s, ps = sb["escenas"][k], p["escenas"][k]
@@ -275,7 +308,9 @@ def _aspecto_cine(sb, words, p, m):
     pos, estilo = max(set(otros), key=otros.count)
     v = s.pop(campos[0])
     r = dict(v) if isinstance(v, dict) else {"texto": v}
-    s["rotulos"] = [{**({"estilo": estilo} if estilo else {}), **r}]  # the author's own style wins
+    s["rotulos"] = [
+        {**({"estilo": estilo} if estilo else {}), **r}
+    ]  # the author's own style wins
     s.setdefault("pos", pos)
     return f"escena {k}: {campos[0]} -> rotulos (pos {s['pos']})"
 
@@ -290,13 +325,19 @@ CATALOGO = [
     (re.compile(r'^escena (\d+): "(.*)" se ve solo [\d.]+s desde'), _texto_breve),
     (re.compile(r"^escena (\d+) \(\w+\): pantalla vacía"), _pantalla_vacia),
     (
-        re.compile(r"^prueba (.+?): se ve ([\d.]+)s desde ([\d.]+)s .* pide ([\d.]+)s: alarga"),
+        re.compile(
+            r"^prueba (.+?): se ve ([\d.]+)s desde ([\d.]+)s .* pide ([\d.]+)s: alarga"
+        ),
         _prueba_breve,
     ),
     (re.compile(r"^sonidos\[(\d+)\]: '[^']*' es ambiente: lleva `dur`"), _sfx_dur),
     (re.compile(r"^imagenes\.(.+?): duotono solo para archivo real"), _duotono),
     (re.compile(r'^escena (\d+): "(.*)" y "(.*)" se solapan'), _solapados),
     (re.compile(r"^escena (\d+): el contador de ([\d,.]+) arranca"), _contador),
+    (
+        re.compile(r"^escena (\d+): voz sin subtítulo ([\d.]+)-([\d.]+)s"),
+        _sin_subtitulo,
+    ),
 ]
 _SIN_PLAN = {_ancla, _duotono, _aspecto_cine}  # the rest read scene times from the plan
 
@@ -405,7 +446,9 @@ def arreglar(
                 hechos, pendientes = hechos + h, pendientes + pend
             elif f["criterio"] == "V1" and " dentro de frase " in f["detalle"]:
                 voz = True  # the critic's own advice: re-synthesise, not the storyboard
-                pendientes.append(critico.linea(f))  # still failing until a re-run measures it
+                pendientes.append(
+                    critico.linea(f)
+                )  # still failing until a re-run measures it
             else:
                 pendientes.append(critico.linea(f))
     if hechos:

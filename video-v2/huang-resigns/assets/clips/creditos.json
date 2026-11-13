@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "oficina.src",
+  "origen": "pexels",
+  "titulo": "pexels:8347240",
+  "autor": "Kampus Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/an-empty-office-8347240/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "servidores.src",
+  "origen": "pexels",
+  "titulo": "pexels:5028622",
+  "autor": "ALL IZ Well",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/database-storage-of-a-server-5028622/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "grafico.src",
+  "origen": "pexels",
+  "titulo": "pexels:38642315",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-stock-market-chart-on-screen-38642315/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "grafico2.src",
+  "origen": "pexels",
+  "titulo": "pexels:38736274",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-finance-chart-display-in-dark-room-38736274/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "sala.src",
+  "origen": "pexels",
+  "titulo": "pexels:6951393",
+  "autor": "Werner Pfennig",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/an-empty-conference-room-6951393/",
+  "desde": 0.0
+ }
+]

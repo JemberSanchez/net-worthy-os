@@ -43,8 +43,8 @@ sys.path.insert(0, str(RAIZ / "tools"))
 
 import anclas
 import edicion
-import puertas
 import hfversion
+import puertas
 
 CATALOGO = (
     "foto",
@@ -198,7 +198,7 @@ def _validar_aspecto(sb: dict) -> list[str]:
 VETO_CLICHES = re.compile(
     r"(?<![a-z])hood(ed|ie)?(?![a-z])|capucha|hacker|typing|keyboard|teclado|"
     r"gold(en)?[-_ ].{0,12}bitcoin|bitcoin[-_ ].{0,12}gold",
-    re.I,
+    re.IGNORECASE,
 )
 MAX_USOS_FUENTE = 2
 
@@ -1160,7 +1160,18 @@ def plan(sb: dict, words: list[dict]) -> dict:
                 cortes.append(round(s["t0"], 3))
                 ult = s["t0"]
     sub = sb.get("subtitulos")
-    rango = [fr[int(sub[0])][0], fr[int(sub[1])][-1]] if sub else [0, len(words) - 1]
+
+    def _sub(
+        a, fin: bool
+    ) -> int:  # a sentence number, or any anchor (validar resolves both)
+        a = str(a)
+        return (
+            fr[int(a)][-1 if fin else 0]
+            if a.isdigit()
+            else anclas.palabra(words, a, fr)[0]
+        )
+
+    rango = [_sub(sub[0], False), _sub(sub[1], True)] if sub else [0, len(words) - 1]
     av = r.get("aviso") or {}
     golpes = [
         s["golpe"]
@@ -1497,23 +1508,8 @@ def asegurar_clips(proy: Path, sb: dict, p: dict) -> None:
         )
 
 
-def _html(p: dict) -> str:
-    tpl = (MOTOR / "plantilla.tpl").read_text(encoding="utf-8")
-    esc_html = []
-    for k, s in enumerate(p["escenas"]):
-        a, b = s["t0"], s["t1"]
-        scrim = (
-            '<div class="scrim"></div>' if s["tipo"] != "foto" else ""
-        )  # sombra local tras el texto
-        esc_html.append(
-            f'      <section id="s{k}" class="clip scene{" papel" if s.get("papel") else ""}" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
-            f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>'
-        )
-    fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
-    audio = [
-        f'      <audio id="vo" src="assets/{"voice-mix.wav" if p.get("voz_mix") else "voice.mp3"}" data-start="0" data-track-index="20" data-volume="1"></audio>',
-        f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>',
-    ]
+def lista_sfx(p: dict) -> list[tuple[str, float, float]]:
+    """Every SFX of the video as (src relative to the project, start s, volume), before ducking."""
     vm = p.get("vol_motor") or VOL_MOTOR
     k_imp = (
         vm["impacto"] / VOL_MOTOR["impacto"]
@@ -1540,6 +1536,27 @@ def _html(p: dict) -> str:
     sfx += [
         (f"assets/sfx/{u['archivo']}", u["t"], u["vol"]) for u in p.get("sonidos") or []
     ]
+    return sfx
+
+
+def _html(p: dict) -> str:
+    tpl = (MOTOR / "plantilla.tpl").read_text(encoding="utf-8")
+    esc_html = []
+    for k, s in enumerate(p["escenas"]):
+        a, b = s["t0"], s["t1"]
+        scrim = (
+            '<div class="scrim"></div>' if s["tipo"] != "foto" else ""
+        )  # sombra local tras el texto
+        esc_html.append(
+            f'      <section id="s{k}" class="clip scene{" papel" if s.get("papel") else ""}" data-start="{a:.3f}" data-duration="{b - a:.3f}" '
+            f'data-track-index="{30 + k}">{scrim}{MARKUP[s["tipo"]](s, f"s{k}")}</section>'
+        )
+    fotos = "\n".join(_capa_html(f, j) for j, f in enumerate(p["fotos"]))
+    audio = [
+        f'      <audio id="vo" src="assets/{"voice-mix.wav" if p.get("voz_mix") else "voice.mp3"}" data-start="0" data-track-index="20" data-volume="1"></audio>',
+        f'      <audio id="music-bed" src="assets/music-bed.wav" data-start="0" data-track-index="19" data-volume="{p.get("musica_volumen", VOL_MUSICA)}"></audio>',
+    ]
+    sfx = p.get("sfx_mezcla") or lista_sfx(p)
     audio += [
         f'      <audio id="sfx{j}" src="{f}" data-start="{max(0, t):.3f}" data-track-index="{21 + j}" data-volume="{v}"></audio>'
         for j, (f, t, v) in enumerate(sfx)
@@ -1809,6 +1826,13 @@ def construir(
         )
         tmp.replace(bed)
     out = proy / "index.html"
+    if not solo_html:  # the contrast-only page has no audio to judge
+        p["sfx_mezcla"] = duck_sfx(
+            proy,
+            lista_sfx(p),
+            "voice-mix.wav" if p.get("voz_mix") else "voice.mp3",
+            words,
+        )
     out.write_text(_html(p), encoding="utf-8")
     _andamiaje(proy)
     if sb.get("_edicion") and not solo_html:
@@ -1913,6 +1937,65 @@ VOL_MUSICA = 0.5
 # whoosh/riser: the critic had to lower them to about this level on #7, and all six later videos failed
 # M1 at the old 0.38/0.3 (10-20 % of windows masked vs 5 % allowed; informes de 3-nov)
 VOL_MOTOR = {"whoosh": 0.1, "impacto": 0.6, "riser": 0.08}
+# the music bed also sits under the voice: an SFX alone stays this much further below the M1 limit
+HOLGURA_SFX_DB = 3.0
+
+
+def tope_vol(
+    sfx, t: float, vol: float, voz, tramos, sr: int, lim_db: float, w: float = 0.5
+) -> float:
+    """Highest volume <= `vol` at which the SFX that starts at `t` stays `lim_db` + HOLGURA_SFX_DB
+    under the voice in every window the critic measures (tools/medir_mezcla: 0.5 s grid from 0, voice
+    band, >= half a window of speech). M1 'whoosh covers the voice' was 20 faults in 7 of 21 reports."""
+    import medir_mezcla as M
+    import numpy as np
+
+    a0, n, tope = int(max(0.0, t) * sr), int(w * sr), float(vol)
+    for i in range(a0 // n * n, a0 + len(sfx), n):
+        t0 = i / sr
+        if sum(max(0.0, min(b, t0 + w) - max(a, t0)) for a, b in tramos) < w / 2:
+            continue
+        s, v = np.zeros(n), np.zeros(n)
+        lo, hi = max(i, a0), min(i + n, a0 + len(sfx))
+        s[lo - i : hi - i] = sfx[lo - a0 : hi - a0]
+        k = max(0, min(n, len(voz) - i))
+        v[:k] = voz[i : i + k]
+        es = M.energia_banda(s, sr)
+        if es > 0:
+            r = M.energia_banda(v, sr) / (es * 10 ** ((lim_db + HOLGURA_SFX_DB) / 10))
+            tope = min(tope, float(np.sqrt(r)))
+    return float(np.floor(tope * 1000) / 1000) if tope < vol else float(vol)
+
+
+def duck_sfx(proy: Path, sfx: list, voz_rel: str, words: list[dict]) -> list:
+    """`lista_sfx` with each volume capped by `tope_vol` against the voice that is actually mixed."""
+    import medir_mezcla as M
+
+    lim = json.loads((MOTOR / "rubrica.json").read_text(encoding="utf-8"))["criterios"][
+        "M1"
+    ]["voz_sobre_fondo_db"]
+    voz, tramos, out = (
+        M.decodificar(proy / "assets" / voz_rel),
+        M.tramos_de_words(words),
+        [],
+    )
+    for f, t, v in sfx:
+        ruta = (
+            MOTOR / "assets" / f.removeprefix("assets/_motor/")
+            if f.startswith("assets/_motor/")
+            else proy / f
+        )
+        try:
+            x = M.decodificar(ruta)
+        except Exception as e:  # noqa: BLE001 -- unreadable file: keep its volume, say so
+            print(f"⚠ ducking: {f} no medido ({e})")
+            out.append((f, t, v))
+            continue
+        nv = tope_vol(x, t, v, voz, tramos, M.SR, lim)
+        if nv < v:
+            print(f"  ducking: {f} @{t:.2f}s {v} -> {nv}")
+        out.append((f, t, nv))
+    return out
 
 
 def volumen_motor(sb: dict) -> dict:

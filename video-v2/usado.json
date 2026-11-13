@@ -1119,6 +1119,78 @@
      "desde": 21.0
     }
    }
+  },
+  {
+   "ref": "huang-resigns",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "diagonal",
+     "luma_alta",
+     "push_izq"
+    ],
+    "camara": [
+     "baja",
+     "deriva",
+     "pull"
+    ],
+    "punch": [
+     "inclinado"
+    ],
+    "texto": [
+     "sube"
+    ],
+    "tipografia": [
+     "condensada"
+    ],
+    "efectos": [
+     "Dull thud.ogg",
+     "Hitting a wire cage.ogg",
+     "Holga shuttersound.ogg",
+     "Slam closet door (Gravity Sound).wav",
+     "Softcover books dropped.ogg",
+     "Sword 5 (Gravity Sound).mp3",
+     "Turning a page.ogg",
+     "WWS CashregisteratWolkoffHouseMuseum.ogg"
+    ],
+    "riser": [
+     "Crash hit (Gravity Sound).wav"
+    ],
+    "musica": [
+     "Komiku - 12 - Tension.ogg"
+    ]
+   },
+   "eleccion": {
+    "semilla": "huang-resigns",
+    "transiciones": [
+     "luma_alta",
+     "diagonal",
+     "push_izq"
+    ],
+    "camara": [
+     "baja",
+     "deriva",
+     "pull"
+    ],
+    "punch": "inclinado",
+    "texto": "sube",
+    "tipografia": "condensada",
+    "sfx": {
+     "portazo": "portazo",
+     "timbal": "libro_blando",
+     "gong_sub": "jaula_sub",
+     "gong_cuerpo": "jaula_cuerpo"
+    },
+    "motor": {
+     "whoosh": "tajo_b",
+     "impacto": "thud",
+     "riser": "riser_crash_corto"
+    },
+    "musica": {
+     "commons": "File:Komiku - 12 - Tension.ogg",
+     "desde": 39.0
+    }
+   }
   }
  ]
 }

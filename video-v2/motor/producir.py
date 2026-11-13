@@ -44,6 +44,7 @@ RONDAS_AUTO = 3  # --auto: fix-and-retry rounds; each later one may cost a rende
 DETALLES: dict[
     str, tuple[bool, str]
 ] = {}  # last run, full gate detail (qa.json keeps 600 chars)
+PENDIENTES: list = []  # --auto: what autoarreglo could not fix, for corridas.jsonl
 
 
 def _run(
@@ -1083,6 +1084,49 @@ def producir(proy: Path) -> dict:
     return qa
 
 
+def reglas_fallidas(detalles: dict) -> dict[str, list[str]]:
+    """Failed gate -> the exact rules that failed, one per line: "storyboard" alone (26 failed runs on
+    13-nov) does not say which rule should become a default or a pre-render gate."""
+    out = {}
+    for n, (ok, d) in detalles.items():
+        if ok:
+            continue
+        ls = [x.strip() for x in d.splitlines() if x.strip()]
+        items = (
+            [x[4:].strip() for x in d.splitlines() if x.startswith("  - ")]  # StoryboardError list
+            or [x.lstrip("✗ ") for x in ls if x.startswith("✗")]
+            or ls[-1:]
+        )
+        out[n] = [x[:200] for x in items[:20]]
+    return out
+
+
+def registrar_corrida(
+    reg: Path, t0: float, fallo, argv: list[str], detalles: dict, pendientes: list
+) -> None:
+    """One line per run in renders/corridas.jsonl (aggregate: tools/resumen_corridas.py)."""
+    linea = {
+        "t": int(t0),
+        "s": round(time.time() - t0),
+        "previo": "--previo" in argv,
+        "rapido": "--rapido" in argv,
+        "fallo": fallo,
+    }
+    if reglas := reglas_fallidas(detalles):
+        linea["reglas"] = reglas
+    if pendientes:
+        linea["pendientes"] = [str(x)[:200] for x in pendientes[:20]]
+    qa_f = reg.parent / "qa.json"
+    if (
+        qa_f.exists() and qa_f.stat().st_mtime >= t0
+    ):  # seconds per gate of the last round
+        q = json.loads(qa_f.read_text(encoding="utf-8"))
+        linea["puertas"] = {x["puerta"]: x["s"] for x in q.get("puertas") or []}
+        linea["critico_s"] = q.get("critico_s")
+    with reg.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(linea, ensure_ascii=False) + "\n")
+
+
 def producir_auto(proy: Path, critico_: bool = True) -> dict:
     """--auto: mechanical fixes BEFORE the same gates, never instead of them. Each round runs the
     whole production; a failed gate or a blocking critic fault goes to autoarreglo; whatever it
@@ -1119,6 +1163,7 @@ def producir_auto(proy: Path, critico_: bool = True) -> dict:
         for h in hechos:
             print(f"🔧 auto {ronda + 1}: {h}")
         if not (hechos or rehacer_voz) or ronda == RONDAS_AUTO:
+            PENDIENTES[:] = pendientes
             for x in pendientes:
                 print(f"  pendiente: {x}")
             raise SystemExit(
@@ -1153,21 +1198,4 @@ if __name__ == "__main__":
     finally:  # failed runs and minutes per video: the numbers docs/POLITICA.md asks to compare
         reg = Path(sys.argv[1]) / "renders" / "corridas.jsonl"
         if reg.parent.exists():
-            with reg.open("a", encoding="utf-8") as f:
-                linea = {
-                    "t": int(t0),
-                    "s": round(time.time() - t0),
-                    "previo": "--previo" in sys.argv,
-                    "rapido": "--rapido" in sys.argv,
-                    "fallo": fallo,
-                }
-                qa_f = reg.parent / "qa.json"
-                if (
-                    qa_f.exists() and qa_f.stat().st_mtime >= t0
-                ):  # seconds per gate of the last round
-                    q = json.loads(qa_f.read_text(encoding="utf-8"))
-                    linea["puertas"] = {
-                        x["puerta"]: x["s"] for x in q.get("puertas") or []
-                    }
-                    linea["critico_s"] = q.get("critico_s")
-                f.write(json.dumps(linea, ensure_ascii=False) + "\n")
+            registrar_corrida(reg, t0, fallo, sys.argv, DETALLES, PENDIENTES)

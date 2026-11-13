@@ -1,0 +1,70 @@
+{
+  "production_ref": "huang-resigns",
+  "hook_type": "curiosity",
+  "story_type": "news_explainer",
+  "cta_type": "dichotomy",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 40,
+  "blocks": [
+    {
+      "block": "f1",
+      "technique": "revelacion,foto",
+      "length_s": 5.76
+    },
+    {
+      "block": "f2",
+      "technique": "titulo",
+      "length_s": 2.16
+    },
+    {
+      "block": "f3",
+      "technique": "titulo",
+      "length_s": 2.68
+    },
+    {
+      "block": "f4",
+      "technique": "puntos",
+      "length_s": 1.96
+    },
+    {
+      "block": "f5",
+      "technique": "revelacion",
+      "length_s": 2.89
+    },
+    {
+      "block": "f6",
+      "technique": "foto",
+      "length_s": 2.69
+    },
+    {
+      "block": "f7",
+      "technique": "titulo",
+      "length_s": 3.7
+    },
+    {
+      "block": "f8",
+      "technique": "foto",
+      "length_s": 2.82
+    },
+    {
+      "block": "f9",
+      "technique": "grafica",
+      "length_s": 4.52
+    },
+    {
+      "block": "f10",
+      "technique": "titulo",
+      "length_s": 2.14
+    },
+    {
+      "block": "f11",
+      "technique": "foto+clip",
+      "length_s": 2.1
+    },
+    {
+      "block": "f12",
+      "technique": "revelacion",
+      "length_s": 6.1
+    }
+  ]
+}

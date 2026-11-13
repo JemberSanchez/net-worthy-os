@@ -1,0 +1,593 @@
+{
+  "ref": "huang-resigns",
+  "guion": [
+    {
+      "id": "f1",
+      "texto": "Colette Kress, a finance chief most people never heard of, now runs the biggest stock your index fund owns."
+    },
+    {
+      "id": "f2",
+      "texto": "Her boss, Jensen Huang, just quit.",
+      "giro": true
+    },
+    {
+      "id": "f3",
+      "texto": "Reports tied him to an alleged Chinese spy."
+    },
+    {
+      "id": "f4",
+      "texto": "Nvidia fell as much as fourteen percent."
+    },
+    {
+      "id": "f5",
+      "texto": "The reflex: the genius leaves, so you sell."
+    },
+    {
+      "id": "f6",
+      "texto": "When Steve Jobs quit, Apple sank overnight."
+    },
+    {
+      "id": "f7",
+      "texto": "His quiet replacement built America's first trillion-dollar company.",
+      "giro": true
+    },
+    {
+      "id": "f8",
+      "texto": "Jack Welch left General Electric."
+    },
+    {
+      "id": "f9",
+      "texto": "Under his successor, the stock fell nearly thirty percent while the market more than doubled."
+    },
+    {
+      "id": "f10",
+      "texto": "Same panic, opposite endings.",
+      "giro": true
+    },
+    {
+      "id": "f11",
+      "texto": "Nobody could tell which was which."
+    },
+    {
+      "id": "f12",
+      "texto": "Kress keeps the seat warm; the next boss decides which ending your index fund gets."
+    }
+  ],
+  "pronuncia_ok": [
+    "Huang",
+    "Jensen",
+    "Kress",
+    "Welch"
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "formato": "documental-editorial",
+  "adn": {
+    "hook_type": "curiosity",
+    "story_type": "news_explainer",
+    "cta_type": "dichotomy",
+    "renderer_version": "v2-hyperframes"
+  },
+  "cifras": [
+    {
+      "dato": "Nvidia board: Jensen Huang has resigned as President, CEO and a member of the Board, effective immediately; CFO Colette Kress appointed interim CEO",
+      "fuente": "https://nvidianews.nvidia.com/news/nvidia-announces-ceo-transition"
+    },
+    {
+      "dato": "Huang admitted an affair with Alice Huang, a Megaspeed executive U.S. intelligence officials believe is a spy for China (FT via CNBC)",
+      "fuente": "https://www.cnbc.com/2026/11/12/nvidia-nvda-jensen-huang-second-affair.html"
+    },
+    {
+      "dato": "Nvidia shares declined 4.34% Thursday Nov 12, 2026; the fall pared steeper losses earlier in the day of as much as 14%",
+      "fuente": "https://www.cnbc.com/2026/11/12/nvidia-nvda-jensen-huang-second-affair.html"
+    },
+    {
+      "dato": "NVIDIA CORP is the top holding of the SPDR S&P 500 ETF at 8.38% (as of 09/30/2026)",
+      "fuente": "https://www.ssga.com/library-content/products/factsheets/etfs/us/factsheet-us-en-spy.pdf"
+    },
+    {
+      "dato": "Aug 24, 2011: after Steve Jobs resigned, Apple fell nearly $20 (5.22%) in after-hours trading; Tim Cook named CEO",
+      "fuente": "https://fortune.com/2011/08/24/steve-jobs-resigns-tim-cook-is-ceo-stock-drops-nearly-20/"
+    },
+    {
+      "dato": "Tim Cook: leader of the first $1 trillion company in the US (CNBC headline cited by Wikipedia)",
+      "fuente": "https://en.wikipedia.org/wiki/Tim_Cook"
+    },
+    {
+      "dato": "GE shares plunged nearly 30% since Immelt took over from Jack Welch on Sept 7, 2001, while the S&P 500 rose nearly 124% (as of June 2017)",
+      "fuente": "https://fortune.com/2017/06/12/ge-stock-jeff-immelt/"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "CNBC Nov 12, 2026 · Fortune 2011, 2017",
+      "Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "3",
+        "4"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 33,
+    "completo": "Not financial advice. Nvidia figures: CNBC (Nov 12, 2026); Apple: Fortune (Aug 24, 2011); GE vs S&P 500: Fortune (Jun 12, 2017). The spy claim is an allegation reported by the FT and CNBC."
+  },
+  "subtitulos": [
+    "0",
+    "10"
+  ],
+  "calientes": [
+    "quit",
+    "spy",
+    "fourteen",
+    "sell",
+    "sank",
+    "trillion",
+    "thirty",
+    "doubled",
+    "opposite",
+    "ending"
+  ],
+  "golpes": [
+    "1:quit",
+    "3:fourteen",
+    "6:trillion-dollar",
+    "8:thirty",
+    "9:opposite"
+  ],
+  "musica": {
+    "oscuro": [
+      "2",
+      "4"
+    ],
+    "pista": {
+      "mood": "tension"
+    }
+  },
+  "sonidos": [
+    {
+      "sfx": "obturador",
+      "en": "0:now"
+    },
+    {
+      "sfx": "portazo",
+      "en": "1:quit",
+      "vol": 0.3
+    },
+    {
+      "sfx": "timbal",
+      "en": "3:fourteen",
+      "vol": 0.25
+    },
+    {
+      "sfx": "caja",
+      "en": "6:trillion-dollar"
+    },
+    {
+      "sfx": "pagina",
+      "en": "8"
+    },
+    {
+      "sfx": "gong_sub",
+      "en": "9:opposite"
+    },
+    {
+      "sfx": "gong_cuerpo",
+      "en": "9:opposite"
+    }
+  ],
+  "imagenes": {
+    "spy": {
+      "documento": true,
+      "color": true
+    },
+    "applepark": {
+      "commons": "File:Apple Park aerial view, June 2024.jpg",
+      "color": true
+    },
+    "ge90": {
+      "commons": "File:2016.10.13.112619 GE90 jet engine Future of Flight Center & Boeing Tour Everett Washington.jpg",
+      "color": true
+    }
+  },
+  "clips": {
+    "servidores": {
+      "pexels": 5028622,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "grafico": {
+      "pexels": 38642315,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "grafico2": {
+      "pexels": 38736274,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "sala": {
+      "pexels": 6951393,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "oficina": {
+      "pexels": 8347240,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    }
+  },
+  "escenas": [
+    {
+      "tipo": "revelacion",
+      "en": "0-0.4",
+      "linea1": {
+        "texto": "Colette Kress"
+      },
+      "linea2": {
+        "texto": "Never heard of her?",
+        "en": "0:most"
+      },
+      "fondo": {
+        "clip": "servidores",
+        "opacidad": 0.8
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "0:now",
+      "clip": "servidores"
+    },
+    {
+      "tipo": "titulo",
+      "en": "1",
+      "fondo": {
+        "clip": "sala",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Jensen Huang",
+          "en": "1:Jensen",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*quit.*",
+          "en": "1:quit",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo_suave": true,
+      "fondo_opacidad": 0.3
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "fondo": {
+        "clip": "oficina",
+        "opacidad": 0.4
+      },
+      "kicker": {
+        "texto": "Reported by the FT and CNBC",
+        "en": "2"
+      },
+      "lineas": [
+        {
+          "texto": "Tied to an",
+          "en": "2",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*alleged Chinese spy*",
+          "en": "2:alleged",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "3",
+      "linea1": {
+        "texto": "Nvidia, intraday"
+      },
+      "linea2": {
+        "texto": "−14%",
+        "en": "3:fourteen"
+      },
+      "golpe": "3:fourteen",
+      "fondo": {
+        "clip": "grafico",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "4",
+      "fondo": {
+        "clip": "grafico2",
+        "opacidad": 0.4
+      },
+      "lineas": [
+        {
+          "texto": "The genius leaves…",
+          "en": "4",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*so you sell?*",
+          "en": "4:leaves",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "5",
+      "img": "applepark",
+      "kicker": {
+        "texto": "Aug 2011 · Jobs resigns · after hours",
+        "en": "5"
+      },
+      "titulo": {
+        "texto": "Apple −5%",
+        "en": "5:sank"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "fondo": {
+        "img": "applepark",
+        "opacidad": 0.3
+      },
+      "kicker": {
+        "texto": "His quiet replacement",
+        "en": "6"
+      },
+      "lineas": [
+        {
+          "texto": "Tim Cook",
+          "en": "6:quiet",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*First $1T company*",
+          "en": "6:trillion-dollar",
+          "estilo": "big"
+        },
+        {
+          "texto": "in the U.S.",
+          "en": "6:trillion-dollar",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "7",
+      "img": "ge90",
+      "kicker": {
+        "texto": "Sept 2001",
+        "en": "7"
+      },
+      "titulo": {
+        "texto": "Jack Welch *leaves GE*",
+        "en": "7:left"
+      }
+    },
+    {
+      "tipo": "grafica",
+      "papel": true,
+      "en": "8",
+      "lineas": [
+        {
+          "nombre": "S&P 500",
+          "color": "#17324d",
+          "puntos": [
+            [
+              2001.68,
+              0.0
+            ],
+            [
+              2017.45,
+              124.0
+            ]
+          ]
+        },
+        {
+          "nombre": "GE",
+          "color": "#c0392b",
+          "puntos": [
+            [
+              2001.68,
+              0.0
+            ],
+            [
+              2017.45,
+              -30.0
+            ]
+          ],
+          "estados": [
+            {
+              "en": "8:thirty",
+              "ancho": 12
+            }
+          ]
+        }
+      ],
+      "rejilla": [
+        -50,
+        0,
+        50,
+        100
+      ],
+      "ticks": [
+        2001,
+        2017
+      ],
+      "ymin": -60,
+      "ymax": 140,
+      "avance": [
+        {
+          "anio": 2001.68,
+          "en": "8"
+        },
+        {
+          "anio": 2017.45,
+          "en": "8:doubled$"
+        }
+      ],
+      "rotulos": [
+        {
+          "texto": "Start and end only (Fortune)",
+          "en": "8",
+          "estilo": "nota",
+          "color": "ink",
+          "tam": 40
+        }
+      ],
+      "unidad": "%"
+    },
+    {
+      "tipo": "titulo",
+      "en": "9",
+      "fondo": {
+        "clip": "grafico2",
+        "opacidad": 0.35
+      },
+      "lineas": [
+        {
+          "texto": "Same panic.",
+          "en": "9",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*Opposite endings.*",
+          "en": "9:opposite",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "grafico"
+    },
+    {
+      "tipo": "revelacion",
+      "en": "11",
+      "linea1": {
+        "texto": "Apple ending or GE ending?"
+      },
+      "linea2": {
+        "texto": "The next boss decides.",
+        "en": "11:decides"
+      },
+      "fondo": {
+        "clip": "sala",
+        "opacidad": 0.4
+      }
+    }
+  ],
+  "pruebas": [
+    {
+      "img": "spy",
+      "texto": "NVIDIA CORP",
+      "en": "0:now",
+      "marca": "0:biggest",
+      "hasta": "1"
+    }
+  ],
+  "publicacion": {
+    "titulo": "Nvidia's CEO quit. Here's what history says.",
+    "descripcion": "Jensen Huang resigned as Nvidia's CEO on Nov 12, 2026, effective immediately, after reports tied him to an alleged Chinese spy. CFO Colette Kress is interim CEO. Nvidia, the top holding of the SPDR S&P 500 ETF, fell as much as 14% before closing down 4.34%.\n\nThe reflex is to sell when the genius leaves. When Steve Jobs resigned in 2011, Apple fell 5% after hours, and Tim Cook went on to lead the first $1 trillion U.S. company. When Jack Welch left GE in 2001, the stock fell nearly 30% under his successor by 2017 while the S&P 500 rose about 124%. Same panic, opposite endings.\n\nSources: Nvidia (Nov 12, 2026); CNBC (Nov 12, 2026); State Street SPY factsheet (Sep 30, 2026); Fortune (Aug 24, 2011; Jun 12, 2017). The spy claim is an allegation. Not financial advice.",
+    "tags": [
+      "jensen huang",
+      "nvidia",
+      "nvidia stock",
+      "colette kress",
+      "nvidia ceo",
+      "steve jobs",
+      "tim cook",
+      "jack welch",
+      "index fund",
+      "investing",
+      "stocks"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#nvidia",
+      "#investing",
+      "#stocks"
+    ],
+    "comentario": "Apple lost Steve Jobs and became the first $1 trillion U.S. company. GE lost Jack Welch and fell nearly 30% while the market more than doubled. Which one does Nvidia look like to you, and why?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:servidores@1",
+        "kicker": "Nvidia's interim CEO",
+        "titulo": "Never heard of *Colette Kress*?",
+        "texto": "She now runs the biggest stock in the S&P 500. Jensen Huang resigned on Nov 12, 2026."
+      },
+      {
+        "fondo": "img:spy",
+        "kicker": "SPDR S&P 500 ETF",
+        "titulo": "Nvidia: *top holding*",
+        "texto": "8.38% of the fund as of Sep 30, 2026 (State Street factsheet)."
+      },
+      {
+        "fondo": "clip:grafico@3",
+        "kicker": "Nov 12, 2026",
+        "titulo": "Down as much as *14%*",
+        "texto": "Nvidia closed down 4.34% after Huang quit (CNBC)."
+      },
+      {
+        "fondo": "img:applepark",
+        "kicker": "Aug 2011",
+        "titulo": "Jobs quits, Apple *−5%*",
+        "texto": "Tim Cook went on to lead the first $1 trillion U.S. company."
+      },
+      {
+        "fondo": "img:ge90",
+        "kicker": "Sept 2001",
+        "titulo": "Welch leaves, GE *−30%*",
+        "texto": "By 2017, while the S&P 500 rose about 124% (Fortune). Not financial advice."
+      },
+      {
+        "fondo": "clip:sala@1",
+        "kicker": "Your turn",
+        "titulo": "Apple *or* GE?",
+        "texto": "Same panic, opposite endings. Which one does Nvidia get?"
+      }
+    ],
+    "caption": "Jensen Huang quit and Nvidia fell as much as 14%. History has two endings for this: Apple after Jobs, GE after Welch.\n\nWhich one does Nvidia get? 👇",
+    "historia": {
+      "hasta": "3:percent$",
+      "cierre": "Apple *or* GE?"
+    }
+  },
+  "mezcla": {
+    "whoosh": 0.057,
+    "impacto": 0.15
+  }
+}

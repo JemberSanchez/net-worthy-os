@@ -1,0 +1,170 @@
+{
+  "estructuras": [
+    {
+      "id": "error",
+      "nombre": "error comun: el genio se va, vendes",
+      "frases": [
+        {
+          "id": "f1",
+          "texto": "Colette Kress, a finance chief most people never heard of, now runs the biggest stock your index fund owns."
+        },
+        {
+          "id": "f2",
+          "texto": "Her boss, Jensen Huang, just quit.",
+          "giro": true
+        },
+        {
+          "id": "f3",
+          "texto": "Reports tied him to an alleged Chinese spy."
+        },
+        {
+          "id": "f4",
+          "texto": "Nvidia fell as much as fourteen percent."
+        },
+        {
+          "id": "f5",
+          "texto": "The reflex: the genius leaves, so you sell."
+        },
+        {
+          "id": "f6",
+          "texto": "When Steve Jobs quit, Apple sank overnight."
+        },
+        {
+          "id": "f7",
+          "texto": "His quiet replacement built America's first trillion-dollar company.",
+          "giro": true
+        },
+        {
+          "id": "f8",
+          "texto": "Jack Welch left General Electric."
+        },
+        {
+          "id": "f9",
+          "texto": "Under his successor, the stock fell nearly thirty percent while the market more than doubled."
+        },
+        {
+          "id": "f10",
+          "texto": "Same panic, opposite endings.",
+          "giro": true
+        },
+        {
+          "id": "f11",
+          "texto": "Nobody could tell which was which."
+        },
+        {
+          "id": "f12",
+          "texto": "Kress keeps the seat warm; the next boss decides which ending your index fund gets."
+        }
+      ]
+    },
+    {
+      "id": "cuenta",
+      "nombre": "cuenta atras: tres CEOs que se fueron",
+      "frases": [
+        {
+          "id": "c1",
+          "texto": "Colette Kress, Nvidia's finance chief, woke up running the biggest stock in your index fund."
+        },
+        {
+          "id": "c2",
+          "texto": "Jensen Huang quit after reports tied him to an alleged Chinese spy.",
+          "giro": true
+        },
+        {
+          "id": "c3",
+          "texto": "Nvidia fell as much as fourteen percent."
+        },
+        {
+          "id": "c4",
+          "texto": "Three legends, three exits."
+        },
+        {
+          "id": "c5",
+          "texto": "Number three: Jack Welch leaves General Electric."
+        },
+        {
+          "id": "c6",
+          "texto": "The stock fell nearly thirty percent under his successor."
+        },
+        {
+          "id": "c7",
+          "texto": "Number two: Steve Jobs leaves Apple, and the stock sinks overnight.",
+          "giro": true
+        },
+        {
+          "id": "c8",
+          "texto": "Then his replacement builds America's first trillion-dollar company."
+        },
+        {
+          "id": "c9",
+          "texto": "Number one is Nvidia, and nobody knows the ending yet.",
+          "giro": true
+        },
+        {
+          "id": "c10",
+          "texto": "Panic looked the same both times."
+        },
+        {
+          "id": "c11",
+          "texto": "The next boss decides which story your index fund is in."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Colette Kress, a finance chief most people never heard of, now runs the biggest stock your index fund owns."
+    },
+    {
+      "id": "g2",
+      "texto": "Jensen Huang, the man who built Nvidia, just quit, and your index fund felt it."
+    },
+    {
+      "id": "g3",
+      "texto": "Colette Kress, Nvidia's accountant-in-chief, inherited a four-trillion-dollar problem overnight."
+    },
+    {
+      "id": "g4",
+      "texto": "Tim Cook, a supply-chain guy nobody wanted, is why you shouldn't panic about Nvidia's CEO."
+    }
+  ],
+  "juicio": {
+    "error": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "One idea (same panic, opposite endings); Apple vs GE twist lands at the midpoint; close loops back to Kress and the index fund."
+    },
+    "cuenta": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Countdown is clear but telegraphs the order; number-one payoff is weaker because the ending is unknown."
+    },
+    "error+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 5,
+      "nota": "Unknown name plus 'biggest stock in your index fund' opens the loop; the Apple/GE split pays it off; last line returns to Kress."
+    },
+    "error+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Huang is the obvious headline; no curiosity gap, everyone has seen it."
+    },
+    "error+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 4,
+      "nota": "Problem is vague and the viewer is absent until late."
+    },
+    "error+g4": {
+      "una_idea": 3,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Gives away the Apple payoff and reads as advice."
+    }
+  }
+}

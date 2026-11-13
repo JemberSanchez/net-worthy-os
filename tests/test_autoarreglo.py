@@ -156,6 +156,27 @@ class TiemposTest(unittest.TestCase):
         self.assertEqual(con(quedan, "es ambiente"), [])
         self.assertGreaterEqual(nuevo["sonidos"][0]["dur"], 1.0)
 
+    def test_voz_sin_subtitulo_extiende_subtitulos(self):
+        # session bdd19749: "escena 1: voz sin subtítulo 3.0-5.2s (...): quita `limpio` o añade texto"
+        proy, sb, w = cargar("huang-resigns")
+        sb["subtitulos"] = ["1", "10"]
+        self.assertTrue(con(errores(proy, sb, w), "voz sin subtítulo"))
+        nuevo, quedan = bucle(proy, sb, w)
+        self.assertEqual(con(quedan, "voz sin subtítulo"), [])
+        self.assertEqual(nuevo["subtitulos"], ["0", "10"])
+
+    def test_subtitulos_con_ancla_no_revienta_plan(self):
+        # session bdd19749: the hand fix `"subtitulos": ["0:now", "10"]` passed validar and then
+        # crashed plan() with int('0:now')
+        proy, sb, w = cargar("huang-resigns")
+        sb["subtitulos"] = ["0:now", "10"]
+        self.assertEqual(con(errores(proy, sb, w), "voz sin subtítulo"), [])
+        i_now, _, _ = anclas.palabra(w, "0:now")
+        fr = anclas.frases(w)
+        self.assertEqual(
+            construir.plan(copy.deepcopy(sb), w)["subtitulos"], [i_now, fr[10][-1]]
+        )
+
     def test_contador_anclado_a_la_cifra(self):
         # session e248c34b: "escena 1: el contador de 22,000,000 arranca 0.69s antes"
         proy, sb, w = cargar("anne-scheiber")
@@ -390,7 +411,9 @@ class BucleProducirTest(unittest.TestCase):
             producir.DETALLES.clear()
             fallos = [{"id": "M1"}] if len(llamadas) <= veces else []
             inf.write_text(json.dumps({"fallos": fallos}), encoding="utf-8")
-            t = time.time() + 1  # Windows mtime ticks ~15 ms: same-tick writes look older than t0
+            t = (
+                time.time() + 1
+            )  # Windows mtime ticks ~15 ms: same-tick writes look older than t0
             os.utime(inf, (t, t))
             return {"ok": True}
 
