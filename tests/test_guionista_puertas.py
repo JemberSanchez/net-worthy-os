@@ -329,6 +329,32 @@ class TestReglas(unittest.TestCase):
         for p in G.puertas(["One line."]):  # every gate the run will apply is announced
             self.assertIn(p["id"], txt)
 
+    def test_ensena_la_frase_de_mitad_de_los_que_aguantaron_y_los_que_cayeron(self):
+        with tempfile.TemporaryDirectory() as d:
+            for ref, mitad in (("a", "Then October hit."), ("b", "Rates drag it up.")):
+                (Path(d) / ref).mkdir()
+                sb = {
+                    "guion": [
+                        {"id": "1", "texto": "One two three four."},
+                        {"id": "2", "texto": mitad},
+                        {"id": "3", "texto": "Five six seven eight nine."},
+                    ]
+                }
+                (Path(d) / ref / "storyboard.json").write_text(
+                    json.dumps(sb), encoding="utf-8"
+                )
+            txt = G.reglas(
+                Path(d) / "nuevo", publicados=[], curvas={"b": 0.1, "a": 0.9, "zz": 0.5}
+            )
+        self.assertIn('aguantan: a 0.90 "Then October hit."', txt)
+        self.assertIn('caen: b 0.10 "Rates drag it up."', txt)
+        self.assertNotIn("zz", txt)  # a curve without a storyboard is skipped
+        self.assertIn("COMPARTIR", txt)
+
+    def test_frase_de_mitad_es_la_que_cruza_el_50_por_ciento(self):
+        fs = [{"texto": "a b c d"}, {"texto": "e f"}, {"texto": "g h i j"}]
+        self.assertEqual(G.frase_mitad(fs), "e f")
+
 
 if __name__ == "__main__":
     unittest.main()

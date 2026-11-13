@@ -727,10 +727,63 @@ def _pedir_juicio(e: FaltaJuicio, cands: list[dict]) -> NoReturn:
     raise SystemExit(2)
 
 
-def reglas(proy: Path, publicados: list[str] | None = None) -> str:
+def frase_mitad(frases: list) -> str:
+    """The sentence being spoken when half of the words have been said."""
+    fs = [f if isinstance(f, dict) else {"texto": f} for f in frases]
+    mitad, acum = sum(len(f["texto"].split()) for f in fs) / 2, 0
+    for f in fs:
+        acum += len(f["texto"].split())
+        if acum > mitad:
+            return f["texto"]
+    return fs[-1]["texto"]
+
+
+def retencion_mitad() -> dict[str, float]:
+    """{ref: YouTube relative retention at 50 %} from data/omega.sqlite (empty without a base)."""
+    ruta = RAIZ / "data" / "omega.sqlite"
+    if not ruta.exists():
+        return {}
+    con = sqlite3.connect(f"{ruta.as_uri()}?mode=ro", uri=True)
+    try:
+        filas = con.execute(
+            "SELECT production_ref, relative FROM production_retention r WHERE relative IS NOT"
+            " NULL AND ABS(t_ratio - 0.5) = (SELECT MIN(ABS(t_ratio - 0.5)) FROM"
+            " production_retention WHERE production_ref = r.production_ref)"
+        ).fetchall()
+    except sqlite3.Error:
+        return {}
+    finally:
+        con.close()
+    return {ref: float(rel) for ref, rel in filas}
+
+
+def _mitades(proy: Path, curvas: dict[str, float]) -> str:
+    """Best 2 and worst 2 videos by retention at 50 %, with the sentence that was playing."""
+    filas = []
+    for ref, rel in sorted(curvas.items(), key=lambda x: -x[1]):
+        ruta = proy.parent / ref / "storyboard.json"
+        if not ruta.exists():
+            continue
+        guion = json.loads(ruta.read_text(encoding="utf-8")).get("guion")
+        if guion:
+            filas.append(f'{ref} {rel:.2f} "{frase_mitad(guion)}"')
+    if not filas:
+        return "sin curvas medidas"
+    n = min(2, len(filas) // 2)
+    return f"aguantan: {'; '.join(filas[: max(n, 1)])} · caen: {'; '.join(filas[-n:]) if n else '-'}"
+
+
+def reglas(
+    proy: Path,
+    publicados: list[str] | None = None,
+    curvas: dict[str, float] | None = None,
+) -> str:
     """Everything the gates will check, with today's vetoes, BEFORE writing: the same gates failed
-    in 3 of 4 sessions (11-nov) and each failed run is a full-context turn."""
+    in 3 of 4 sessions (11-nov) and each failed run is a full-context turn. Also what the audience
+    did at mid-video: G-GIRO passed both videos that collapsed there (13-nov), so the writer sees
+    the measured result instead of a lexical proxy."""
     pub = refs_publicadas() if publicados is None else publicados
+    mitades = _mitades(proy, retencion_mitad() if curvas is None else curvas)
     vetados = cierres_previos(proy, pub)[:CIERRE_VENTANA]
     libres = [
         c
@@ -761,6 +814,10 @@ G-CIERRE   tipos vetados (últimos {CIERRE_VENTANA} vídeos): {cierres}.
 G-COMODIN  prohibido: {", ".join(COMODINES)}.
 G-RELLENO  prohibido: {", ".join(RELLENO)}.
 Últimos publicados (no repetir estructura ni gancho): {"; ".join(previos) or "sin datos"}
+MITAD      retención relativa de YouTube al 50 % y la frase que sonaba (PROVISIONAL, n bajo).
+           {mitades}
+           Aguantan los que a mitad avanzan una historia (pasa algo) o responden la pregunta del gancho; caen los que explican una estadística.
+COMPARTIR  (experimento) la última o penúltima frase da algo que mandar a alguien: una cifra difícil de creer, comparación con quien mira, o pregunta que pide opinión. Se mide en shares/alcance de Meta.
 guiones.json: estructuras[2-3]{{id,nombre,frases[{{id,texto,giro?}}]}}, ganchos[3-5]{{id,texto}}, juicio{{<id>: {{una_idea,bucle_abierto,giro: 1-5, nota}}}}.
 Rellena ya el juicio de cada estructura; el de <estructura>+gN solo para la que gane (2 corridas en total)."""
 

@@ -99,3 +99,9 @@ es más parecido que el azar (11 de 45 pares). Sigue siendo `media`.
 `baja` sigue de aviso: su fallo más común, L1 "cae bajo la interfaz" (115 de los publicados), dio un
 falso positivo comprobado en anne-scheiber t=6,5 s (subtítulo a ~1300 px, la UI empieza en ~1570). La
 franja derecha usa x > 0,86 (151 px) y ESTADO dice ~120 px: validar con una captura real del móvil.
+
+**13-nov: G-GIRO no predice la retención a mitad de vídeo** (n=7 con curva de YouTube). Aprueba los dos que
+se hunden al 50 % (average-401k 0,05, aws-profit 0,09 de retención relativa). Quitar las cifras como giro
+tampoco separa: suspende a gdp-annualized (0,65, gana) y aprueba a average-401k. Se queda como higiene
+de ritmo, no como medidor de giro. El guionista ve ahora la retención real a mitad de vídeo y la frase
+que sonaba (`guionista.py --reglas`, línea MITAD). Detalle en `docs/INVESTIGACION-VIRAL.md` §2.1.

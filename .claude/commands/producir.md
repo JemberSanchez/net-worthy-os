@@ -26,7 +26,9 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
    misterio, error común, cuenta atrás o vida de personaje. Frases cortas (cada una es un ancla); la parte honesta
    (riesgo, sesgo de superviviente) es obligatoria, sin fórmula de anuncio. Open loop que se cierra tarde, giro propio
    cada 8-10 s, última frase que enlaza con la primera. Cada cifra con URL en `cifras`; sin verificar, no se usa. Nada de
-   consejo personalizado; curvas ILUSTRATIVAS y se dice.
+   consejo personalizado; curvas ILUSTRATIVAS y se dice. Las líneas MITAD y COMPARTIR de `--reglas` no son puertas: son la
+   retención real a mitad de vídeo y el experimento de compartir (`docs/INVESTIGACION-VIRAL.md`); el guion las aplica y la
+   nota de `giro` del juicio puntúa la frase de mitad contra ellas.
 5. Escribe `video-v2/<ref>/guiones.json` (2-3 estructuras, 3-5 ganchos) y corre `python video-v2/motor/guionista.py video-v2/<ref>`:
    sus puertas (G-GANCHO, G-TU, G-CIFRAS, G-COMODIN, G-CIERRE, longitud, relleno) dicen qué reescribir, y pide tu juicio 1-5.
    No juzgues para salvar una alternativa. Ganador al `guion` del storyboard; descartadas en `guiones.md`.

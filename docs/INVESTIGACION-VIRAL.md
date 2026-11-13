@@ -80,3 +80,15 @@ Lo que NO haría: más producción visual, optimizar duración/título (VIRALIDA
 - [Social Media Today: aclaración de YouTube](https://www.socialmediatoday.com/news/youtube-clarifies-monetization-update-inauthentic-repeated-content/752892/)
 - [Owlclaw: benchmarks de Shorts](https://owlclaw.com/benchmarks/youtube-shorts-benchmarks/) · [Fluxnote: Shorts a suscriptores](https://fluxnote.io/guides/youtube-shorts-to-subscribers-strategy-2026) [blog]
 - [BecomeViral: caso canal de finanzas](https://becomeviral.com/blog/faceless-youtube-case-study-finance) [blog]
+
+## 5. Aplicado (13-nov)
+
+- `guionista.py --reglas` (lo que lee el guionista antes de escribir, paso 4 de `/producir`) trae dos
+  líneas nuevas: **MITAD** (retención relativa al 50 % de los 2 mejores y 2 peores, con la frase que
+  sonaba, leída en vivo de `production_retention`) y **COMPARTIR** (el experimento del punto 4.1).
+- Causa raíz comprobada: G-GIRO aprobaba los dos vídeos que se hundieron a mitad, y ninguna variante
+  léxica probada los separa (`docs/RUBRICA.md`, 13-nov). Por eso el guionista recibe el resultado medido
+  en vez de otra regla de palabras sin validar.
+- `analytics-sync` guarda `subs_gained` (suscriptores por vídeo). Primera lectura: 2 en 1.068 vistas,
+  los dos de personajes; midterm-rally, 496 vistas y 0 suscriptores.
+- Cómo se juzga: retención al 50 % ≥ 0,6 y shares/alcance en Meta en los próximos vídeos, frente a los 7 de §2.1.
