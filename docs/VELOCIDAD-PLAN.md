@@ -81,6 +81,9 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
   datos de esa ronda no se guardaron). Ahora `rondas` lo registra si vuelve a pasar.
 - El carrusel social se hace en paralelo con el render, y después solo la historia: 410 s → 384 s
   (6,4 min), social 60 s → 28 s, render 132 s → 135 s (sin freno visible). n=1.
+- Ritmo en paralelo con loudness: descartado. 384 s → 379 s (ruido): esas dos bajaron de 160 a 72 s,
+  pero social subió de 28 a 111 s. Tras el render, el camino crítico es el crítico (~203 s, en
+  paralelo): lo que corre a su lado solo se reparte la CPU. La siguiente palanca es el propio crítico.
 
 ## Fase 2: brief → compilador (1-2 semanas)
 
