@@ -1,7 +1,7 @@
 # PLAN LONG-FORM: del Short al vídeo de 8-10 min (18-nov-2026)
 
-> Documento de DISEÑO. No hay código del motor escrito. Las decisiones marcadas **[PENDIENTE]**
-> son recomendaciones que el usuario aún no ha confirmado (preguntas Q1-Q6 del 18-nov).
+> Documento de DISEÑO. No hay código del motor escrito. Las decisiones marcadas **[CONFIRMADO]**
+> eran recomendaciones; el usuario confirmó Q1-Q6 el 18-nov.
 > Objetivo único: **ingresos**. Cada fase se juzga por cuánto acerca al primer dólar y al YPP.
 
 ## 1. Datos del canal (18-nov, API YouTube Data + Analytics, DB local)
@@ -25,7 +25,7 @@ y [ppc.land](https://ppc.land/new-youtube-creators-face-8-000-hour-bar-for-ad-re
 (8.000 h o 20 M; los miembros actuales conservan su estado).
 Detalle y URLs de monetización: nota `monetizacion.md` del grupo de sesiones (resumen en §6).
 
-## 2. Decisión: empezar el long-form YA [PENDIENTE Q1]
+## 2. Decisión: empezar el long-form YA [CONFIRMADO 18-nov]
 
 1. **La vía Shorts no es realista:** 1.937 vistas / 90 d contra 20 M = 10.000× por debajo.
 2. **Las horas de Shorts nunca cuentan.** Con 3 subs no llegaremos antes del 1-feb-2027, así que la meta
@@ -44,9 +44,9 @@ Contra-argumento honesto: con 1,4 subs por 1.000 vistas el embudo es débil, y u
 suscriptores depende de la búsqueda y del "suggested". Por eso los temas salen de la demanda medida (`decide`,
 `youtube-scan`) y de los Shorts que ya retuvieron, y la miniatura y el título son entregables de primera clase.
 
-## 3. Política nueva [PENDIENTE Q2]
+## 3. Política nueva [CONFIRMADO 18-nov]
 
-`docs/POLITICA.md` no se toca hasta que el usuario lo confirme. Cambio propuesto:
+Aplicado en `docs/POLITICA.md` (18-nov):
 
 - **Puertas que BLOQUEAN, solo lo irreversible o lo roto:** YMYL (aviso, nada de consejo
   personalizado, cifras corregidas), licencias (lista cerrada), reglas de YouTube (inautenticidad, estafas,
@@ -153,7 +153,7 @@ Orden: el punto 1 primero (es lo que más rinde). Hasta tenerlo, el primer víde
   solo lo cubre el juicio J3. Para 10 min, con decenas de cifras, se propone una puerta que baje la URL y busque el número
   (con tolerancia de formato) y bloquee si no aparece. Es lo único nuevo que bloquea.
 
-### 5.7 Riesgo de "contenido inauténtico" [PENDIENTE Q3]
+### 5.7 Riesgo de "contenido inauténtico" [CONFIRMADO 18-nov]
 
 La [política oficial](https://support.google.com/youtube/answer/1311392) desmonetiza lo hecho en masa con plantillas, lo
 repetitivo entre vídeos y las **personas IA que dan consejo financiero como expertos humanos**.
@@ -167,7 +167,7 @@ Cómo evitarlo:
 - La [divulgación de contenido alterado o sintético](https://support.google.com/youtube/answer/14328491) se marca cuando
   hay escenas realistas generadas. Una línea "AI narration" en la descripción (suposición: no reduce el alcance).
 
-## 6. Embudo e ingresos fuera del YPP [PENDIENTE Q5, Q6]
+## 6. Embudo e ingresos fuera del YPP [CONFIRMADO 18-nov]
 
 - **Embudo:** cada long-form amplía el tema de un Short que retuvo (huang-exit, midterm-rally,
   ronald-wayne, jesse-livermore). Se hacen 2-3 Shorts nuevos por long-form, cortados de sus capítulos, con
