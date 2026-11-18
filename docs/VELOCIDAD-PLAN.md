@@ -60,6 +60,18 @@ social, ritmo, corte a media frase.
 
 Meta Fase 1: 1 corrida por Short, ~15 min de máquina.
 
+Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n=1, PROVISIONAL):
+
+- Antes: 21,7 min (1301 s), 2 rondas y salida 1 (L1 y C2 sin arreglo). Después: 16,4 min (986 s),
+  1 corrida y salida 0. No aislado: el crítico de "después" dio 0 fallos y el de "antes" dio 2.
+- Kokoro (torch `+cpu`, sin CUDA), CPU libre: cargar el modelo tarda 16 s (import 13,5 s +
+  pipeline 2,5 s) y sintetizar una frase de ~10 palabras unos 4,5 s. El worker persistente paga la
+  carga una vez por corrida.
+- Render `high` (lo que ya usa el motor): con `--workers auto` el motor ya elige 4. Con caché
+  caliente: auto 81 s, 4w 74 s, 6w 73 s, es decir, ruido. El primer render en frío tardó 120 s.
+  `looks` (CRF 16): 74 s, un 17 % más ligero y SSIM 0,9936 contra `high`. No hay ganancia de
+  tiempo, así que **el punto 6 se descarta: se queda `high` con workers en auto**.
+
 ## Fase 2: brief → compilador (1-2 semanas)
 
 Claude escribe solo un brief (~400 tokens): guion, cifras con URL, ~10 beats
