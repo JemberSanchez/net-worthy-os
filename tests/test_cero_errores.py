@@ -184,6 +184,9 @@ class TrazabilidadTest(unittest.TestCase):
             v("in twenty twenty five, three hundred thirty thousand"), [2025, 330000]
         )
         self.assertEqual(v("in april seventeen twenty, he sold"), [1720])
+        # product names read in pairs: "Riva 128", "GeForce 256"
+        self.assertEqual(v("the Riva one twenty eight, then two fifty six"), [128, 256])
+        self.assertEqual(v("ninety nine"), [99])
         self.assertEqual(v("one of three savers, four-oh-one-k"), [])
         self.assertEqual(
             [
@@ -515,5 +518,12 @@ class GanchoClipTest(unittest.TestCase):
             self.assertTrue(e[0].startswith("gancho: clip"))
 
     def test_clip_claro_o_fuera_del_gancho_pasa(self):
-        self.assertEqual(puertas.gancho_clip_oscuro(self.plan("torres"), {"torres": 124.5}, 2.0), [])
-        self.assertEqual(puertas.gancho_clip_oscuro(self.plan("pantalla", 3.0), {"pantalla": 16.5}, 2.0), [])
+        self.assertEqual(
+            puertas.gancho_clip_oscuro(self.plan("torres"), {"torres": 124.5}, 2.0), []
+        )
+        self.assertEqual(
+            puertas.gancho_clip_oscuro(
+                self.plan("pantalla", 3.0), {"pantalla": 16.5}, 2.0
+            ),
+            [],
+        )
