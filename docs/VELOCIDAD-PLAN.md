@@ -87,6 +87,13 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
 - OCR del crítico: 6 procesos × 12 hilos de onnxruntime (su valor por defecto) en 12 núcleos.
   Limitado a `núcleos // procesos` hilos por proceso: crítico 203 s → 121 s y corrida 384 s → 301 s
   (5,0 min), mismo informe (0 fallos, 100 % leído). A solas, el crítico baja de 212 a 96 s.
+- Render: HyperFrames 0.9.67 trae Chrome 158, que no tiene la preferencia de GPU "Alto rendimiento"
+  de Windows (la tenía el 152 de la 0.9.65): renderiza en la Intel, 121 s frente a 77 s en la NVIDIA.
+  HyperFrames no acepta flags propios de Chrome; se arregla con la preferencia de Windows para el
+  `chrome-headless-shell.exe` nuevo, y hay que repetirlo con cada versión de Chrome.
+- Captura rápida (`PRODUCER_EXPERIMENTAL_FAST_CAPTURE=true`): descartada. Se desactiva sola por
+  `filter: blur` ("drawElementImage cannot reproduce it"): 82 s frente a 77 s. Quitar el desenfoque
+  cambia el aspecto y pide nota a ciegas.
 
 ## Fase 2: brief → compilador (1-2 semanas)
 
