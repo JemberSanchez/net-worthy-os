@@ -582,6 +582,18 @@ def fallos_contraste(informes: list[dict]) -> list[str]:
     return out
 
 
+def fallos_layout(informes: list[dict]) -> list[str]:
+    """Layout errors of `hyperframes check` (clipped, overflowing, occluded or unpainted text, covered canvas):
+    broken output, so they block. Its warnings and info (safe zone, overlaps) carry the decorative-layer false
+    positives measured on Grace (25-sep) and only inform."""
+    return [
+        f'{f.get("code")} {f.get("selector", "")} en t≈{f.get("time", "?")}s: {str(f.get("message", ""))[:80]}'
+        for d in informes
+        for f in (d.get("layout") or {}).get("findings") or []
+        if f.get("severity") == "error"
+    ]
+
+
 def medicion_valida(d: dict) -> tuple[bool, str]:
     """¿La pasada de `check` MIDIÓ de verdad? Sin muestras, sin textos o con error de runtime, su
     'ok' no significa nada (así pasó en falso el #7: 'Navigation timeout', 0 textos, ok=True)."""
@@ -635,11 +647,11 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
             return False, f"la auditoría NO midió (t={ts[i : i + 5]}): {motivo}"
         informes.append(d)
         textos += d["contrast"]["checked"]
-    fallos = fallos_contraste(informes)
+    fallos = fallos_contraste(informes) + fallos_layout(informes)
     return not fallos, (
-        f"{textos} textos en {len(ts)} escenas, todos >= AA"
+        f"{textos} textos en {len(ts)} escenas, todos >= AA, sin errores de maquetación"
         if not fallos
-        else f"{len(fallos)} textos ilegibles: " + "; ".join(fallos[:5])
+        else f"{len(fallos)} textos ilegibles o rotos: " + "; ".join(fallos[:5])
     )
 
 
