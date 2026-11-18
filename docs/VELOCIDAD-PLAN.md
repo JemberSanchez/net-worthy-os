@@ -91,6 +91,7 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
   de Windows (la tenía el 152 de la 0.9.65): renderiza en la Intel, 121 s frente a 77 s en la NVIDIA.
   HyperFrames no acepta flags propios de Chrome; se arregla con la preferencia de Windows para el
   `chrome-headless-shell.exe` nuevo, y hay que repetirlo con cada versión de Chrome.
+  Con la preferencia puesta (18-nov): render 139 s → 94 s en la NVIDIA, corrida 301 s → 260 s (4,3 min).
 - Captura rápida (`PRODUCER_EXPERIMENTAL_FAST_CAPTURE=true`): descartada. Se desactiva sola por
   `filter: blur` ("drawElementImage cannot reproduce it"): 82 s frente a 77 s. Quitar el desenfoque
   cambia el aspecto y pide nota a ciegas.
