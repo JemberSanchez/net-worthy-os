@@ -38,6 +38,12 @@ CRITERIOS = ("una_idea", "bucle_abierto", "giro")
 # PROVISIONAL thresholds (docs/mejora/guion/linea_base.md): 10 scripts, 5 with >=30 measured views.
 TU_PALABRA_MAX = 19  # second 6 at 3.1 words/s; measured: median 19 words before 6 s (words.json, n=10)
 CIFRAS_MAX = 3
+# long-form (tipo_video "largo", decision 6 of F1): 8-10 min, chapters, the promise inside 30 s, no figure cap;
+# the per-chapter creative structure only warns (docs/POLITICA.md: creative issues do not block)
+LARGO_PALABRAS = (1300, 1600)
+LARGO_TU_MAX = int(30 * PALABRAS_POR_S)
+LARGO_CAPITULOS_MIN = 3
+LARGO_SOLO_AVISO = ("G-GIRO", "G-BUCLE", "G-CIERRE")
 CIERRE_VENTANA = 3  # a close type cannot repeat within the last N published videos
 
 NUMEROS = {
@@ -420,7 +426,7 @@ def _puerta_gancho(fs: list[dict]) -> dict:
     }
 
 
-def _puerta_tu(fs: list[dict]) -> dict:
+def _puerta_tu(fs: list[dict], tope: int = TU_PALABRA_MAX) -> dict:
     ps = [w.strip('.,:;?!"') for f in fs for w in _normal(f["texto"]).split()]
     pos = next(
         (
@@ -432,8 +438,8 @@ def _puerta_tu(fs: list[dict]) -> dict:
     )
     return {
         "id": "G-TU",
-        "ok": pos is not None and pos <= TU_PALABRA_MAX,
-        "detalle": f"espectador en la palabra {pos} (≤{TU_PALABRA_MAX})"
+        "ok": pos is not None and pos <= tope,
+        "detalle": f"espectador en la palabra {pos} (≤{tope})"
         if pos
         else "nunca habla del espectador",
     }
@@ -501,7 +507,12 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
     if proy.name in pub or list((proy / "renders").glob("*-final.mp4")):
         return True, "exento: vídeo anterior a la puerta o ya publicado"
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
-    ps = puertas(sb["guion"], previos=cierres_previos(proy, pub))
+    ps = puertas(
+        sb["guion"],
+        previos=cierres_previos(proy, pub),
+        tipo_video=sb.get("tipo_video", "short"),
+        capitulos=sb.get("capitulos"),
+    )
     fallan = [f"{p['id']}: {p['detalle']}" for p in ps if not p["ok"]]
     if not sb.get(
         "formato"
@@ -512,21 +523,47 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
     return not fallan, " · ".join(fallan) or f"{len(ps)} puertas de guion OK"
 
 
-def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
+def _puerta_capitulos(caps: list[dict] | None, n_frases: int) -> dict:
+    desde = [c.get("desde") for c in caps or []]
+    ok = (
+        len(desde) >= LARGO_CAPITULOS_MIN
+        and desde[0] == 0
+        and all(isinstance(d, int) and d < n_frases for d in desde)
+        and desde == sorted(set(desde))
+        and all((c.get("titulo") or "").strip() for c in caps or [])
+    )
+    return {
+        "id": "G-CAPITULOS",
+        "ok": ok,
+        "detalle": f"{len(desde)} capítulos desde {desde} (≥{LARGO_CAPITULOS_MIN}, 1.º en 0, crecientes, con título)",
+    }
+
+
+def puertas(
+    frases: list,
+    previos: list[str] | None = None,
+    tipo_video: str = "short",
+    capitulos: list[dict] | None = None,
+) -> list[dict]:
     """Criterios que se miden sin juicio. `frases`: textos o dicts {texto, giro?}.
-    `previos`: close types of earlier videos, newest first (None = no history, nothing vetoed)."""
+    `previos`: close types of earlier videos, newest first (None = no history, nothing vetoed).
+    `tipo_video` "largo": long-form limits; `capitulos` [{titulo, desde: index in `frases`}]."""
     fs = [f if isinstance(f, dict) else {"texto": f} for f in frases]
     n = [len(f["texto"].split()) for f in fs]
     total = sum(n)
+    largo = tipo_video == "largo"
+    pmin, pmax = LARGO_PALABRAS if largo else (PALABRAS_MIN, PALABRAS_MAX)
     out = []
 
     out.append(_puerta_gancho(fs))
-    out.append(_puerta_tu(fs))
+    out.append(_puerta_tu(fs, LARGO_TU_MAX if largo else TU_PALABRA_MAX))
+    if largo:
+        out.append(_puerta_capitulos(capitulos, len(fs)))
     cifras = cifras_protagonistas(" ".join(f["texto"] for f in fs))
     out.append(
         {
             "id": "G-CIFRAS",
-            "ok": len(cifras) <= CIFRAS_MAX,
+            "ok": largo or len(cifras) <= CIFRAS_MAX,
             "detalle": f"{len(cifras)} cifras dichas (≤{CIFRAS_MAX}): {'; '.join(cifras)}",
         }
     )
@@ -558,8 +595,8 @@ def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
     out.append(
         {
             "id": "G-LARGO",
-            "ok": PALABRAS_MIN <= total <= PALABRAS_MAX,
-            "detalle": f"{total} palabras ({PALABRAS_MIN}-{PALABRAS_MAX}) ≈ {total / PALABRAS_POR_S:.1f} s",
+            "ok": pmin <= total <= pmax,
+            "detalle": f"{total} palabras ({pmin}-{pmax}) ≈ {total / PALABRAS_POR_S:.1f} s",
         }
     )
 
@@ -603,6 +640,13 @@ def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
             else "la última frase no retoma la primera",
         }
     )
+    if largo:  # creative structure warns only
+        out = [
+            {**p, "ok": True, "detalle": f"aviso: {p['detalle']}"}
+            if p["id"] in LARGO_SOLO_AVISO and not p["ok"]
+            else p
+            for p in out
+        ]
     return out
 
 
