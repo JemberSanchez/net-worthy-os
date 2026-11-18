@@ -235,6 +235,23 @@ class PuertaTest(unittest.TestCase):
             self.assertIsNone(ed.preparar(raiz / "otro", sin))
             self.assertNotIn("transiciones", c.plan(sin, palabras()))
 
+    def test_sonido_anadido_tras_congelar_tambien_rota(self):
+        """E7 (errores.json): a sound added after the first build missed the frozen swap map and kept
+        the recording the previous video used ("efectos: 0.571 > 0.34", berkshire-1999 15-nov)."""
+        with tempfile.TemporaryDirectory() as t:
+            raiz = Path(t)
+            a = crear(raiz, sb_nuevo("a", edicion={"sfx": {"thud": "golpe_hondo"}}))
+            pa, sa = construido(raiz, sb_nuevo("a"))
+            ed.registrar(a, pa, sa)
+            b = crear(raiz, sb_nuevo("b"))
+            pb, sb = construido(raiz, sb_nuevo("b"))
+            ed.registrar(b, pb, sb)
+            editado = sb_nuevo("b")
+            editado["sonidos"].append({"sfx": "golpe_hondo", "en": "3"})
+            ed.preparar(b, editado)
+            self.assertNotIn("golpe_hondo", [x["sfx"] for x in editado["sonidos"]])
+            self.assertEqual(editado["sonidos"][0]["sfx"], sb["sonidos"][0]["sfx"])
+
     def test_eleccion_congelada_al_reconstruir(self):
         with tempfile.TemporaryDirectory() as t:
             raiz = Path(t)

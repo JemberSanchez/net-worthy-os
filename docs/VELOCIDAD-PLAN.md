@@ -1,0 +1,82 @@
+# Plan de velocidad de /producir (17-nov-2026)
+
+Fuente: 3 agentes (perfil de 4 sesiones reales, auditoría del motor, investigación externa).
+Scripts del perfil: scratchpad de la sesión (`an2.py`, `turns.py`), no versionados.
+
+## Medido (media de berkshire-1999, strategy-underwater, huang-resigns, huang-exit sin cuelgue)
+
+156 min y ~150 turnos por Short:
+
+| Categoría                                                             | min | %   |
+| --------------------------------------------------------------------- | --- | --- |
+| Espera a procesos (producir/render/crítico), 10-14 corridas por vídeo | 70  | 45  |
+| Espera al usuario (3-8 aprobaciones)                                  | 39  | 25  |
+| Generación de Claude                                                  | 19  | 12  |
+| Voz (heredoc edita storyboard + Kokoro recargado)                     | 10  | 7   |
+| omega cli + publicar dentro de la sesión                              | 9   | 6   |
+| Medios + otras                                                        | 9   | 5   |
+
+- 25 de 45 corridas fallaron en puertas (proyecto: 59/123, 205 de 735 min).
+- Turnos: solo 22 % creativos; 31 % vigilando logs, 11 % editando JSON con heredoc, 11 % ceremonia.
+- Máquina pura por Short bien hecho: ~14 min. Render: 114 s. **El renderer no es el cuello.**
+
+## Decisión técnica
+
+Mantener HyperFrames (ninguna alternativa tiene medición que justifique migrar; el render es ~2 min).
+Atacar: reintentos completos, puertas tardías, storyboard escrito a mano, vigilancia y aprobaciones.
+
+## Trinquete de errores (base de la Fase 1): cada error ocurre UNA vez
+
+Ya existe: `renders/corridas.jsonl` guarda la regla exacta que falla, `tools/resumen_corridas.py`
+la agrupa por clase (`clase()`), `autoarreglo.py` arregla las mecánicas, `tests/test_cero_errores.py`
+reproduce cada defecto en un fixture. Falta cerrar el ciclo:
+
+1. **Registro versionado** `video-v2/motor/errores.json`: clase de error → `{estado, donde, test, desde}`.
+   Estados: `imposible` (el compilador ya no puede generarlo), `prevenido` (chequeo estático antes de
+   la voz que lo corrige solo), `autoarreglo` (parche mecánico), `abierto`.
+2. **Error nuevo = parada**: si una corrida falla con una clase que no está en el registro,
+   `producir.py` la añade como `abierto`, imprime `ERROR NUEVO` y para. `/producir` obliga a
+   arreglar la causa ANTES de seguir con el vídeo, en este orden de preferencia: imposible >
+   prevenido > autoarreglo, siempre con un test que lo reproduce primero.
+3. **Test trinquete** `test_registro_errores`: falla si una clase no `abierta` no nombra una función
+   y un test que existen, o si reaparece en `corridas.jsonl` después de su `desde` (regresión).
+4. Métrica en `resumen_corridas`: errores repetidos tras su arreglo (meta 0) y minutos perdidos.
+
+Límite honesto: un error de una clase NUNCA vista puede ocurrir una vez; lo que el sistema garantiza es
+que no vuelve. Primeras entradas (del log): repetición de efectos, gancho oscuro, contraste, borde
+social, ritmo, corte a media frase.
+
+## Fase 1: quitar corridas fallidas y esperas (días)
+
+1. Reintento desde la etapa que falló, no `producir()` entero (`producir.py` `producir_auto`).
+2. Puertas estáticas ANTES de voz/render: repetición de efectos (rotar sfx solo), luma del gancho
+   y del fondo medida al elegir el medio (opacidad del overlay calculada), corte a media frase,
+   borde de texto social medido en layout, `huecos_estaticos` como bloqueo en `validar`.
+3. Kokoro: worker persistente + comprobar CUDA en el venv; re-sintetizar solo frases cambiadas.
+4. Social, ritmo y loudness en paralelo con el crítico.
+5. Crítico en una pasada, sin rondas (ninguna ronda ganó a la ronda 0 en 11 proyectos).
+6. Render: `looks` en vez de `high` y `--workers` según `npx hyperframes benchmark`.
+7. Una sola orden `producir.py --auto` que corre todo y avisa al terminar: Claude no vigila logs.
+
+Meta Fase 1: 1 corrida por Short, ~15 min de máquina.
+
+## Fase 2: brief → compilador (1-2 semanas)
+
+Claude escribe solo un brief (~400 tokens): guion, cifras con URL, ~10 beats
+`{frase, dato?, concepto_medio, prueba?}`. Código compila el storyboard entero con las `m_*`
+existentes de `construir.py`: anclas desde la alineación, golpes/calientes desde cifras, sfx por
+tipo de escena, mood, rótulos, social y publicación por plantilla, tipo de escena por la regla de
+variedad. Medios desde biblioteca local ya revisada (`visto`); solo un concepto nuevo pide hoja.
+
+Meta Fase 2: ~25-30 turnos, 20-30 min tema → preview.
+
+## No se pierde (medido o codificado)
+
+Alineación forzada, reparación V1 de pausas, ducking M1, -14 LUFS / pico < -1 dBTP, ritmo ≤ 2,5 s,
+gancho C1, contraste WCAG AA, OCR de clips (marcas/tickers), prueba documental con OCR, cifras con
+URL + aviso YMYL, puerta `repeticion`, aprobación del crítico sobre el SHA del MP4 final.
+
+## Verificación
+
+Cada fase se mide en un Short real: minutos de reloj y turnos (`costo.json`) y corridas
+(`tools/resumen_corridas.py`). Calidad: nota a ciegas del usuario vs un Short previo (POLITICA.md).

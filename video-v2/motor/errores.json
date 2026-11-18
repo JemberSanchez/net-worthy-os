@@ -1,0 +1,69 @@
+[
+  {
+    "id": "E1",
+    "patron": "gancho\\ oscuro\\ o\\ plano:\\ luma\\ \\d+(?:[.,]\\d+)?",
+    "estado": "abierto",
+    "ejemplo": "gancho: gancho oscuro o plano: luma 8.2 (mín. 30), contraste 27.1 (mín. 25): más opacidad del fondo o un clip más claro",
+    "desde": "2026-11-14"
+  },
+  {
+    "id": "E2",
+    "patron": "Hay\\ \\d+(?:[.,]\\d+)?\\ s\\ sin\\ nada\\ nuevo\\ en\\ pantalla:\\ ahí\\ es\\ donde\\ se\\ va\\ la\\ gente\\.",
+    "estado": "abierto",
+    "ejemplo": "Hay 2.8 s sin nada nuevo en pantalla: ahí es donde se va la gente.",
+    "desde": "2026-11-14"
+  },
+  {
+    "id": "E3",
+    "patron": "diapositiva\\ \\d+(?:[.,]\\d+)?:\\ .+?\\ toca\\ el\\ borde",
+    "estado": "abierto",
+    "ejemplo": "diapositiva 2: \"ce (in\" toca el borde",
+    "desde": "2026-11-14"
+  },
+  {
+    "id": "E4",
+    "patron": "diapositiva\\ \\d+(?:[.,]\\d+)?:\\ el\\ título\\ .+?\\ no\\ se\\ lee\\ en\\ la\\ imagen",
+    "estado": "abierto",
+    "ejemplo": "diapositiva 6: el título \"Would you hold a bitcoin vault?\" no se lee en la imagen",
+    "desde": "2026-11-14"
+  },
+  {
+    "id": "E5",
+    "patron": "escena\\ \\d+(?:[.,]\\d+)?:\\ .+?\\ se\\ ve\\ solo\\ \\d+(?:[.,]\\d+)?s\\ desde\\ \\d+(?:[.,]\\d+)?s",
+    "estado": "abierto",
+    "ejemplo": "escena 7: \"Buying more: harder\" se ve solo 0.18s desde 27.9s (< 0.5): retrasa el corte o adelanta el texto",
+    "desde": "2026-11-14"
+  },
+  {
+    "id": "E6",
+    "patron": "el\\ corte\\ en\\ \\d+(?:[.,]\\d+)?s\\ cae\\ tras\\ .+?,\\ sin\\ terminar\\ la\\ frase:\\ ancla\\ al\\ final\\ de\\ una\\ frase",
+    "estado": "abierto",
+    "ejemplo": "historia: el corte en 6.6s cae tras \"looked\", sin terminar la frase: ancla al final de una frase",
+    "desde": "2026-11-15"
+  },
+  {
+    "id": "E7",
+    "patron": "repite\\ los\\ últimos\\ vídeos:\\ efectos:\\ \\d+(?:[.,]\\d+)?\\ >\\ \\d+(?:[.,]\\d+)?\\ con\\ los\\ últimos\\ \\d+(?:[.,]\\d+)?\\ vídeos",
+    "estado": "imposible",
+    "ejemplo": "repite los últimos vídeos: efectos: 0.571 > 0.34 con los últimos 3 vídeos (Deep hit (Gravity Sound).wav, Knocking on wood or door.ogg, Rubber seal dabbed on ink pad.ogg, Turning a page.ogg)",
+    "desde": "2026-11-15",
+    "donde": "edicion.preparar",
+    "test": "test_sonido_anadido_tras_congelar_tambien_rota",
+    "cerrado": "2026-11-17",
+    "causa": "a sound added after the first build missed the frozen swap map"
+  },
+  {
+    "id": "E8",
+    "patron": "guion\\ repite\\ .+?",
+    "estado": "abierto",
+    "ejemplo": "guion repite «this is not advice» (1 frases de 4 palabras) · misma apertura: titulo · parecido recursos 0.3 con strategy-underwater (> 0.25): clip:32805742, clip:35039725, clip:35417493",
+    "desde": "2026-11-15"
+  },
+  {
+    "id": "E9",
+    "patron": "\\[alta\\]\\ L\\d+(?:[.,]\\d+)?\\ t=\\d+(?:[.,]\\d+)?s\\ escena\\ \\d+(?:[.,]\\d+)?\\ ·\\ .+?\\ \\d+(?:[.,]\\d+)?:\\d+(?:[.,]\\d+)?\\ en\\ el\\ DOM",
+    "estado": "abierto",
+    "ejemplo": "[alta] L1 t=12.6s escena 3 · \"burst\" 2.02:1 en el DOM (< 3, WCAG AA) → parche",
+    "desde": "2026-11-15"
+  }
+]

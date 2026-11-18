@@ -492,10 +492,19 @@ def preparar(proy: Path, sb: dict, reelegir: bool = False) -> dict | None:
     fila = entrada(reg, sb["ref"])
     if fila and fila.get("legacy") and not reelegir:
         return None
+    firmas = [v["firma"] for v in previas(reg, sb["ref"], sb.get("marca"))]
     if fila and fila.get("eleccion") and not reelegir:
         e = fila["eleccion"]  # frozen: re-rendering must give the same video
+        cat = _cat_sfx()
+        if any(  # a sound added after freezing gets its own swap (E7 in errores.json)
+            (cat.get(x.get("sfx")) or {}).get("rol") in ROLES_CAMBIABLES
+            and x.get("sfx") not in e["sfx"]
+            for x in sb.get("sonidos") or []
+        ):
+            # frozen swaps keep priority; shortcut: the new one may reuse a recording of this video
+            e = {**e, "sfx": {**elegir(sb, firmas, cat)["sfx"], **e["sfx"]}}
     else:
-        e = elegir(sb, [v["firma"] for v in previas(reg, sb["ref"], sb.get("marca"))])
+        e = elegir(sb, firmas)
     aplicar(sb, e)
     return e
 

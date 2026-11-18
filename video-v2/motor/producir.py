@@ -1093,7 +1093,9 @@ def reglas_fallidas(detalles: dict) -> dict[str, list[str]]:
             continue
         ls = [x.strip() for x in d.splitlines() if x.strip()]
         items = (
-            [x[4:].strip() for x in d.splitlines() if x.startswith("  - ")]  # StoryboardError list
+            [
+                x[4:].strip() for x in d.splitlines() if x.startswith("  - ")
+            ]  # StoryboardError list
             or [x.lstrip("✗ ") for x in ls if x.startswith("✗")]
             or ls[-1:]
         )
@@ -1199,3 +1201,10 @@ if __name__ == "__main__":
         reg = Path(sys.argv[1]) / "renders" / "corridas.jsonl"
         if reg.parent.exists():
             registrar_corrida(reg, t0, fallo, sys.argv, DETALLES, PENDIENTES)
+            if (
+                fallo
+            ):  # the ratchet: a new error class stops here until its cause is fixed
+                import errores
+
+                ultima = json.loads(reg.read_text(encoding="utf-8").splitlines()[-1])
+                errores.avisar(errores.revisar(errores.reglas_de(ultima)))
