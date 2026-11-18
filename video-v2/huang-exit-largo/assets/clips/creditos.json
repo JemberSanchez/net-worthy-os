@@ -1,0 +1,68 @@
+[
+ {
+  "archivo": "placa.src",
+  "origen": "pexels",
+  "titulo": "pexels:7609195",
+  "autor": "Steve B",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-video-of-a-circuit-board-7609195/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "oficina.src",
+  "origen": "pexels",
+  "titulo": "pexels:8347240",
+  "autor": "Kampus Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/an-empty-office-8347240/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "retro.src",
+  "origen": "pexels",
+  "titulo": "pexels:15069622",
+  "autor": "Stefan",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/vintage-crt-monitor-tv-in-the-dark-15069622/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "nyse.src",
+  "origen": "pexels",
+  "titulo": "pexels:35039725",
+  "autor": "Yetkin Ağaç",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/moody-black-and-white-urban-building-scene-35039725/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "pantalla.src",
+  "origen": "pexels",
+  "titulo": "pexels:38771102",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-stock-market-graph-on-screen-38771102/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "mercado.src",
+  "origen": "pexels",
+  "titulo": "pexels:39020626",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/dynamic-stock-trading-data-on-monitors-39020626/",
+  "desde": 2.0
+ }
+]
