@@ -200,3 +200,29 @@ carrusel para el long-form; generador de posts de texto (regla vigente); un sele
 - RPM de finanzas con un rango amplio ($2-40): el plan usa $5-15 como supuesto.
 - El "related video" es manual: si se olvida, el embudo se rompe en silencio.
 - El layout 16:9 es rediseño, no reescalado: es la mayor parte de F1.
+
+## 9. Alternativas evaluadas (18-nov, GitHub + historial propio)
+
+Detalle con estrellas, licencias y URLs: nota `alternativas-github.md` del grupo de sesiones.
+
+- **Generadores faceless** (MoneyPrinterTurbo 144k★, MoneyPrinterV2, ShortGPT, short-video-maker): **ignorar**.
+  Son clips de stock + TTS + subtítulos con plantilla, sin datos reales ni QA: justo lo que la política de
+  inautenticidad desmonetiza, y la sanción cae sobre el canal entero.
+- **Cambiar de framework** (Remotion, Revideo, Motion Canvas, MoviePy): **ignorar**. Remotion ya se descartó
+  (`docs/V2-CALIDAD.md:39-41`) y ninguno publica s/s medidos; el único dato real es nuestro 1,83 s/s.
+- **Lo que HyperFrames ya trae y no usamos → ADOPTAR en F1/F3:**
+  1. `hyperframes check` para layout/oclusión (overflow, clipping, overlaps, `text_occluded`, `--range`).
+     Hoy `producir.py:539` solo lee el contraste. Caza texto cortado antes del render.
+  2. `render --start/--end` para re-renderizar **solo un capítulo** + `ffmpeg` concat-copy. Medir antes de adoptar:
+     `--gpu` (NVENC) y `--workers` (en el Short, más workers fue ruido: `VELOCIDAD-PLAN.md:70-73`).
+  3. `hyperframes lambda`/Cloud Run por chunks: solo si el render local de 10 min no alcanza (coste en la nube).
+- **OCR guiado por la timeline** (§5.5): nadie lo publica, hay que montarlo nosotros (poco código). Considerar
+  después, con medición: reconocimiento solo sobre recortes del DOM (`use_det=False`), detector a 960, onnxruntime-gpu.
+- **TTS:** seguir con Kokoro. Chatterbox-Turbo (MIT) es el único rival comercial limpio, pero el repo está
+  archivado: solo en prueba a ciegas. F5, XTTS, Higgs y Fish quedan fuera por licencia (ya en `docs/mejora/sonido/PLAN.md`).
+- **Alineador:** ctc-forced-aligner (BSD-2) alinea el texto exacto sin ASR. Solo si se mide deriva en 10 min;
+  la sincronía de los Shorts está resuelta.
+- **Miniaturas:** no hay herramienta abierta creíble. Test & Compare de YouTube Studio + variantes propias (§5.4).
+
+Corrección a §7: "render por segmentos" se mantiene fuera para la PRIMERA pasada, pero el re-render de un capítulo
+con `--start/--end` entra en F3.
