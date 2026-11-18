@@ -1,0 +1,92 @@
+[
+ {
+  "archivo": "caja.src",
+  "origen": "wikimedia",
+  "titulo": "File:WWS CashregisteratWolkoffHouseMuseum.ogg",
+  "autor": "Work With Sounds / Werstas",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:WWS_CashregisteratWolkoffHouseMuseum.ogg"
+ },
+ {
+  "archivo": "escaner.src",
+  "origen": "wikimedia",
+  "titulo": "File:Alien technology scanning device.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Alien_technology_scanning_device.ogg"
+ },
+ {
+  "archivo": "golpe_hondo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Deep hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Deep_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "nudillo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Knocking on wood or door.ogg",
+  "autor": "stephan",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Knocking_on_wood_or_door.ogg"
+ },
+ {
+  "archivo": "riser_viento.src",
+  "origen": "wikimedia",
+  "titulo": "File:Wind outside atmosphere (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Wind_outside_atmosphere_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "sala_servidores.src",
+  "origen": "wikimedia",
+  "titulo": "File:Server Room (Antti Luode).mp3",
+  "autor": "Antti Luode",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Server_Room_(Antti_Luode).mp3"
+ },
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ },
+ {
+  "archivo": "timbal.src",
+  "origen": "wikimedia",
+  "titulo": "File:Timpani 64-c-p5.wav",
+  "autor": "spt3125",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Timpani_64-c-p5.wav"
+ },
+ {
+  "archivo": "ventana.src",
+  "origen": "wikimedia",
+  "titulo": "File:Flapping window closing.ogg",
+  "autor": "ezwa",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Flapping_window_closing.ogg"
+ }
+]

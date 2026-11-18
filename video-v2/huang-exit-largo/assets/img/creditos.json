@@ -1,0 +1,92 @@
+[
+  {
+    "archivo": "gpu.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:GPU blade with glycol cooling (54685994424).jpg",
+    "autor": "Steve Jurvetson",
+    "licencia": "CC BY 4.0",
+    "clase": "cc-by",
+    "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+    "fuente": "https://commons.wikimedia.org/wiki/File:GPU_blade_with_glycol_cooling_(54685994424).jpg"
+  },
+  {
+    "archivo": "hq.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:Nvidia HQ.jpg",
+    "autor": "Kevin McCarthy",
+    "licencia": "CC BY 2.0",
+    "clase": "cc-by",
+    "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+    "fuente": "https://commons.wikimedia.org/wiki/File:Nvidia_HQ.jpg"
+  },
+  {
+    "archivo": "empac.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:EMPACBalcony.JPG",
+    "autor": "UpstateNYer",
+    "licencia": "CC BY 3.0",
+    "clase": "cc-by",
+    "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+    "fuente": "https://commons.wikimedia.org/wiki/File:EMPACBalcony.JPG"
+  },
+  {
+    "archivo": "riva.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:Package open - NVIDIA RIVA 128 - John McMaster.jpg",
+    "autor": "John McMaster",
+    "licencia": "CC BY 4.0",
+    "clase": "cc-by",
+    "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+    "fuente": "https://commons.wikimedia.org/wiki/File:Package_open_-_NVIDIA_RIVA_128_-_John_McMaster.jpg"
+  },
+  {
+    "archivo": "voodoo.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:3dfx Voodoo 5500.jpg",
+    "autor": "Austriacus",
+    "licencia": "CC0",
+    "clase": "cc0",
+    "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "fuente": "https://commons.wikimedia.org/wiki/File:3dfx_Voodoo_5500.jpg"
+  },
+  {
+    "archivo": "geforce.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:VisionTek GeForce 256.jpg",
+    "autor": "Hyins",
+    "licencia": "Public domain",
+    "clase": "pd",
+    "url_licencia": "",
+    "fuente": "https://commons.wikimedia.org/wiki/File:VisionTek_GeForce_256.jpg"
+  },
+  {
+    "archivo": "nvsign.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:Nvidia sign.jpg",
+    "autor": "Will Buckner",
+    "licencia": "CC BY 2.0",
+    "clase": "cc-by",
+    "url_licencia": "https://creativecommons.org/licenses/by/2.0",
+    "fuente": "https://commons.wikimedia.org/wiki/File:Nvidia_sign.jpg"
+  },
+  {
+    "archivo": "dreamcast.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:Sega-Dreamcast-Console-BR.jpg",
+    "autor": "Evan-Amos",
+    "licencia": "Public domain",
+    "clase": "pd",
+    "url_licencia": "",
+    "fuente": "https://commons.wikimedia.org/wiki/File:Sega-Dreamcast-Console-BR.jpg"
+  },
+  {
+    "archivo": "dennys.jpg",
+    "origen": "wikimedia",
+    "titulo": "File:Denny's Restaurant 24.jpg",
+    "autor": "No machine-readable author provided. Kici assumed (based on copyright claims).",
+    "licencia": "Public domain",
+    "clase": "pd",
+    "url_licencia": "",
+    "fuente": "https://commons.wikimedia.org/wiki/File:Denny%27s_Restaurant_24.jpg"
+  }
+]
