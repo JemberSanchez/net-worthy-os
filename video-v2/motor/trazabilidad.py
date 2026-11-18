@@ -96,7 +96,13 @@ def _valor_hablado(run: list[str]) -> float:
         dec = "".join(str(_NUM[w]) for w in cola if w in _NUM)
         return float(f"{_entero(run[:k]):.0f}.{dec or 0}") * esc
     siglo = ("sixteen", "seventeen", "eighteen", "nineteen", "twenty")
-    if len(run) >= 2 and run[0] in siglo and run[1] in _NUM and _NUM[run[1]] >= 10:
+    # also "one twenty eight" (128) and "two fifty six" (256): hundreds read like a year
+    if (
+        len(run) >= 2
+        and (run[0] in siglo or _NUM.get(run[0], 99) < 10)
+        and run[1] in _NUM
+        and _NUM[run[1]] >= 10
+    ):
         return _NUM[run[0]] * 100 + _entero(run[1:])
     return _entero(run)
 
