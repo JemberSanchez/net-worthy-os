@@ -1,0 +1,65 @@
+{
+  "production_ref": "strategy-underwater",
+  "hook_type": "contradiction",
+  "story_type": "news_explainer",
+  "cta_type": "fact",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 36,
+  "blocks": [
+    {
+      "block": "f1",
+      "technique": "titulo",
+      "length_s": 4.82
+    },
+    {
+      "block": "f2",
+      "technique": "foto+clip",
+      "length_s": 2.52
+    },
+    {
+      "block": "f3",
+      "technique": "revelacion",
+      "length_s": 3.21
+    },
+    {
+      "block": "f4",
+      "technique": "v2-storyboard",
+      "length_s": 2.86
+    },
+    {
+      "block": "f5",
+      "technique": "titulo",
+      "length_s": 2.49
+    },
+    {
+      "block": "f6",
+      "technique": "foto",
+      "length_s": 2.54
+    },
+    {
+      "block": "f7",
+      "technique": "revelacion",
+      "length_s": 2.9
+    },
+    {
+      "block": "f9",
+      "technique": "lista",
+      "length_s": 2.67
+    },
+    {
+      "block": "f10",
+      "technique": "foto",
+      "length_s": 3.32
+    },
+    {
+      "block": "f11",
+      "technique": "foto+clip",
+      "length_s": 4.09
+    },
+    {
+      "block": "f12",
+      "technique": "puntos",
+      "length_s": 4.98
+    }
+  ]
+}

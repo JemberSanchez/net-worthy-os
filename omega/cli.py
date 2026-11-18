@@ -1700,7 +1700,7 @@ def cmd_analytics_sync() -> None:
         bus = ", ".join(f"'{t}' {n}" for t, n in r["busquedas"]) or "—"
         print(
             f"  {ref}: {r['views']} vistas{eng} · visto {r['avg_view_pct_raw']:.0%} · {pc}\n"
-            f"      tráfico: {r['traffic_source']} · búsquedas: {bus} · {f'score {puntuado[0]:.3f} ({scoring.SCORE_VERSION})' if puntuado else f'sin score (< {scoring.MIN_VISTAS} vistas)'}"
+            f"      tráfico: {r['traffic_source']} · autopsia: {ay.autopsia(r['views'], r['traffic_breakdown'], r['avg_view_pct_raw'])} · búsquedas: {bus} · {f'score {puntuado[0]:.3f} ({scoring.SCORE_VERSION})' if puntuado else f'sin score (< {scoring.MIN_VISTAS} vistas)'}"
         )
     con.close()
     if medidos:
@@ -1943,6 +1943,56 @@ def cmd_estado_subir() -> None:
         raise SystemExit(f"✗ {e}")
 
 
+def cmd_fotos() -> None:
+    """Hourly public counters of videos published in the last week (docs/OBSERVATORIO.md P0)."""
+    from . import analytics_yt as ay
+    from .creative import production_dna
+    from .reasoning import store as kstore
+
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    yt, _ = ay._clientes()
+    n = ay.fotos(con, yt)
+    con.close()
+    print(f"{n} fotos guardadas en production_snapshot.")
+
+
+def cmd_autopsia() -> None:
+    """Why each published Short did or did not spread (needs analytics-sync data, ~72 h)."""
+    from collections import Counter
+
+    from . import analytics_yt as ay
+    from .creative import production_dna
+    from .reasoning import store as kstore
+
+    con = kstore.connect(str(config.DB_PATH))
+    production_dna.init(con)
+    filas = con.execute(
+        "SELECT production_ref, views, traffic_breakdown, avg_view_pct_raw "
+        "FROM production_analytics ORDER BY views DESC"
+    ).fetchall()
+    con.close()
+    causas = Counter()
+    sin_desglose = 0
+    for ref, views, traf, avp in filas:
+        if traf is None:
+            sin_desglose += 1
+            continue
+        t = json.loads(traf)
+        c = ay.autopsia(views, t, avp)
+        causas[c] += 1
+        visto = "—" if avp is None else f"{avp:.0%}"
+        print(
+            f"  {ref:22} {c:17} feed {t.get('SHORTS', 0):>5} / {views or 0:>5} · visto {visto}"
+        )
+    print()
+    print(" · ".join(f"{k} {v}" for k, v in causas.most_common()))
+    if sin_desglose:
+        print(
+            f"{sin_desglose} sin desglose de tráfico: correr analytics-sync para rellenarlo."
+        )
+
+
 def main(argv: list[str]) -> int:
     cmds = {
         "ingest": cmd_ingest,
@@ -1980,6 +2030,8 @@ def main(argv: list[str]) -> int:
         "publish-social": cmd_publish_social,
         "analytics-sync": cmd_analytics_sync,
         "meta-sync": cmd_meta_sync,
+        "fotos": cmd_fotos,
+        "autopsia": cmd_autopsia,
         "estado-bajar": cmd_estado_bajar,
         "estado-subir": cmd_estado_subir,
         "produccion-guardar": cmd_produccion_guardar,

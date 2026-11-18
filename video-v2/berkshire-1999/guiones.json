@@ -1,0 +1,168 @@
+{
+  "estructuras": [
+    {
+      "id": "error",
+      "nombre": "error comun",
+      "frases": [
+        {
+          "id": "f1",
+          "texto": "Berkshire Hathaway, a legendary stock, fell twenty percent in 1999 while the market soared."
+        },
+        {
+          "id": "f2",
+          "texto": "If you owned it, Warren Buffett looked finished."
+        },
+        {
+          "id": "f3",
+          "texto": "Selling right there is the most common mistake in investing.",
+          "giro": true
+        },
+        {
+          "id": "f4",
+          "texto": "The next year, the tech bubble burst."
+        },
+        {
+          "id": "f5",
+          "texto": "Berkshire went up while the market went down.",
+          "giro": true
+        },
+        {
+          "id": "f6",
+          "texto": "That wasn't even its worst year."
+        },
+        {
+          "id": "f7",
+          "texto": "Years earlier, it had crashed even harder.",
+          "giro": true
+        },
+        {
+          "id": "f8",
+          "texto": "The people who held from the start earned almost twenty percent a year."
+        },
+        {
+          "id": "f9",
+          "texto": "The market earned about ten."
+        },
+        {
+          "id": "f10",
+          "texto": "But for every Berkshire, thousands of stocks fell and never came back.",
+          "giro": true
+        },
+        {
+          "id": "f11",
+          "texto": "This is not advice."
+        },
+        {
+          "id": "f12",
+          "texto": "Remember Berkshire in 1999 the next time the market scares you."
+        }
+      ]
+    },
+    {
+      "id": "misterio",
+      "nombre": "misterio",
+      "frases": [
+        {
+          "id": "f1",
+          "texto": "Berkshire Hathaway, the best stock of the last half century, lost twenty percent in 1999."
+        },
+        {
+          "id": "f2",
+          "texto": "Most people who sold that year never got back in."
+        },
+        {
+          "id": "f3",
+          "texto": "So why did Buffett refuse to chase tech?",
+          "giro": true
+        },
+        {
+          "id": "f4",
+          "texto": "He said he could not understand those businesses."
+        },
+        {
+          "id": "f5",
+          "texto": "The next year, the tech bubble burst.",
+          "giro": true
+        },
+        {
+          "id": "f6",
+          "texto": "Berkshire went up while the market went down."
+        },
+        {
+          "id": "f7",
+          "texto": "Over six decades it compounded almost twenty percent a year.",
+          "giro": true
+        },
+        {
+          "id": "f8",
+          "texto": "The market did about ten."
+        },
+        {
+          "id": "f9",
+          "texto": "But for every Berkshire, thousands of stocks fell and never came back.",
+          "giro": true
+        },
+        {
+          "id": "f10",
+          "texto": "This is not advice."
+        },
+        {
+          "id": "f11",
+          "texto": "Remember Berkshire the next time a bad year scares you."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Berkshire Hathaway, a legendary stock, fell twenty percent in 1999 while the market soared."
+    },
+    {
+      "id": "g2",
+      "texto": "Berkshire Hathaway, a legendary stock, trailed the market by forty points in 1999."
+    },
+    {
+      "id": "g3",
+      "texto": "Berkshire Hathaway, a legendary stock, looked broken in 1999."
+    }
+  ],
+  "cifras": [
+    {
+      "dato": "Berkshire 1999 -19.9% vs S&P +21.0%; 2000 +26.6% vs -9.1%; 1974 -48.7%; 1965-2024 compounded 19.9% vs 10.4%",
+      "url": "https://www.berkshirehathaway.com/letters/2024ltr.pdf"
+    }
+  ],
+  "juicio": {
+    "error": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Story advances at the midpoint (bubble bursts, Berkshire rises) instead of explaining a statistic."
+    },
+    "misterio": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Buffett quote on tech needs its own source; f2 claim is unverifiable."
+    },
+    "error+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Clear story start; 'fell twenty percent' is concrete but common."
+    },
+    "error+g2": {
+      "una_idea": 5,
+      "bucle_abierto": 5,
+      "giro": 4,
+      "nota": "Forty-point gap is hard to believe and verified (-19.9 vs +21.0); opens the why."
+    },
+    "error+g3": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "'Looked broken' is vague, no number to anchor."
+    }
+  }
+}

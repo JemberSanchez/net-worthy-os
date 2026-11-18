@@ -95,6 +95,30 @@ class AudioContraGuionTest(unittest.TestCase):
         r = mga.comparar("this is a binance heist", hablado("this is a by nance heist"))
         self.assertEqual((r["grave"], r["leve"]), ([], []))
 
+    def test_eco_de_whisper_en_limite_de_frase_no_salta(self):
+        # strategy-underwater, 14-nov: the full-file transcription heard "Bitcoin, Bitcoin," with the copy
+        # starting exactly where the first ends, over silence; a 3.5 s cut of the same audio hears it once
+        oidas_ = [
+            {"word": " a", "start": 24.6, "end": 24.8},
+            {"word": " single", "start": 24.8, "end": 25.02},
+            {"word": " Bitcoin,", "start": 25.02, "end": 25.4},
+            {"word": " Bitcoin,", "start": 25.4, "end": 25.58},
+            {"word": " but", "start": 25.96, "end": 26.22},
+        ]
+        r = mga.comparar("a single bitcoin. But", oidas_)
+        self.assertEqual((r["grave"], r["leve"]), ([], []))
+
+    def test_repeticion_con_hueco_si_salta(self):
+        oidas_ = [
+            {"word": " a", "start": 24.6, "end": 24.8},
+            {"word": " single", "start": 24.8, "end": 25.02},
+            {"word": " bitcoin", "start": 25.02, "end": 25.4},
+            {"word": " bitcoin", "start": 25.7, "end": 26.0},
+            {"word": " but", "start": 26.1, "end": 26.3},
+        ]
+        r = mga.comparar("a single bitcoin. But", oidas_)
+        self.assertEqual([d["oido"] for d in r["leve"]], ["bitcoin"])
+
     def _revisar(self, mezcla: str, limpia: str, db: float) -> list[dict]:
         sb = {"guion": [{"texto": BIEN}]}
         with mock.patch.object(

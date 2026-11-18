@@ -1,0 +1,278 @@
+{
+ "tam": [
+  1440,
+  620
+ ],
+ "lineas": [
+  {
+   "texto": "BTC Update",
+   "conf": 1.0,
+   "caja": [
+    50,
+    13,
+    195,
+    50
+   ]
+  },
+  {
+   "texto": "On November 9, 2026, Strategy announced updates with respect to its bitcoin holdings:",
+   "conf": 0.995,
+   "caja": [
+    54,
+    78,
+    990,
+    108
+   ]
+  },
+  {
+   "texto": "During Period November 2, 2026 to November 8, 2026",
+   "conf": 1.0,
+   "caja": [
+    74,
+    139,
+    698,
+    169
+   ]
+  },
+  {
+   "texto": "As of November 8, 2026",
+   "conf": 0.979,
+   "caja": [
+    894,
+    140,
+    1168,
+    168
+   ]
+  },
+  {
+   "texto": "Aggregate",
+   "conf": 1.0,
+   "caja": [
+    974,
+    170,
+    1100,
+    204
+   ]
+  },
+  {
+   "texto": "Average",
+   "conf": 1.0,
+   "caja": [
+    588,
+    169,
+    692,
+    203
+   ]
+  },
+  {
+   "texto": "Purchase Price (in",
+   "conf": 0.999,
+   "caja": [
+    322,
+    200,
+    537,
+    228
+   ]
+  },
+  {
+   "texto": "Purchase",
+   "conf": 1.0,
+   "caja": [
+    580,
+    196,
+    697,
+    230
+   ]
+  },
+  {
+   "texto": "Aggregate BTC Purchase Price (in",
+   "conf": 0.996,
+   "caja": [
+    730,
+    196,
+    1146,
+    235
+   ]
+  },
+  {
+   "texto": "BTC Purchased (1)",
+   "conf": 0.998,
+   "caja": [
+    66,
+    218,
+    288,
+    261
+   ]
+  },
+  {
+   "texto": "millions)",
+   "conf": 0.971,
+   "caja": [
+    361,
+    225,
+    470,
+    257
+   ]
+  },
+  {
+   "texto": "(2)",
+   "conf": 1.0,
+   "caja": [
+    658,
+    222,
+    687,
+    248
+   ]
+  },
+  {
+   "texto": "Price",
+   "conf": 1.0,
+   "caja": [
+    588,
+    224,
+    662,
+    257
+   ]
+  },
+  {
+   "texto": "Holdings",
+   "conf": 1.0,
+   "caja": [
+    767,
+    227,
+    880,
+    261
+   ]
+  },
+  {
+   "texto": "billions)",
+   "conf": 1.0,
+   "caja": [
+    972,
+    225,
+    1073,
+    257
+   ]
+  },
+  {
+   "texto": "1,036 $",
+   "conf": 0.99,
+   "caja": [
+    234,
+    258,
+    333,
+    292
+   ]
+  },
+  {
+   "texto": "81.9 $",
+   "conf": 0.992,
+   "caja": [
+    493,
+    257,
+    582,
+    292
+   ]
+  },
+  {
+   "texto": "79,012",
+   "conf": 1.0,
+   "caja": [
+    639,
+    259,
+    722,
+    291
+   ]
+  },
+  {
+   "texto": "850,364 $",
+   "conf": 0.992,
+   "caja": [
+    824,
+    259,
+    949,
+    290
+   ]
+  },
+  {
+   "texto": "64.16 $",
+   "conf": 0.972,
+   "caja": [
+    1080,
+    259,
+    1179,
+    290
+   ]
+  },
+  {
+   "texto": "75,456",
+   "conf": 1.0,
+   "caja": [
+    1249,
+    257,
+    1343,
+    292
+   ]
+  },
+  {
+   "texto": "(1) The bitcoin purchases were made using net proceeds from MSTR Stock sales.",
+   "conf": 0.993,
+   "caja": [
+    55,
+    320,
+    927,
+    350
+   ]
+  },
+  {
+   "texto": "(2) Aggregate and average purchase prices are inclusive of fees and expenses.",
+   "conf": 0.993,
+   "caja": [
+    54,
+    350,
+    889,
+    382
+   ]
+  },
+  {
+   "texto": "Repurchase Program Updates",
+   "conf": 0.999,
+   "caja": [
+    54,
+    414,
+    383,
+    442
+   ]
+  },
+  {
+   "texto": "On November 9, 2026, Strategy announced the following update with respect to its share repurchase programs of the",
+   "conf": 0.998,
+   "caja": [
+    52,
+    473,
+    1345,
+    507
+   ]
+  },
+  {
+   "texto": "following socuritios",
+   "conf": 0.896,
+   "caja": [
+    52,
+    502,
+    260,
+    519
+   ]
+  },
+  {
+   "texto": "following securities:",
+   "conf": 0.995,
+   "caja": [
+    52,
+    504,
+    279,
+    535
+   ]
+  }
+ ]
+}

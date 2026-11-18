@@ -1,0 +1,147 @@
+{
+  "estructuras": [
+    {
+      "id": "contradiccion",
+      "nombre": "contradicción: la empresa que nunca vende, en pérdida y expulsada",
+      "frases": [
+        {
+          "id": "f1",
+          "texto": "(gancho)"
+        },
+        {
+          "id": "f2",
+          "texto": "If you own an index fund, you may own a piece of it."
+        },
+        {
+          "id": "f3",
+          "texto": "It paid about seventy-five thousand dollars per bitcoin."
+        },
+        {
+          "id": "f4",
+          "texto": "This week, bitcoin fell near sixty-four thousand."
+        },
+        {
+          "id": "f5",
+          "texto": "The company built to never sell is underwater.",
+          "giro": true
+        },
+        {
+          "id": "f6",
+          "texto": "Now MSCI is dropping it from its indexes.",
+          "giro": true
+        },
+        {
+          "id": "f7",
+          "texto": "Funds that copy those indexes must sell the stock."
+        },
+        {
+          "id": "f9",
+          "texto": "Strategy doesn't have to sell a single bitcoin.",
+          "giro": true
+        },
+        {
+          "id": "f10",
+          "texto": "But raising cash to buy more just got harder."
+        },
+        {
+          "id": "f11",
+          "texto": "Nobody knows where bitcoin goes next. This is not advice."
+        },
+        {
+          "id": "f12",
+          "texto": "That vault holds about one of every twenty-five bitcoin that will ever exist.",
+          "giro": true
+        }
+      ]
+    },
+    {
+      "id": "cuenta_atras",
+      "nombre": "cuenta atrás: dieciséis días hasta la expulsión",
+      "frases": [
+        {
+          "id": "f1",
+          "texto": "(gancho)"
+        },
+        {
+          "id": "f2",
+          "texto": "In sixteen days, your index fund may sell it."
+        },
+        {
+          "id": "f3",
+          "texto": "It paid about seventy-five thousand per coin."
+        },
+        {
+          "id": "f4",
+          "texto": "Bitcoin just fell near sixty-four thousand."
+        },
+        {
+          "id": "f5",
+          "texto": "The whole stack is worth less than it paid.",
+          "giro": true
+        },
+        {
+          "id": "f6",
+          "texto": "At the end of November, MSCI drops Strategy from its indexes."
+        },
+        {
+          "id": "f7",
+          "texto": "Funds that copy MSCI must sell the shares.",
+          "giro": true
+        },
+        {
+          "id": "f8",
+          "texto": "Strategy is not forced to sell its bitcoin.",
+          "giro": true
+        },
+        {
+          "id": "f9",
+          "texto": "But its machine for buying more runs on selling stock."
+        },
+        {
+          "id": "f10",
+          "texto": "Nobody knows where bitcoin goes next. This is not advice."
+        },
+        {
+          "id": "f11",
+          "texto": "When the clock runs out, the vault is either still full or for sale."
+        }
+      ]
+    }
+  ],
+  "ganchos": [
+    {
+      "id": "g1",
+      "texto": "Strategy went from software company to bitcoin vault and now loses money on its bitcoin."
+    },
+    {
+      "id": "g2",
+      "texto": "Strategy, the company that promised to never sell bitcoin, is getting kicked out of the index."
+    }
+  ],
+  "juicio": {
+    "contradiccion": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Una idea: la empresa que nunca vende está en pérdida y la echan del índice. 'you may own a piece of it' abre el bucle; se cierra con la expulsión y la cifra final del vault. A mitad pasa algo (MSCI entra), no se explica una estadística."
+    },
+    "cuenta_atras": {
+      "una_idea": 4,
+      "bucle_abierto": 4,
+      "giro": 3,
+      "nota": "Cuenta atrás concreta, pero 'sixteen' suma una 4.ª cifra y el cierre es dicotomía forzada."
+    },
+    "contradiccion+g1": {
+      "una_idea": 5,
+      "bucle_abierto": 4,
+      "giro": 4,
+      "nota": "Gancho con nombre poco conocido + aposición y la contradicción dentro (vault que pierde). La mitad avanza la historia (MSCI la expulsa). Cierre dato compartible: uno de cada 25 bitcoin."
+    },
+    "contradiccion+g2": {
+      "una_idea": 4,
+      "bucle_abierto": 3,
+      "giro": 3,
+      "nota": "Adelanta la expulsión en el gancho: gasta el giro de mitad."
+    }
+  }
+}

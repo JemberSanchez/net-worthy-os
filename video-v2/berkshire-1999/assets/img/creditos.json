@@ -1,0 +1,32 @@
+[
+ {
+  "archivo": "omaha.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Downtown Omaha Skyline in Overcast conditions.jpg",
+  "autor": "WiinterU",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Downtown_Omaha_Skyline_in_Overcast_conditions.jpg"
+ },
+ {
+  "archivo": "nasdaq.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:NASDAQ IXIC - dot-com bubble.png",
+  "autor": "Made by ed g2s • talk.",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:NASDAQ_IXIC_-_dot-com_bubble.png"
+ },
+ {
+  "archivo": "nyse_sign.jpg",
+  "origen": "wikimedia",
+  "titulo": "File:Sign of the New York Stock Exchange, Broad Street.jpg",
+  "autor": "Billie Grace Ward",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sign_of_the_New_York_Stock_Exchange,_Broad_Street.jpg"
+ }
+]

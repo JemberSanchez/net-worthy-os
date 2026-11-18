@@ -1,0 +1,57 @@
+[
+ {
+  "archivo": "vieja.src",
+  "origen": "pexels",
+  "titulo": "pexels:8888818",
+  "autor": "MART  PRODUCTION",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-vintage-computer-on-a-table-8888818/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "bolsa.src",
+  "origen": "pexels",
+  "titulo": "pexels:13801266",
+  "autor": "Mizuno K",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/street-signs-on-the-corner-of-broad-st-and-wall-st-new-york-city-13801266/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "chart.src",
+  "origen": "pexels",
+  "titulo": "pexels:36864123",
+  "autor": "Canan İldeniz",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-of-flipping-book-pages-36864123/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "torres.src",
+  "origen": "pexels",
+  "titulo": "pexels:5832878",
+  "autor": "Joshua Santos",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/top-view-of-new-york-5832878/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "nyse.src",
+  "origen": "pexels",
+  "titulo": "pexels:6641647",
+  "autor": "CAPTKHO kho",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/drone-footage-of-new-york-city-6641647/",
+  "desde": 0.0
+ }
+]

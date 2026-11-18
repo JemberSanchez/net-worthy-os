@@ -22,7 +22,28 @@ PARECIDO_MIN = (
 _UNIDADES = {
     w: i
     for i, w in enumerate(
-        ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+        [
+            "zero",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+            "ten",
+            "eleven",
+            "twelve",
+            "thirteen",
+            "fourteen",
+            "fifteen",
+            "sixteen",
+            "seventeen",
+            "eighteen",
+            "nineteen",
+        ]
     )
 }
 _DECENAS = {
@@ -48,6 +69,11 @@ PARECIDO_NUMERO = 0.7  # "four oh" heard as "for a" (0.73) is a slip; "oh" heard
 _HOMOFONOS = {"for": "four", "to": "two", "too": "two", "won": "one", "ate": "eight"}
 # never words of a figure on their own, and the same sound spelled two ways
 _IGUALES = {"o": "oh", "okay": "ok", "per": "percent"}
+# Whisper echo: at a segment boundary it can repeat the last word as a new word that starts exactly
+# where the first ends (strategy-underwater 14-nov: "Bitcoin, Bitcoin," over silence; a cut of the
+# same audio hears it once). shortcut: a real TTS stutter with zero gap would also be dropped; if one
+# ever slips through, check the clip energy in that window instead of timing alone.
+ECO_S = 0.02
 
 
 def tokens(texto: str) -> list[str]:
@@ -117,7 +143,9 @@ def _es_anio(escrito: list[str], oido: list[str]) -> bool:
         if not oido[-1].endswith("ies"):
             return False
         oido = [*oido[:-1], oido[-1][:-3] + "y"]
-    return anio_hablado(oido) == int(m.group(1)) or (not m.group(2) and valor(oido) == int(m.group(1)))
+    return anio_hablado(oido) == int(m.group(1)) or (
+        not m.group(2) and valor(oido) == int(m.group(1))
+    )
 
 
 def _de_numero(a: list[str], b: list[str]) -> bool:
@@ -135,7 +163,12 @@ def _mismo_sonido(a: list[str], b: list[str]) -> bool:
     """Same audio written differently. A number word never gets the fuzzy pass: only an equal value does."""
     if _de_numero(a, b):
         va, vb = valor(a), valor(b)
-        return (va is not None and va == vb) or _es_anio(a, b) or _es_anio(b, a) or [_HOMOFONOS.get(w, w) for w in a] == [_HOMOFONOS.get(w, w) for w in b]
+        return (
+            (va is not None and va == vb)
+            or _es_anio(a, b)
+            or _es_anio(b, a)
+            or [_HOMOFONOS.get(w, w) for w in a] == [_HOMOFONOS.get(w, w) for w in b]
+        )
     return _parecido(a, b) >= PARECIDO_MIN
 
 
@@ -146,7 +179,18 @@ def comparar(guion: str, oidas: list[dict]) -> dict:
     phrase). leve: one or two words that do not sound alike: Whisper also makes these on correct audio, so
     they are a reason to listen, not proof."""
     esp = tokens(guion)
-    hechas = [(w, o) for o in oidas for w in tokens(o["word"])]
+    hechas = []
+    for o in oidas:
+        for w in tokens(o["word"]):
+            prev = hechas[-1] if hechas else None
+            eco = (
+                prev
+                and prev[0] == w
+                and prev[1] is not o
+                and abs(o["start"] - prev[1]["end"]) <= ECO_S
+            )
+            if not eco:
+                hechas.append((w, o))
     oid = [w for w, _ in hechas]
     grave, leve = [], []
     sm = difflib.SequenceMatcher(None, esp, oid, autojunk=False)
@@ -165,7 +209,9 @@ def comparar(guion: str, oidas: list[dict]) -> dict:
             "oido": " ".join(b),
         }
         nuevo_numero = any((w in NUMERICAS or w.isdigit()) and w not in a for w in b)
-        grave_num = _de_numero(a, b) and (nuevo_numero or _parecido(a, b) < PARECIDO_NUMERO)
+        grave_num = _de_numero(a, b) and (
+            nuevo_numero or _parecido(a, b) < PARECIDO_NUMERO
+        )
         (grave if grave_num or max(len(a), len(b)) >= 3 else leve).append(d)
     return {"grave": grave, "leve": leve, "n_guion": len(esp), "n_oidas": len(oid)}
 

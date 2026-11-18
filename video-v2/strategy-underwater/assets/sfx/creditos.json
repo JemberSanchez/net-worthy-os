@@ -1,0 +1,92 @@
+[
+ {
+  "archivo": "bombo_seco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Kick 2 (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Kick_2_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "golpe_hueco.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hollow hit (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hollow_hit_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "gong_cuerpo.src",
+  "origen": "wikimedia",
+  "titulo": "File:Gong55.ogg",
+  "autor": "stephan",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Gong55.ogg"
+ },
+ {
+  "archivo": "gong_sub.src",
+  "origen": "wikimedia",
+  "titulo": "File:Gong55.ogg",
+  "autor": "stephan",
+  "licencia": "CC0",
+  "clase": "cc0",
+  "url_licencia": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Gong55.ogg"
+ },
+ {
+  "archivo": "libro_duro.src",
+  "origen": "wikimedia",
+  "titulo": "File:Hardcover books dropped.ogg",
+  "autor": "stilgar",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Hardcover_books_dropped.ogg"
+ },
+ {
+  "archivo": "pagina.src",
+  "origen": "wikimedia",
+  "titulo": "File:Turning a page.ogg",
+  "autor": "planish",
+  "licencia": "Public domain",
+  "clase": "pd",
+  "url_licencia": "",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg"
+ },
+ {
+  "archivo": "rafaga.src",
+  "origen": "wikimedia",
+  "titulo": "File:Wind rustling (Gravity Sound).mp3",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Wind_rustling_(Gravity_Sound).mp3"
+ },
+ {
+  "archivo": "riser_barrido.src",
+  "origen": "wikimedia",
+  "titulo": "File:Sweep (Gravity Sound).wav",
+  "autor": "Gravity Sound",
+  "licencia": "CC BY 4.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/4.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Sweep_(Gravity_Sound).wav"
+ },
+ {
+  "archivo": "sello.src",
+  "origen": "wikimedia",
+  "titulo": "File:Rubber seal dabbed on ink pad.ogg",
+  "autor": "Subhashish Panigrahi",
+  "licencia": "CC BY 3.0",
+  "clase": "cc-by",
+  "url_licencia": "https://creativecommons.org/licenses/by/3.0",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Rubber_seal_dabbed_on_ink_pad.ogg"
+ }
+]

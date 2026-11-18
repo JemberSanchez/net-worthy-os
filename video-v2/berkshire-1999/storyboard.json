@@ -1,0 +1,482 @@
+{
+  "ref": "berkshire-1999",
+  "guion": [
+    {
+      "id": "f1",
+      "texto": "Berkshire Hathaway, a legendary stock, trailed the market by forty points in 1999."
+    },
+    {
+      "id": "f2",
+      "texto": "If you owned it, Warren Buffett looked finished."
+    },
+    {
+      "id": "f3",
+      "texto": "Selling right there is the most common mistake in investing.",
+      "giro": true
+    },
+    {
+      "id": "f4",
+      "texto": "The next year, the tech bubble burst."
+    },
+    {
+      "id": "f5",
+      "texto": "Berkshire went up while the market went down.",
+      "giro": true
+    },
+    {
+      "id": "f6",
+      "texto": "That wasn't even its worst year."
+    },
+    {
+      "id": "f7",
+      "texto": "Years earlier, it had crashed even harder.",
+      "giro": true
+    },
+    {
+      "id": "f8",
+      "texto": "The people who held from the start earned almost twenty percent a year."
+    },
+    {
+      "id": "f9",
+      "texto": "The market earned about ten."
+    },
+    {
+      "id": "f10",
+      "texto": "But for every Berkshire there were thousands that fell and never came back.",
+      "giro": true
+    },
+    {
+      "id": "f11",
+      "texto": "Past returns promise nothing."
+    },
+    {
+      "id": "f12",
+      "texto": "Remember Berkshire the next time the market scares you."
+    }
+  ],
+  "pronuncia_ok": [
+    "Buffett",
+    "Hathaway"
+  ],
+  "formato": "documental-editorial",
+  "tema": "editorial",
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam",
+    "speed": 1.0,
+    "pausa_s": 0.3
+  },
+  "fondos_auto": false,
+  "adn": {
+    "hook_type": "shock_number",
+    "story_type": "common_mistake",
+    "cta_type": "imperative",
+    "renderer_version": "v2-hyperframes"
+  },
+  "aviso": {
+    "lineas": [
+      "Berkshire Hathaway 2024 shareholder letter",
+      "Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "1",
+        "2"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 33,
+    "completo": "Not financial advice. Source: Berkshire Hathaway 2024 shareholder letter (per-share market value vs S&P 500 with dividends, 1965-2024). Past returns do not predict future returns."
+  },
+  "subtitulos": [
+    "1",
+    "11"
+  ],
+  "calientes": [
+    "forty",
+    "finished",
+    "mistake",
+    "worst",
+    "twenty",
+    "thousands",
+    "never"
+  ],
+  "golpes": [
+    "0:forty",
+    "2:mistake",
+    "3:burst",
+    "7:twenty",
+    "9:thousands"
+  ],
+  "musica": {
+    "pista": {
+      "mood": "documental"
+    }
+  },
+  "sonidos": [
+    {
+      "sfx": "obturador",
+      "en": "0:points"
+    },
+    {
+      "sfx": "portazo",
+      "en": "2:mistake",
+      "vol": 0.4
+    },
+    {
+      "sfx": "braam_sub",
+      "en": "3:burst"
+    },
+    {
+      "sfx": "braam_cuerpo",
+      "en": "3:burst"
+    },
+    {
+      "sfx": "monedas",
+      "en": "7:twenty",
+      "vol": 0.3
+    },
+    {
+      "sfx": "jaula_sub",
+      "en": "11:Berkshire"
+    },
+    {
+      "sfx": "jaula_cuerpo",
+      "en": "11:Berkshire"
+    }
+  ],
+  "imagenes": {
+    "carta": {
+      "documento": true,
+      "color": true
+    },
+    "omaha": {
+      "color": true
+    },
+    "nyse_sign": {
+      "color": true
+    }
+  },
+  "clips": {
+    "vieja": {
+      "pexels": 8888818,
+      "desde": 0,
+      "visto": true
+    },
+    "bolsa": {
+      "pexels": 13801266,
+      "desde": 0,
+      "visto": true
+    },
+    "chart": {
+      "pexels": 36864123,
+      "desde": 0,
+      "visto": true
+    },
+    "torres": {
+      "pexels": 5832878,
+      "desde": 0,
+      "visto": true
+    },
+    "nyse": {
+      "pexels": 6641647,
+      "desde": 0,
+      "visto": true
+    }
+  },
+  "pruebas": [
+    {
+      "img": "carta",
+      "texto": "(19.9)",
+      "en": "0:points",
+      "marca": "0:1999",
+      "hasta": "1:owned"
+    }
+  ],
+  "escenas": [
+    {
+      "tipo": "foto",
+      "en": "0-0.4",
+      "clip": "bolsa",
+      "rotulos": [
+        {
+          "texto": "Berkshire Hathaway",
+          "en": "0-0.4",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "40 points behind the market",
+          "en": "0:forty",
+          "estilo": "mid",
+          "color": "red",
+          "top": 430
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "1:owned",
+      "linea1": {
+        "texto": "1999 Berkshire: -19.9%"
+      },
+      "linea2": {
+        "texto": "S&P 500: +21.0%",
+        "en": "1:Buffett"
+      },
+      "fondo": {
+        "clip": "vieja",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "2",
+      "fondo": {
+        "img": "nyse_sign"
+      },
+      "lineas": [
+        {
+          "texto": "Selling here",
+          "en": "2",
+          "estilo": "mid"
+        },
+        {
+          "texto": "The classic mistake",
+          "en": "2:mistake",
+          "estilo": "big",
+          "color": "red"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "fondo": {
+        "clip": "torres"
+      },
+      "posicion": "arriba",
+      "lineas": [
+        {
+          "texto": "2000",
+          "en": "3",
+          "estilo": "mid"
+        },
+        {
+          "texto": "Tech bubble bursts",
+          "en": "3:burst",
+          "estilo": "big",
+          "color": "red"
+        }
+      ],
+      "fondo_suave": true,
+      "fondo_opacidad": 0.3
+    },
+    {
+      "tipo": "revelacion",
+      "en": "4",
+      "linea1": {
+        "texto": "2000 Berkshire: +26.6%"
+      },
+      "linea2": {
+        "texto": "S&P 500: -9.1%",
+        "en": "4:while"
+      },
+      "fondo": {
+        "clip": "chart",
+        "opacidad": 0.4
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "5",
+      "fondo": {
+        "clip": "torres"
+      },
+      "lineas": [
+        {
+          "texto": "Not even its worst year",
+          "en": "5",
+          "estilo": "mid"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "6",
+      "fondo": {
+        "img": "omaha"
+      },
+      "lineas": [
+        {
+          "texto": "1974",
+          "en": "6",
+          "estilo": "mid"
+        },
+        {
+          "texto": "-48.7%",
+          "en": "6:crashed",
+          "estilo": "huge",
+          "color": "red"
+        }
+      ],
+      "fondo_suave": true,
+      "fondo_opacidad": 0.36
+    },
+    {
+      "tipo": "anios",
+      "en": "7",
+      "desde": 1965,
+      "hasta": 2024,
+      "cuenta": {
+        "en": "7:held"
+      },
+      "fin": "7:year",
+      "kicker": "Held from the start",
+      "etiqueta": {
+        "texto": "19.9% a year",
+        "en": "7:twenty"
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "8",
+      "linea1": {
+        "texto": "Berkshire: 19.9% a year"
+      },
+      "linea2": {
+        "texto": "S&P 500: 10.4% a year",
+        "en": "8:ten"
+      },
+      "fondo": {
+        "clip": "bolsa",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "puntos",
+      "en": "9",
+      "n": 30,
+      "etiqueta": "stocks",
+      "cuenta": {
+        "en": "9:every"
+      },
+      "atenuar": {
+        "en": "9:fell",
+        "n": 29,
+        "texto": "never came back"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "10",
+      "clip": "nyse"
+    },
+    {
+      "tipo": "titulo",
+      "en": "11",
+      "fondo": {
+        "clip": "vieja"
+      },
+      "lineas": [
+        {
+          "texto": "Remember",
+          "en": "11",
+          "estilo": "mid"
+        },
+        {
+          "texto": "*1999*",
+          "en": "11:Berkshire",
+          "estilo": "huge"
+        }
+      ]
+    }
+  ],
+  "cifras": [
+    {
+      "dato": "Berkshire per-share market value 1999: -19.9%; S&P 500 with dividends: +21.0% (gap 40.9 points)",
+      "fuente": "https://www.berkshirehathaway.com/letters/2024ltr.pdf"
+    },
+    {
+      "dato": "2000: Berkshire +26.6%, S&P 500 -9.1%",
+      "fuente": "https://www.berkshirehathaway.com/letters/2024ltr.pdf"
+    },
+    {
+      "dato": "1974: Berkshire -48.7% (worse than 1999)",
+      "fuente": "https://www.berkshirehathaway.com/letters/2024ltr.pdf"
+    },
+    {
+      "dato": "Compounded annual gain 1965-2024: Berkshire 19.9%, S&P 500 10.4%",
+      "fuente": "https://www.berkshirehathaway.com/letters/2024ltr.pdf"
+    }
+  ],
+  "publicacion": {
+    "titulo": "Buffett's stock trailed the market by 40 points. Then this happened",
+    "descripcion": "In 1999, Berkshire Hathaway's stock fell 19.9% while the S&P 500 (with dividends) gained 21.0%, a gap of about 40 points. In 2000 the tech bubble burst: Berkshire rose 26.6% while the S&P 500 fell 9.1%. 1999 wasn't even its worst year: in 1974 it lost 48.7%. From 1965 to 2024, Berkshire compounded 19.9% a year vs 10.4% for the S&P 500. All figures from Berkshire Hathaway's 2024 shareholder letter. But Berkshire is one survivor: many stocks fall and never recover, and past returns don't predict future ones. Not financial advice.",
+    "tags": [
+      "berkshire hathaway",
+      "warren buffett",
+      "long-term investing",
+      "stock market",
+      "dot com bubble",
+      "investing mistakes",
+      "s&p 500",
+      "compounding",
+      "investing"
+    ],
+    "hashtags": [
+      "#shorts",
+      "#investing",
+      "#warrenbuffett",
+      "#stockmarket",
+      "#berkshirehathaway"
+    ],
+    "comentario": "Berkshire lost 19.9% in 1999 while the market gained 21%. Be honest: would you have held on after a year like that?"
+  },
+  "social": {
+    "carrusel": [
+      {
+        "fondo": "clip:vieja@1",
+        "kicker": "Berkshire Hathaway, 1999",
+        "titulo": "*40 points* behind",
+        "texto": "Buffett's stock fell 19.9% while the S&P 500 gained 21.0%."
+      },
+      {
+        "fondo": "img:carta",
+        "kicker": "2024 shareholder letter",
+        "titulo": "The real numbers",
+        "texto": "Per-share market value vs S&P 500 with dividends, year by year."
+      },
+      {
+        "fondo": "clip:torres@1",
+        "kicker": "2000",
+        "titulo": "The bubble *burst*",
+        "texto": "Berkshire +26.6%. S&P 500 -9.1%."
+      },
+      {
+        "fondo": "img:omaha",
+        "kicker": "Not even its worst",
+        "titulo": "1974: *-48.7%*",
+        "texto": "Holding it was never comfortable."
+      },
+      {
+        "fondo": "clip:chart@1",
+        "kicker": "1965-2024",
+        "titulo": "*19.9%* a year",
+        "texto": "vs 10.4% for the S&P 500. But for every Berkshire, many stocks never came back. Not financial advice."
+      },
+      {
+        "fondo": "clip:torres@2",
+        "kicker": "Your turn",
+        "titulo": "Would you have *held*?",
+        "texto": "After losing 19.9% while everyone else made 21%. Tell us honestly."
+      }
+    ],
+    "caption": "In 1999 Buffett's stock trailed the market by 40 points. Most people would have sold.\n\nWould you have held? 👇",
+    "historia": {
+      "hasta": "1:finished$",
+      "cierre": "Full story in Reels"
+    }
+  }
+}

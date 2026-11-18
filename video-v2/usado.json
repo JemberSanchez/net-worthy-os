@@ -1191,6 +1191,146 @@
      "desde": 39.0
     }
    }
+  },
+  {
+   "ref": "strategy-underwater",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "continuo",
+     "cortina"
+    ],
+    "camara": [
+     "izq",
+     "push",
+     "sube"
+    ],
+    "punch": [
+     "rampa"
+    ],
+    "texto": [
+     "mascara"
+    ],
+    "tipografia": [
+     "serif"
+    ],
+    "efectos": [
+     "Gong55.ogg",
+     "Hardcover books dropped.ogg",
+     "Hollow hit (Gravity Sound).wav",
+     "Kick 2 (Gravity Sound).wav",
+     "Rubber seal dabbed on ink pad.ogg",
+     "Turning a page.ogg",
+     "Wind rustling (Gravity Sound).mp3"
+    ],
+    "riser": [
+     "Sweep (Gravity Sound).wav"
+    ],
+    "musica": [
+     "PeriTune - Investigation2(Suspense-Royalty Free Music).opus"
+    ]
+   },
+   "eleccion": {
+    "semilla": "strategy-underwater",
+    "transiciones": [
+     "cortina",
+     "continuo"
+    ],
+    "camara": [
+     "sube",
+     "push",
+     "izq"
+    ],
+    "punch": "rampa",
+    "texto": "mascara",
+    "tipografia": "serif",
+    "sfx": {
+     "timbal": "libro_duro",
+     "thud": "bombo_seco",
+     "gong_sub": "gong_sub",
+     "gong_cuerpo": "gong_cuerpo"
+    },
+    "motor": {
+     "whoosh": "rafaga",
+     "impacto": "golpe_hueco",
+     "riser": "riser_barrido"
+    },
+    "musica": {
+     "commons": "File:PeriTune - Investigation2(Suspense-Royalty Free Music).opus",
+     "desde": 71.0
+    }
+   }
+  },
+  {
+   "ref": "berkshire-1999",
+   "marca": null,
+   "firma": {
+    "transiciones": [
+     "inercia_der",
+     "push_arriba"
+    ],
+    "camara": [
+     "arco_der",
+     "arco_izq",
+     "tenso"
+    ],
+    "punch": [
+     "doble"
+    ],
+    "texto": [
+     "lateral"
+    ],
+    "tipografia": [
+     "grotesca"
+    ],
+    "efectos": [
+     "647712 unfa braam.flac",
+     "Close door (Gravity Sound).wav",
+     "Coins dropped in metallic moneybox 0.ogg",
+     "Holga shuttersound.ogg",
+     "Kick bin (Gravity Sound).wav",
+     "Knocking on wood or door.ogg",
+     "Whip-sound.ogg"
+    ],
+    "riser": [
+     "Gong55.ogg"
+    ],
+    "musica": [
+     "Scott Buckley - Signal To Noise (nomelody mix).oga"
+    ]
+   },
+   "eleccion": {
+    "semilla": "berkshire-1999",
+    "transiciones": [
+     "push_arriba",
+     "inercia_der"
+    ],
+    "camara": [
+     "arco_der",
+     "tenso",
+     "arco_izq"
+    ],
+    "punch": "doble",
+    "texto": "lateral",
+    "tipografia": "grotesca",
+    "sfx": {
+     "portazo": "puerta_seca",
+     "braam_sub": "bombo_sub",
+     "braam_cuerpo": "bombo_cuerpo",
+     "monedas": "monedas_hucha",
+     "jaula_sub": "braam_sub",
+     "jaula_cuerpo": "braam_cuerpo"
+    },
+    "motor": {
+     "whoosh": "latigo",
+     "impacto": "nudillo",
+     "riser": "riser_gong_largo"
+    },
+    "musica": {
+     "commons": "File:Scott Buckley - Signal To Noise (nomelody mix).oga",
+     "desde": 3.0
+    }
+   }
   }
  ]
 }

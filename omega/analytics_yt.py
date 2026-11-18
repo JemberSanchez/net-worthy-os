@@ -21,6 +21,8 @@ Límites conocidos (no son bugs):
 
 from __future__ import annotations
 
+import contextlib
+import itertools
 import json
 import re
 import sqlite3
@@ -76,7 +78,7 @@ def retencion_en(curva: list[tuple[float, float]], ratio: float) -> float | None
     pts = sorted(curva)
     if ratio <= pts[0][0]:
         return pts[0][1]
-    for (t0, w0), (t1, w1) in zip(pts, pts[1:]):
+    for (t0, w0), (t1, w1) in itertools.pairwise(pts):
         if t0 <= ratio <= t1:
             return w0 if t1 == t0 else w0 + (w1 - w0) * (ratio - t0) / (t1 - t0)
     return pts[-1][1]
@@ -124,6 +126,28 @@ def trafico_dominante(filas_trafico: list[dict]) -> str | None:
     return TRAFICO.get(tipo, tipo.lower() or None)
 
 
+# Autopsy thresholds, from the 6 videos measured on 14-nov-2026 (docs/OBSERVATORIO.md section 1).
+# PROVISIONAL: the pushed ones kept 70-81 % watched, the dead ones < 20 %.
+AUTOPSIA_VISTO_MIN = 0.30  # mean % watched below this: the feed sample swiped away
+AUTOPSIA_EMPUJE_MIN = 100  # feed views at or above this: the feed widened the test
+
+
+def autopsia(
+    views: int | None, traffic_breakdown: dict | None, avg_view_pct_raw: float | None
+) -> str:
+    """Why a Short did or did not spread, one cause with its own fix:
+    no_probado (never shown in the feed: publishing problem) · deslizado (shown, swiped: hook) ·
+    visto_sin_empuje (watched, feed did not widen: content/topic) · empujado · sin_datos."""
+    if not views:
+        return "sin_datos"
+    feed = (traffic_breakdown or {}).get("SHORTS", 0)
+    if feed == 0:
+        return "no_probado"
+    if (avg_view_pct_raw or 0) < AUTOPSIA_VISTO_MIN:
+        return "deslizado"
+    return "empujado" if feed >= AUTOPSIA_EMPUJE_MIN else "visto_sin_empuje"
+
+
 def resumen(
     basicas: dict, curva, filas_trafico: list[dict], blocks, dur: float
 ) -> dict:
@@ -139,6 +163,11 @@ def resumen(
         "avd_pct": frac,
         "retention_avg": frac,
         "traffic_source": trafico_dominante(filas_trafico),
+        "traffic_breakdown": {
+            f["insightTrafficSourceType"]: int(f.get("views") or 0)
+            for f in filas_trafico
+        }
+        or None,
         "retention_by_block": por_bloques(curva, blocks, dur) or None,
         "subs_gained": int(basicas["subscribersGained"])
         if basicas.get("subscribersGained") is not None
@@ -220,12 +249,11 @@ def consultar(video_id: str, yt=None, yta=None, hoy: date | None = None) -> dict
         )
     if not basicas or not basicas[0].get("views"):
         return {"estado": "sin_datos", "duracion": dur, "published_at": publicado}
-    try:  # separate query: an unsupported combo must not drop engagedViews
+    # Separate query: an unsupported combo must not drop engagedViews; followers are optional.
+    with contextlib.suppress(Exception):
         subs = q(metrics="subscribersGained", filters=base)
         if subs:
             basicas[0]["subscribersGained"] = subs[0].get("subscribersGained")
-    except Exception:  # noqa: BLE001 -- followers are optional; the rest still syncs
-        pass
     ret = q(
         dimensions="elapsedVideoTimeRatio",
         metrics="audienceWatchRatio,relativeRetentionPerformance",
@@ -290,6 +318,64 @@ def guardar(
     r["puntos_control"] = puntos_control(curva2, datos["duracion"])
     r["busquedas"] = datos["busquedas"][:3]
     return r
+
+
+def iso_utc(epoch: int) -> str:
+    return datetime.fromtimestamp(epoch, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+FOTOS_MAX_H = (
+    7 * 24
+)  # after a week the feed test is long decided: Analytics covers the rest
+
+
+def fotos(con: sqlite3.Connection, yt, now: int | None = None) -> int:
+    """Hourly snapshot of public counters (Data API, near real time) for YouTube videos
+    published in the last FOTOS_MAX_H hours. One row per video and whole hour. Returns rows."""
+    now = now or int(time.time())
+    recientes = {}
+    for ref, vid, pub in con.execute(
+        "SELECT production_ref, video_id, publish_at FROM production_video "
+        "WHERE platform='youtube' AND publish_at IS NOT NULL"
+    ):
+        edad_h = (
+            now - datetime.fromisoformat(pub).timestamp()
+        ) / 3600
+        if 0 <= edad_h <= FOTOS_MAX_H:
+            recientes[vid] = (ref, edad_h)
+    ids = list(recientes)
+    n = 0
+    for i in range(0, len(ids), 50):  # videos.list accepts up to 50 ids per call
+        lote = ids[i : i + 50]
+        items = (
+            yt.videos()
+            .list(part="statistics", id=",".join(lote))
+            .execute()
+            .get("items", [])
+        )
+        for it in items:
+            ref, edad_h = recientes[it["id"]]
+            s = it.get("statistics", {})
+
+            def num(k, s=s):
+                return int(s[k]) if k in s else None
+
+            con.execute(
+                "INSERT OR REPLACE INTO production_snapshot VALUES (?,?,?,?,?,?,?,?)",
+                (
+                    ref,
+                    "youtube",
+                    int(edad_h),
+                    round(edad_h, 1),
+                    num("viewCount"),
+                    num("likeCount"),
+                    num("commentCount"),
+                    now,
+                ),
+            )
+            n += 1
+    con.commit()
+    return n
 
 
 def video_desde_archivos(ref: str) -> str | None:

@@ -1,0 +1,70 @@
+{
+  "production_ref": "berkshire-1999",
+  "hook_type": "shock_number",
+  "story_type": "common_mistake",
+  "cta_type": "imperative",
+  "renderer_version": "v2-hyperframes",
+  "length_s": 37,
+  "blocks": [
+    {
+      "block": "f1",
+      "technique": "foto+clip",
+      "length_s": 5.82
+    },
+    {
+      "block": "f2",
+      "technique": "revelacion",
+      "length_s": 2.48
+    },
+    {
+      "block": "f3",
+      "technique": "titulo",
+      "length_s": 3.18
+    },
+    {
+      "block": "f4",
+      "technique": "titulo",
+      "length_s": 2.08
+    },
+    {
+      "block": "f5",
+      "technique": "revelacion",
+      "length_s": 2.46
+    },
+    {
+      "block": "f6",
+      "technique": "titulo",
+      "length_s": 1.88
+    },
+    {
+      "block": "f7",
+      "technique": "titulo",
+      "length_s": 2.44
+    },
+    {
+      "block": "f8",
+      "technique": "anios",
+      "length_s": 3.74
+    },
+    {
+      "block": "f9",
+      "technique": "revelacion",
+      "length_s": 1.79
+    },
+    {
+      "block": "f10",
+      "technique": "puntos",
+      "length_s": 3.45
+    },
+    {
+      "block": "f11",
+      "technique": "foto+clip",
+      "length_s": 2.42
+    },
+    {
+      "block": "f12",
+      "technique": "titulo",
+      "length_s": 5.4
+    }
+  ]
+}

@@ -105,6 +105,19 @@ CREATE TABLE IF NOT EXISTS production_social (
     measured_at    INTEGER NOT NULL,
     PRIMARY KEY (production_ref, platform)
 );
+-- Hourly public counters after publishing (docs/OBSERVATORIO.md P0): Analytics lags 48-72 h, the
+-- Data API does not, so this is the only view of the first hours, when the feed test is decided.
+CREATE TABLE IF NOT EXISTS production_snapshot (
+    production_ref TEXT    NOT NULL,
+    platform       TEXT    NOT NULL,
+    hora           INTEGER NOT NULL,        -- whole hours since publishing (one row per hour)
+    t_horas        REAL    NOT NULL,
+    views          INTEGER,
+    likes          INTEGER,                 -- NULL = hidden by the platform, not zero
+    comments       INTEGER,
+    measured_at    INTEGER NOT NULL,
+    PRIMARY KEY (production_ref, platform, hora)
+);
 """
 
 
@@ -134,6 +147,7 @@ def init(con: sqlite3.Connection) -> None:
             "engaged_views": "INTEGER",
             "avg_view_pct_raw": "REAL",
             "subs_gained": "INTEGER",
+            "traffic_breakdown": "TEXT",
         },
     )
     if "renderer_version" in _ensure_columns(
@@ -167,7 +181,7 @@ def record_dna(
     if not production_ref:
         raise ValueError("falta production_ref")
     if not isinstance(blocks, list):
-        raise ValueError("blocks debe ser una lista de {block, technique, length_s}")
+        raise TypeError("blocks debe ser una lista de {block, technique, length_s}")
     if renderer_version is not None and renderer_version not in RENDERERS:
         raise ValueError(
             f"renderer_version inválido: {renderer_version!r}. Permitidos: {sorted(RENDERERS)}"
@@ -204,6 +218,7 @@ def record_analytics(
     engaged_views: int | None = None,
     avg_view_pct_raw: float | None = None,
     subs_gained: int | None = None,
+    traffic_breakdown: dict | None = None,
     now: int | None = None,
 ) -> None:
     """Registra las analíticas MEDIDAS (el 'qué pasó') tras publicar. Se une al ADN + outcome.
@@ -236,7 +251,7 @@ def record_analytics(
     con.execute(
         "INSERT OR REPLACE INTO production_analytics (production_ref, ctr, avd_pct, retention_avg, "
         "views, traffic_source, retention_by_block, engaged_views, avg_view_pct_raw, subs_gained, "
-        "measured_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        "traffic_breakdown, measured_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
         (
             production_ref,
             ctr,
@@ -250,6 +265,7 @@ def record_analytics(
             engaged_views,
             avg_view_pct_raw,
             subs_gained,
+            json.dumps(traffic_breakdown) if traffic_breakdown else None,
             now,
         ),
     )

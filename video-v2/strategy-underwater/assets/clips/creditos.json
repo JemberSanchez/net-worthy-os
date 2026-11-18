@@ -1,0 +1,68 @@
+[
+ {
+  "archivo": "pantalla.src",
+  "origen": "pexels",
+  "titulo": "pexels:38725026",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/cryptocurrency-market-analysis-on-screen-38725026/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "nyse.src",
+  "origen": "pexels",
+  "titulo": "pexels:35039725",
+  "autor": "Yetkin Ağaç",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/moody-black-and-white-urban-building-scene-35039725/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "grafico.src",
+  "origen": "pexels",
+  "titulo": "pexels:38736271",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/stock-market-trading-data-display-in-dark-room-38736271/",
+  "desde": 2.0
+ },
+ {
+  "archivo": "candado.src",
+  "origen": "pexels",
+  "titulo": "pexels:7830154",
+  "autor": "Monstera Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-hinge-attached-on-the-door-7830154/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "chart.src",
+  "origen": "pexels",
+  "titulo": "pexels:35417493",
+  "autor": "Jakub Zerdzicki",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/digital-trading-analysis-on-tablet-device-35417493/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "torres.src",
+  "origen": "pexels",
+  "titulo": "pexels:32805742",
+  "autor": "The Six",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/aerial-view-of-modern-city-skyscrapers-in-daylight-32805742/",
+  "desde": 0.0
+ }
+]
