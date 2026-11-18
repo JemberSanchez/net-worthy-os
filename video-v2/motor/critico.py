@@ -432,6 +432,7 @@ def revisar_ritmo(
         for x in words
         if a + 0.3 <= x["start"] <= b - 0.3
         and x["end"] - x["start"] >= 0.03
+        and x["start"] >= 0.8  # motor.js `libre`: never in the hook's own entrance
         and all(abs(x["start"] - g) >= HUECO_PUNCH for g in golpes)
     ]
     t = min(libres, key=lambda s: abs(s - (a + b) / 2), default=None)
@@ -821,7 +822,10 @@ def fallos_de_qa(qa: dict, vs) -> list[dict]:
                 )
                 # a hot word of the captions takes the accent colour: over a same-colour title no
                 # background step helps (E9, berkshire-1999 "burst" after 4 rounds of fondo_suave)
-                caliente = txt.strip().lower() in (qa.get("_calientes") or [])
+                import anclas
+
+                cal = {anclas.norm(c): c for c in qa.get("_calientes") or []}
+                caliente = cal.get(anclas.norm(txt))
                 out.append(
                     fallo(
                         "L1",
@@ -831,7 +835,7 @@ def fallos_de_qa(qa: dict, vs) -> list[dict]:
                         escena="aviso" if aviso else esc,
                         parche={"op": "aviso_placa"}
                         if aviso
-                        else {"op": "quitar_caliente", "palabra": txt.strip().lower()}
+                        else {"op": "quitar_caliente", "palabra": caliente}
                         if caliente
                         else (
                             {"op": "fondo_suave", "escena": esc}
