@@ -587,7 +587,7 @@ def fallos_layout(informes: list[dict]) -> list[str]:
     broken output, so they block. Its warnings and info (safe zone, overlaps) carry the decorative-layer false
     positives measured on Grace (25-sep) and only inform."""
     return [
-        f'{f.get("code")} {f.get("selector", "")} en t≈{f.get("time", "?")}s: {str(f.get("message", ""))[:80]}'
+        f"{f.get('code')} {f.get('selector', '')} en t≈{f.get('time', '?')}s: {str(f.get('message', ''))[:80]}"
         for d in informes
         for f in (d.get("layout") or {}).get("findings") or []
         if f.get("severity") == "error"
@@ -978,6 +978,9 @@ def producir(proy: Path) -> dict:
     import guionista
 
     puerta("guion", *guionista.puerta_guion(proy), seguir=True)
+    import fuentes  # network: only here, never in construir --validar (tests stay offline)
+
+    puerta("fuentes", *fuentes.puerta_fuentes(proy), seguir=True)
     if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
         raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
     if not (proy / "assets" / "voice.mp3").exists():
