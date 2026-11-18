@@ -120,7 +120,7 @@
     },
     {
       "id": "s28",
-      "texto": "In nineteen ninety six, Huang laid off more than half of the staff, cutting the team from one hundred people to forty."
+      "texto": "In nineteen ninety six, Huang laid off over half the staff, cutting the team from one hundred people to forty."
     },
     {
       "id": "s29",
@@ -267,7 +267,7 @@
     },
     {
       "id": "s64",
-      "texto": "Back in November two thousand twenty three, Forbes estimated the net worth of Priem at about thirty million dollars."
+      "texto": "In late two thousand twenty three, Forbes estimated the net worth of Priem at about thirty million dollars."
     },
     {
       "id": "s65",
@@ -436,6 +436,10 @@
   },
   "cifras": [
     {
+      "dato": "Nvidia's RIVA 128 graphics chip",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
       "dato": "Curtis Priem received a Bachelor of Science in electrical engineering from Rensselaer Polytechnic Institute in 1982",
       "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
     },
@@ -554,7 +558,7 @@
       "vol": 0.255
     },
     {
-      "sfx": "thud",
+      "sfx": "golpe_hondo",
       "en": "3:slid",
       "vol": 0.2
     },
@@ -563,16 +567,26 @@
       "en": "17"
     },
     {
-      "sfx": "caja",
+      "sfx": "riser_viento",
+      "en": "39:and-0.7",
+      "vol": 0.3
+    },
+    {
+      "sfx": "ventana",
+      "en": "55:now-0.7",
+      "vol": 0.3
+    },
+    {
+      "sfx": "nudillo",
       "en": "25:five"
     },
     {
-      "sfx": "sello",
+      "sfx": "timbal",
       "en": "49:bankrupt",
       "vol": 0.425
     },
     {
-      "sfx": "caja",
+      "sfx": "nudillo",
       "en": "59:forty"
     },
     {
@@ -617,41 +631,45 @@
     "dennys": {
       "commons": "File:Denny's Restaurant 24.jpg",
       "color": true
+    },
+    "hq": {
+      "commons": "File:Nvidia HQ.jpg",
+      "color": true
     }
   },
   "clips": {
     "placa": {
-      "pexels": 7609195,
+      "pexels": 6754824,
       "desde": 2,
       "ligero": true,
       "visto": true
     },
     "nyse": {
-      "pexels": 35039725,
+      "pexels": 7579943,
       "desde": 0,
       "ligero": true,
       "visto": true
     },
     "pantalla": {
-      "pexels": 38771102,
+      "pexels": 35475054,
       "desde": 2,
       "ligero": true,
       "visto": true
     },
     "mercado": {
-      "pexels": 39020626,
+      "pexels": 38736274,
       "desde": 2,
       "ligero": true,
       "visto": true
     },
     "retro": {
-      "pexels": 15069622,
+      "pexels": 8888818,
       "desde": 0,
       "ligero": true,
       "visto": true
     },
     "oficina": {
-      "pexels": 8347240,
+      "pexels": 5483080,
       "desde": 0,
       "ligero": true,
       "visto": true
@@ -669,22 +687,16 @@
   "formato": "documental-editorial",
   "escenas": [
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "0",
-      "lineas": [
-        {
-          "texto": "Nvidia co-founder",
-          "en": "0",
-          "estilo": "mid",
-          "color": "ink"
-        },
-        {
-          "texto": "*Sold every share*",
-          "en": "0:sold",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
+      "linea1": {
+        "texto": "Nvidia co-founder"
+      },
+      "linea2": {
+        "texto": "*Sold every share*",
+        "en": "0:sold"
+      },
+      "golpe": "0:sold",
       "fondo": {
         "clip": "placa",
         "opacidad": 0.8
@@ -716,21 +728,16 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "2",
-      "lineas": [
-        {
-          "texto": "His actual fortune",
-          "en": "2",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*~$30M*",
-          "en": "2:thirty",
-          "estilo": "huge"
-        }
-      ],
+      "linea1": {
+        "texto": "His actual fortune"
+      },
+      "linea2": {
+        "texto": "*~$30M*",
+        "en": "2:thirty"
+      },
+      "golpe": "2:thirty",
       "fondo": {
         "clip": "oficina",
         "opacidad": 0.35
@@ -748,7 +755,7 @@
         },
         {
           "texto": "*resigned*",
-          "en": "3:resigned",
+          "en": "3",
           "estilo": "big",
           "color": "ink"
         }
@@ -779,19 +786,19 @@
       "lineas": [
         {
           "texto": "A college lab",
-          "en": "4:college",
+          "en": "4",
           "estilo": "mid",
           "color": "ink"
         },
         {
           "texto": "*Near bankruptcy*",
-          "en": "4:bankruptcy",
+          "en": "4",
           "estilo": "big",
           "color": "ink"
         },
         {
           "texto": "The sale of a lifetime",
-          "en": "4:sale",
+          "en": "4",
           "estilo": "mid",
           "color": "ink"
         }
@@ -939,35 +946,29 @@
       "lineas": [
         {
           "texto": "The *GX* graphics chip",
-          "en": "11:developed",
+          "en": "11",
           "estilo": "big",
           "color": "ink"
         },
         {
           "texto": "Fast graphics are hard",
-          "en": "11:learned",
+          "en": "11",
           "estilo": "mid",
           "color": "mute"
         }
       ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "12",
-      "lineas": [
-        {
-          "texto": "The PC needed",
-          "en": "12",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*more power*",
-          "en": "12:graphics",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
+      "linea1": {
+        "texto": "The PC needed"
+      },
+      "linea2": {
+        "texto": "*more power*",
+        "en": "12:graphics"
+      },
+      "golpe": "12:graphics",
       "fondo": {
         "clip": "placa",
         "opacidad": 0.35
@@ -983,7 +984,7 @@
       },
       "titulo": {
         "texto": "A *Denny's* diner",
-        "en": "13:dennys"
+        "en": "13:denny's"
       }
     },
     {
@@ -1034,7 +1035,7 @@
       "lineas": [
         {
           "texto": "*Nvidia*",
-          "en": "16:nvidia",
+          "en": "16",
           "estilo": "huge"
         }
       ],
@@ -1099,10 +1100,6 @@
       "kicker": {
         "texto": "Chapter 2",
         "en": "20:the-0.7"
-      },
-      "fondo": {
-        "clip": "retro",
-        "opacidad": 0.3
       }
     },
     {
@@ -1121,33 +1118,19 @@
           "estilo": "mid",
           "color": "mute"
         }
-      ],
-      "fondo": {
-        "img": "gpu",
-        "opacidad": 0.25
-      }
+      ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "21",
-      "lineas": [
-        {
-          "texto": "Microsoft DirectX",
-          "en": "21:microsoft",
-          "estilo": "mid",
-          "color": "ink"
-        },
-        {
-          "texto": "*Triangles only*",
-          "en": "21:triangles",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "clip": "pantalla",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "Microsoft DirectX"
+      },
+      "linea2": {
+        "texto": "*Triangles only*",
+        "en": "21"
+      },
+      "golpe": "21"
     },
     {
       "tipo": "titulo",
@@ -1193,21 +1176,16 @@
       "golpe": "24:another"
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "25",
-      "lineas": [
-        {
-          "texto": "But Sega invested",
-          "en": "25",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*$5M*",
-          "en": "25:five",
-          "estilo": "huge"
-        }
-      ],
+      "linea1": {
+        "texto": "But Sega invested"
+      },
+      "linea2": {
+        "texto": "*$5M*",
+        "en": "25:five"
+      },
+      "golpe": "25:five",
       "fondo": {
         "clip": "nyse",
         "opacidad": 0.35
@@ -1229,30 +1207,19 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "oficina",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "27",
-      "lineas": [
-        {
-          "texto": "*Six months*",
-          "en": "27:six",
-          "estilo": "big",
-          "color": "ink"
-        },
-        {
-          "texto": "to live",
-          "en": "27:live",
-          "estilo": "mid",
-          "color": "ink"
-        }
-      ],
-      "fondo_suave": true
+      "linea1": {
+        "texto": "*Six months*"
+      },
+      "linea2": {
+        "texto": "to live",
+        "en": "27"
+      },
+      "golpe": "27"
     },
     {
       "tipo": "titulo",
@@ -1266,14 +1233,10 @@
         },
         {
           "texto": "*100 to 40*",
-          "en": "28:forty",
+          "en": "28",
           "estilo": "huge"
         }
-      ],
-      "fondo": {
-        "clip": "placa",
-        "opacidad": 0.3
-      }
+      ]
     },
     {
       "tipo": "foto",
@@ -1304,33 +1267,19 @@
       "kicker": {
         "texto": "Company motto",
         "en": "30"
-      },
-      "fondo": {
-        "clip": "mercado",
-        "opacidad": 0.35
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "32",
-      "lineas": [
-        {
-          "texto": "*~1 million* sold",
-          "en": "32:million",
-          "estilo": "big",
-          "color": "ink"
-        },
-        {
-          "texto": "in four months",
-          "en": "32:four",
-          "estilo": "mid",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "clip": "placa",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "*~1 million* sold"
+      },
+      "linea2": {
+        "texto": "in four months",
+        "en": "32:four"
+      },
+      "golpe": "32:four"
     },
     {
       "tipo": "titulo",
@@ -1347,11 +1296,7 @@
           "estilo": "mid",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "nyse",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "foto",
@@ -1378,15 +1323,11 @@
         },
         {
           "texto": "*your money*",
-          "en": "36:money",
+          "en": "36",
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "img": "gpu",
-        "opacidad": 0.25
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -1410,11 +1351,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "retro",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1446,26 +1383,16 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "41",
-      "lineas": [
-        {
-          "texto": "Late 90s PC gaming",
-          "en": "41",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*Voodoo* was the card",
-          "en": "41:wanted",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "clip": "retro",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "Late-nineties PC gaming"
+      },
+      "linea2": {
+        "texto": "*Voodoo* was the card",
+        "en": "41:wanted"
+      },
+      "golpe": "41:wanted"
     },
     {
       "tipo": "titulo",
@@ -1487,26 +1414,16 @@
       "fondo_suave": true
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "43",
-      "lineas": [
-        {
-          "texto": "3dfx buys",
-          "en": "43",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*STB Systems*",
-          "en": "43:systems",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "clip": "oficina",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "3dfx buys"
+      },
+      "linea2": {
+        "texto": "*STB Systems*",
+        "en": "43:systems"
+      },
+      "golpe": "43:systems"
     },
     {
       "tipo": "titulo",
@@ -1514,15 +1431,11 @@
       "lineas": [
         {
           "texto": "The *safest bet*?",
-          "en": "44:safest",
+          "en": "44",
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "mercado",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1542,7 +1455,7 @@
       "lineas": [
         {
           "texto": "Nvidia *kept shipping*",
-          "en": "46:nvidia",
+          "en": "46",
           "estilo": "big",
           "color": "ink"
         }
@@ -1562,11 +1475,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "nyse",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1607,7 +1516,7 @@
       "en": "51",
       "lineas": [
         {
-          "texto": "Late 90s smart pick",
+          "texto": "Late-nineties smart pick",
           "en": "51",
           "estilo": "mid",
           "color": "mute"
@@ -1617,11 +1526,7 @@
           "en": "51:picked",
           "estilo": "huge"
         }
-      ],
-      "fondo": {
-        "img": "voodoo",
-        "opacidad": 0.25
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1629,15 +1534,11 @@
       "lineas": [
         {
           "texto": "Watched it *disappear*",
-          "en": "52:watched",
+          "en": "52",
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "retro",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -1647,9 +1548,9 @@
       },
       "linea2": {
         "texto": "*The obvious pick went bust*",
-        "en": "53:bust"
+        "en": "53"
       },
-      "golpe": "53:bust"
+      "golpe": "53"
     },
     {
       "tipo": "titulo",
@@ -1671,10 +1572,6 @@
       "kicker": {
         "texto": "Psychology",
         "en": "54"
-      },
-      "fondo": {
-        "clip": "oficina",
-        "opacidad": 0.35
       }
     },
     {
@@ -1691,28 +1588,19 @@
       "kicker": {
         "texto": "Chapter 4",
         "en": "55:now-0.7"
-      },
-      "fondo": {
-        "clip": "placa",
-        "opacidad": 0.3
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "56",
-      "lineas": [
-        {
-          "texto": "*2000*",
-          "en": "56",
-          "estilo": "huge"
-        },
-        {
-          "texto": "Entrepreneur of the Year",
-          "en": "56:entrepreneur",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
+      "linea1": {
+        "texto": "*2000*"
+      },
+      "linea2": {
+        "texto": "Entrepreneur of the Year",
+        "en": "56:entrepreneur"
+      },
+      "golpe": "56:entrepreneur",
       "fondo": {
         "img": "hq",
         "opacidad": 0.35
@@ -1774,11 +1662,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "oficina",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1790,11 +1674,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "img": "nvsign",
-        "opacidad": 0.3
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1817,33 +1697,19 @@
           "estilo": "mid",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "nyse",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "63",
-      "lineas": [
-        {
-          "texto": "2025: first to pass",
-          "en": "63",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*$4T*, then *$5T*",
-          "en": "63:four",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "clip": "mercado",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "2025: first to pass"
+      },
+      "linea2": {
+        "texto": "*$4T*, then *$5T*",
+        "en": "63:four"
+      },
+      "golpe": "63:four"
     },
     {
       "tipo": "titulo",
@@ -1859,15 +1725,11 @@
       "kicker": {
         "texto": "Forbes, November 2023",
         "en": "64"
-      },
-      "fondo": {
-        "clip": "oficina",
-        "opacidad": 0.35
       }
     },
     {
       "tipo": "contador3d",
-      "en": "65",
+      "en": "65:seventy-0.15",
       "valor": 70,
       "prefijo": "$",
       "llega": "65:seventy",
@@ -1890,11 +1752,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "img": "gpu",
-        "opacidad": 0.25
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -1924,11 +1782,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "img": "empac",
-        "opacidad": 0.3
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1963,26 +1817,16 @@
       ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "72",
-      "lineas": [
-        {
-          "texto": "One company,",
-          "en": "72",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*one bet*",
-          "en": "72:riding",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "clip": "pantalla",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "One company,"
+      },
+      "linea2": {
+        "texto": "*one bet*",
+        "en": "72:riding"
+      },
+      "golpe": "72:riding"
     },
     {
       "tipo": "titulo",
@@ -1998,10 +1842,6 @@
       "kicker": {
         "texto": "Chapter 5",
         "en": "73:so-0.7"
-      },
-      "fondo": {
-        "clip": "nyse",
-        "opacidad": 0.3
       }
     },
     {
@@ -2024,10 +1864,6 @@
       "kicker": {
         "texto": "Lesson 1",
         "en": "74"
-      },
-      "fondo": {
-        "clip": "mercado",
-        "opacidad": 0.35
       }
     },
     {
@@ -2046,11 +1882,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "img": "voodoo",
-        "opacidad": 0.2
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -2064,7 +1896,7 @@
         },
         {
           "texto": "or *everything lost*",
-          "en": "77:everything",
+          "en": "77",
           "estilo": "big",
           "color": "ink"
         }
@@ -2072,10 +1904,6 @@
       "kicker": {
         "texto": "Lesson 2",
         "en": "77"
-      },
-      "fondo": {
-        "clip": "placa",
-        "opacidad": 0.35
       }
     },
     {
@@ -2109,12 +1937,7 @@
         "en": "81:failed",
         "hasta": "82",
         "texto": "Losers shrink out"
-      },
-      "fondo": {
-        "clip": "nyse",
-        "opacidad": 0.3
-      },
-      "fondo_suave": true
+      }
     },
     {
       "tipo": "titulo",
@@ -2131,11 +1954,7 @@
           "en": "82:pick",
           "estilo": "huge"
         }
-      ],
-      "fondo": {
-        "img": "geforce",
-        "opacidad": 0.3
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -2151,10 +1970,6 @@
       "kicker": {
         "texto": "Lesson 4",
         "en": "83"
-      },
-      "fondo": {
-        "clip": "nyse",
-        "opacidad": 0.35
       }
     },
     {
@@ -2173,33 +1988,19 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "pantalla",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "85",
-      "lineas": [
-        {
-          "texto": "An insider",
-          "en": "85",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "*couldn't see it*",
-          "en": "85:still",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo": {
-        "img": "hq",
-        "opacidad": 0.35
-      }
+      "linea1": {
+        "texto": "An insider"
+      },
+      "linea2": {
+        "texto": "*couldn't see it*",
+        "en": "85:still"
+      },
+      "golpe": "85:still"
     },
     {
       "tipo": "revelacion",
@@ -2214,23 +2015,16 @@
       "golpe": "86:headline"
     },
     {
-      "tipo": "titulo",
+      "tipo": "revelacion",
       "en": "87",
-      "lineas": [
-        {
-          "texto": "*Not financial advice*",
-          "en": "87",
-          "estilo": "big",
-          "color": "ink"
-        },
-        {
-          "texto": "Sources in the description",
-          "en": "87:source",
-          "estilo": "mid",
-          "color": "ink"
-        }
-      ],
-      "fondo_suave": true
+      "linea1": {
+        "texto": "*Not financial advice*"
+      },
+      "linea2": {
+        "texto": "Sources in the description",
+        "en": "87:source"
+      },
+      "golpe": "87:source"
     },
     {
       "tipo": "titulo",
@@ -2248,11 +2042,7 @@
           "estilo": "big",
           "color": "ink"
         }
-      ],
-      "fondo": {
-        "clip": "placa",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "cta",
@@ -2270,11 +2060,7 @@
         "texto": "Would you have held every share?",
         "en": "90"
       },
-      "sub": "tell me in the comments",
-      "fondo": {
-        "clip": "placa",
-        "opacidad": 0.4
-      }
+      "sub": "tell me in the comments"
     }
   ],
   "miniatura": {
