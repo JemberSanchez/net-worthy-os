@@ -198,5 +198,22 @@ class Miniatura(unittest.TestCase):
         self.assertIn("width: 1280px; height: 720px", h)
 
 
+class LayoutCheck(unittest.TestCase):
+    def test_only_layout_errors_block(self):
+        import producir
+
+        d = {
+            "layout": {
+                "findings": [
+                    {"code": "outside_safe_zone", "severity": "warning", "selector": "#brand", "time": 2},
+                    {"code": "clipped_text", "severity": "error", "selector": "#s3-t", "time": 9.5, "message": "cut"},
+                ]
+            }
+        }
+        f = producir.fallos_layout([d])
+        self.assertEqual(len(f), 1)
+        self.assertIn("clipped_text #s3-t", f[0])
+
+
 if __name__ == "__main__":
     unittest.main()
