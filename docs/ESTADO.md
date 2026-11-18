@@ -18,6 +18,24 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): parado por tiempo, SIN render
+
+- Hecho: layout 16:9, capítulos, miniatura, puertas de layout y cifra-vs-fuente. Storyboard real
+  `video-v2/huang-exit-largo` (85 escenas, voz 441.8 s = 7.4 min, bajo el objetivo de 8-10 min).
+  Lista de capítulos OK (6, empieza en `0:00`). Miniatura 1280x720 OK, 11 s.
+- **Tiempo medido (reloj de pared):** `producir --previo --sin-subir` tarda **24.6 min** (1.ª pasada)
+  y **35.1 min** (2.ª). La puerta de contraste sola: 9.0 / 11.7 min. Luego, texto/gancho (OCR):
+  ~15-20 min. Dos previos suman ~60 min **antes** de renderizar: la regla de "ronda > 60 min = parar"
+  se cumplió sin llegar a render, loudness, pausas ni crítico. El previo escala con la duración:
+  hay que muestrear menos en vídeos largos antes de seguir.
+- Puertas duras: 19 fallos de contraste bajaron a 1 (título IBM de 4 líneas tapaba el kicker, Denny's
+  dorado sobre cartel amarillo, `linea2` de 4 líneas se salía por arriba). Pendientes sin verificar con
+  un previo: s76 `100 companies` saltaba de línea bajo la rejilla de `puntos` (ahora `firms`) y el gancho
+  con luma 31.8 < 33.5 (fondo `placa` 0.8 → 1.0).
+- Avisos L1 que siguen (⚠, no bloquean): `linea1` de `revelacion` en color `mute` lee 2.2-2.95:1 en
+  9 escenas. Quitar la atenuación en 16:9 NO lo movió (2.53 → 2.54): la causa es el color `mute`.
+  5 avisos de OCR caen en la entrada animada (frames mirados: el texto se lee).
+
 ## Fallos recurrentes imposibles por construcción (13-nov, sin commitear)
 
 Medido el 13-nov: 45 de 99 corridas fallaron (173 de 583 min). Tres defectos dejan de depender del
