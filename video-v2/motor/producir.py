@@ -1021,14 +1021,21 @@ def producir(proy: Path) -> dict:
     )
     cache_render, clave = renders / "render.json", clave_render(proy)
     reusar = render_reutilizable(cache_render, clave, final)
-    if reusar:
-        puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
-    else:
+    # the carousel does not need the video (only the story does): it is made while the video renders
+    car_ex = ThreadPoolExecutor(1)
+    car_f = car_ex.submit(social_previo, proy, env) if sb.get("social") else None
+    if not reusar:
         r = _run(
             hfversion.npx("render", "--quality", "high", "--output", str(crudo)),
             cwd=proy,
             env=env,
         )
+    # collected before a failed render gate can end the round with the carousel still writing social/
+    carrusel = car_f.result() if car_f else None
+    car_ex.shutdown()
+    if reusar:
+        puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
+    else:
         puerta(
             "render",
             r.returncode == 0 and crudo.exists(),
@@ -1138,18 +1145,19 @@ def producir(proy: Path) -> dict:
             ),
             encoding="utf-8",
         )
-    if sb.get("social"):  # páginas vivas: carrusel + historia (no publica nada)
+    if (
+        carrusel
+    ):  # páginas vivas: carrusel (hecho durante el render) + historia (no publica nada)
         import social
 
-        try:
-            s = social.generar(proy, env)
-            puerta(
-                "social",
-                True,
-                f"carrusel {len(s['carrusel'])} diapositivas · historia {'sí' if s['historia'] else 'no'}",
-            )
-        except (social.SocialError, subprocess.CalledProcessError) as e:
-            puerta("social", False, str(e), seguir=True)
+        ok_social, det_social = carrusel
+        if ok_social:
+            try:
+                s = social.generar(proy, env, con_carrusel=False)
+                det_social += f" · historia {'sí' if s['historia'] else 'no'}"
+            except (social.SocialError, subprocess.CalledProcessError) as e:
+                ok_social, det_social = False, str(e)
+        puerta("social", ok_social, det_social, seguir=True)
 
     def esperar_critico() -> list[str] | None:
         if critico_f is None:

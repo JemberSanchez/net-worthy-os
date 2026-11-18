@@ -79,6 +79,8 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
 - En la corrida de 986 s, la ronda 2 (reintento por `social`, con render y crítico en caché) costó solo
   138 s. La ronda 1 costó unos 848 s, el doble de una corrida limpia, y no se sabe por qué (los
   datos de esa ronda no se guardaron). Ahora `rondas` lo registra si vuelve a pasar.
+- El carrusel social se hace en paralelo con el render, y después solo la historia: 410 s → 384 s
+  (6,4 min), social 60 s → 28 s, render 132 s → 135 s (sin freno visible). n=1.
 
 ## Fase 2: brief → compilador (1-2 semanas)
 
