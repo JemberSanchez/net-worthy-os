@@ -90,6 +90,32 @@ AVISO_DVIDS = (
 )
 
 
+def _mmss(t: float) -> str:
+    h, r = divmod(int(t), 3600)
+    return f"{h}:{r // 60:02d}:{r % 60:02d}" if h else f"{r // 60}:{r % 60:02d}"
+
+
+def lista_capitulos(sb: dict, words: list[dict]) -> str:
+    """YouTube chapters ("0:00 Title" per line) from the first word of each chapter's sentence.
+    YouTube ignores the list unless it starts at 0:00 and every chapter lasts >= 10 s: refuse instead."""
+    caps = sb.get("capitulos") or []
+    if not caps:
+        return ""
+    inicio, i = [], 0
+    for g in sb["guion"]:
+        inicio.append(i)
+        i += len(g["texto"].split())
+    ts = [0.0] + [words[inicio[c["desde"]]]["start"] for c in caps[1:]]
+    cortos = [
+        c["titulo"]
+        for c, a, b in zip(caps, ts, [*ts[1:], words[-1]["end"]])
+        if b - a < 10
+    ]
+    if cortos:
+        raise ValueError(f"capítulos de menos de 10 s: {cortos}")
+    return "\n".join(f"{_mmss(t)} {c['titulo']}" for c, t in zip(caps, ts))
+
+
 def descripcion(sb: dict, proy: Path) -> str:
     """Descripción para YouTube: la del storyboard + aviso YMYL + fuentes + créditos de imagen y
     de metraje (CC BY los EXIGE; PD y Pexels se citan igual). Función pura salvo la lectura de creditos.json."""
@@ -99,6 +125,9 @@ def descripcion(sb: dict, proy: Path) -> str:
         (f"{sr['nombre']} · Ep. {sr['ep']}" if sr else ""),
         pub.get("descripcion", "").strip(),
     ]
+    if sb.get("capitulos"):
+        words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
+        partes.append(lista_capitulos(sb, words))
     if (sb.get("aviso") or {}).get("lineas"):
         partes.append(" · ".join(sb["aviso"]["lineas"]))
     hashtags = " ".join(pub.get("hashtags", []) + ([serie_hashtag(sr)] if sr else []))

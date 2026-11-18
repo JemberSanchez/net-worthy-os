@@ -22,6 +22,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(RAIZ / "tools"), str(Path(__file__).resolve().parent)]
+PAUSA_CAPITULO_S = 0.9  # long-form: silence before each chapter (F1 decision 7)
 MAX_TOMAS = 3  # each extra take costs one synthesis + one alignment: measured in docs/CERO-ERRORES.md
 
 
@@ -39,6 +40,7 @@ def tomas(sb: dict) -> list:
     cfg = sb.get("voz") or {}
     sp = cfg.get("speed", 1.0)
     pausa = float(cfg.get("pausa_s", 0.3))
+    capitulos = {c["desde"] for c in sb.get("capitulos") or []}
     out: list = []
     for k, g in enumerate(sb.get("guion") or []):
         v = (
@@ -47,7 +49,7 @@ def tomas(sb: dict) -> list:
             else sp.get(g.get("id"), sp.get("*", 1.0))
         )
         if k:
-            out.append(pausa)
+            out.append(PAUSA_CAPITULO_S if k in capitulos else pausa)
         for t in (cfg.get("cortes") or {}).get(g.get("id")) or [g["texto"].strip()]:
             out.append(float(t) if isinstance(t, (int, float)) else (t, float(v)))
     return out
@@ -299,7 +301,10 @@ def main() -> None:
 
     def sintetizar():
         if motor == "kokoro" and (
-            cfg.get("speed") or cfg.get("cortes") or cfg.get("por_frase")
+            cfg.get("speed")
+            or cfg.get("cortes")
+            or cfg.get("por_frase")
+            or sb.get("capitulos")
         ):
             return sintetizar_por_tomas(sb, voz, gv)
         return (

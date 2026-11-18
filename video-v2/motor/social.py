@@ -241,6 +241,79 @@ def _html_tarjeta(titulo: str, sub: str) -> str:
     )
 
 
+MINI_W, MINI_H = 1280, 720  # YouTube thumbnail
+MINI_PALABRAS = 4
+MINI_OCR = (
+    168,
+    94,
+)  # the size it shows at in suggested videos: it must still read there
+
+
+def _html_miniatura(texto: str) -> str:
+    """Long-form thumbnail (1280x720): the carousel card, one big title, nothing else."""
+    return (
+        _html_carrusel([{"titulo": texto}], ["miniatura-fondo.jpg"], tarjeta=True)
+        .replace(
+            f'data-width="{W}" data-height="{H}"',
+            f'data-width="{MINI_W}" data-height="{MINI_H}"',
+        )
+        .replace(
+            f"width: {W}px; height: {H}px", f"width: {MINI_W}px; height: {MINI_H}px"
+        )
+        .replace(f"width={W}, height={H}", f"width={MINI_W}, height={MINI_H}")
+        .replace(
+            "</style>",
+            "  .top { display: none; } .body { bottom: 64px; } .titulo { font-weight: 900; font-size: 150px; line-height: 0.95; }\n</style>",
+        )
+    )
+
+
+def validar_miniatura(m: dict) -> list[str]:
+    n = len((m.get("texto") or "").replace("*", "").split())
+    err = (
+        []
+        if 1 <= n <= MINI_PALABRAS
+        else [f"`miniatura.texto` de {n} palabras (1-{MINI_PALABRAS})"]
+    )
+    if not str(m.get("fondo", "")).partition(":")[2]:
+        err.append('`miniatura.fondo` debe ser "img:<clave>" o "clip:<clave>@<s>"')
+    return err
+
+
+def miniatura(proy: Path, env: dict | None = None) -> Path:
+    """`storyboard.miniatura` {texto, fondo} -> social/miniatura.jpg (file only: nothing is uploaded)."""
+    from PIL import Image
+
+    proy = Path(proy).resolve()
+    sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
+    m = sb.get("miniatura") or {}
+    if err := validar_miniatura(m):
+        raise SocialError("miniatura inválida:\n  - " + "\n  - ".join(err))
+    d = proy / "social" / "_miniatura"
+    _preparar_dir(d)
+    shutil.copyfile(d / _fondo(proy, sb, m["fondo"], d), d / "miniatura-fondo.jpg")
+    (d / "index.html").write_text(_html_miniatura(m["texto"]), encoding="utf-8")
+    png = _snapshot(d, [0.5], env or {})[0]
+    dst = proy / "social" / "miniatura.jpg"
+    Image.open(png).convert("RGB").resize((MINI_W, MINI_H), Image.LANCZOS).save(
+        dst, quality=92, optimize=True
+    )
+    # legibility where it is actually seen: shrink to the suggested-video size, then OCR it enlarged
+    import medir_cuadros as mc
+    import medir_texto
+
+    chica = d / "miniatura-chica.png"
+    Image.open(dst).resize(MINI_OCR, Image.LANCZOS).resize(
+        (MINI_OCR[0] * 4, MINI_OCR[1] * 4), Image.LANCZOS
+    ).save(chica)
+    leido = " ".join(x["texto"] for x in mc.ocr_imagen(chica)["lineas"])
+    if medir_texto.parecido(m["texto"].replace("*", ""), leido) < 0.8:
+        raise SocialError(
+            f"miniatura ilegible a {MINI_OCR[0]}x{MINI_OCR[1]}: leído {leido!r}"
+        )
+    return dst
+
+
 def _snapshot(dir_: Path, tiempos: list[float], env: dict) -> list[Path]:
     salida = dir_ / "snapshots"
     if salida.exists():
