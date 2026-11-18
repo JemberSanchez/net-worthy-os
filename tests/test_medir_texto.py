@@ -1,16 +1,21 @@
 """Tests de tools/medir_texto.py: legibilidad del texto en pantalla con casos de respuesta conocida."""
+
 from __future__ import annotations
 
 import importlib.util
 import os
 import sys
 import unittest
+from typing import ClassVar
 
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+sys.path.insert(
+    0,
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"),
+)
 
-import medir_texto as T  # noqa: E402
+import medir_texto as T
 
 FUENTE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
@@ -25,7 +30,9 @@ def linea(texto, caja=(100, 800, 900, 880), conf=0.99, contraste=12.0):
 
 class ParecidoTest(unittest.TestCase):
     def test_subcadena_es_parecido_total(self):
-        self.assertEqual(T.parecido("$8 million", "THIS JANITOR DIED WITH $8 MILLION"), 1.0)
+        self.assertEqual(
+            T.parecido("$8 million", "THIS JANITOR DIED WITH $8 MILLION"), 1.0
+        )
 
     def test_errata_de_ocr_se_tolera(self):
         self.assertGreater(T.parecido("No hot tips", "N0 HOT TIPS"), 0.8)
@@ -39,15 +46,25 @@ class ParecidoTest(unittest.TestCase):
 
 class TextosDeEscenaTest(unittest.TestCase):
     def test_recoge_textos_y_quita_contadores_e_iconos(self):
-        esc = {"tipo": "titulo", "en": "6", "fondo": "nyse",
-               "kicker": {"texto": "Now", "en": "6"},
-               "lineas": [{"texto": "The part", "en": "6"}, {"texto": "{n} stocks", "en": "7"}, {"texto": "x"}],
-               "cta": {"a": {"texto": "*Skill*"}, "o": "or just"}}
-        self.assertEqual(T.textos_de_escena(esc), ["Now", "The part", "stocks", "Skill", "or just"])
+        esc = {
+            "tipo": "titulo",
+            "en": "6",
+            "fondo": "nyse",
+            "kicker": {"texto": "Now", "en": "6"},
+            "lineas": [
+                {"texto": "The part", "en": "6"},
+                {"texto": "{n} stocks", "en": "7"},
+                {"texto": "x"},
+            ],
+            "cta": {"a": {"texto": "*Skill*"}, "o": "or just"},
+        }
+        self.assertEqual(
+            T.textos_de_escena(esc), ["Now", "The part", "stocks", "Skill", "or just"]
+        )
 
 
 class AnalizarTest(unittest.TestCase):
-    ESP = [{"texto": "No big salary", "escena": 3, "t0": 6.0, "t1": 8.0}]
+    ESP: ClassVar[list[dict]] = [{"texto": "No big salary", "escena": 3, "t0": 6.0, "t1": 8.0}]
 
     def test_texto_esperado_leido(self):
         r = T.analizar([frame(6.5, linea("NO BIG SALARY"))], self.ESP)
@@ -56,21 +73,30 @@ class AnalizarTest(unittest.TestCase):
     def test_texto_esperado_no_leido_da_escena_y_ventana(self):
         r = T.analizar([frame(6.5, linea("RONALD READ"))], self.ESP)
         self.assertEqual(r["leidos_pct"], 0.0)
-        self.assertEqual((r["no_leidos"][0]["escena"], r["no_leidos"][0]["t0"]), (3, 6.0))
+        self.assertEqual(
+            (r["no_leidos"][0]["escena"], r["no_leidos"][0]["t0"]), (3, 6.0)
+        )
 
     def test_texto_partido_en_dos_lineas_cuenta_como_leido(self):
         r = T.analizar([frame(6.5, linea("NO BIG"), linea("SALARY"))], self.ESP)
         self.assertEqual(r["leidos_pct"], 100.0)
 
     def test_fuera_de_la_ventana_no_cuenta(self):
-        r = T.analizar([frame(9.0, linea("NO BIG SALARY")), frame(6.5, linea("x y"))], self.ESP)
+        r = T.analizar(
+            [frame(9.0, linea("NO BIG SALARY")), frame(6.5, linea("x y"))], self.ESP
+        )
         self.assertEqual(r["leidos_pct"], 0.0)
 
     def test_pequeno_dudoso_bajo_contraste_y_zona_ui(self):
-        fr = [frame(1.0, linea("tiny note", caja=(100, 500, 400, 520)),           # 20 px de alto
-                    linea("blurry words", conf=0.5),
-                    linea("grey on grey", contraste=1.3),
-                    linea("under the ui", caja=(100, 1700, 900, 1780)))]
+        fr = [
+            frame(
+                1.0,
+                linea("tiny note", caja=(100, 500, 400, 520)),  # 20 px de alto
+                linea("blurry words", conf=0.5),
+                linea("grey on grey", contraste=1.3),
+                linea("under the ui", caja=(100, 1700, 900, 1780)),
+            )
+        ]
         r = T.analizar(fr, [])
         self.assertEqual([x["texto"] for x in r["pequenos"]], ["tiny note"])
         self.assertEqual([x["texto"] for x in r["dudosos"]], ["blurry words"])
@@ -78,20 +104,43 @@ class AnalizarTest(unittest.TestCase):
         self.assertEqual([x["texto"] for x in r["zona_ui"]], ["under the ui"])
 
     def test_el_mismo_rotulo_en_varios_frames_es_un_hallazgo(self):
-        fr = [frame(t, linea("grey", contraste=c)) for t, c in ((1.0, 2.0), (1.5, 1.5), (2.0, 2.5))]
+        fr = [
+            frame(t, linea("grey", contraste=c))
+            for t, c in ((1.0, 2.0), (1.5, 1.5), (2.0, 2.5))
+        ]
         r = T.analizar(fr, [])["bajo_contraste"]
-        self.assertEqual((len(r), r[0]["t"], r[0]["t_fin"], r[0]["contraste"]), (1, 1.0, 2.0, 2.5))
+        self.assertEqual(
+            (len(r), r[0]["t"], r[0]["t_fin"], r[0]["contraste"]), (1, 1.0, 2.0, 2.5)
+        )
 
     def test_fundido_de_entrada_no_es_fallo_si_luego_se_lee(self):
         # "THE PART" en el #7: 1,64:1 en su frame de entrada, legible después
-        fr = [frame(15.0, linea("THE PART", contraste=1.64)), frame(15.5, linea("THE PART", contraste=9.0))]
+        fr = [
+            frame(15.0, linea("THE PART", contraste=1.64)),
+            frame(15.5, linea("THE PART", contraste=9.0)),
+        ]
         self.assertEqual(T.analizar(fr, [])["bajo_contraste"], [])
 
     def test_texto_incidental_del_metraje_no_se_juzga(self):
-        fr = [frame(18.0, linea("Tickers were an hour behind", caja=(100, 1700, 300, 1715), contraste=2.0),
-                    linea("NO HOT TIPS", caja=(100, 1700, 900, 1715), contraste=2.0))]
-        r = T.analizar(fr, [], diseno=[{"texto": "No big salary.", "t0": 6, "t1": 8},
-                                       {"texto": "No hot tips.", "t0": 17, "t1": 19}])
+        fr = [
+            frame(
+                18.0,
+                linea(
+                    "Tickers were an hour behind",
+                    caja=(100, 1700, 300, 1715),
+                    contraste=2.0,
+                ),
+                linea("NO HOT TIPS", caja=(100, 1700, 900, 1715), contraste=2.0),
+            )
+        ]
+        r = T.analizar(
+            fr,
+            [],
+            diseno=[
+                {"texto": "No big salary.", "t0": 6, "t1": 8},
+                {"texto": "No hot tips.", "t0": 17, "t1": 19},
+            ],
+        )
         self.assertEqual([x["texto"] for x in r["bajo_contraste"]], ["NO HOT TIPS"])
         self.assertEqual([x["texto"] for x in r["pequenos"]], ["NO HOT TIPS"])
 
@@ -102,7 +151,13 @@ class AnalizarTest(unittest.TestCase):
         self.assertTrue(T.es_disenado("BLUE CHIPS CAN CUT", 14.2, d))
 
     def test_palabra_suelta_del_metraje_no_casa_con_el_guion(self):
-        d = [{"texto": "This janitor died with eight million dollars.", "t0": 0, "t1": 30}]
+        d = [
+            {
+                "texto": "This janitor died with eight million dollars.",
+                "t0": 0,
+                "t1": 30,
+            }
+        ]
         self.assertFalse(T.es_disenado("with", 18.0, d))
         self.assertFalse(T.es_disenado("with a sudden burst of selling.", 18.0, d))
 
@@ -112,15 +167,22 @@ class ContrasteTest(unittest.TestCase):
 
     def caja(self, fg, bg):
         from PIL import Image, ImageDraw, ImageFont
+
         im = Image.new("RGB", (1080, 400), bg)
-        ImageDraw.Draw(im).text((40, 150), "EIGHT MILLION", font=ImageFont.truetype(FUENTE, 70), fill=fg)
+        ImageDraw.Draw(im).text(
+            (40, 150), "EIGHT MILLION", font=ImageFont.truetype(FUENTE, 70), fill=fg
+        )
         return T.contraste_caja(np.asarray(im), [30, 140, 700, 240])
 
     @unittest.skipUnless(os.path.exists(FUENTE), "sin fuente DejaVu")
     def test_razones_conocidas(self):
-        self.assertAlmostEqual(self.caja((255, 255, 255), (10, 10, 10)), 19.8, delta=0.5)
+        self.assertAlmostEqual(
+            self.caja((255, 255, 255), (10, 10, 10)), 19.8, delta=0.5
+        )
         self.assertAlmostEqual(self.caja((70, 70, 70), (55, 55, 55)), 1.26, delta=0.05)
-        self.assertAlmostEqual(self.caja((255, 215, 0), (255, 255, 255)), 1.40, delta=0.05)
+        self.assertAlmostEqual(
+            self.caja((255, 215, 0), (255, 255, 255)), 1.40, delta=0.05
+        )
 
 
 class ConfirmarContrasteTest(unittest.TestCase):
@@ -130,15 +192,21 @@ class ConfirmarContrasteTest(unittest.TestCase):
     BC = ({"t": 29.0, "t_fin": 29.0, "texto": "IT WENT BUST", "contraste": 2.64},)
 
     def test_unico_frame_en_fundido_se_confirma_bien(self):
-        out = T.confirmar_contraste(list(self.BC), lambda t: [{"texto": "IT WENT BUST", "contraste": 7.1}])
+        out = T.confirmar_contraste(
+            list(self.BC), lambda t: [{"texto": "IT WENT BUST", "contraste": 7.1}]
+        )
         self.assertEqual(out, [])
 
     def test_sigue_bajo_se_queda(self):
-        out = T.confirmar_contraste(list(self.BC), lambda t: [{"texto": "IT WENT BUST", "contraste": 2.2}])
+        out = T.confirmar_contraste(
+            list(self.BC), lambda t: [{"texto": "IT WENT BUST", "contraste": 2.2}]
+        )
         self.assertEqual(len(out), 1)
 
     def test_no_reencontrado_se_queda(self):
-        out = T.confirmar_contraste(list(self.BC), lambda t: [{"texto": "NOBODY GETS", "contraste": 9.0}])
+        out = T.confirmar_contraste(
+            list(self.BC), lambda t: [{"texto": "NOBODY GETS", "contraste": 9.0}]
+        )
         self.assertEqual(len(out), 1)
 
     def test_varios_frames_no_se_remide(self):
@@ -153,7 +221,9 @@ class ConfirmarContrasteTest(unittest.TestCase):
         self.assertEqual(visto, [29.15])
 
 
-@unittest.skipUnless(importlib.util.find_spec("rapidocr") and os.path.exists(FUENTE), "sin RapidOCR")
+@unittest.skipUnless(
+    importlib.util.find_spec("rapidocr") and os.path.exists(FUENTE), "sin RapidOCR"
+)
 class OcrRealTest(unittest.TestCase):
     """Validación del instrumento con el OCR de verdad: lo grande y contrastado se lee; lo diminuto
     y lo de contraste ~1,1:1 no (medido al crearlo, 28-oct)."""
@@ -161,25 +231,42 @@ class OcrRealTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import logging
+
         from rapidocr import RapidOCR
+
         logging.getLogger("RapidOCR").setLevel(logging.ERROR)
-        cls.motor = RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920})
+        cls.motor = RapidOCR(
+            params={
+                "Global.log_level": "error",
+                "Det.limit_type": "max",
+                "Det.limit_side_len": 1920,
+            }
+        )
 
     def leer(self, size, fg, bg):
         from PIL import Image, ImageDraw, ImageFont
+
         im = Image.new("RGB", (1080, 1920), bg)
-        ImageDraw.Draw(im).text((80, 900), "NO HOT TIPS", font=ImageFont.truetype(FUENTE, size), fill=fg)
+        ImageDraw.Draw(im).text(
+            (80, 900), "NO HOT TIPS", font=ImageFont.truetype(FUENTE, size), fill=fg
+        )
         r = self.motor(np.asarray(im))
         return " ".join(r.txts) if r.txts else ""
 
     def test_grande_y_contrastado_se_lee(self):
-        self.assertEqual(T.parecido("No hot tips", self.leer(60, (255, 255, 255), (10, 10, 10))), 1.0)
+        self.assertEqual(
+            T.parecido("No hot tips", self.leer(60, (255, 255, 255), (10, 10, 10))), 1.0
+        )
 
     def test_diminuto_no_se_lee(self):
-        self.assertLess(T.parecido("No hot tips", self.leer(16, (255, 255, 255), (10, 10, 10))), 0.8)
+        self.assertLess(
+            T.parecido("No hot tips", self.leer(16, (255, 255, 255), (10, 10, 10))), 0.8
+        )
 
     def test_contraste_casi_nulo_no_se_lee(self):
-        self.assertLess(T.parecido("No hot tips", self.leer(60, (60, 60, 60), (55, 55, 55))), 0.8)
+        self.assertLess(
+            T.parecido("No hot tips", self.leer(60, (60, 60, 60), (55, 55, 55))), 0.8
+        )
 
 
 class TramosOcrTest(unittest.TestCase):
@@ -194,21 +281,35 @@ class TramosOcrTest(unittest.TestCase):
 
     def test_video_corto_no_crea_tramos_vacios(self):
         self.assertEqual(T.tramos(20, 15, 6), [(0, 15), (15, 20)])
-        self.assertEqual(T.tramos(0, 15, 6), [(0, 0)])  # no frame count: one range, read to the end
+        self.assertEqual(
+            T.tramos(0, 15, 6), [(0, 0)]
+        )  # no frame count: one range, read to the end
+
+    def test_procesos_ocr_no_sobresuscriben_los_nucleos(self):
+        # 18-nov: 6 processes x onnxruntime's default 12 threads = 72 on 12 cores, OCR 163 s -> 77 s capped
+        self.assertLessEqual(T.PROCESOS_OCR * T.HILOS_OCR, max(2, os.cpu_count() or 2))
+        self.assertGreaterEqual(T.HILOS_OCR, 1)
 
 
 class OrdenLecturaTest(unittest.TestCase):
     def test_lineas_con_interlineado_menor_que_la_banda_no_se_cruzan(self):
         """huang-exit end card at 33 px (12-nov): lines 44 px apart fell in one 57.6 px band and were sorted by x."""
-        L = [{"texto": "million are", "caja": [65, 1384, 882, 1427]},
-             {"texto": "Not financial", "caja": [66, 1340, 818, 1382]},
-             {"texto": "performance", "caja": [65, 1474, 784, 1518]},
-             {"texto": "Nvidia's", "caja": [64, 1428, 700, 1473]}]
-        self.assertEqual([x["texto"] for x in T.en_orden(L)],
-                         ["Not financial", "million are", "Nvidia's", "performance"])
+        L = [
+            {"texto": "million are", "caja": [65, 1384, 882, 1427]},
+            {"texto": "Not financial", "caja": [66, 1340, 818, 1382]},
+            {"texto": "performance", "caja": [65, 1474, 784, 1518]},
+            {"texto": "Nvidia's", "caja": [64, 1428, 700, 1473]},
+        ]
+        self.assertEqual(
+            [x["texto"] for x in T.en_orden(L)],
+            ["Not financial", "million are", "Nvidia's", "performance"],
+        )
 
     def test_trozos_de_una_misma_linea_van_por_x(self):
-        L = [{"texto": "million?", "caja": [520, 802, 900, 880]}, {"texto": "$1001", "caja": [100, 800, 500, 884]}]
+        L = [
+            {"texto": "million?", "caja": [520, 802, 900, 880]},
+            {"texto": "$1001", "caja": [100, 800, 500, 884]},
+        ]
         self.assertEqual([x["texto"] for x in T.en_orden(L)], ["$1001", "million?"])
 
 

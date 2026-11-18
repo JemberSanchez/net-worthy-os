@@ -84,6 +84,9 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
 - Ritmo en paralelo con loudness: descartado. 384 s → 379 s (ruido): esas dos bajaron de 160 a 72 s,
   pero social subió de 28 a 111 s. Tras el render, el camino crítico es el crítico (~203 s, en
   paralelo): lo que corre a su lado solo se reparte la CPU. La siguiente palanca es el propio crítico.
+- OCR del crítico: 6 procesos × 12 hilos de onnxruntime (su valor por defecto) en 12 núcleos.
+  Limitado a `núcleos // procesos` hilos por proceso: crítico 203 s → 121 s y corrida 384 s → 301 s
+  (5,0 min), mismo informe (0 fallos, 100 % leído). A solas, el crítico baja de 212 a 96 s.
 
 ## Fase 2: brief → compilador (1-2 semanas)
 

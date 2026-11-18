@@ -74,9 +74,7 @@ def textos_de_escena(esc: dict) -> list[str]:
     def visitar(v):
         if isinstance(v, dict):
             for k, x in v.items():
-                if k == "texto" and isinstance(x, str):
-                    out.append(x)
-                elif k in ("o", "sub") and isinstance(x, str):
+                if k == "texto" and isinstance(x, str) or k in ("o", "sub") and isinstance(x, str):
                     out.append(x)
                 else:
                     visitar(x)
@@ -257,6 +255,8 @@ def esperados_de_proyecto(proy: Path) -> list[dict]:
 
 
 PROCESOS_OCR = max(1, min(6, (os.cpu_count() or 2) // 2))
+# onnxruntime defaults to every core per session: 6 x 12 threads on 12 cores made OCR 163 s, capped 77 s (18-nov)
+HILOS_OCR = max(1, (os.cpu_count() or 2) // PROCESOS_OCR)
 
 
 def tramos(n: int, paso: int, partes: int) -> list[tuple[int, int]]:
@@ -269,10 +269,13 @@ def tramos(n: int, paso: int, partes: int) -> list[tuple[int, int]]:
 
 def _ocr_tramo(mp4: str, paso: int, tramo: tuple[int, int]) -> list[dict]:
     import logging
+
     import cv2
     from rapidocr import RapidOCR
     logging.getLogger("RapidOCR").setLevel(logging.ERROR)
-    motor = RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920})
+    motor = RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920,
+                             "EngineConfig.onnxruntime.intra_op_num_threads": HILOS_OCR,
+                             "EngineConfig.onnxruntime.inter_op_num_threads": 1})
     cap = cv2.VideoCapture(mp4)
     fps_v = cap.get(cv2.CAP_PROP_FPS) or 30.0
     frames = []
@@ -312,7 +315,7 @@ def ocr_frames(mp4: Path, fps: float = 2.0) -> list[dict]:
     cap.release()
     paso = max(1, round(fps_v / fps))
     from concurrent.futures import ProcessPoolExecutor
-    # one RapidOCR per process: 4.91 -> 2.58 s/frame with 6 on huang-exit (12 cores), identical text (12-nov)
+    # one RapidOCR per process, HILOS_OCR threads each: identical text to one process (12-nov, 18-nov)
     ts = tramos(n, paso, PROCESOS_OCR)
     ts[-1] = (ts[-1][0], 10**9)  # FRAME_COUNT is an estimate: the last range reads to the end of the file
     with ProcessPoolExecutor(len(ts)) as ex:
