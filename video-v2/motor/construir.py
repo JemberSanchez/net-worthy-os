@@ -1452,6 +1452,37 @@ def localizar_pruebas(proy: Path, sb: dict) -> None:
         )
 
 
+def lumas_gancho(proy: Path, sb: dict, p: dict, gancho_s: float) -> dict[str, float]:
+    """Raw luma of the clips on screen in the hook, cached in assets/clips/luma.json (one ffmpeg per new clip)."""
+    import broll
+
+    decl = sb.get("clips") or {}
+    usados = {
+        f["clip"]
+        for f in p.get("fotos") or []
+        if f.get("clip") in decl and f["t0"] < gancho_s
+    }
+    if not usados:
+        return {}
+    carpeta = proy / "assets" / "clips"
+    cache_p = carpeta / "luma.json"
+    cache = json.loads(cache_p.read_text(encoding="utf-8")) if cache_p.exists() else {}
+    clave = {c: f"{c}@{float(decl[c].get('desde', 0)):g}" for c in usados}
+    # only clips already on disk (reviewed via their contact sheet): a gate never downloads
+    faltan = [
+        c for c in usados if clave[c] not in cache and (carpeta / f"{c}.src").exists()
+    ]
+    if faltan:
+        for c in faltan:
+            cache[clave[c]] = broll.luma(
+                carpeta / f"{c}.src", float(decl[c].get("desde", 0))
+            )
+        cache_p.write_text(
+            json.dumps(cache, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+        )
+    return {c: cache[clave[c]] for c in usados if clave[c] in cache}
+
+
 def medir_detalle(proy: Path, sb: dict) -> None:
     """Antes del plan: cuánto detalle tiene cada clip (cacheado en assets/clips/detalle.json) para
     decidir qué fondos van nítidos y cuáles suaves. Medido, no a ojo."""
@@ -1633,6 +1664,9 @@ def _puertas(
     if not sin_plan:
         p = plan(sb, words)
         errores += [] if exento else puertas.errores(sb, p)
+        if not exento:
+            g = puertas.GANCHO_S
+            errores += puertas.gancho_clip_oscuro(p, lumas_gancho(proy, sb, p, g), g)
         if sb.get("_edicion"):
             errores += [
                 f"repite los últimos vídeos: {m}" for m in edicion.puerta(proy, p, sb)

@@ -132,6 +132,31 @@ def pantalla_vacia(p: dict) -> list[str]:
     return out
 
 
+# Raw clip luma under which the hook comes out dark (E1 in errores.json). Measured 18-nov on 9 hooks: the final
+# hook keeps 0.38-0.68 (median 0.5) of the raw clip's luma; failed hooks had clips of 16.5 and 50 (hook 8.2, 24.2),
+# passed ones 76-171 (hook >= 41). gancho_luma_min 30 / 0.5 = 60. PROVISIONAL (n = 9).
+GANCHO_CLIP_LUMA_MIN = 60
+GANCHO_S = json.loads(
+    (Path(__file__).parent / "rubrica.json").read_text(encoding="utf-8")
+)["criterios"]["C1"]["gancho_s"]
+
+
+def gancho_clip_oscuro(p: dict, lumas: dict[str, float], gancho_s: float) -> list[str]:
+    """A clip on screen in the first `gancho_s` seconds too dark for the hook: caught before the render."""
+    malos = {
+        f["clip"]: lumas[f["clip"]]
+        for f in p.get("fotos") or []
+        if f.get("clip") in lumas
+        and f["t0"] < gancho_s
+        and lumas[f["clip"]] < GANCHO_CLIP_LUMA_MIN
+    }
+    return [
+        f"gancho: clip '{c}' luma {lu:g} (mín. {GANCHO_CLIP_LUMA_MIN}) en los primeros {gancho_s:g} s: "
+        "el gancho saldrá oscuro, pon un clip más claro"
+        for c, lu in malos.items()
+    ]
+
+
 def texto_breve(p: dict) -> list[str]:
     return [
         f'escena {k}: "{txt}" se ve solo {fin - en:.2f}s desde {en:.1f}s (< {_U["texto_min_s"]}): '
@@ -158,7 +183,9 @@ def rotulos_solapados(p: dict) -> list[str]:
     return out
 
 
-ANCHO_UTIL = 1080 - 2 * 72  # the motor's side margin (#aviso, #avisofin, editorial titles)
+ANCHO_UTIL = (
+    1080 - 2 * 72
+)  # the motor's side margin (#aviso, #avisofin, editorial titles)
 
 
 def contador_ancho(sb: dict) -> list[str]:
@@ -171,7 +198,9 @@ def contador_ancho(sb: dict) -> list[str]:
     )
     out = []
     for k, e in enumerate(sb.get("escenas") or []):
-        if e.get("tipo") != "contador3d" or not isinstance(e.get("valor"), (int, float)):
+        if e.get("tipo") != "contador3d" or not isinstance(
+            e.get("valor"), (int, float)
+        ):
             continue
         t = f"{e.get('prefijo', '$')}{round(e['valor']):,}"
         if (w := fuente.getlength(t)) > ANCHO_UTIL:

@@ -12,8 +12,9 @@ Encadena (cada paso es una puerta: si falla, se para y sale con código 1):
   7. medir_ritmo --max 2.5        el cuadro nunca muerto más de 2,5 s
   8. preview <30 MB + publish_<ref>.json (PRIVADO) + adn.json
   9. si hay token de YouTube: sube el MP4 como PRIVADO (borrador; `--sin-subir` lo evita)
-`--auto`: antes de cada repetición aplica SOLO arreglos mecánicos (autoarreglo.py) y vuelve a pasar
-las MISMAS puertas, hasta RONDAS_AUTO veces; para e imprime lo que no es mecánico.
+Por defecto (`--auto`, implícito desde el 18-nov; `--sin-auto` lo apaga): antes de cada repetición aplica
+SOLO arreglos mecánicos (autoarreglo.py) y vuelve a pasar las MISMAS puertas, hasta RONDAS_AUTO veces;
+para e imprime lo que no es mecánico.
 `--previo` para antes del render: puertas + una hoja de contactos por escena (<1 min). Sin `--sin-critico`,
 al final corre los medidores del crítico. Solo imprime fallos, con segundo y escena; todo queda en
 `renders/qa.json` (puertas, con su duración) y `renders/corridas.jsonl` (una línea por corrida).
@@ -1187,7 +1188,8 @@ if __name__ == "__main__":
         raise SystemExit(__doc__)
     t0, fallo = time.time(), None
     try:
-        if "--auto" in sys.argv:
+        # E2-E5 (errores.json) failed on --sin-subir runs that never called autoarreglo
+        if "--sin-auto" not in sys.argv:
             producir_auto(
                 Path(sys.argv[1]).resolve(),
                 "--sin-critico" not in sys.argv and "--previo" not in sys.argv,

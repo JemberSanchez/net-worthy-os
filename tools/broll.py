@@ -189,7 +189,28 @@ def buscar_pexels(q: str, n: int = 10) -> list[dict]:
 
 # ── selección: puntuar candidatos contra la frase ──────────────────────────────────────────────
 GENERICO = frozenset(
-    ["business", "businessman", "businesswoman", "handshake", "coins", "coin", "skyline", "laptop", "typing", "person", "people", "man", "woman", "office", "pointing", "money", "abstract", "animation", "background", "concept"]
+    [
+        "business",
+        "businessman",
+        "businesswoman",
+        "handshake",
+        "coins",
+        "coin",
+        "skyline",
+        "laptop",
+        "typing",
+        "person",
+        "people",
+        "man",
+        "woman",
+        "office",
+        "pointing",
+        "money",
+        "abstract",
+        "animation",
+        "background",
+        "concept",
+    ]
 )
 PESOS = {"rel": 0.35, "esp": 0.25, "res": 0.15, "mov": 0.10, "lic": 0.05, "nuevo": 0.10}
 VALOR_LICENCIA = {"pd": 1.0, "cc0": 1.0, "pexels": 0.8, "cc-by": 0.7}
@@ -199,7 +220,10 @@ def _tokens(s: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", (s or "").lower()))
 
 
-def usados(raiz: Path = Path(__file__).resolve().parents[1] / "video-v2") -> set[str]:
+VIDEOS = Path(__file__).resolve().parents[1] / "video-v2"
+
+
+def usados(raiz: Path = VIDEOS) -> set[str]:
     """Titles already credited in any of our videos."""
     return {
         f["titulo"]
@@ -301,7 +325,9 @@ def _vigente(destino: Path, v: dict) -> bool:
     return not ruta.exists() or ruta.read_text(encoding="utf-8") == _origen(v)
 
 
-OCR_CONF_MIN = 0.6  # below this the OCR is guessing at texture, and this list is meant to be read
+OCR_CONF_MIN = (
+    0.6  # below this the OCR is guessing at texture, and this list is meant to be read
+)
 
 
 def _quitar_derivados(k: str, carpeta: Path) -> None:
@@ -332,7 +358,9 @@ def _quitar_derivados(k: str, carpeta: Path) -> None:
         )
 
 
-def purgar_cambiados(decl: dict[str, dict], carpeta: Path, huerfanos: bool = True) -> list[str]:
+def purgar_cambiados(
+    decl: dict[str, dict], carpeta: Path, huerfanos: bool = True
+) -> list[str]:
     """Same key, new source: the old clip must not survive in any cache. Also drops credits of clips no longer
     declared or just purged, which would otherwise end up in the description. `decl` is the whole `clips`."""
     cambiados = [
@@ -347,7 +375,12 @@ def purgar_cambiados(decl: dict[str, dict], carpeta: Path, huerfanos: bool = Tru
         fichas = json.loads(cred.read_text(encoding="utf-8"))
         fuera = {f"{k}.src" for k in cambiados}
         validos = {f"{k}.src" for k in decl}
-        vivas = [f for f in fichas if f.get("archivo") not in fuera and (not huerfanos or f.get("archivo") in validos)]
+        vivas = [
+            f
+            for f in fichas
+            if f.get("archivo") not in fuera
+            and (not huerfanos or f.get("archivo") in validos)
+        ]
         if len(vivas) != len(fichas):
             cred.write_text(
                 json.dumps(vivas, ensure_ascii=False, indent=1), encoding="utf-8"
@@ -655,6 +688,33 @@ def detalle(crudo: Path, desde: float = 0.0, segundos: float = 8.0) -> float:
     )
 
 
+def luma(crudo: Path, desde: float = 0.0, segundos: float = 2.0) -> float:
+    """Mean brightness (0-255) of the raw clip over the seconds it would open the video."""
+    import numpy as np
+
+    raw = subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-ss",
+            f"{desde:.2f}",
+            "-i",
+            str(crudo),
+            "-t",
+            f"{segundos:.2f}",
+            "-vf",
+            "fps=4,scale=270:480:force_original_aspect_ratio=increase,crop=270:480,format=gray",
+            "-f",
+            "rawvideo",
+            "-",
+        ],
+        capture_output=True,
+        check=True,
+    ).stdout
+    return round(float(np.frombuffer(raw, np.uint8).mean()), 1)
+
+
 def hoja_clip(crudo: Path, desde: float = 0.0) -> list[str]:
     """<clave>.hoja.jpg (up to 16 frames of the clip) and <clave>.hoja.txt (what the OCR reads in them). The clips
     with Polish banknotes and a crypto chart were chosen by description: reading a clip's text is cheap here."""
@@ -664,9 +724,23 @@ def hoja_clip(crudo: Path, desde: float = 0.0) -> list[str]:
     n = max(1, min(16, round(util / 2)))
     with tempfile.TemporaryDirectory() as d:
         subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-ss", f"{desde:.2f}", "-i", str(crudo), "-vf",
-             f"fps={n / util:.4f},scale=1280:1280:force_original_aspect_ratio=decrease", "-frames:v", "16",
-             "-q:v", "2", str(Path(d) / "f-%02d.jpg")],
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-y",
+                "-ss",
+                f"{desde:.2f}",
+                "-i",
+                str(crudo),
+                "-vf",
+                f"fps={n / util:.4f},scale=1280:1280:force_original_aspect_ratio=decrease",
+                "-frames:v",
+                "16",
+                "-q:v",
+                "2",
+                str(Path(d) / "f-%02d.jpg"),
+            ],
             check=True,
         )
         textos = list(
@@ -678,11 +752,26 @@ def hoja_clip(crudo: Path, desde: float = 0.0) -> list[str]:
             )
         )
         subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-i", str(Path(d) / "f-%02d.jpg"), "-vf", "scale=320:-2,tile=4x4",
-             "-frames:v", "1", "-q:v", "4", str(crudo.with_suffix(".hoja.jpg"))],
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-y",
+                "-i",
+                str(Path(d) / "f-%02d.jpg"),
+                "-vf",
+                "scale=320:-2,tile=4x4",
+                "-frames:v",
+                "1",
+                "-q:v",
+                "4",
+                str(crudo.with_suffix(".hoja.jpg")),
+            ],
             check=True,
         )
-    crudo.with_suffix(".hoja.txt").write_text("\n".join(textos) + "\n", encoding="utf-8")
+    crudo.with_suffix(".hoja.txt").write_text(
+        "\n".join(textos) + "\n", encoding="utf-8"
+    )
     return textos
 
 

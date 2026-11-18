@@ -156,6 +156,15 @@ class TiemposTest(unittest.TestCase):
         self.assertEqual(con(quedan, "es ambiente"), [])
         self.assertGreaterEqual(nuevo["sonidos"][0]["dur"], 1.0)
 
+    def test_historia_cortada_vuelve_al_final_de_frase(self):
+        # E6 (errores.json): 15-nov 'historia: el corte en Ns cae tras "…", sin terminar la frase'
+        proy, sb, w = cargar("berkshire-1999")
+        sb["social"]["historia"]["hasta"] = "1:looked$"
+        self.assertTrue(con(errores(proy, sb, w), "sin terminar la frase"))
+        nuevo, quedan = bucle(proy, sb, w)
+        self.assertEqual(con(quedan, "historia"), [])
+        self.assertEqual(nuevo["social"]["historia"]["hasta"], "0:1999$")
+
     def test_voz_sin_subtitulo_extiende_subtitulos(self):
         # session bdd19749: "escena 1: voz sin subtítulo 3.0-5.2s (...): quita `limpio` o añade texto"
         proy, sb, w = cargar("huang-resigns")

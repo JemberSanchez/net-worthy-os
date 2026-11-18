@@ -2,9 +2,13 @@
   {
     "id": "E1",
     "patron": "gancho\\ oscuro\\ o\\ plano:\\ luma\\ \\d+(?:[.,]\\d+)?",
-    "estado": "abierto",
+    "estado": "prevenido",
     "ejemplo": "gancho: gancho oscuro o plano: luma 8.2 (mín. 30), contraste 27.1 (mín. 25): más opacidad del fondo o un clip más claro",
-    "desde": "2026-11-14"
+    "desde": "2026-11-14",
+    "donde": "puertas.gancho_clip_oscuro",
+    "test": "test_clip_oscuro_en_el_gancho_bloquea_antes_del_render",
+    "cerrado": "2026-11-18",
+    "causa": "a dark clip (raw luma < 60) chosen for the first 2 s; now blocked at validation, before any render"
   },
   {
     "id": "E2",
@@ -30,16 +34,24 @@
   {
     "id": "E5",
     "patron": "escena\\ \\d+(?:[.,]\\d+)?:\\ .+?\\ se\\ ve\\ solo\\ \\d+(?:[.,]\\d+)?s\\ desde\\ \\d+(?:[.,]\\d+)?s",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "escena 7: \"Buying more: harder\" se ve solo 0.18s desde 27.9s (< 0.5): retrasa el corte o adelanta el texto",
-    "desde": "2026-11-14"
+    "desde": "2026-11-14",
+    "donde": "autoarreglo._texto_breve",
+    "test": "test_borrador_hot_inflation_solo_deja_lo_no_mecanico",
+    "cerrado": "2026-11-18",
+    "causa": "the fix existed but the failing run had no --auto; --auto is now the default of producir.py"
   },
   {
     "id": "E6",
     "patron": "el\\ corte\\ en\\ \\d+(?:[.,]\\d+)?s\\ cae\\ tras\\ .+?,\\ sin\\ terminar\\ la\\ frase:\\ ancla\\ al\\ final\\ de\\ una\\ frase",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "historia: el corte en 6.6s cae tras \"looked\", sin terminar la frase: ancla al final de una frase",
-    "desde": "2026-11-15"
+    "desde": "2026-11-15",
+    "donde": "autoarreglo._historia",
+    "test": "test_historia_cortada_vuelve_al_final_de_frase",
+    "cerrado": "2026-11-18",
+    "causa": "story cut anchored mid-sentence; --auto moves it to the end of the previous finished sentence"
   },
   {
     "id": "E7",
@@ -65,5 +77,13 @@
     "estado": "abierto",
     "ejemplo": "[alta] L1 t=12.6s escena 3 · \"burst\" 2.02:1 en el DOM (< 3, WCAG AA) → parche",
     "desde": "2026-11-15"
+  },
+  {
+    "id": "E10",
+    "patron": "clip\\ .+?\\ luma\\ \\d+(?:[.,]\\d+)?",
+    "estado": "abierto",
+    "ejemplo": "gancho: clip 'pantalla' luma 16.5 (mín. 60) en los primeros 2 s: el gancho saldrá oscuro, pon un clip más claro",
+    "desde": "2026-11-18",
+    "nota": "early catch of E1 (seconds, no render); still needs Claude to pick a clip: autoarreglo pending"
   }
 ]

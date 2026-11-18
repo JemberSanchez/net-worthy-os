@@ -499,3 +499,21 @@ class JuicioTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GanchoClipTest(unittest.TestCase):
+    """E1 (errores.json): strategy-underwater 14-15 nov rendered three times with a dark hook clip
+    ('pantalla' raw luma 16.5 -> hook 8.2, 'chart' 50 -> 24.2); 'torres' 124.5 passed (47.9)."""
+
+    def plan(self, clip, t0=0.0):
+        return {"fotos": [{"clip": clip, "t0": t0}, {"img": "x", "t0": 0.0}]}
+
+    def test_clip_oscuro_en_el_gancho_bloquea_antes_del_render(self):
+        for clip, lu in (("pantalla", 16.5), ("chart", 50.0)):
+            e = puertas.gancho_clip_oscuro(self.plan(clip), {clip: lu}, 2.0)
+            self.assertEqual(len(e), 1, clip)
+            self.assertTrue(e[0].startswith("gancho: clip"))
+
+    def test_clip_claro_o_fuera_del_gancho_pasa(self):
+        self.assertEqual(puertas.gancho_clip_oscuro(self.plan("torres"), {"torres": 124.5}, 2.0), [])
+        self.assertEqual(puertas.gancho_clip_oscuro(self.plan("pantalla", 3.0), {"pantalla": 16.5}, 2.0), [])

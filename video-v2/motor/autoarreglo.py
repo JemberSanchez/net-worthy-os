@@ -315,7 +315,27 @@ def _aspecto_cine(sb, words, p, m):
     return f"escena {k}: {campos[0]} -> rotulos (pos {s['pos']})"
 
 
+def _historia(sb, words, p, m):
+    """Story cut mid-sentence or past 14 s: back to the end of the last finished sentence before it."""
+    h = (sb.get("social") or {}).get("historia") or {}
+    try:
+        t = anclas.t(words, h["hasta"])
+    except (anclas.AnclaError, KeyError):
+        return None
+    tope = min(t + 0.01, 14.0 - 0.35)  # the same limits puertas.historia_corte checks
+    fin = [
+        i
+        for i, w in enumerate(words)
+        if w["end"] <= tope and re.search(r"[.?!][\"')\]]*$", w["text"])
+    ]
+    if not fin:
+        return None
+    h["hasta"] = ancla_de_palabra(words, fin[-1], fin=True)
+    return f"historia: corte al final de la frase anterior ({h['hasta']})"
+
+
 CATALOGO = [
+    (re.compile(r"^historia: (el corte en|`hasta` en) [\d.]+s"), _historia),
     (
         re.compile(r"^escena (\d+): con aspecto cine el texto va en `rotulos`"),
         _aspecto_cine,
@@ -339,7 +359,12 @@ CATALOGO = [
         _sin_subtitulo,
     ),
 ]
-_SIN_PLAN = {_ancla, _duotono, _aspecto_cine}  # the rest read scene times from the plan
+_SIN_PLAN = {
+    _ancla,
+    _duotono,
+    _aspecto_cine,
+    _historia,
+}  # the rest read scene times from the plan
 
 
 def arreglar_storyboard(
