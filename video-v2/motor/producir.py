@@ -47,6 +47,7 @@ DETALLES: dict[
     str, tuple[bool, str]
 ] = {}  # last run, full gate detail (qa.json keeps 600 chars)
 PENDIENTES: list = []  # --auto: what autoarreglo could not fix, for corridas.jsonl
+RONDAS: list = []  # --auto: seconds of each round; qa.json only keeps the last one
 
 
 def _run(
@@ -820,7 +821,11 @@ def clave_render(proy: Path) -> str:
     for f in sorted((proy / "assets").rglob("*")):
         if f.is_file():
             rel = f.relative_to(proy).as_posix()
-            h.update(f"{rel}:{f.stat().st_size}".encode() if f.suffix == ".src" else (rel + _sha(f)).encode())
+            h.update(
+                f"{rel}:{f.stat().st_size}".encode()
+                if f.suffix == ".src"
+                else (rel + _sha(f)).encode()
+            )
     return h.hexdigest()
 
 
@@ -830,7 +835,9 @@ def clave_critico(proy: Path, final: Path) -> str:
     sb.pop("social", None)
     h = hashlib.sha256(json.dumps(sb, sort_keys=True).encode())
     for f in (MOTOR / "critico.py", MOTOR / "rubrica.json", proy / "rubrica.json"):
-        h.update(f.read_bytes() if f.exists() else b"-")  # a new meter or threshold = a new report
+        h.update(
+            f.read_bytes() if f.exists() else b"-"
+        )  # a new meter or threshold = a new report
     return _sha(final) + h.hexdigest()
 
 
@@ -849,7 +856,9 @@ def critico_cacheado(proy: Path, final: Path) -> list[str] | None:
     inf = proy / "renders" / "critica" / "informe.json"
     if not (cache.exists() and inf.exists()):
         return None
-    if json.loads(cache.read_text(encoding="utf-8")).get("clave") != clave_critico(proy, final):
+    if json.loads(cache.read_text(encoding="utf-8")).get("clave") != clave_critico(
+        proy, final
+    ):
         return None
     os.utime(inf)
     import critico
@@ -1042,7 +1051,9 @@ def producir(proy: Path) -> dict:
             det_ln = f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
     puerta("loudnorm", ok_ln, det_ln)
     crudo.unlink(missing_ok=True)  # 40-60 MB; only input of loudnorm, the final ships
-    cache_render.write_text(json.dumps({"clave": clave, "final_sha": _sha(final)}), encoding="utf-8")
+    cache_render.write_text(
+        json.dumps({"clave": clave, "final_sha": _sha(final)}), encoding="utf-8"
+    )
     # the critic (~11 min) measures the final MP4 while the cheaper gates below do too
     ex = ThreadPoolExecutor(1)
     critico_f = (
@@ -1198,8 +1209,26 @@ def reglas_fallidas(detalles: dict) -> dict[str, list[str]]:
     return out
 
 
+def ronda_medida(qa_f: Path, t0: float) -> dict | None:
+    """Seconds of one --auto round, read before the next round overwrites qa.json."""
+    if not (qa_f.exists() and qa_f.stat().st_mtime >= t0):
+        return None
+    q = json.loads(qa_f.read_text(encoding="utf-8"))
+    return {
+        "s": round(time.time() - t0),
+        "puertas": {x["puerta"]: x["s"] for x in q.get("puertas") or []},
+        "critico_s": q.get("critico_s"),
+    }
+
+
 def registrar_corrida(
-    reg: Path, t0: float, fallo, argv: list[str], detalles: dict, pendientes: list
+    reg: Path,
+    t0: float,
+    fallo,
+    argv: list[str],
+    detalles: dict,
+    pendientes: list,
+    rondas: list | None = None,
 ) -> None:
     """One line per run in renders/corridas.jsonl (aggregate: tools/resumen_corridas.py)."""
     linea = {
@@ -1213,13 +1242,17 @@ def registrar_corrida(
         linea["reglas"] = reglas
     if pendientes:
         linea["pendientes"] = [str(x)[:200] for x in pendientes[:20]]
-    qa_f = reg.parent / "qa.json"
-    if (
-        qa_f.exists() and qa_f.stat().st_mtime >= t0
-    ):  # seconds per gate of the last round
-        q = json.loads(qa_f.read_text(encoding="utf-8"))
-        linea["puertas"] = {x["puerta"]: x["s"] for x in q.get("puertas") or []}
-        linea["critico_s"] = q.get("critico_s")
+    rondas = [r for r in rondas or [] if r] or [
+        r for r in [ronda_medida(reg.parent / "qa.json", t0)] if r
+    ]
+    if rondas:  # seconds per gate summed over every --auto round, each round kept apart
+        linea["puertas"] = {}
+        for r in rondas:
+            for p, s in r["puertas"].items():
+                linea["puertas"][p] = round(linea["puertas"].get(p, 0) + s, 1)
+        linea["critico_s"] = round(sum(r["critico_s"] or 0 for r in rondas), 1)
+        if len(rondas) > 1:
+            linea["rondas"] = rondas
     with reg.open("a", encoding="utf-8") as f:
         f.write(json.dumps(linea, ensure_ascii=False) + "\n")
 
@@ -1237,6 +1270,7 @@ def producir_auto(proy: Path, critico_: bool = True) -> dict:
             qa = producir(proy)
         except SystemExit as e:
             fallo = e
+        RONDAS.append(ronda_medida(proy / "renders" / "qa.json", t0))
         fallidas = {n: d for n, (ok, d) in DETALLES.items() if not ok}
         informe = None
         inf = proy / "renders" / "critica" / "informe.json"
@@ -1297,7 +1331,7 @@ if __name__ == "__main__":
     finally:  # failed runs and minutes per video: the numbers docs/POLITICA.md asks to compare
         reg = Path(sys.argv[1]) / "renders" / "corridas.jsonl"
         if reg.parent.exists():
-            registrar_corrida(reg, t0, fallo, sys.argv, DETALLES, PENDIENTES)
+            registrar_corrida(reg, t0, fallo, sys.argv, DETALLES, PENDIENTES, RONDAS)
             if (
                 fallo
             ):  # the ratchet: a new error class stops here until its cause is fixed

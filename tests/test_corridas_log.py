@@ -52,6 +52,34 @@ class CorridasTest(unittest.TestCase):
         self.assertEqual(linea["pendientes"], ["M1 t=4.2s barrido_sint"])
         self.assertEqual(linea["fallo"], "✗ puertas fallidas: storyboard, guion")
 
+    def test_every_auto_round_counts_not_only_the_last(self):
+        # 18-nov: a 986 s run logged 138 s of gates; round 1 (render 229 s) was overwritten by round 2
+        with tempfile.TemporaryDirectory() as d:
+            renders = Path(d) / "renders"
+            renders.mkdir()
+            rondas = []
+            for puertas, crit in (
+                ([("render", 229.0), ("social", 120.0)], 470.0),
+                ([("render", 0.6), ("social", 83.1)], 0.1),
+            ):
+                (renders / "qa.json").write_text(
+                    json.dumps(
+                        {
+                            "puertas": [{"puerta": p, "s": s} for p, s in puertas],
+                            "critico_s": crit,
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                rondas.append(P.ronda_medida(renders / "qa.json", 0.0))
+            reg = renders / "corridas.jsonl"
+            P.registrar_corrida(reg, 0.0, None, [], {}, [], rondas)
+            linea = json.loads(reg.read_text(encoding="utf-8"))
+        self.assertEqual(linea["puertas"], {"render": 229.6, "social": 203.1})
+        self.assertEqual(linea["critico_s"], 470.1)
+        self.assertEqual(len(linea["rondas"]), 2)
+        self.assertEqual(linea["rondas"][0]["puertas"]["render"], 229.0)
+
     def test_clean_run_has_no_rules(self):
         with tempfile.TemporaryDirectory() as d:
             reg = Path(d) / "corridas.jsonl"

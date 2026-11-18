@@ -71,6 +71,12 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
   caliente: auto 81 s, 4w 74 s, 6w 73 s, es decir, ruido. El primer render en frío tardó 120 s.
   `looks` (CRF 16): 74 s, un 17 % más ligero y SSIM 0,9936 contra `high`. No hay ganancia de
   tiempo, así que **el punto 6 se descarta: se queda `high` con workers en auto**.
+- Faltaban unos 850 s de los 986: `corridas.jsonl` solo guardaba la última ronda de `--auto`
+  (`qa.json` se sobrescribe). Ahora suma todas las rondas y guarda el detalle en `rondas`.
+- Corrida limpia, `strategy-underwater` actual (no el escenario E4): 6,8 min (410 s), 1 ronda y
+  407,6 s registrados. Render 132 s, ritmo 111 s, social 60 s, loudness 49 s. El crítico (221 s)
+  corre en paralelo. Conclusión: con una corrida que pasa a la primera, la meta de 15 min se cumple; los
+  minutos se pierden en las rondas repetidas.
 
 ## Fase 2: brief → compilador (1-2 semanas)
 
