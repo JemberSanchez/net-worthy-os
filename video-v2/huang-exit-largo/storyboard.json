@@ -687,20 +687,26 @@
   "formato": "documental-editorial",
   "escenas": [
     {
-      "tipo": "revelacion",
+      "tipo": "titulo",
       "en": "0",
-      "linea1": {
-        "texto": "Nvidia co-founder"
-      },
-      "linea2": {
-        "texto": "*Sold every share*",
-        "en": "0:sold"
-      },
-      "golpe": "0:sold",
       "fondo": {
         "clip": "placa",
-        "opacidad": 0.8
-      }
+        "opacidad": 1.0
+      },
+      "lineas": [
+        {
+          "texto": "Nvidia co-founder",
+          "en": "0",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*Sold every share*",
+          "en": "0:sold",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
     },
     {
       "tipo": "titulo",
@@ -897,7 +903,7 @@
         "en": "8"
       },
       "titulo": {
-        "texto": "IBM Professional Graphics Adapter",
+        "texto": "*IBM PGA*",
         "en": "8:ibm"
       }
     },
@@ -975,16 +981,23 @@
       }
     },
     {
-      "tipo": "foto",
+      "tipo": "titulo",
       "en": "13",
-      "img": "dennys",
+      "lineas": [
+        {
+          "texto": "A *Denny's* diner",
+          "en": "13:denny's",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
       "kicker": {
         "texto": "San Jose, California",
         "en": "13"
       },
-      "titulo": {
-        "texto": "A *Denny's* diner",
-        "en": "13:denny's"
+      "fondo": {
+        "img": "dennys",
+        "opacidad": 0.35
       }
     },
     {
@@ -1547,7 +1560,7 @@
         "texto": "Hindsight: Nvidia looks obvious"
       },
       "linea2": {
-        "texto": "*The obvious pick went bust*",
+        "texto": "*The favorite* went bust",
         "en": "53"
       },
       "golpe": "53"
@@ -1929,7 +1942,7 @@
       "tipo": "puntos",
       "en": "79",
       "n": 100,
-      "etiqueta": "companies",
+      "etiqueta": "firms",
       "cuenta": {
         "en": "79:whole"
       },
