@@ -67,6 +67,12 @@ def cargar_rubrica(proy: Path, ruta: Path | None = None) -> dict:
     raise SystemExit("no hay rúbrica (video-v2/motor/rubrica.json)")
 
 
+def umbrales(rub: dict, plan: dict) -> dict:
+    """Flat thresholds; a long-form plan takes `por_tipo.largo` on top (no Shorts UI to dodge)."""
+    u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+    return {**u, **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {})}
+
+
 def plan_de_html(html: str) -> dict:
     """El plan resuelto (segundos) que construir.py incrusta en index.html."""
     m = re.search(r"window\.PLAN = (\{.*?\});</script>", html, re.DOTALL)
@@ -373,7 +379,7 @@ def revisar_previo(sb: dict, plan: dict, words: list[dict], frames: list[dict], 
     import medir_texto
     import puertas_final as pf
 
-    u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
+    u = umbrales(rub, plan)
     vs = ventanas(plan)
     textos = muestreo_previo(sb, plan, words, [])["textos"]
     diseno = textos_previstos(sb, plan, words)[1]
@@ -1023,7 +1029,6 @@ def revisar(
     import medir_texto
     import medir_voz
 
-    u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
     # storyboard y plan DEL VÍDEO que se revisa (instantánea de su ronda), no los actuales del
     # proyecto: una ronda abortada dejó un index.html de otro storyboard y el crítico revisó el r0
     # con el plan equivocado (28-oct: caja a 0,05 "medida" sobre un plan que ya la tenía a 0,05)
@@ -1035,6 +1040,7 @@ def revisar(
     plan = plan_de_html(
         html if html is not None else (proy / "index.html").read_text(encoding="utf-8")
     )
+    u = umbrales(rub, plan)
     vs = ventanas(plan)
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
     med: dict = {}

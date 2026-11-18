@@ -1199,6 +1199,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
             "t0": 0.1,
             "t1": round(min(3.0, max(1.6, fin0 + 0.3)), 3),
         }
+    largo = sb.get("tipo_video") == "largo"
+    dims = (1920, 1080) if largo else (1080, 1920)
     out = {
         "D": END,
         "tema": sb.get("tema", ""),
@@ -1237,13 +1239,20 @@ def plan(sb: dict, words: list[dict]) -> dict:
         "musica_volumen": volumen_musica(sb),
         "vol_motor": volumen_motor(sb),
         "pruebas": [
-            prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])
+            prueba(x, j, words, fr, END, *dims)
+            for j, x in enumerate(sb.get("pruebas") or [])
         ],
     }
+    if largo:  # short plans stay byte-identical (tests/test_formato_regresion.py)
+        out.update(tipo_video="largo", W=dims[0], H=dims[1])
     if ed:
         import sfx_libre
 
-        out["transiciones"] = trans
+        out["transiciones"] = (
+            [_escalar_tr(t, dims[0] / 1080, dims[1] / 1920) for t in trans]
+            if largo
+            else trans
+        )
         out["edicion"] = edicion.presets(ed)
         out["sonidos"] = sorted(
             out["sonidos"]
@@ -1260,6 +1269,21 @@ def plan(sb: dict, words: list[dict]) -> dict:
     return out
 
 
+def _escalar_tr(tr: dict, kx: float, ky: float) -> dict:
+    """A transition's x/y pushes are in 9:16 px; a 16:9 frame needs them scaled to clear it."""
+
+    def esc(d):
+        return {
+            k: v * kx if k == "x" else v * ky if k == "y" else v
+            for k, v in (d or {}).items()
+        }
+
+    return {
+        **tr,
+        **{k: esc(tr[k]) for k in ("sale", "entra", "reposo") if k in tr},
+    }
+
+
 PRUEBA_ANCHO_FRASE = (
     940  # px que ocupa la frase subrayada al final del empuje (de 1080)
 )
@@ -1268,7 +1292,9 @@ PRUEBA_Y = (
 )
 
 
-def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
+def prueba(
+    x: dict, j: int, words: list[dict], fr, END: float, W: int = 1080, H: int = 1920
+) -> dict:
     """LA PRUEBA (1-oct): el documento real a pantalla completa, encuadrado para que la frase
     localizada por OCR (tools/ocr_doc.py -> `_caja_n`, `_aspecto`) quede legible en la zona de
     texto; empuje de cámara hacia ella y subrayador en `marca`. Geometría pura, en px del cuadro."""
@@ -1286,12 +1312,13 @@ def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
         0.52,
     ]  # sin OCR (solo validar): centro
     asp = float(x.get("_aspecto") or 1.3)
-    wd = min(3240.0, max(1080.0, PRUEBA_ANCHO_FRASE / max(0.05, x1 - x0)))
+    ancho_frase, y_frase = (PRUEBA_ANCHO_FRASE, PRUEBA_Y) if W <= H else (1400, 480)
+    wd = min(3.0 * W, max(float(W), ancho_frase / max(0.05, x1 - x0)))
     hd = wd * asp
-    izq = min(0.0, max(1080 - wd, 540 - (x0 + x1) / 2 * wd))
-    arr = PRUEBA_Y - (y0 + y1) / 2 * hd
+    izq = min(0.0, max(W - wd, W / 2 - (x0 + x1) / 2 * wd))
+    arr = y_frase - (y0 + y1) / 2 * hd
     arr = (
-        min(max(arr, 1920 - hd), 0.0) if hd >= 1920 else arr
+        min(max(arr, H - hd), 0.0) if hd >= H else arr
     )  # cubre el cuadro si el documento da
     pad_x, pad_y = 0.012 * wd, 0.25 * (y1 - y0) * hd
     caja = [
@@ -1632,9 +1659,17 @@ def _html(p: dict) -> str:
         if sr
         else ""
     )
+    largo = p.get("tipo_video") == "largo"
     rep = {
+        "__W__": str(p.get("W", 1080)),
+        "__H__": str(p.get("H", 1920)),
+        "__CSSANCHO__": (MOTOR / "plantilla-ancho.css")
+        .read_text(encoding="utf-8")
+        .rstrip()
+        if largo
+        else "",
         "__PRUEBAS__": html_pruebas(p),
-        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}".strip(),
+        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}{' ancho' if largo else ''}".strip(),
         "__AVISOFIN__": (
             f'        <div id="avisofin"{estilo_avisofin(p["aviso"])}>{html.escape(p["aviso"]["completo"])}</div>'
             if p["aviso"].get("completo")
