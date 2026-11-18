@@ -35,8 +35,10 @@ Qué NO hace
 No decide el timbre de voz del canal — eso lo decide quien escucha. No sobrescribe un audio ya
 existente salvo que se pida `--forzar` — la voz de un Short ya revisado no se toca sola.
 """
+
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import wave
@@ -44,12 +46,12 @@ from pathlib import Path
 
 import numpy as np
 
-for _s in (sys.stdout, sys.stderr):     # cp1252 no tiene "✓"; no tumbar el cálculo por eso
+for _s in (sys.stdout, sys.stderr):  # cp1252 no tiene "✓"; no tumbar el cálculo por eso
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(errors="replace")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from alinear_voz import guion_del_short, generar_alineamiento, RAIZ  # noqa: E402
+from alinear_voz import RAIZ, generar_alineamiento, guion_del_short
 
 MOTOR_DEFECTO = "kokoro"
 
@@ -57,10 +59,14 @@ VOZ_PIPER = RAIZ / "data" / "voces-piper" / "en_US-ryan-high.onnx"
 VOZ_KOKORO_DEFECTO = "am_adam"
 VENV_KOKORO = RAIZ / "tools" / ".venv-voces"
 # Windows pone el intérprete del venv en Scripts/, Linux/macOS en bin/ (el render v2 corre en Linux).
-PYTHON_KOKORO = VENV_KOKORO / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+PYTHON_KOKORO = VENV_KOKORO / (
+    "Scripts/python.exe" if sys.platform == "win32" else "bin/python"
+)
 HELPER_KOKORO = Path(__file__).resolve().parent / "_sintetizar_kokoro.py"
 
-PICO_OBJETIVO = 0.89   # ~ -1 dBFS: dentro del margen, sin clipear (medido: el bruto llegaba a 1.0)
+PICO_OBJETIVO = (
+    0.89  # ~ -1 dBFS: dentro del margen, sin clipear (medido: el bruto llegaba a 1.0)
+)
 
 
 def _normalizar_pico(muestras: np.ndarray) -> np.ndarray:
@@ -81,11 +87,14 @@ def sintetizar_piper(texto: str, modelo_path: Path) -> tuple[np.ndarray, int]:
     return _normalizar_pico(muestras), sr
 
 
-def sintetizar_kokoro(texto: str, voz: str, speed: float = 1.0) -> tuple[np.ndarray, int]:
+def sintetizar_kokoro(
+    texto: str, voz: str, speed: float = 1.0
+) -> tuple[np.ndarray, int]:
     """Sintetiza con Kokoro en el venv de Python 3.12 (subproceso: Kokoro no vive en el 3.14
     principal). El texto viaja por stdin — evita límites/escapes de línea de comandos."""
-    import soundfile as sf
     import tempfile
+
+    import soundfile as sf
 
     if not PYTHON_KOKORO.exists():
         raise SystemExit(
@@ -93,22 +102,49 @@ def sintetizar_kokoro(texto: str, voz: str, speed: float = 1.0) -> tuple[np.ndar
             "Créalo (una vez):\n"
             f'  py -3.12 -m venv "{VENV_KOKORO}"\n'
             f'  "{PYTHON_KOKORO}" -m pip install "kokoro>=0.9.4" soundfile\n'
-            "O usa --motor piper mientras tanto.")
+            "O usa --motor piper mientras tanto."
+        )
     with tempfile.TemporaryDirectory() as tmp:
         wav_tmp = Path(tmp) / "kokoro.wav"
-        r = subprocess.run(
-            [str(PYTHON_KOKORO), str(HELPER_KOKORO), voz, str(wav_tmp), str(speed)],
-            input=texto, capture_output=True, text=True, encoding="utf-8")
-        if r.returncode != 0 or not wav_tmp.exists():
-            raise SystemExit(f"Kokoro falló (voz={voz}):\n{r.stderr[-2000:]}")
+        w = _worker_kokoro()
+        w.stdin.write(
+            json.dumps(
+                {"voz": voz, "wav": str(wav_tmp), "speed": speed, "texto": texto}
+            )
+            + "\n"
+        )
+        w.stdin.flush()
+        r = json.loads(w.stdout.readline() or '{"error": "el worker de Kokoro murió"}')
+        if "error" in r or not wav_tmp.exists():
+            raise SystemExit(f"Kokoro falló (voz={voz}):\n{r.get('error')}")
         muestras, sr = sf.read(str(wav_tmp), dtype="float32")
     return _normalizar_pico(muestras), sr
+
+
+_WORKER: list = []
+
+
+def _worker_kokoro() -> subprocess.Popen:
+    """One Kokoro process per run: the pipeline loads once instead of once per phrase and take."""
+    if not _WORKER or _WORKER[0].poll() is not None:
+        _WORKER[:] = [
+            subprocess.Popen(
+                [str(PYTHON_KOKORO), str(HELPER_KOKORO), "--servidor"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=None,  # kokoro warnings and tracebacks stay visible
+                text=True,
+                encoding="utf-8",
+            )
+        ]
+    return _WORKER[0]
 
 
 def guardar(muestras: np.ndarray, sr: int, destino: Path) -> None:
     pcm16 = (muestras * 32767).astype(np.int16)
     if destino.suffix.lower() == ".mp3":
         import lameenc
+
         enc = lameenc.Encoder()
         enc.set_bit_rate(128)
         enc.set_in_sample_rate(sr)
@@ -118,7 +154,9 @@ def guardar(muestras: np.ndarray, sr: int, destino: Path) -> None:
         destino.write_bytes(mp3)
     else:
         with wave.open(str(destino), "wb") as w:
-            w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(sr)
             w.writeframes(pcm16.tobytes())
 
 
@@ -138,28 +176,35 @@ def main() -> None:
     motor = _valor_de("--motor") or MOTOR_DEFECTO
     if motor not in ("piper", "kokoro"):
         raise SystemExit(f"--motor debe ser 'piper' o 'kokoro', no {motor!r}")
-    voz_motor = _valor_de("--voz") or (VOZ_KOKORO_DEFECTO if motor == "kokoro" else None)
+    voz_motor = _valor_de("--voz") or (
+        VOZ_KOKORO_DEFECTO if motor == "kokoro" else None
+    )
 
     if motor == "piper" and not VOZ_PIPER.exists():
         raise SystemExit(
             f"No encuentro el modelo de voz en {VOZ_PIPER}.\n"
             "Descárgalo (una vez, ~120MB):\n"
-            f"  curl -L -o \"{VOZ_PIPER}\" "
+            f'  curl -L -o "{VOZ_PIPER}" '
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx\n"
-            f"  curl -L -o \"{VOZ_PIPER}.json\" "
-            "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx.json")
+            f'  curl -L -o "{VOZ_PIPER}.json" '
+            "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx.json"
+        )
 
     voz_nombre, frases = guion_del_short(clave)
     destino = RAIZ / "data" / voz_nombre
     if destino.exists() and not forzar:
         raise SystemExit(
             f"{destino} ya existe (probablemente la voz de un Short ya publicado o revisado).\n"
-            "No se sobrescribe sola. Si de verdad quieres regenerarla: --forzar")
+            "No se sobrescribe sola. Si de verdad quieres regenerarla: --forzar"
+        )
 
     texto = " ".join(frases)
     print(f"Short   : {clave}")
     print(f"Destino : {destino.name}")
-    print(f"Motor   : {motor}" + (f" ({voz_motor})" if voz_motor else f" ({VOZ_PIPER.stem})"))
+    print(
+        f"Motor   : {motor}"
+        + (f" ({voz_motor})" if voz_motor else f" ({VOZ_PIPER.stem})")
+    )
     print(f"Guion   : {len(texto)} caracteres, {len(frases)} frases\n")
     print("Sintetizando…")
 
@@ -170,11 +215,13 @@ def main() -> None:
 
     destino.parent.mkdir(parents=True, exist_ok=True)
     guardar(muestras, sr, destino)
-    print(f"✓ {destino}  ({len(muestras)/sr:.2f}s a {sr}Hz)\n")
+    print(f"✓ {destino}  ({len(muestras) / sr:.2f}s a {sr}Hz)\n")
 
     print("Alineando (faster-whisper, tiempo real medido por palabra)…\n")
     generar_alineamiento(clave, ruta_audio=destino)
-    print("\nListo: audio + alineamiento generados. En el motor, «Usar la voz del proyecto» ya calibra con tiempos medidos.")
+    print(
+        "\nListo: audio + alineamiento generados. En el motor, «Usar la voz del proyecto» ya calibra con tiempos medidos."
+    )
 
 
 if __name__ == "__main__":

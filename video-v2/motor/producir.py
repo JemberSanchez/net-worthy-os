@@ -24,6 +24,7 @@ Escribe `renders/qa.json` con cada puerta. NO publica: aprobar = `python -m omeg
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -806,6 +807,69 @@ def medir_critico(proy: Path, final: Path) -> list[str]:
     return fallos_critico(inf, critico.linea)
 
 
+def _sha(ruta: Path) -> str:
+    with ruta.open("rb") as f:
+        return hashlib.file_digest(f, "sha256").hexdigest()
+
+
+def clave_render(proy: Path) -> str:
+    """What the render depends on: the built page and every asset it can load. Raw clips (*.src, up to
+    hundreds of MB) by name and size; the rest by content.
+    shortcut: a raw clip replaced by another of the exact same size is missed; hash it too if that bites."""
+    h = hashlib.sha256((proy / "index.html").read_bytes())
+    for f in sorted((proy / "assets").rglob("*")):
+        if f.is_file():
+            rel = f.relative_to(proy).as_posix()
+            h.update(f"{rel}:{f.stat().st_size}".encode() if f.suffix == ".src" else (rel + _sha(f)).encode())
+    return h.hexdigest()
+
+
+def clave_critico(proy: Path, final: Path) -> str:
+    """The critic reads the final MP4 and the storyboard; the carousel (`social`) is not part of it."""
+    sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
+    sb.pop("social", None)
+    h = hashlib.sha256(json.dumps(sb, sort_keys=True).encode())
+    for f in (MOTOR / "critico.py", MOTOR / "rubrica.json", proy / "rubrica.json"):
+        h.update(f.read_bytes() if f.exists() else b"-")  # a new meter or threshold = a new report
+    return _sha(final) + h.hexdigest()
+
+
+def render_reutilizable(cache: Path, clave: str, final: Path) -> bool:
+    """--auto retries from the failed stage: same page + assets as the last good render = same video."""
+    if not (cache.exists() and final.exists()):
+        return False
+    c = json.loads(cache.read_text(encoding="utf-8"))
+    return c.get("clave") == clave and c.get("final_sha") == _sha(final)
+
+
+def critico_cacheado(proy: Path, final: Path) -> list[str] | None:
+    """The last critic report when it was made on this exact MP4 and storyboard (touched, so --auto reads it
+    as this round's); None when the critic must run."""
+    cache = proy / "renders" / "critica" / "cache.json"
+    inf = proy / "renders" / "critica" / "informe.json"
+    if not (cache.exists() and inf.exists()):
+        return None
+    if json.loads(cache.read_text(encoding="utf-8")).get("clave") != clave_critico(proy, final):
+        return None
+    os.utime(inf)
+    import critico
+
+    return fallos_critico(json.loads(inf.read_text(encoding="utf-8")), critico.linea)
+
+
+def critico_en_paralelo(proy: Path, final: Path) -> tuple[list[str], float, bool]:
+    """(lines, seconds, reused). Runs while loudness, rhythm and social measure the same final MP4."""
+    t = time.monotonic()
+    if (fallos := critico_cacheado(proy, final)) is not None:
+        return fallos, round(time.monotonic() - t, 1), True
+    fallos = medir_critico(proy, final)
+    if not any(x.startswith("crítico falló") for x in fallos):
+        (proy / "renders" / "critica" / "cache.json").write_text(
+            json.dumps({"clave": clave_critico(proy, final)}), encoding="utf-8"
+        )
+    return fallos, round(time.monotonic() - t, 1), False
+
+
 def producir(proy: Path) -> dict:
     proy = proy.resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
@@ -946,17 +1010,22 @@ def producir(proy: Path) -> dict:
         renders / f"{ref}-final.mp4",
         renders / f"{ref}-preview.mp4",
     )
-    r = _run(
-        hfversion.npx("render", "--quality", "high", "--output", str(crudo)),
-        cwd=proy,
-        env=env,
-    )
-    puerta(
-        "render",
-        r.returncode == 0 and crudo.exists(),
-        (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
-    )
-    qa["hyperframes"]["gpu"] = gpu_render(r.stdout + r.stderr)
+    cache_render, clave = renders / "render.json", clave_render(proy)
+    reusar = render_reutilizable(cache_render, clave, final)
+    if reusar:
+        puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
+    else:
+        r = _run(
+            hfversion.npx("render", "--quality", "high", "--output", str(crudo)),
+            cwd=proy,
+            env=env,
+        )
+        puerta(
+            "render",
+            r.returncode == 0 and crudo.exists(),
+            (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
+        )
+    qa["hyperframes"]["gpu"] = None if reusar else gpu_render(r.stdout + r.stderr)
     if qa["hyperframes"]["gpu"] and "NVIDIA" not in qa["hyperframes"]["gpu"]:
         # the PC's per-app GPU preference is keyed to chrome-headless-shell.exe's path, which changes
         # with each HyperFrames Chrome update: the render then silently drops to the iGPU (~2x slower)
@@ -964,14 +1033,23 @@ def producir(proy: Path) -> dict:
             f"⚠ render en {qa['hyperframes']['gpu']}, no en la NVIDIA: repetir Gráficos > Alto rendimiento "
             "para el chrome-headless-shell.exe nuevo (~/.cache/hyperframes/chrome)"
         )
-    ok_ln, det_ln = loudnorm_2pasos(crudo, final)
-    if ok_ln:
-        ok_ln, det_pico = asegurar_pico(final)
-        det_ln = (
-            f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
-        )
+    if reusar:
+        ok_ln, det_ln = True, "reutilizado"
+    else:
+        ok_ln, det_ln = loudnorm_2pasos(crudo, final)
+        if ok_ln:
+            ok_ln, det_pico = asegurar_pico(final)
+            det_ln = f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
     puerta("loudnorm", ok_ln, det_ln)
     crudo.unlink(missing_ok=True)  # 40-60 MB; only input of loudnorm, the final ships
+    cache_render.write_text(json.dumps({"clave": clave, "final_sha": _sha(final)}), encoding="utf-8")
+    # the critic (~11 min) measures the final MP4 while the cheaper gates below do too
+    ex = ThreadPoolExecutor(1)
+    critico_f = (
+        ex.submit(critico_en_paralelo, proy, final)
+        if "--sin-critico" not in sys.argv
+        else None
+    )
     r = _run([PY, str(RAIZ / "tools" / "medir_loudness.py"), str(final)])
     lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)
     pico = re.search(r"Pico real\s*:\s*(-?[\d.]+)", r.stdout)
@@ -984,9 +1062,10 @@ def producir(proy: Path) -> dict:
         "loudness",
         ok,
         f"{lufs.group(1) if lufs else '?'} LUFS, pico {pico.group(1) if pico else '?'} dBTP",
+        seguir=True,
     )
     r = _run([PY, str(RAIZ / "tools" / "medir_ritmo.py"), str(final), "--max", "2.5"])
-    puerta("ritmo", r.returncode == 0 and "✓" in r.stdout, r.stdout)
+    puerta("ritmo", r.returncode == 0 and "✓" in r.stdout, r.stdout, seguir=True)
     _run(
         [
             "ffmpeg",
@@ -1059,7 +1138,25 @@ def producir(proy: Path) -> dict:
                 f"carrusel {len(s['carrusel'])} diapositivas · historia {'sí' if s['historia'] else 'no'}",
             )
         except (social.SocialError, subprocess.CalledProcessError) as e:
-            puerta("social", False, str(e))
+            puerta("social", False, str(e), seguir=True)
+
+    def esperar_critico() -> list[str] | None:
+        if critico_f is None:
+            return None
+        fallos, s, reusado = critico_f.result()
+        ex.shutdown()
+        qa["critico_s"], qa["critico_reutilizado"] = s, reusado
+        (renders / "qa.json").write_text(
+            json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        return fallos
+
+    if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
+        try:
+            esperar_critico()  # its report feeds --auto in the same round
+        except Exception as e:  # noqa: BLE001 -- the failed gate is the error to report, not the critic's
+            print(f"⚠ crítico falló en paralelo: {e!r}"[:300])
+        raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
     qa["borrador_youtube"] = subir_borrador(publish, ref)
     qa.update(
         final=str(final),
@@ -1072,14 +1169,11 @@ def producir(proy: Path) -> dict:
     print(
         f"✓ puertas OK · {final.name} · preview {qa['preview_mb']} MB · YouTube: {qa['borrador_youtube']}"
     )
-    if "--sin-critico" not in sys.argv:
-        t_c = time.monotonic()
-        fallos = medir_critico(proy, final)
-        qa["critico_s"] = round(time.monotonic() - t_c, 1)
-        (renders / "qa.json").write_text(
-            json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
+    if (fallos := esperar_critico()) is not None:
+        print(
+            f"crítico: {len(fallos)} líneas{' (reutilizado)' if qa['critico_reutilizado'] else ''}"
+            " · hoja renders/critica/r0/hoja.jpg"
         )
-        print(f"crítico: {len(fallos)} líneas · hoja renders/critica/r0/hoja.jpg")
         for x in fallos:
             print("  " + x)
     return qa
@@ -1146,7 +1240,8 @@ def producir_auto(proy: Path, critico_: bool = True) -> dict:
         fallidas = {n: d for n, (ok, d) in DETALLES.items() if not ok}
         informe = None
         inf = proy / "renders" / "critica" / "informe.json"
-        if critico_ and fallo is None and inf.exists() and inf.stat().st_mtime >= t0:
+        # the critic runs in parallel with the last gates: its report counts even when one of them failed
+        if critico_ and inf.exists() and inf.stat().st_mtime >= t0:
             import critico
 
             informe = json.loads(inf.read_text(encoding="utf-8"))

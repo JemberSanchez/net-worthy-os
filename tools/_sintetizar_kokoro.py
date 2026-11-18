@@ -15,7 +15,31 @@ import soundfile as sf
 from kokoro import KPipeline
 
 
+def servidor() -> None:
+    """--servidor: one process for a whole voice run; the pipeline loads once (~15-25 s each time
+    otherwise). One JSON line in {"voz", "wav", "speed", "texto"}, one JSON line out {"s"} or {"error"}."""
+    import json
+
+    out, sys.stdout = sys.stdout, sys.stderr  # library prints must not break the one-line protocol
+    pipes: dict[str, KPipeline] = {}
+    for linea in sys.stdin:
+        try:
+            q = json.loads(linea)
+            lang = "b" if q["voz"].startswith(("bm_", "bf_")) else "a"
+            pipe = pipes.get(lang) or pipes.setdefault(lang, KPipeline(lang_code=lang))
+            trozos = [a for _, _, a in pipe(q["texto"], voice=q["voz"], speed=float(q.get("speed", 1.0)))]
+            if not trozos:
+                raise ValueError(f"Kokoro no generó audio para la voz {q['voz']!r}")
+            audio = np.concatenate(trozos)
+            sf.write(q["wav"], audio, 24000)
+            print(json.dumps({"s": round(len(audio) / 24000, 2)}), file=out, flush=True)
+        except Exception as e:  # noqa: BLE001 -- the client gets the error and decides; the worker stays up
+            print(json.dumps({"error": repr(e)[-2000:]}), file=out, flush=True)
+
+
 def main() -> None:
+    if sys.argv[1:] == ["--servidor"]:
+        return servidor()
     if len(sys.argv) < 3:
         raise SystemExit("Uso: _sintetizar_kokoro.py <voz> <wav-destino>  (texto por stdin)")
     voz, destino = sys.argv[1], sys.argv[2]
