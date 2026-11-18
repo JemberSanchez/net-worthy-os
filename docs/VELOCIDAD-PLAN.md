@@ -75,8 +75,10 @@ Medido 18-nov (escenario real E4, `strategy-underwater`, `--auto --sin-subir`, n
   (`qa.json` se sobrescribe). Ahora suma todas las rondas y guarda el detalle en `rondas`.
 - Corrida limpia, `strategy-underwater` actual (no el escenario E4): 6,8 min (410 s), 1 ronda y
   407,6 s registrados. Render 132 s, ritmo 111 s, social 60 s, loudness 49 s. El crítico (221 s)
-  corre en paralelo. Conclusión: con una corrida que pasa a la primera, la meta de 15 min se cumple; los
-  minutos se pierden en las rondas repetidas.
+  corre en paralelo. Con una corrida que pasa a la primera, la meta de 15 min se cumple.
+- En la corrida de 986 s, la ronda 2 (reintento por `social`, con render y crítico en caché) costó solo
+  138 s. La ronda 1 costó unos 848 s, el doble de una corrida limpia, y no se sabe por qué (los
+  datos de esa ronda no se guardaron). Ahora `rondas` lo registra si vuelve a pasar.
 
 ## Fase 2: brief → compilador (1-2 semanas)
 
