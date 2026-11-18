@@ -46,7 +46,8 @@
       #brand span { display: inline-block; padding: 8px 6px 8px 22px; border-radius: 10px; background: rgba(10,26,20,0.78); }
       /* la PRUEBA: documento real a pantalla completa + subrayador (tools/ocr_doc.py) */
       .prueba { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
-      .prueba .pcam { position: absolute; inset: 0; }
+      .prueba .pcam, .prueba .ppunch { position: absolute; inset: 0; }
+      .prueba .ppunch { transform-origin: 50% 45%; }
       .prueba img { position: absolute; display: block; box-shadow: 0 30px 90px rgba(0,0,0,0.7); }
       /* foco: todo el documento se apaga salvo la frase (y las fotos de personas del periódico, de paso, no protagonizan) */
       .prueba .foco { position: absolute; border-radius: 8px; box-shadow: 0 0 0 4000px rgba(4,10,8,0.84); opacity: 0; }

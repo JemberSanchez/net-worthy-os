@@ -1462,7 +1462,7 @@
       giro = 0;
     PASOS.forEach(([off, n, dur, ease, rot]) => {
       tl.fromTo(
-        "#cam",
+        "#cam, .ppunch", // the proof documents live outside #cam (E2)
         { scale: 1 + (z - 1) * nivel, rotation: giro },
         {
           scale: 1 + (z - 1) * n,

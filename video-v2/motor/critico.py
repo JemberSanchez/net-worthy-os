@@ -27,8 +27,8 @@ from __future__ import annotations
 
 import argparse
 import copy
-import itertools
 import hashlib
+import itertools
 import json
 import math
 import re
@@ -418,11 +418,24 @@ def _parche_texto(x: dict, esc, rt: dict) -> dict | None:
     return {"op": "fondo_suave", "escena": esc} if esc is not None else None
 
 
-def revisar_ritmo(rr: dict, words: list[dict], vs, u: dict) -> list[dict]:
+HUECO_PUNCH = 1.8  # motor.js `HUECO`: a punch-in closer than this to another one is silently dropped (E2)
+
+
+def revisar_ritmo(
+    rr: dict, words: list[dict], vs, u: dict, golpes: list[float] = ()
+) -> list[dict]:
     if rr["max_s"] <= u["quieto_max_s"]:
         return []
     a, b = rr["desde_s"], rr["desde_s"] + rr["max_s"]
-    ancla = ancla_de(words, (a + b) / 2, a + 0.3, b - 0.3)
+    libres = [
+        x["start"]
+        for x in words
+        if a + 0.3 <= x["start"] <= b - 0.3
+        and x["end"] - x["start"] >= 0.03
+        and all(abs(x["start"] - g) >= HUECO_PUNCH for g in golpes)
+    ]
+    t = min(libres, key=lambda s: abs(s - (a + b) / 2), default=None)
+    ancla = ancla_de(words, t, t, t) if t is not None else None
     return [
         fallo(
             "R1",
@@ -806,6 +819,9 @@ def fallos_de_qa(qa: dict, vs) -> list[dict]:
                 aviso = len(txt) >= 6 and any(
                     a.lower().startswith(txt.lower()) for a in (qa.get("_aviso") or [])
                 )
+                # a hot word of the captions takes the accent colour: over a same-colour title no
+                # background step helps (E9, berkshire-1999 "burst" after 4 rounds of fondo_suave)
+                caliente = txt.strip().lower() in (qa.get("_calientes") or [])
                 out.append(
                     fallo(
                         "L1",
@@ -815,6 +831,8 @@ def fallos_de_qa(qa: dict, vs) -> list[dict]:
                         escena="aviso" if aviso else esc,
                         parche={"op": "aviso_placa"}
                         if aviso
+                        else {"op": "quitar_caliente", "palabra": txt.strip().lower()}
+                        if caliente
                         else (
                             {"op": "fondo_suave", "escena": esc}
                             if esc is not None
@@ -845,6 +863,7 @@ OPS = (
     "sfx_vol",
     "motor_vol",
     "fondo_suave",
+    "quitar_caliente",
     "set",
 )
 SET_PERMITIDO = re.compile(
@@ -927,6 +946,9 @@ def aplicar(sb: dict, parches: list[dict]) -> tuple[dict, list[str]]:
                     hechos.append(
                         f"escena {p['escena']}: fondo más tenue (opacidad {e['fondo_opacidad']})"
                     )
+        elif op == "quitar_caliente" and p.get("palabra") in (sb.get("calientes") or []):
+            sb["calientes"].remove(p["palabra"])
+            hechos.append(f"'{p['palabra']}' fuera de calientes (ilegible en su color)")
         elif op == "set" and SET_PERMITIDO.match(str(p.get("ruta", ""))):
             obj, partes = sb, p["ruta"].split(".")
             try:
@@ -1014,7 +1036,11 @@ def revisar(
     med: dict = {}
     fallos: list[dict] = []
     if qa:
-        qa = {**qa, "_aviso": (sb.get("aviso") or {}).get("lineas") or []}
+        qa = {
+            **qa,
+            "_aviso": (sb.get("aviso") or {}).get("lineas") or [],
+            "_calientes": sb.get("calientes") or [],
+        }
         fallos += fallos_de_qa(qa, vs)
 
     frames = medir_texto.ocr_frames(mp4, 2.0)
@@ -1037,7 +1063,7 @@ def revisar(
 
     rr = medir_ritmo.tramo_quieto(medir_ritmo.leer_frames(str(mp4)))
     med["ritmo"] = rr
-    fallos += revisar_ritmo(rr, words, vs, u)
+    fallos += revisar_ritmo(rr, words, vs, u, plan.get("golpes") or [])
 
     rv = medir_voz.medir(
         words,
@@ -1333,7 +1359,11 @@ def bucle(
             foto["mp4"] is None
         ):  # una puerta paró el render: sus fallos (con parche) mandan
             fallos = fallos_de_qa(
-                {**qa, "_aviso": (sb.get("aviso") or {}).get("lineas") or []},
+                {
+                    **qa,
+                    "_aviso": (sb.get("aviso") or {}).get("lineas") or [],
+                    "_calientes": sb.get("calientes") or [],
+                },
                 ventanas(plan),
             )
             res = {"fallos": fallos, "medidas": {}, "puntuacion": None}

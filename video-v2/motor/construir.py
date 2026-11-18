@@ -1452,16 +1452,37 @@ def localizar_pruebas(proy: Path, sb: dict) -> None:
         )
 
 
-def lumas_gancho(proy: Path, sb: dict, p: dict, gancho_s: float) -> dict[str, float]:
-    """Raw luma of the clips on screen in the hook, cached in assets/clips/luma.json (one ffmpeg per new clip)."""
-    import broll
+def html_pruebas(p: dict) -> str:
+    """The proof documents sit outside #cam (over the scenes): `.ppunch` takes the punch-ins too (E2)."""
+    return "\n".join(
+        f'      <div id="{pr["id"]}" class="clip prueba" data-start="{pr["t0"]:.3f}" data-duration="{pr["t1"] - pr["t0"]:.3f}" '
+        f'data-track-index="{64 + j}"><div class="ppunch"><div id="{pr["id"]}-cam" class="pcam" style="transform-origin:{pr["foco"][0]:.0f}px {pr["foco"][1]:.0f}px">'
+        f'<img src="assets/t/{pr["img"]}.jpg" alt="" style="left:{pr["doc"][0]}px;top:{pr["doc"][1]}px;width:{pr["doc"][2]}px;height:{pr["doc"][3]}px" />'
+        f'<div id="{pr["id"]}-f" class="foco" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
+        f'<div id="{pr["id"]}-m" class="marca" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
+        f"</div></div></div>"
+        for j, pr in enumerate(p.get("pruebas") or [])
+    )
 
+
+def lumas_gancho(proy: Path, sb: dict, p: dict, gancho_s: float) -> dict[str, float]:
+    """Raw luma of the clips on screen in the hook (one ffmpeg per new clip, cached)."""
     decl = sb.get("clips") or {}
     usados = {
         f["clip"]
         for f in p.get("fotos") or []
         if f.get("clip") in decl and f["t0"] < gancho_s
     }
+    return lumas_clips(proy, sb, usados)
+
+
+def lumas_clips(proy: Path, sb: dict, usados) -> dict[str, float]:
+    """Raw luma of declared clips, cached in assets/clips/luma.json. Only clips already on disk: a gate
+    never downloads."""
+    import broll
+
+    decl = sb.get("clips") or {}
+    usados = [c for c in usados if c in decl]
     if not usados:
         return {}
     carpeta = proy / "assets" / "clips"
@@ -1611,17 +1632,8 @@ def _html(p: dict) -> str:
         if sr
         else ""
     )
-    pruebas = "\n".join(
-        f'      <div id="{pr["id"]}" class="clip prueba" data-start="{pr["t0"]:.3f}" data-duration="{pr["t1"] - pr["t0"]:.3f}" '
-        f'data-track-index="{64 + j}"><div id="{pr["id"]}-cam" class="pcam" style="transform-origin:{pr["foco"][0]:.0f}px {pr["foco"][1]:.0f}px">'
-        f'<img src="assets/t/{pr["img"]}.jpg" alt="" style="left:{pr["doc"][0]}px;top:{pr["doc"][1]}px;width:{pr["doc"][2]}px;height:{pr["doc"][3]}px" />'
-        f'<div id="{pr["id"]}-f" class="foco" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
-        f'<div id="{pr["id"]}-m" class="marca" style="left:{pr["caja"][0]}px;top:{pr["caja"][1]}px;width:{pr["caja"][2]}px;height:{pr["caja"][3]}px"></div>'
-        f"</div></div>"
-        for j, pr in enumerate(p.get("pruebas") or [])
-    )
     rep = {
-        "__PRUEBAS__": pruebas,
+        "__PRUEBAS__": html_pruebas(p),
         "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}".strip(),
         "__AVISOFIN__": (
             f'        <div id="avisofin"{estilo_avisofin(p["aviso"])}>{html.escape(p["aviso"]["completo"])}</div>'

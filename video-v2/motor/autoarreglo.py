@@ -334,7 +334,34 @@ def _historia(sb, words, p, m):
     return f"historia: corte al final de la frase anterior ({h['hasta']})"
 
 
+def _fondo_social(sb, words, p, m):
+    """A slide whose background hides its text (OCR at the edge or title unread, E3/E4): the next declared background not already in the carousel, reviewed clips first, never a proof
+    document. Cyclic from the failing one, so a second failure moves on instead of coming back."""
+    car = (sb.get("social") or {}).get("carrusel") or []
+    k = int(m.group(1)) - 1
+    if not 0 <= k < len(car):
+        return None
+    docs = {pr.get("img") for pr in sb.get("pruebas") or []}
+    cands = [f"clip:{c}@1" for c, v in (sb.get("clips") or {}).items() if v.get("visto") is True]
+    cands += [f"img:{i}" for i in sb.get("imagenes") or {} if i not in docs]
+    viejo = str(car[k].get("fondo", ""))
+    claves = [c.split("@")[0] for c in cands]
+    i = claves.index(viejo.split("@")[0]) + 1 if viejo.split("@")[0] in claves else 0
+    usados = {str(d.get("fondo", "")).split("@")[0] for d in car}
+    nuevo = next((c for c in cands[i:] + cands[:i] if c.split("@")[0] not in usados), None)
+    if nuevo is None:
+        return None
+    car[k]["fondo"] = nuevo
+    return f"diapositiva {k + 1}: fondo {viejo} -> {nuevo}"
+
+
 CATALOGO = [
+    (
+        re.compile(
+            r'^diapositiva (\d+): (?:".*" toca el borde|el título .* no se lee en la imagen)'
+        ),
+        _fondo_social,
+    ),
     (re.compile(r"^historia: (el corte en|`hasta` en) [\d.]+s"), _historia),
     (
         re.compile(r"^escena (\d+): con aspecto cine el texto va en `rotulos`"),
@@ -364,6 +391,7 @@ _SIN_PLAN = {
     _duotono,
     _aspecto_cine,
     _historia,
+    _fondo_social,
 }  # the rest read scene times from the plan
 
 
@@ -380,16 +408,22 @@ def arreglar_storyboard(
             break
         except (anclas.AnclaError, KeyError, ValueError, TypeError, IndexError):
             continue
-    hechos, pendientes = [], []
+    hechos, pendientes, hecho = [], [], {}
     for e in (x.strip() for x in errores):
         fn, m = next(
             ((fn, m) for rx, fn in CATALOGO if (m := rx.match(e))), (None, None)
         )
-        r = (
-            fn(nuevo, words, p, m)
-            if fn and (p is not None or fn in _SIN_PLAN)
-            else None
-        )
+        clave = (fn, m.groups()) if m else None
+        if clave in hecho:  # two rules on the same target (two texts at one slide's edge): one fix
+            r = hecho[clave]
+        else:
+            r = (
+                fn(nuevo, words, p, m)
+                if fn and (p is not None or fn in _SIN_PLAN)
+                else None
+            )
+            if clave:
+                hecho[clave] = r
         if r:
             hechos.append(r)
         else:
@@ -432,7 +466,39 @@ def fallos_ritmo(proy: Path, words: list[dict], detalle: str) -> list[dict]:
     rr = {"max_s": float(m.group(1)), "desde_s": float(m.group(2))}
     rub = critico.cargar_rubrica(proy)
     u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
-    return critico.revisar_ritmo(rr, words, _ventanas(proy), u)
+    plan = critico.plan_de_html((proy / "index.html").read_text(encoding="utf-8"))
+    return critico.revisar_ritmo(
+        rr, words, critico.ventanas(plan), u, plan.get("golpes") or []
+    )
+
+
+GANCHO_RX = re.compile(r"^gancho: clip '([^']+)' luma")
+
+
+def _gancho_claro(proy: Path, sb: dict, words: list[dict], malo: str) -> str | None:
+    """E10: a dark clip in the hook -> the brightest reviewed (`visto`) clip of this storyboard whose raw
+    luma clears puertas.GANCHO_CLIP_LUMA_MIN, in the hook scenes only. Nothing measured bright: Claude."""
+    try:
+        p = construir.plan(copy.deepcopy(sb), words)
+    except (anclas.AnclaError, KeyError, ValueError, TypeError, IndexError):
+        return None
+    vistos = [
+        c for c, v in (sb.get("clips") or {}).items() if v.get("visto") is True and c != malo
+    ]
+    lu = construir.lumas_clips(proy, sb, vistos)
+    claros = [c for c in lu if lu[c] >= puertas.GANCHO_CLIP_LUMA_MIN]
+    if not claros:
+        return None
+    nuevo = max(claros, key=lu.get)
+    n = 0
+    for k, s in enumerate(p["escenas"]):
+        if s["t0"] >= puertas.GANCHO_S:
+            continue
+        e = sb["escenas"][k]
+        for o in (e, e.get("fondo")):
+            if isinstance(o, dict) and o.get("clip") == malo:
+                o["clip"], n = nuevo, n + 1
+    return f"gancho: clip '{malo}' -> '{nuevo}' (luma {lu[nuevo]:g})" if n else None
 
 
 def arreglar(
@@ -449,9 +515,18 @@ def arreglar(
     words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
     hechos, pendientes, voz = [], [], False
     for nombre, detalle in fallidas.items():
-        if nombre == "storyboard":
-            errores = re.findall(r"^\s+- (.+)$", detalle, re.MULTILINE)
-            sb, h, pend = arreglar_storyboard(sb, words, errores or [detalle])
+        if nombre in ("storyboard", "social"):
+            errores = [
+                e.strip()
+                for e in re.findall(r"^\s+- (.+)$", detalle, re.MULTILINE) or [detalle]
+            ]
+            gancho = [e for e in errores if GANCHO_RX.match(e)]
+            sb, h, pend = arreglar_storyboard(
+                sb, words, [e for e in errores if e not in gancho]
+            )
+            for e in gancho:
+                r = _gancho_claro(proy, sb, words, GANCHO_RX.match(e).group(1))
+                (h if r else pend).append(r or e)
         elif nombre == "contraste":
             sb, h, pend = _aplicar_parches(sb, fallos_contraste(proy, sb, detalle))
             pend = pend or ([] if h else [f"contraste: {detalle.strip()}"])

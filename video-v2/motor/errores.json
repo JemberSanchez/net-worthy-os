@@ -13,23 +13,35 @@
   {
     "id": "E2",
     "patron": "Hay\\ \\d+(?:[.,]\\d+)?\\ s\\ sin\\ nada\\ nuevo\\ en\\ pantalla:\\ ahí\\ es\\ donde\\ se\\ va\\ la\\ gente\\.",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "Hay 2.8 s sin nada nuevo en pantalla: ahí es donde se va la gente.",
-    "desde": "2026-11-14"
+    "desde": "2026-11-14",
+    "donde": "critico.revisar_ritmo",
+    "test": "test_golpe_del_parche_no_cae_en_el_hueco_de_otro",
+    "causa": "the R1 punch-in landed < 1.8 s from another golpe (motor.js HUECO drops it) and the proof document sat outside #cam; now the anchor keeps the gap and .ppunch takes the punch",
+    "cerrado": "2026-11-18"
   },
   {
     "id": "E3",
     "patron": "diapositiva\\ \\d+(?:[.,]\\d+)?:\\ .+?\\ toca\\ el\\ borde",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "diapositiva 2: \"ce (in\" toca el borde",
-    "desde": "2026-11-14"
+    "desde": "2026-11-14",
+    "donde": "autoarreglo._fondo_social",
+    "test": "test_documento_de_fondo_que_toca_el_borde_pasa_a_otro_que_no_es_documento",
+    "causa": "a proof document behind slide 2: OCR read its own text at the edge; --auto moves the slide to the next unused background, never a document",
+    "cerrado": "2026-11-18"
   },
   {
     "id": "E4",
     "patron": "diapositiva\\ \\d+(?:[.,]\\d+)?:\\ el\\ título\\ .+?\\ no\\ se\\ lee\\ en\\ la\\ imagen",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "diapositiva 6: el título \"Would you hold a bitcoin vault?\" no se lee en la imagen",
-    "desde": "2026-11-14"
+    "desde": "2026-11-14",
+    "donde": "autoarreglo._fondo_social",
+    "test": "test_borde_y_titulo_ilegible_cambian_el_fondo_una_vez_por_diapositiva",
+    "causa": "slide title unreadable on a busy clip; --auto cycles the slide to the next unused reviewed background (social gate goes through autoarreglo now)",
+    "cerrado": "2026-11-18"
   },
   {
     "id": "E5",
@@ -69,21 +81,29 @@
     "patron": "guion\\ repite\\ .+?",
     "estado": "abierto",
     "ejemplo": "guion repite «this is not advice» (1 frases de 4 palabras) · misma apertura: titulo · parecido recursos 0.3 con strategy-underwater (> 0.25): clip:32805742, clip:35039725, clip:35417493",
-    "desde": "2026-11-15"
+    "desde": "2026-11-15",
+    "nota": "not mechanical: script wording, opening scene and shared clips are creative choices; it is caught statically before the voice (validation, ~2 s). Closing it needs the Phase 2 compiler picking media from the reviewed library with the variety rule"
   },
   {
     "id": "E9",
     "patron": "\\[alta\\]\\ L\\d+(?:[.,]\\d+)?\\ t=\\d+(?:[.,]\\d+)?s\\ escena\\ \\d+(?:[.,]\\d+)?\\ ·\\ .+?\\ \\d+(?:[.,]\\d+)?:\\d+(?:[.,]\\d+)?\\ en\\ el\\ DOM",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "[alta] L1 t=12.6s escena 3 · \"burst\" 2.02:1 en el DOM (< 3, WCAG AA) → parche",
-    "desde": "2026-11-15"
+    "desde": "2026-11-15",
+    "donde": "critico.fallos_de_qa",
+    "test": "test_palabra_caliente_ilegible_sale_de_calientes",
+    "causa": "a hot caption word in the accent colour over a same-colour title; fondo_suave was at its floor, so --auto now drops the word from calientes",
+    "cerrado": "2026-11-18"
   },
   {
     "id": "E10",
     "patron": "clip\\ .+?\\ luma\\ \\d+(?:[.,]\\d+)?",
-    "estado": "abierto",
+    "estado": "autoarreglo",
     "ejemplo": "gancho: clip 'pantalla' luma 16.5 (mín. 60) en los primeros 2 s: el gancho saldrá oscuro, pon un clip más claro",
     "desde": "2026-11-18",
-    "nota": "early catch of E1 (seconds, no render); still needs Claude to pick a clip: autoarreglo pending"
+    "donde": "autoarreglo._gancho_claro",
+    "test": "test_clip_oscuro_del_gancho_pasa_a_uno_visto_y_claro",
+    "causa": "dark clip in the first 2 s; --auto swaps it in the hook scenes for the brightest reviewed clip with raw luma >= 60",
+    "cerrado": "2026-11-18"
   }
 ]
