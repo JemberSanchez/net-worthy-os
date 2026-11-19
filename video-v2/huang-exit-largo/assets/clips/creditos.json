@@ -64,5 +64,60 @@
   "url_licencia": "https://www.pexels.com/license/",
   "fuente": "https://www.pexels.com/video/an-empty-office-5483080/",
   "desde": 0.0
+ },
+ {
+  "archivo": "disquete.src",
+  "origen": "pexels",
+  "titulo": "pexels:20503026",
+  "autor": "Stefan",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/floppy-disk-80s-computer-retro-diskette-20503026/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "circuito.src",
+  "origen": "pexels",
+  "titulo": "pexels:7609195",
+  "autor": "Steve B",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/close-up-video-of-a-circuit-board-7609195/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "vacia.src",
+  "origen": "pexels",
+  "titulo": "pexels:5483080",
+  "autor": "cottonbro studio",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/an-empty-office-5483080/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "cerrado.src",
+  "origen": "pexels",
+  "titulo": "pexels:13633619",
+  "autor": "Erik Mclean",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/closed-sign-hanging-in-window-13633619/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "app.src",
+  "origen": "pexels",
+  "titulo": "pexels:7578628",
+  "autor": "Tima Miroshnichenko",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/person-using-stock-market-app-7578628/",
+  "desde": 0.0
  }
 ]

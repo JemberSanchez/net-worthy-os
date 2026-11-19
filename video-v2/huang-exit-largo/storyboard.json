@@ -548,7 +548,9 @@
     "28:forty",
     "45:delays",
     "62:trillion",
-    "74:losers"
+    "74:losers",
+    "83:huge",
+    "89:question"
   ],
   "sonidos": [
     {
@@ -635,6 +637,34 @@
     "hq": {
       "commons": "File:Nvidia HQ.jpg",
       "color": true
+    },
+    "nv1": {
+      "commons": "File:Diamond Edge 3D 3400.jpg",
+      "color": true
+    },
+    "saturn": {
+      "commons": "File:Sega-Saturn-Console-Set-Mk1.png",
+      "color": true
+    },
+    "banshee": {
+      "commons": "File:3Dfx@350nm@Fixed-pipeline@Banshee@Voodoo Banshee.jpg",
+      "color": true
+    },
+    "voodoo1": {
+      "commons": "File:3Dfx@Voodoo Graphics FrontsideA.jpg",
+      "color": true
+    },
+    "h100": {
+      "commons": "File:NVIDIA H100 (极客湾Geekerwan) 011.png",
+      "color": true
+    },
+    "gtc": {
+      "commons": "File:GTC Taiwan 2016.jpg",
+      "color": true
+    },
+    "huang": {
+      "commons": "File:Jensen huang stanford 2026-04-30 025.jpg",
+      "color": true
     }
   },
   "clips": {
@@ -670,6 +700,36 @@
     },
     "oficina": {
       "pexels": 5483080,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "disquete": {
+      "pexels": 20503026,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "circuito": {
+      "pexels": 7609195,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "vacia": {
+      "pexels": 5483080,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "cerrado": {
+      "pexels": 13633619,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "app": {
+      "pexels": 7578628,
       "desde": 0,
       "ligero": true,
       "visto": true
@@ -917,7 +977,11 @@
         "texto": "he taught one to *draw*",
         "en": "9:teaching"
       },
-      "golpe": "9:teaching"
+      "golpe": "9:teaching",
+      "fondo": {
+        "clip": "disquete",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -962,7 +1026,11 @@
           "estilo": "mid",
           "color": "mute"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "circuito",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "revelacion",
@@ -1116,22 +1184,17 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "20:first",
-      "lineas": [
-        {
-          "texto": "Chip one: *NV1*",
-          "en": "20:first",
-          "estilo": "big",
-          "color": "ink"
-        },
-        {
-          "texto": "A different way to draw 3D",
-          "en": "20:different",
-          "estilo": "mid",
-          "color": "mute"
-        }
-      ]
+      "img": "nv1",
+      "kicker": {
+        "texto": "Chip one: *NV1*",
+        "en": "20:first"
+      },
+      "sub": {
+        "texto": "A different way to draw 3D",
+        "en": "20:different"
+      }
     },
     {
       "tipo": "revelacion",
@@ -1143,7 +1206,11 @@
         "texto": "*Triangles only*",
         "en": "21"
       },
-      "golpe": "21"
+      "golpe": "21",
+      "fondo": {
+        "clip": "circuito",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1161,7 +1228,11 @@
           "estilo": "huge"
         }
       ],
-      "fondo_suave": true
+      "fondo_suave": true,
+      "fondo": {
+        "img": "nv1",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "foto",
@@ -1186,7 +1257,11 @@
         "texto": "*Another vendor*",
         "en": "24:another"
       },
-      "golpe": "24:another"
+      "golpe": "24:another",
+      "fondo": {
+        "img": "saturn",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "revelacion",
@@ -1220,7 +1295,11 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "img": "saturn",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "revelacion",
@@ -1232,7 +1311,11 @@
         "texto": "to live",
         "en": "27"
       },
-      "golpe": "27"
+      "golpe": "27",
+      "fondo": {
+        "clip": "vacia",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1249,7 +1332,11 @@
           "en": "28",
           "estilo": "huge"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "vacia",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "foto",
@@ -1292,7 +1379,11 @@
         "texto": "in four months",
         "en": "32:four"
       },
-      "golpe": "32:four"
+      "golpe": "32:four",
+      "fondo": {
+        "img": "riva",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "titulo",
@@ -1364,7 +1455,11 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "app",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1405,26 +1500,24 @@
         "texto": "*Voodoo* was the card",
         "en": "41:wanted"
       },
-      "golpe": "41:wanted"
+      "golpe": "41:wanted",
+      "fondo": {
+        "img": "voodoo1",
+        "opacidad": 0.3
+      }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "42",
-      "lineas": [
-        {
-          "texto": "January 1999",
-          "en": "42",
-          "estilo": "mid",
-          "color": "mute"
-        },
-        {
-          "texto": "Banshee: *~1M sold*",
-          "en": "42:banshee",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
-      "fondo_suave": true
+      "img": "banshee",
+      "kicker": {
+        "texto": "January 1999",
+        "en": "42"
+      },
+      "sub": {
+        "texto": "Banshee: *~1M sold*",
+        "en": "42:banshee"
+      }
     },
     {
       "tipo": "revelacion",
@@ -1448,7 +1541,11 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "img": "voodoo1",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "titulo",
@@ -1522,7 +1619,11 @@
         "texto": "*Bankrupt*",
         "en": "49:bankrupt"
       },
-      "golpe": "49:bankrupt"
+      "golpe": "49:bankrupt",
+      "fondo": {
+        "clip": "cerrado",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1539,7 +1640,11 @@
           "en": "51:picked",
           "estilo": "huge"
         }
-      ]
+      ],
+      "fondo": {
+        "img": "banshee",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "titulo",
@@ -1551,7 +1656,11 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "cerrado",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "revelacion",
@@ -1710,7 +1819,11 @@
           "estilo": "mid",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "img": "h100",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "revelacion",
@@ -1722,7 +1835,11 @@
         "texto": "*$4T*, then *$5T*",
         "en": "63:four"
       },
-      "golpe": "63:four"
+      "golpe": "63:four",
+      "fondo": {
+        "img": "h100",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "titulo",
@@ -1738,6 +1855,10 @@
       "kicker": {
         "texto": "Forbes, November 2023",
         "en": "64"
+      },
+      "fondo": {
+        "img": "gtc",
+        "opacidad": 0.3
       }
     },
     {
@@ -1967,7 +2088,11 @@
           "en": "82:pick",
           "estilo": "huge"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "app",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1983,6 +2108,10 @@
       "kicker": {
         "texto": "Lesson 4",
         "en": "83"
+      },
+      "fondo": {
+        "img": "huang",
+        "opacidad": 0.3
       }
     },
     {
