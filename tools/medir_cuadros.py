@@ -107,7 +107,9 @@ def banda_vacia(fr: np.ndarray, u: dict) -> dict | None:
 
 def sin_texto(f: dict, u: dict) -> bool:
     """No line a viewer reads as content: the brand and the disclaimer are smaller than `texto_alto_px`."""
-    return not any(x["caja"][3] - x["caja"][1] >= u["texto_alto_px"] for x in f["lineas"])
+    return not any(
+        x["caja"][3] - x["caja"][1] >= u["texto_alto_px"] for x in f["lineas"]
+    )
 
 
 def _area(c: list[float]) -> float:
@@ -206,17 +208,35 @@ def ocr_imagen(ruta: Path) -> dict:
 
     logging.getLogger("RapidOCR").setLevel(logging.ERROR)
     global _MOTOR  # loading the model costs seconds per slide
-    _MOTOR = _MOTOR or RapidOCR(params={"Global.log_level": "error", "Det.limit_type": "max", "Det.limit_side_len": 1920})
+    # same thread cap as the critic's OCR: the preview runs PROCESOS_OCR of these in parallel
+    _MOTOR = _MOTOR or RapidOCR(
+        params={
+            "Global.log_level": "error",
+            "Det.limit_type": "max",
+            "Det.limit_side_len": 1920,
+            "EngineConfig.onnxruntime.intra_op_num_threads": medir_texto.HILOS_OCR,
+            "EngineConfig.onnxruntime.inter_op_num_threads": 1,
+        }
+    )
     motor = _MOTOR
     bgr = cv2.imread(str(ruta))
     h, w = bgr.shape[:2]
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
     res = motor(rgb)
     lineas = []
-    for caja, txt, conf in zip(res.boxes, res.txts, res.scores) if res.boxes is not None else []:
+    for caja, txt, conf in (
+        zip(res.boxes, res.txts, res.scores) if res.boxes is not None else []
+    ):
         xs, ys = [p[0] for p in caja], [p[1] for p in caja]
         c = [round(min(xs)), round(min(ys)), round(max(xs)), round(max(ys))]
-        lineas.append({"texto": txt, "conf": round(float(conf), 3), "caja": c, "contraste": medir_texto.contraste_caja(rgb, c)})
+        lineas.append(
+            {
+                "texto": txt,
+                "conf": round(float(conf), 3),
+                "caja": c,
+                "contraste": medir_texto.contraste_caja(rgb, c),
+            }
+        )
     return {"ancho": w, "alto": h, "lineas": lineas}
 
 
