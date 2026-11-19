@@ -64,7 +64,9 @@ class TextosDeEscenaTest(unittest.TestCase):
 
 
 class AnalizarTest(unittest.TestCase):
-    ESP: ClassVar[list[dict]] = [{"texto": "No big salary", "escena": 3, "t0": 6.0, "t1": 8.0}]
+    ESP: ClassVar[list[dict]] = [
+        {"texto": "No big salary", "escena": 3, "t0": 6.0, "t1": 8.0}
+    ]
 
     def test_texto_esperado_leido(self):
         r = T.analizar([frame(6.5, linea("NO BIG SALARY"))], self.ESP)
@@ -289,6 +291,32 @@ class TramosOcrTest(unittest.TestCase):
         # 18-nov: 6 processes x onnxruntime's default 12 threads = 72 on 12 cores, OCR 163 s -> 77 s capped
         self.assertLessEqual(T.PROCESOS_OCR * T.HILOS_OCR, max(2, os.cpu_count() or 2))
         self.assertGreaterEqual(T.HILOS_OCR, 1)
+
+    def test_ocr_del_previo_lleva_el_tope_de_hilos(self):
+        # 18-nov: the preview's ocr_imagen had no cap, 5.25 -> 1.09 s/frame on huang-exit-largo (22 min on 139 frames)
+        import types
+        from unittest import mock
+
+        import medir_cuadros
+
+        visto = {}
+
+        class Falso:
+            def __init__(self, params):
+                visto.update(params)
+                raise RuntimeError("stop")
+
+        with (
+            mock.patch.dict(
+                sys.modules, {"rapidocr": types.SimpleNamespace(RapidOCR=Falso)}
+            ),
+            mock.patch.object(medir_cuadros, "_MOTOR", None),
+            self.assertRaises(RuntimeError),
+        ):
+            medir_cuadros.ocr_imagen("x.png")
+        self.assertEqual(
+            visto["EngineConfig.onnxruntime.intra_op_num_threads"], T.HILOS_OCR
+        )
 
 
 class OrdenLecturaTest(unittest.TestCase):
