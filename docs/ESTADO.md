@@ -42,8 +42,16 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
   partir línea, `construir._rotulos_solapados`, solo tema base) y **E12** (en 16:9 la placa del
   aviso tapa el kicker/sub de una `foto`, `construir.bajo_el_aviso`).
 - ⚠ **El previo volvió a ser lento: 24.4 min** (contraste 715 s, texto 706 s; antes 332 + 120 s).
-  Suposición sin medir: el OCR lee el texto propio de los clips nuevos (cifras de `grafico`,
-  periódico de `rotativa`). Con `--auto` (por defecto) un fallo cuesta 3 rondas: 58 min. Para medir,
+  Medido (19-nov, máquina libre): el OCR del previo cuesta **9.1 s de DETECCIÓN por fotograma**
+  (PP-OCRv6 det small a `limit_side_len` 1920, 2 hilos; reconocimiento 0.3 s) igual con fondo liso,
+  foto o clip: NO es el metraje nuevo. 140 fotogramas → 4.7 s/fotograma con 6 procesos (3 procesos
+  rinden casi igual: 5.5). No es la CPU frenada (176 % de rendimiento, en corriente) ni EcoQoS
+  (quitarlo: 5.57, igual). Bajar `limit_side_len` a 1280/960 acelera 2-4x pero pierde texto
+  (30 y 28 de 46 líneas): descartado. Historial: solo la corrida de 18-nov 19:36 fue rápida (texto
+  120 s ≈ 25 fotogramas, cuadra con los "24 frames" del commit 84dc90d); antes y después, 700-1400 s.
+  Suposición sin verificar: aquella corrida muestreó ~25 fotogramas y no 140. Palancas sin probar:
+  det PP-OCRv4 mobile (cambia el instrumento del crítico: validar contra el actual antes) o
+  muestrear menos. Con `--auto` (por defecto) un fallo cuesta 3 rondas: 58 min. Para medir,
   `--sin-auto` y `PYTHONUNBUFFERED=1` (sin eso el log sale vacío hasta el final).
 
 - **Previo arreglado (18-nov, 84dc90d):** la causa no era muestrear de más sino el OCR del previo
