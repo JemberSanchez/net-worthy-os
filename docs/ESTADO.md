@@ -18,7 +18,17 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
-## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): parado por tiempo, SIN render
+## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, SIN render aún
+
+- **Previo arreglado (18-nov, 84dc90d):** la causa no era muestrear de más sino el OCR del previo
+  (`medir_cuadros.ocr_imagen`) sin el tope de hilos de onnxruntime: 5.25 → 1.09 s/fotograma, mismo
+  texto. Previo completo **8.0 min** (contraste 332 s, texto 120 s), TODAS las puertas pasan: s76 y
+  gancho verificados. Contraste: `check` mide como mucho 5 instantes por pasada (`CONTRAST_SAMPLES = 5`
+  fijo en HyperFrames, medido: 85 `--at` → 5 muestras), ~50 s fijos cada una. Siguiente: render.
+- El previo añade el ref a `video-v2/usado.json`: revertirlo si no se publica (rompe
+  `test_todos_los_publicados_siguen_validando`).
+
+Historia anterior al arreglo:
 
 - Hecho: layout 16:9, capítulos, miniatura, puertas de layout y cifra-vs-fuente. Storyboard real
   `video-v2/huang-exit-largo` (85 escenas, voz 441.8 s = 7.4 min, bajo el objetivo de 8-10 min).
