@@ -236,6 +236,43 @@ def errores_seleccion(sb: dict, proy: Path) -> list[str]:
     return errores
 
 
+# px per style in the base template (.rot.big/.rot.huge; .rot.mid falls back to .mid at 104 px)
+_ROT_PX = {"mid": 104, "big": 92, "huge": 130, "mega": 230}
+ROT_ANCHO = 980  # .rot spans left/right 50 px of the 1080 px scene
+
+
+def alto_rotulo(r: dict) -> int:
+    """Estimated px height of a rotulo, wrapped lines included.
+    shortcut: Anton capitals average ~0.42 em, base theme only (validar skips `aspecto: cine`, whose
+    editorial serif is smaller); measure that theme if a cine video starts stacking tops."""
+    px = int(r.get("tam") or _ROT_PX.get(r.get("estilo", "huge"), 130))
+    letras = len(r["texto"].replace("*", ""))
+    return px * max(1, int(-(-letras * 0.42 * px // ROT_ANCHO)))
+
+
+def _rotulos_solapados(s: dict) -> list[str]:
+    """Rotulos stacked by hand with `top` that would overlap once a line wraps (E11)."""
+    rs = sorted(
+        (r for r in s.get("rotulos") or [] if "top" in r), key=lambda r: r["top"]
+    )
+    return [
+        f"rótulo {a['texto']!r} (top {a['top']}, ~{alto_rotulo(a)} px) pisa a {b['texto']!r} (top {b['top']}): baja el segundo `top`"
+        for a, b in itertools.pairwise(rs)
+        if b["top"] - a["top"] < alto_rotulo(a)
+    ]
+
+
+def bajo_el_aviso(p: dict) -> list[str]:
+    """16:9 only (E12): the YMYL notice plate sits over the bottom plate of a `foto` (kicker/sub)."""
+    return [
+        f"escena {k} (foto): su kicker/sub queda bajo la placa del aviso ({a:.1f}-{b:.1f}s): quítalo o pásalo a `rotulos`"
+        for k, s in enumerate(p["escenas"])
+        if s["tipo"] == "foto" and (s.get("kicker") or s.get("sub"))
+        for a, b in (p.get("aviso") or {}).get("ventanas") or []
+        if s["t0"] < b and a < s["t1"]
+    ]
+
+
 def validar(sb: dict, words: list[dict]) -> list[str]:
     errores = []
     esc = sb.get("escenas") or []
@@ -273,6 +310,8 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
                 )
         if tipo == "foto" and bool(s.get("img")) == bool(s.get("clip")):
             errores.append(f"escena {k} (foto): lleva `img` O `clip` (uno de los dos)")
+        if sb.get("aspecto") != "cine":
+            errores += [f"escena {k} ({tipo}): {e}" for e in _rotulos_solapados(s)]
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
     errores += _validar_sonidos(sb)
@@ -1782,6 +1821,8 @@ def construir(
         av["ventanas_t"] = [
             [anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]
         ]
+    if sb.get("tipo_video") == "largo" and not sin_plan:
+        errores += bajo_el_aviso(plan(sb, words))
     if not solo_html:
         errores += _puertas(proy, sb, words, sin_plan, solo_validar)
         if solo_validar and not sin_contraste:
