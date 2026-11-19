@@ -20,6 +20,32 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 
 ## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, SIN render aún
 
+- **Retención sin render (19-nov):** avisos de `construir.py`, antes → después:
+
+  | aviso                                 | antes                      | después                        |
+  | ------------------------------------- | -------------------------- | ------------------------------ |
+  | huecos sin re-gancho (> 12 s)         | 13 (peor 44 s, 73.8-117.4) | 0                              |
+  | tramos "sin nada nuevo" (> 2.5 s)     | 19                         | 0                              |
+  | % del tiempo con texto grande         | 91 %                       | 81 % (tope 70: sigue avisando) |
+  | rachas > 3 escenas con texto centrado | 4                          | 0                              |
+  | L1 contraste < 3 (previo)             | 11 (2.2-2.95:1)            | 4 (2.44-2.95:1)                |
+
+  Cómo: 22 `golpes` en palabras de giro; fondos nuevos en 16 escenas de solo texto (6 clips Pexels
+  vistos en su hoja: `grafico`, `niebla`, `oficina_vacia`, `fichas`, `rotativa`, `tarro`; foto PD
+  `rpiunion`; `grafico2` descartado: mismo metraje que `mercado`); 14 `titulo` con fondo pasan a
+  `foto` con el mismo medio a opacidad plena y `rotulos` que se van (`hasta`) ~2.8 s después;
+  `posicion` arriba/abajo en 12 títulos; `--mute: #c3cfc7` en `plantilla-ancho.css` (el `mute` de
+  `revelacion.linea1` era la causa de 9 de los 11 L1). Quedan 7 L1 de OCR en la entrada animada
+  (no cambiaron) y 4 de contraste.
+
+- Errores nuevos cerrados como prevenidos: **E11** (rótulos apilados con `top` que se pisan al
+  partir línea, `construir._rotulos_solapados`, solo tema base) y **E12** (en 16:9 la placa del
+  aviso tapa el kicker/sub de una `foto`, `construir.bajo_el_aviso`).
+- ⚠ **El previo volvió a ser lento: 24.4 min** (contraste 715 s, texto 706 s; antes 332 + 120 s).
+  Suposición sin medir: el OCR lee el texto propio de los clips nuevos (cifras de `grafico`,
+  periódico de `rotativa`). Con `--auto` (por defecto) un fallo cuesta 3 rondas: 58 min. Para medir,
+  `--sin-auto` y `PYTHONUNBUFFERED=1` (sin eso el log sale vacío hasta el final).
+
 - **Previo arreglado (18-nov, 84dc90d):** la causa no era muestrear de más sino el OCR del previo
   (`medir_cuadros.ocr_imagen`) sin el tope de hilos de onnxruntime: 5.25 → 1.09 s/fotograma, mismo
   texto. Previo completo **8.0 min** (contraste 332 s, texto 120 s), TODAS las puertas pasan: s76 y

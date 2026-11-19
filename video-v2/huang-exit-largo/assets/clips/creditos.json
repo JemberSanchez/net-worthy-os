@@ -119,5 +119,71 @@
   "url_licencia": "https://www.pexels.com/license/",
   "fuente": "https://www.pexels.com/video/person-using-stock-market-app-7578628/",
   "desde": 0.0
+ },
+ {
+  "archivo": "grafico.src",
+  "origen": "pexels",
+  "titulo": "pexels:38267970",
+  "autor": "Rafael Minguet Delgado",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/stock-market-analysis-on-dual-monitors-38267970/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "niebla.src",
+  "origen": "pexels",
+  "titulo": "pexels:28865202",
+  "autor": "Ravi Kant",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/foggy-mountain-road-with-dense-mist-28865202/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "oficina_vacia.src",
+  "origen": "pexels",
+  "titulo": "pexels:8347237",
+  "autor": "Kampus Production",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/an-empty-office-8347237/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "fichas.src",
+  "origen": "pexels",
+  "titulo": "pexels:7607942",
+  "autor": "Pavel Danilyuk",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/a-gambler-stacking-poker-chips-7607942/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "rotativa.src",
+  "origen": "pexels",
+  "titulo": "pexels:38826405",
+  "autor": "Somogro Bangladesh",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/high-speed-newspaper-printing-process-close-up-38826405/",
+  "desde": 0.0
+ },
+ {
+  "archivo": "tarro.src",
+  "origen": "pexels",
+  "titulo": "pexels:12033695",
+  "autor": "Towfiqu barbhuiya",
+  "licencia": "Pexels License",
+  "clase": "pexels",
+  "url_licencia": "https://www.pexels.com/license/",
+  "fuente": "https://www.pexels.com/video/pulling-coins-out-of-jar-12033695/",
+  "desde": 0.0
  }
 ]

@@ -8,6 +8,10 @@
   width: 1080px;
   height: 1920px;
 }
+/* mute #8da298 gave 2.2-2.95:1 over the long-form backgrounds (L1); same value as the editorial theme */
+#root.ancho:not(.claro) {
+  --mute: #c3cfc7;
+}
 #root.ancho .scene.papel {
   box-shadow: 0 0 0 1200px #f2ecdf;
 }

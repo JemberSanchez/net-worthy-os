@@ -543,12 +543,34 @@
     }
   },
   "golpes": [
+    "1:seventy",
     "3:resigned",
+    "7:first",
+    "8:first",
+    "11:hard",
+    "13:diner",
+    "14:Priem",
+    "16:Nvidia",
+    "19:survive",
+    "19:But",
     "22:failed",
     "28:forty",
+    "30:thirty",
+    "34:public",
+    "39:favorite",
     "45:delays",
+    "52:disappear",
+    "54:hindsight",
+    "58:all",
+    "59:forty",
+    "61:going",
     "62:trillion",
+    "64:thirty",
+    "70:detail",
     "74:losers",
+    "76:advance",
+    "77:everything",
+    "79:Third",
     "83:huge",
     "89:question"
   ],
@@ -665,6 +687,10 @@
     "huang": {
       "commons": "File:Jensen huang stanford 2026-04-30 025.jpg",
       "color": true
+    },
+    "rpiunion": {
+      "commons": "File:RPI Union (Rensselaer Polytechnic Institute Union).jpg",
+      "color": true
     }
   },
   "clips": {
@@ -732,6 +758,36 @@
       "pexels": 7578628,
       "desde": 0,
       "ligero": true,
+      "visto": true
+    },
+    "grafico": {
+      "pexels": 38267970,
+      "desde": 0,
+      "visto": true
+    },
+    "niebla": {
+      "pexels": 28865202,
+      "desde": 0,
+      "visto": true
+    },
+    "oficina_vacia": {
+      "pexels": 8347237,
+      "desde": 0,
+      "visto": true
+    },
+    "fichas": {
+      "pexels": 7607942,
+      "desde": 0,
+      "visto": true
+    },
+    "rotativa": {
+      "pexels": 38826405,
+      "desde": 0,
+      "visto": true
+    },
+    "tarro": {
+      "pexels": 12033695,
+      "desde": 0,
       "visto": true
     }
   },
@@ -830,7 +886,8 @@
         "clip": "nyse",
         "opacidad": 0.35
       },
-      "fondo_suave": true
+      "fondo_suave": true,
+      "posicion": "abajo"
     },
     {
       "tipo": "foto",
@@ -847,32 +904,36 @@
       ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "4",
-      "lineas": [
+      "clip": "retro",
+      "pos": "baj",
+      "rotulos": [
         {
           "texto": "A college lab",
           "en": "4",
           "estilo": "mid",
-          "color": "ink"
+          "color": "ink",
+          "top": 772,
+          "hasta": "4:lab"
         },
         {
           "texto": "*Near bankruptcy*",
           "en": "4",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 890,
+          "hasta": "4:lab"
         },
         {
           "texto": "The sale of a lifetime",
           "en": "4",
           "estilo": "mid",
-          "color": "ink"
+          "color": "ink",
+          "top": 996,
+          "hasta": "4:lab"
         }
-      ],
-      "fondo": {
-        "clip": "retro",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -891,24 +952,24 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "6:start-0.7",
-      "lineas": [
-        {
-          "texto": "*Before Nvidia*",
-          "en": "6:start-0.7",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
+      "img": "empac",
+      "pos": "sup",
       "kicker": {
         "texto": "Chapter 1",
         "en": "6:start-0.7"
       },
-      "fondo": {
-        "img": "empac",
-        "opacidad": 0.3
-      }
+      "rotulos": [
+        {
+          "texto": "*Before Nvidia*",
+          "en": "6:start-0.7",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "6:earned"
+        }
+      ]
     },
     {
       "tipo": "titulo",
@@ -952,7 +1013,8 @@
       "fondo": {
         "clip": "oficina",
         "opacidad": 0.35
-      }
+      },
+      "posicion": "arriba"
     },
     {
       "tipo": "foto",
@@ -1011,26 +1073,28 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "11",
-      "lineas": [
+      "clip": "circuito",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "The *GX* graphics chip",
           "en": "11",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "11:and"
         },
         {
           "texto": "Fast graphics are hard",
           "en": "11",
           "estilo": "mid",
-          "color": "mute"
+          "color": "mute",
+          "top": 406,
+          "hasta": "11:and"
         }
-      ],
-      "fondo": {
-        "clip": "circuito",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -1049,24 +1113,24 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "13",
-      "lineas": [
-        {
-          "texto": "A *Denny's* diner",
-          "en": "13:denny's",
-          "estilo": "big",
-          "color": "ink"
-        }
-      ],
+      "img": "dennys",
+      "pos": "sup",
       "kicker": {
         "texto": "San Jose, California",
         "en": "13"
       },
-      "fondo": {
-        "img": "dennys",
-        "opacidad": 0.35
-      }
+      "rotulos": [
+        {
+          "texto": "A *Denny's* diner",
+          "en": "13:denny's",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "13:and"
+        }
+      ]
     },
     {
       "tipo": "lista",
@@ -1152,20 +1216,20 @@
       ]
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "19",
-      "lineas": [
+      "clip": "mercado",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "Would it *survive*?",
           "en": "19",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "19:the#2"
         }
-      ],
-      "fondo": {
-        "clip": "mercado",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1232,7 +1296,8 @@
       "fondo": {
         "img": "nv1",
         "opacidad": 0.3
-      }
+      },
+      "posicion": "abajo"
     },
     {
       "tipo": "foto",
@@ -1299,7 +1364,8 @@
       "fondo": {
         "img": "saturn",
         "opacidad": 0.3
-      }
+      },
+      "posicion": "arriba"
     },
     {
       "tipo": "revelacion",
@@ -1318,25 +1384,27 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "28",
-      "lineas": [
+      "clip": "vacia",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "1996 layoffs",
           "en": "28",
           "estilo": "mid",
-          "color": "mute"
+          "color": "mute",
+          "top": 300,
+          "hasta": "28:half"
         },
         {
           "texto": "*100 to 40*",
           "en": "28",
-          "estilo": "huge"
+          "estilo": "huge",
+          "top": 418,
+          "hasta": "28:half"
         }
-      ],
-      "fondo": {
-        "clip": "vacia",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "foto",
@@ -1348,26 +1416,32 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "30",
-      "lineas": [
+      "img": "huang",
+      "pos": "sup",
+      "kicker": {
+        "texto": "Company motto",
+        "en": "30"
+      },
+      "rotulos": [
         {
           "texto": "“Our company is *thirty days*",
           "en": "30:our",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "31:with"
         },
         {
           "texto": "from going out of business”",
           "en": "30:going",
           "estilo": "mid",
-          "color": "ink"
+          "color": "ink",
+          "top": 498,
+          "hasta": "31:with"
         }
-      ],
-      "kicker": {
-        "texto": "Company motto",
-        "en": "30"
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -1431,7 +1505,8 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "posicion": "abajo"
     },
     {
       "tipo": "revelacion",
@@ -1443,23 +1518,27 @@
         "texto": "*Half the staff laid off*",
         "en": "37:laid"
       },
-      "golpe": "37:laid"
+      "golpe": "37:laid",
+      "fondo": {
+        "clip": "oficina_vacia",
+        "opacidad": 0.35
+      }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "38",
-      "lineas": [
+      "clip": "app",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "Not a *sure thing*",
           "en": "38",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "38:most"
         }
-      ],
-      "fondo": {
-        "clip": "app",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1532,20 +1611,20 @@
       "golpe": "43:systems"
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "44",
-      "lineas": [
+      "img": "voodoo1",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "The *safest bet*?",
           "en": "44",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "44:graphics"
         }
-      ],
-      "fondo": {
-        "img": "voodoo1",
-        "opacidad": 0.3
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -1607,7 +1686,8 @@
       "fondo": {
         "img": "nvsign",
         "opacidad": 0.3
-      }
+      },
+      "posicion": "arriba"
     },
     {
       "tipo": "revelacion",
@@ -1647,20 +1727,20 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "52",
-      "lineas": [
+      "clip": "cerrado",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "Watched it *disappear*",
           "en": "52",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "52:the"
         }
-      ],
-      "fondo": {
-        "clip": "cerrado",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "revelacion",
@@ -1672,7 +1752,11 @@
         "texto": "*The favorite* went bust",
         "en": "53"
       },
-      "golpe": "53"
+      "golpe": "53",
+      "fondo": {
+        "clip": "fichas",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1710,7 +1794,12 @@
       "kicker": {
         "texto": "Chapter 4",
         "en": "55:now-0.7"
-      }
+      },
+      "fondo": {
+        "img": "rpiunion",
+        "opacidad": 0.3
+      },
+      "posicion": "abajo"
     },
     {
       "tipo": "revelacion",
@@ -1784,7 +1873,12 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "img": "rpiunion",
+        "opacidad": 0.3
+      },
+      "posicion": "arriba"
     },
     {
       "tipo": "titulo",
@@ -1842,24 +1936,20 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "64",
-      "lineas": [
+      "img": "gtc",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "Net worth *~$30M*",
           "en": "64:thirty",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "65:forbes"
         }
-      ],
-      "kicker": {
-        "texto": "Forbes, November 2023",
-        "en": "64"
-      },
-      "fondo": {
-        "img": "gtc",
-        "opacidad": 0.3
-      }
+      ]
     },
     {
       "tipo": "contador3d",
@@ -1886,7 +1976,11 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "img": "gtc",
+        "opacidad": 0.3
+      }
     },
     {
       "tipo": "revelacion",
@@ -1916,7 +2010,12 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "tarro",
+        "opacidad": 0.35
+      },
+      "posicion": "abajo"
     },
     {
       "tipo": "titulo",
@@ -1948,7 +2047,11 @@
           "texto": "A brutal market",
           "en": "71:brutal"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "disquete",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "revelacion",
@@ -1960,7 +2063,11 @@
         "texto": "*one bet*",
         "en": "72:riding"
       },
-      "golpe": "72:riding"
+      "golpe": "72:riding",
+      "fondo": {
+        "clip": "fichas",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -1976,29 +2083,40 @@
       "kicker": {
         "texto": "Chapter 5",
         "en": "73:so-0.7"
-      }
+      },
+      "fondo": {
+        "clip": "tarro",
+        "opacidad": 0.35
+      },
+      "posicion": "arriba"
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "74",
-      "lineas": [
+      "clip": "grafico",
+      "pos": "sup",
+      "kicker": {
+        "texto": "Lesson 1",
+        "en": "74"
+      },
+      "rotulos": [
         {
           "texto": "Nobody sells",
           "en": "74:nobody",
           "estilo": "mid",
-          "color": "mute"
+          "color": "mute",
+          "top": 300,
+          "hasta": "75:have"
         },
         {
           "texto": "*only the losers*",
           "en": "74:losers",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 418,
+          "hasta": "75:have"
         }
-      ],
-      "kicker": {
-        "texto": "Lesson 1",
-        "en": "74"
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -2016,7 +2134,11 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "niebla",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
@@ -2041,23 +2163,28 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "78",
-      "lineas": [
+      "clip": "grafico",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "*Concentration*",
           "en": "78",
           "estilo": "big",
-          "color": "ink"
+          "color": "ink",
+          "top": 300,
+          "hasta": "78:which"
         },
         {
           "texto": "makes fortunes and breaks them",
           "en": "78:lost",
           "estilo": "mid",
-          "color": "mute"
+          "color": "mute",
+          "top": 406,
+          "hasta": "78:which"
         }
-      ],
-      "fondo_suave": true
+      ]
     },
     {
       "tipo": "puntos",
@@ -2074,25 +2201,27 @@
       }
     },
     {
-      "tipo": "titulo",
+      "tipo": "foto",
       "en": "82",
-      "lineas": [
+      "clip": "app",
+      "pos": "sup",
+      "rotulos": [
         {
           "texto": "You never had to",
           "en": "82",
           "estilo": "mid",
-          "color": "mute"
+          "color": "mute",
+          "top": 300,
+          "hasta": "82:both"
         },
         {
           "texto": "*pick*",
           "en": "82:pick",
-          "estilo": "huge"
+          "estilo": "huge",
+          "top": 418,
+          "hasta": "82:both"
         }
-      ],
-      "fondo": {
-        "clip": "app",
-        "opacidad": 0.35
-      }
+      ]
     },
     {
       "tipo": "titulo",
@@ -2130,7 +2259,12 @@
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "fondo": {
+        "clip": "niebla",
+        "opacidad": 0.35
+      },
+      "posicion": "abajo"
     },
     {
       "tipo": "revelacion",
@@ -2142,7 +2276,11 @@
         "texto": "*couldn't see it*",
         "en": "85:still"
       },
-      "golpe": "85:still"
+      "golpe": "85:still",
+      "fondo": {
+        "clip": "rotativa",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "revelacion",
@@ -2154,7 +2292,9 @@
         "texto": "*A headline won't either*",
         "en": "86:headline"
       },
-      "golpe": "86:headline"
+      "golpe": "86:headline",
+      "fondo_suave": true,
+      "fondo_opacidad": 0.6
     },
     {
       "tipo": "revelacion",
@@ -2166,25 +2306,34 @@
         "texto": "Sources in the description",
         "en": "87:source"
       },
-      "golpe": "87:source"
+      "golpe": "87:source",
+      "fondo": {
+        "clip": "rotativa",
+        "opacidad": 0.35
+      }
     },
     {
       "tipo": "titulo",
-      "en": "88",
+      "en": "88:sold",
       "lineas": [
         {
           "texto": "Too early?",
-          "en": "88",
+          "en": "88:sold",
           "estilo": "mid",
           "color": "mute"
         },
         {
           "texto": "Or *enough*?",
-          "en": "88:enough",
+          "en": "88:another",
           "estilo": "big",
           "color": "ink"
         }
-      ]
+      ],
+      "kicker": {
+        "texto": "My question for you",
+        "en": "89"
+      },
+      "posicion": "arriba"
     },
     {
       "tipo": "cta",
@@ -2202,7 +2351,11 @@
         "texto": "Would you have held every share?",
         "en": "90"
       },
-      "sub": "tell me in the comments"
+      "sub": "tell me in the comments",
+      "fondo": {
+        "clip": "oficina_vacia",
+        "opacidad": 0.35
+      }
     }
   ],
   "miniatura": {
