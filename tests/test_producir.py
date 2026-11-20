@@ -1,42 +1,74 @@
 """Tests de la descripción que se publica (video-v2/motor/producir.py): lo que va a YouTube tiene
 que llevar SIEMPRE el aviso YMYL, las fuentes de las cifras y la atribución de imágenes (CC BY la
 exige: publicar sin ella es incumplir la licencia)."""
+
 from __future__ import annotations
+
 import json
+import os
 import shutil
 import subprocess
-import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video-v2", "motor"))
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video-v2", "motor"
+    ),
+)
 
-import producir  # noqa: E402
+import producir
 
-SB = {"publicacion": {"descripcion": "The janitor.", "hashtags": ["#shorts"]},
-      "aviso": {"lineas": ["Illustrative", "Not financial advice"]},
-      "cifras": [{"dato": "$8M", "fuente": "https://a.org"}, {"dato": "95", "fuente": "https://a.org"}]}
+SB = {
+    "publicacion": {"descripcion": "The janitor.", "hashtags": ["#shorts"]},
+    "aviso": {"lineas": ["Illustrative", "Not financial advice"]},
+    "cifras": [
+        {"dato": "$8M", "fuente": "https://a.org"},
+        {"dato": "95", "fuente": "https://a.org"},
+    ],
+}
 
 
 class ContrasteTest(unittest.TestCase):
     def test_un_instante_por_escena(self):
-        h = ('<section id="s0" class="clip scene" data-start="0.000" data-duration="2.000">'
-             '<section id="s1" class="clip scene" data-start="2.000" data-duration="0.100">')
-        self.assertEqual(producir.instantes_escena(h), [1.2, 2.0])        # escena corta: nunca fuera de su ventana
+        h = (
+            '<section id="s0" class="clip scene" data-start="0.000" data-duration="2.000">'
+            '<section id="s1" class="clip scene" data-start="2.000" data-duration="0.100">'
+        )
+        self.assertEqual(
+            producir.instantes_escena(h), [1.2, 2.0]
+        )  # escena corta: nunca fuera de su ventana
 
     def test_instante_tapado_por_una_prueba_se_mueve_a_la_parte_visible(self):
-        h = ('<section id="s0" class="clip scene" data-start="16.43" data-duration="3.23"'
-             '<script>window.PLAN = {"pruebas": [{"t0": 17.8, "t1": 18.98}]};</script>')
+        h = (
+            '<section id="s0" class="clip scene" data-start="16.43" data-duration="3.23"'
+            '<script>window.PLAN = {"pruebas": [{"t0": 17.8, "t1": 18.98}]};</script>'
+        )
         t = producir.instantes_escena(h)[0]
         self.assertFalse(17.6 <= t <= 19.18, t)
         self.assertTrue(16.43 < t < 19.66)
 
     def test_solo_cuenta_lo_que_no_llega_a_aa(self):
-        inf = [{"contrast": {"findings": [
-            {"text": "Here's", "ratio": 2.67, "requiredRatio": 3, "time": 31.3},
-            {"text": "ok", "ratio": 4.8, "requiredRatio": 4.5, "time": 2}]}}, {"contrast": None}]
+        inf = [
+            {
+                "contrast": {
+                    "findings": [
+                        {
+                            "text": "Here's",
+                            "ratio": 2.67,
+                            "requiredRatio": 3,
+                            "time": 31.3,
+                        },
+                        {"text": "ok", "ratio": 4.8, "requiredRatio": 4.5, "time": 2},
+                    ]
+                }
+            },
+            {"contrast": None},
+        ]
         f = producir.fallos_contraste(inf)
         self.assertEqual(len(f), 1)
         self.assertIn('"Here\'s" 2.67:1', f[0])
@@ -45,24 +77,58 @@ class ContrasteTest(unittest.TestCase):
 class MedicionValidaTest(unittest.TestCase):
     def test_no_aprueba_si_no_midio(self):
         """El falso aprobado real del #7: runtime con timeout, 0 muestras, contraste 'ok'."""
-        falso = {"contrast": {"ok": True, "samples": [], "checked": 0},
-                 "runtime": {"errorCount": 1, "findings": [{"message": "Navigation timeout of 10000 ms exceeded"}]}}
+        falso = {
+            "contrast": {"ok": True, "samples": [], "checked": 0},
+            "runtime": {
+                "errorCount": 1,
+                "findings": [{"message": "Navigation timeout of 10000 ms exceeded"}],
+            },
+        }
         ok, motivo = producir.medicion_valida(falso)
         self.assertFalse(ok)
         self.assertIn("Navigation timeout", motivo)
-        self.assertFalse(producir.medicion_valida({"contrast": {"samples": [1.0], "checked": 0}, "runtime": {}})[0])
-        self.assertTrue(producir.medicion_valida({"contrast": {"samples": [1.0], "checked": 7}, "runtime": {"errorCount": 0}})[0])
+        self.assertFalse(
+            producir.medicion_valida(
+                {"contrast": {"samples": [1.0], "checked": 0}, "runtime": {}}
+            )[0]
+        )
+        self.assertTrue(
+            producir.medicion_valida(
+                {
+                    "contrast": {"samples": [1.0], "checked": 7},
+                    "runtime": {"errorCount": 0},
+                }
+            )[0]
+        )
 
 
 class BloquesAdnTest(unittest.TestCase):
-    W = [{"text": x, "start": i * 1.0, "end": i * 1.0 + 0.8} for i, x in enumerate("Hi there. Big news! It works. The end.".split())]
+    W: ClassVar[list] = [
+        {"text": x, "start": i * 1.0, "end": i * 1.0 + 0.8}
+        for i, x in enumerate(["Hi", "there.", "Big", "news!", "It", "works.", "The", "end."])
+    ]
 
     def test_duracion_real_y_tecnica(self):
-        sb = {"cola_s": 2, "guion": [{"id": "hook", "texto": "Hi there. Big news!"}, {"id": "cierre", "texto": "It works. The end."}],
-              "escenas": [{"tipo": "foto", "en": "0", "clip": "x"}, {"tipo": "revelacion", "en": "1"}, {"tipo": "cta", "en": "3:end"}]}
+        sb = {
+            "cola_s": 2,
+            "guion": [
+                {"id": "hook", "texto": "Hi there. Big news!"},
+                {"id": "cierre", "texto": "It works. The end."},
+            ],
+            "escenas": [
+                {"tipo": "foto", "en": "0", "clip": "x"},
+                {"tipo": "revelacion", "en": "1"},
+                {"tipo": "cta", "en": "3:end"},
+            ],
+        }
         b = producir.bloques_adn(sb, self.W)
-        self.assertEqual(b, [{"block": "hook", "technique": "foto+clip,revelacion", "length_s": 4.0},
-                             {"block": "cierre", "technique": "cta", "length_s": 5.8}])
+        self.assertEqual(
+            b,
+            [
+                {"block": "hook", "technique": "foto+clip,revelacion", "length_s": 4.0},
+                {"block": "cierre", "technique": "cta", "length_s": 5.8},
+            ],
+        )
         self.assertAlmostEqual(sum(x["length_s"] for x in b), self.W[-1]["end"] + 2)
 
     def test_si_guion_y_voz_no_casan_no_inventa(self):
@@ -73,16 +139,30 @@ class BloquesAdnTest(unittest.TestCase):
 class DescripcionTest(unittest.TestCase):
     def test_lleva_aviso_fuentes_creditos_y_hashtags(self):
         with tempfile.TemporaryDirectory() as d:
-            img = Path(d, "assets", "img"); img.mkdir(parents=True)
-            (img / "creditos.json").write_text(json.dumps([{"archivo": "x.jpg", "titulo": "File:Crash.jpg",
-                "autor": "Orange County Archives", "licencia": "CC BY 2.0", "url_licencia": "https://cc/by/2.0",
-                "fuente": "https://commons/x"}]))
+            img = Path(d, "assets", "img")
+            img.mkdir(parents=True)
+            (img / "creditos.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "archivo": "x.jpg",
+                            "titulo": "File:Crash.jpg",
+                            "autor": "Orange County Archives",
+                            "licencia": "CC BY 2.0",
+                            "url_licencia": "https://cc/by/2.0",
+                            "fuente": "https://commons/x",
+                        }
+                    ]
+                )
+            )
             t = producir.descripcion(SB, Path(d))
         self.assertTrue(t.startswith("The janitor."))
         self.assertIn("Not financial advice", t)
-        self.assertEqual(t.count("https://a.org"), 1)                 # fuentes sin repetir
-        self.assertIn("Orange County Archives — CC BY 2.0", t)       # atribución exigida por CC BY
-        self.assertIn("\n\n#shorts\n\n", t)          # antes de los créditos: nunca se corta
+        self.assertEqual(t.count("https://a.org"), 1)  # fuentes sin repetir
+        self.assertIn(
+            "Orange County Archives — CC BY 2.0", t
+        )  # atribución exigida por CC BY
+        self.assertIn("\n\n#shorts\n\n", t)  # antes de los créditos: nunca se corta
         self.assertLessEqual(len(t), 5000)
 
     def test_aviso_dvids_solo_con_material_militar(self):
@@ -90,9 +170,25 @@ class DescripcionTest(unittest.TestCase):
             with self.subTest(autor=autor), tempfile.TemporaryDirectory() as d:
                 img = Path(d, "assets", "img")
                 img.mkdir(parents=True)
-                (img / "creditos.json").write_text(json.dumps([{"archivo": "x.jpg", "titulo": "File:X.jpg", "autor": autor,
-                    "licencia": "Public domain", "url_licencia": "", "fuente": "https://commons/x"}]))
-                self.assertEqual("does not imply or constitute DoW endorsement" in producir.descripcion(SB, Path(d)), esperado)
+                (img / "creditos.json").write_text(
+                    json.dumps(
+                        [
+                            {
+                                "archivo": "x.jpg",
+                                "titulo": "File:X.jpg",
+                                "autor": autor,
+                                "licencia": "Public domain",
+                                "url_licencia": "",
+                                "fuente": "https://commons/x",
+                            }
+                        ]
+                    )
+                )
+                self.assertEqual(
+                    "does not imply or constitute DoW endorsement"
+                    in producir.descripcion(SB, Path(d)),
+                    esperado,
+                )
 
     def test_sin_creditos_no_rompe(self):
         with tempfile.TemporaryDirectory() as d:
@@ -100,55 +196,96 @@ class DescripcionTest(unittest.TestCase):
 
 
 class SerieYComentarioTest(unittest.TestCase):
-    SB = {**SB, "serie": {"nombre": "Quiet Millionaires", "ep": 2},
-          "escenas": [{"tipo": "cta", "en": "5", "a": {"texto": "Skill", "en": "5:skill"}, "b": {"texto": "*Time*", "en": "5:time"}}]}
+    SB: ClassVar[dict] = {
+        **SB,
+        "serie": {"nombre": "Quiet Millionaires", "ep": 2},
+        "escenas": [
+            {
+                "tipo": "cta",
+                "en": "5",
+                "a": {"texto": "Skill", "en": "5:skill"},
+                "b": {"texto": "*Time*", "en": "5:time"},
+            }
+        ],
+    }
 
     def test_descripcion_con_serie_y_creditos_de_efectos(self):
         sb = {**self.SB, "sonidos": [{"sfx": "caja", "en": "0:dollars"}]}
         with tempfile.TemporaryDirectory() as d:
-            sfx = Path(d, "assets", "sfx"); sfx.mkdir(parents=True)
-            (sfx / "creditos.json").write_text(json.dumps([
-                {"archivo": "caja.src", "titulo": "File:WWS Cash register.ogg", "autor": "Work With Sounds / Werstas",
-                 "licencia": "CC BY 4.0", "url_licencia": "https://cc/by/4.0", "fuente": "https://commons/c"},
-                {"archivo": "reloj.src", "titulo": "File:Clock.ogg", "autor": "x", "licencia": "Public domain",
-                 "url_licencia": "", "fuente": "https://commons/r"}]))
+            sfx = Path(d, "assets", "sfx")
+            sfx.mkdir(parents=True)
+            (sfx / "creditos.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "archivo": "caja.src",
+                            "titulo": "File:WWS Cash register.ogg",
+                            "autor": "Work With Sounds / Werstas",
+                            "licencia": "CC BY 4.0",
+                            "url_licencia": "https://cc/by/4.0",
+                            "fuente": "https://commons/c",
+                        },
+                        {
+                            "archivo": "reloj.src",
+                            "titulo": "File:Clock.ogg",
+                            "autor": "x",
+                            "licencia": "Public domain",
+                            "url_licencia": "",
+                            "fuente": "https://commons/r",
+                        },
+                    ]
+                )
+            )
             t = producir.descripcion(sb, Path(d))
         self.assertTrue(t.startswith("Quiet Millionaires · Ep. 2\n\nThe janitor."))
-        self.assertIn("Sound effects:\n- WWS Cash register — Work With Sounds / Werstas — CC BY 4.0", t)
-        self.assertNotIn("Clock", t)                                       # solo los efectos que se usan
+        self.assertIn(
+            "Sound effects:\n- WWS Cash register — Work With Sounds / Werstas — CC BY 4.0",
+            t,
+        )
+        self.assertNotIn("Clock", t)  # solo los efectos que se usan
         self.assertIn("\n\n#shorts #QuietMillionaires\n\n", t)
 
     def test_comentario_por_defecto_y_manual(self):
         c = producir.comentario(self.SB)
         self.assertTrue(c.startswith("Skill or Time? Reply with one word"))
         self.assertIn("Quiet Millionaires · Ep. 3 is next", c)
-        self.assertEqual(producir.comentario({**self.SB, "publicacion": {"comentario": " Hola "}}), "Hola")
-        self.assertIsNone(producir.comentario(SB))                         # sin CTA no se inventa
+        self.assertEqual(
+            producir.comentario({**self.SB, "publicacion": {"comentario": " Hola "}}),
+            "Hola",
+        )
+        self.assertIsNone(producir.comentario(SB))  # sin CTA no se inventa
 
 
 class LimiteDescripcionTest(unittest.TestCase):
     def test_acorta_titulos_antes_que_cortar_y_si_no_cabe_falla(self):
-        cred = "Images:\n" + "\n".join(f"- {'T' * 300} {i} — Autor {i} — CC BY 4.0 — https://c/{i}" for i in range(12))
+        cred = "Images:\n" + "\n".join(
+            f"- {'T' * 300} {i} — Autor {i} — CC BY 4.0 — https://c/{i}"
+            for i in range(12)
+        )
         t = producir.ajustar_limite(["Intro", "#shorts", cred], limite=2000)
         self.assertLessEqual(len(t), 2000)
         self.assertIn("#shorts", t)
-        self.assertTrue(all(f"Autor {i} — CC BY 4.0 — https://c/{i}" in t for i in range(12)))   # atribución intacta
+        self.assertTrue(
+            all(f"Autor {i} — CC BY 4.0 — https://c/{i}" in t for i in range(12))
+        )  # atribución intacta
         with self.assertRaises(ValueError):
             producir.ajustar_limite(["x" * 3000], limite=2000)
-
 
 
 class GpuRenderTest(unittest.TestCase):
     def test_vendor_from_hyperframes_probe_line(self):
         linea = '[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (NVIDIA)" renderer="ANGLE (NVIDIA)")'
         self.assertEqual(producir.gpu_render(linea), "NVIDIA")
-        self.assertEqual(producir.gpu_render(linea.replace("(NVIDIA)", "(Intel)")), "Intel")   # dropped to the iGPU
+        self.assertEqual(
+            producir.gpu_render(linea.replace("(NVIDIA)", "(Intel)")), "Intel"
+        )  # dropped to the iGPU
         self.assertIsNone(producir.gpu_render("rendered in 1m 56s"))
+
 
 class GanchoPrevioTest(unittest.TestCase):
     """C1 (dark hook) was found only by the critic on the MP4 (huang-exit, 12-nov): one render run lost."""
 
-    U = {"gancho_s": 2.0, "gancho_luma_min": 30, "gancho_contraste_min": 25}
+    U: ClassVar[dict] = {"gancho_s": 2.0, "gancho_luma_min": 30, "gancho_contraste_min": 25}
 
     def _frames(self, d: Path, alto: int) -> None:
         import numpy as np
@@ -173,13 +310,46 @@ class GanchoPrevioTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             self.assertFalse(producir.gancho_previo(Path(d), self.U)[0])
 
+    def test_gancho_temprano_solo_saca_los_fotogramas_del_gancho(self):
+        """huang-exit-largo (18-nov): the dark hook surfaced after ~24 min of preview; alone it costs ~54 s."""
+        import json
+        from unittest import mock
+
+        pedidos = []
+
+        def snapshot_falso(cmd, cwd, env):
+            ts = cmd[cmd.index("--at") + 1].split(",")
+            salida = Path(cmd[cmd.index("--output") + 1])
+            pedidos.append(ts)
+            salida.mkdir(parents=True)
+            self._frames(salida, 40)
+            return mock.Mock(
+                returncode=0, stdout=json.dumps({"contactSheets": ["x.jpg"]}), stderr=""
+            )
+
+        with (
+            tempfile.TemporaryDirectory() as d,
+            mock.patch.object(producir, "_run", snapshot_falso),
+        ):
+            ok, det = producir.gancho_temprano(Path(d), {}, self.U)
+            self.assertFalse(ok)
+            self.assertIn("gancho oscuro", det)
+            self.assertEqual(len(pedidos[0]), len(producir.instantes_gancho(self.U)))
+
     def test_sobre_el_mp4_sin_margen_y_sobre_el_snapshot_con_margen(self):
         g = {"luma": 32.0, "contraste": 30.0}
-        self.assertTrue(producir.veredicto_gancho(g, self.U)[0])  # --rapido: the MP4, critic's exact limits
-        self.assertFalse(producir.veredicto_gancho(g, self.U, producir.GANCHO_MARGEN_LUMA)[0])
+        self.assertTrue(
+            producir.veredicto_gancho(g, self.U)[0]
+        )  # --rapido: the MP4, critic's exact limits
+        self.assertFalse(
+            producir.veredicto_gancho(g, self.U, producir.GANCHO_MARGEN_LUMA)[0]
+        )
 
     def test_instantes_del_gancho_a_la_cadencia_del_critico(self):
-        self.assertEqual(producir.instantes_gancho(self.U), [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8])
+        self.assertEqual(
+            producir.instantes_gancho(self.U),
+            [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8],
+        )
 
 
 if __name__ == "__main__":
@@ -194,9 +364,24 @@ class LoudnessMedidoTest(unittest.TestCase):
     def test_sube_a_menos_14_con_el_pico_garantizado_en_el_archivo(self):
         with tempfile.TemporaryDirectory() as d:
             crudo, final = Path(d) / "c.mp4", Path(d) / "f.mp4"
-            subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
-                            "aevalsrc='0.05*sin(2*PI*220*t)+0.9*lt(mod(t,1),0.01)*sin(2*PI*3000*t)':s=48000:d=8",
-                            "-c:a", "aac", "-b:a", "192k", str(crudo)], check=True)
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-v",
+                    "error",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "aevalsrc='0.05*sin(2*PI*220*t)+0.9*lt(mod(t,1),0.01)*sin(2*PI*3000*t)':s=48000:d=8",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    str(crudo),
+                ],
+                check=True,
+            )
             ok, det = producir.loudnorm_2pasos(crudo, final)
             lufs, tp = producir.lufs_y_pico(final)
         self.assertTrue(ok, det)
