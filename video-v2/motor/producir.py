@@ -775,11 +775,18 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
     return rap
 
 
+def gancho_temprano(proy: Path, env: dict, u: dict) -> tuple[bool, str]:
+    """The hook gate on its own frames only (~54 s on huang-exit-largo), before contrast and OCR."""
+    salida = proy / "renders" / "gancho"
+    ok, detalle = hoja_previa(proy, env, instantes_gancho(u), salida)
+    return gancho_previo(salida, u) if ok else (False, detalle)
+
+
 def hoja_previa(
-    proy: Path, env: dict, ts: list[float] | None = None
+    proy: Path, env: dict, ts: list[float] | None = None, salida: Path | None = None
 ) -> tuple[bool, str]:
     """Frames from the built HTML: what a render would show, without the 3-4 min render."""
-    salida = proy / "renders" / "previo"
+    salida = salida or proy / "renders" / "previo"
     shutil.rmtree(
         salida, ignore_errors=True
     )  # frames of an older preview would be read as this one's
@@ -1031,7 +1038,8 @@ def producir(proy: Path) -> dict:
             for k, v in c.items()
             if k != "nombre"
         }
-        muestreo["todos"] = sorted(set(muestreo["todos"]) | set(instantes_gancho(u)))
+        # first and alone: a dark hook found after the full preview cost ~24 min (huang-exit-largo, 18-nov)
+        puerta("gancho", *gancho_temprano(proy, env, u))
     with ThreadPoolExecutor(1) as ex:
         hoja = (
             ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
@@ -1045,9 +1053,6 @@ def producir(proy: Path) -> dict:
     if previo:
         if muestreo and ok_hoja:
             puerta("texto", *texto_previo(proy, sb, muestreo), seguir=True)
-            puerta(
-                "gancho", *gancho_previo(proy / "renders" / "previo", u), seguir=True
-            )
         if sb.get("social") and not exento:
             puerta("social", *social_previo(proy, env), seguir=True)
         if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
