@@ -56,6 +56,32 @@ class CacheTest(unittest.TestCase):
             self.cache, producir.clave_render(self.proy), self.final
         )
 
+    def test_contraste_aprobado_se_reutiliza_solo_con_la_misma_pagina(self):
+        llamadas = []
+
+        def medir(ok):
+            return lambda p, e: (llamadas.append(1), (ok, "medido"))[1]
+
+        env = {"HF_VERSION": "1.0"}
+        self.assertFalse(producir.auditar_contraste(self.proy, env, medir(False))[0])
+        producir.auditar_contraste(
+            self.proy, env, medir(True)
+        )  # a failure is never cached
+        self.assertEqual(len(llamadas), 2)
+        self.assertIn(
+            "reutilizado", producir.auditar_contraste(self.proy, env, medir(False))[1]
+        )
+        self.assertEqual(len(llamadas), 2)
+        for cambio in (
+            lambda: (self.proy / "index.html").write_text(
+                "<html>2</html>", encoding="utf-8"
+            ),
+            lambda: env.update(HF_VERSION="1.1"),
+        ):
+            cambio()
+            producir.auditar_contraste(self.proy, env, medir(True))
+        self.assertEqual(len(llamadas), 4)
+
     def test_mismo_html_y_assets_reutiliza_el_render(self):
         self.assertTrue(self.reutiliza())
 
@@ -81,7 +107,15 @@ class CacheTest(unittest.TestCase):
                     "rondas": [
                         {
                             "fallos": [
-                                {"severidad": "media", "criterio": "M1", "detalle": "x", "t": 1.0, "t_fin": None, "escena": 0, "parche": None}
+                                {
+                                    "severidad": "media",
+                                    "criterio": "M1",
+                                    "detalle": "x",
+                                    "t": 1.0,
+                                    "t_fin": None,
+                                    "escena": 0,
+                                    "parche": None,
+                                }
                             ]
                         }
                     ]
@@ -127,7 +161,9 @@ class AutoConCriticoParaleloTest(unittest.TestCase):
             llamadas.append(proy)
             producir.DETALLES.clear()
             inf.write_text('{"rondas": [{"fallos": []}]}', encoding="utf-8")
-            t = time.time() + 1  # Windows mtime ticks ~15 ms: same-tick writes look older than t0
+            t = (
+                time.time() + 1
+            )  # Windows mtime ticks ~15 ms: same-tick writes look older than t0
             os.utime(inf, (t, t))
             if len(llamadas) == 1:
                 producir.DETALLES["social"] = (
