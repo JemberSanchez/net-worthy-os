@@ -617,7 +617,11 @@ def auditar_contraste(proy: Path, env: dict, medir=None) -> tuple[bool, str]:
     --rapido then --sin-subir audited the same page twice (18.8 min over 33 Short runs, 20-nov)."""
     cache = proy / "renders" / "contraste.json"
     clave = hashlib.sha256(
-        (clave_render(proy) + (env.get("HF_VERSION") or hfversion.version()) + _sha(Path(__file__))).encode()
+        (
+            clave_render(proy)
+            + (env.get("HF_VERSION") or hfversion.version())
+            + _sha(Path(__file__))
+        ).encode()
     ).hexdigest()
     try:
         if json.loads(cache.read_text(encoding="utf-8")).get("clave") == clave:
@@ -900,9 +904,11 @@ def clave_render(proy: Path) -> str:
 
 
 def clave_critico(proy: Path, final: Path) -> str:
-    """The critic reads the final MP4 and the storyboard; the carousel (`social`) is not part of it."""
+    """The critic reads the final MP4 and the storyboard; the carousel (`social`), the title/description/tags
+    (`publicacion`, checked by the static gates) and the DNA are not part of it."""
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
-    sb.pop("social", None)
+    for k in ("social", "publicacion", "adn"):
+        sb.pop(k, None)
     h = hashlib.sha256(json.dumps(sb, sort_keys=True).encode())
     for f in (MOTOR / "critico.py", MOTOR / "rubrica.json", proy / "rubrica.json"):
         h.update(
