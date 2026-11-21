@@ -8,7 +8,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
 
-from medir_ritmo import tramo_quieto  # noqa: E402
+from medir_ritmo import resumen, tramo_quieto  # noqa: E402
 
 FPS = 5
 
@@ -45,6 +45,11 @@ class TramoQuietoTest(unittest.TestCase):
     def test_video_mas_corto_que_el_lag_no_revienta(self):
         r = tramo_quieto([plano(1)] * 2, fps=FPS)
         self.assertEqual(r["max_s"], 0.0)
+
+    def test_resumen_pasa_hasta_el_maximo_inclusive(self):
+        r = {"max_s": 2.5, "desde_s": 1.0, "pct_quieto": 10.0, "cambio_medio": 5.0}
+        self.assertTrue(resumen(r, 2.5)[0])
+        self.assertFalse(resumen({**r, "max_s": 2.6}, 2.5)[0])
 
 
 if __name__ == "__main__":

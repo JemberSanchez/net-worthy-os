@@ -69,6 +69,47 @@ class GeneradorTest(unittest.TestCase):
             self.assertEqual((car / "01.jpg").read_bytes(), b"hecho")
         self.assertEqual([Path(p).name for p in r["carrusel"]], ["01.jpg"])
 
+    def test_historia_reusa_la_tarjeta_hecha_junto_al_carrusel(self):
+        # the end card needs no video: snapshotted beside the carousel, the story only cuts the MP4
+        import json
+
+        import anclas
+
+        sb = {**SB, "social": {**SB["social"], "historia": {"hasta": "1:1"}}}
+        with tempfile.TemporaryDirectory() as d:
+            proy = Path(d)
+            (proy / "storyboard.json").write_text(json.dumps(sb), encoding="utf-8")
+            (proy / "assets" / "t").mkdir(parents=True)
+            (proy / "assets" / "t" / "a.jpg").write_bytes(b"jpg")
+            (proy / "assets" / "words.json").write_text("[]", encoding="utf-8")
+            (proy / "renders").mkdir()
+            (proy / "renders" / "x-final.mp4").write_bytes(b"mp4")
+            hecha = proy / "social" / "_tarjeta" / "snapshots" / "frame-00.png"
+            hecha.parent.mkdir(parents=True)
+            hecha.write_bytes(b"png")
+            (hecha.parent.parent / "tarjeta-fondo.jpg").write_bytes(b"jpg")
+            html = hecha.parent.parent / "index.html"
+            html.write_text(
+                social._html_tarjeta(
+                    "Full story in Reels", "Full story in our Reels · @networthytv"
+                ),
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    social, "_snapshot", side_effect=AssertionError("rehizo la tarjeta")
+                ),
+                mock.patch.object(anclas, "t", return_value=3.0),
+                mock.patch.object(social.subprocess, "run") as run,
+                mock.patch.object(social, "revisar_activos", return_value=[]),
+            ):
+                social.generar(proy, con_carrusel=False)
+                self.assertIn(str(hecha), run.call_args.args[0])
+                # another closing line = another card: snapshotted again, never the stale one
+                html.write_text("otra tarjeta", encoding="utf-8")
+                with self.assertRaisesRegex(AssertionError, "rehizo la tarjeta"):
+                    social.generar(proy, con_carrusel=False)
+
     def test_captions_con_aviso_fuentes_y_sin_shorts(self):
         c = social.captions(SB)
         self.assertTrue(c["caption_ig"].startswith("Texto base."))
