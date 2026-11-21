@@ -612,7 +612,29 @@ def gpu_render(log: str) -> str | None:
     return m.group(1) if m else None
 
 
-def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
+def auditar_contraste(proy: Path, env: dict, medir=None) -> tuple[bool, str]:
+    """Contrast audit, reused when page, assets, HyperFrames and these rules match the last PASS:
+    --rapido then --sin-subir audited the same page twice (18.8 min over 33 Short runs, 20-nov)."""
+    cache = proy / "renders" / "contraste.json"
+    clave = hashlib.sha256(
+        (clave_render(proy) + (env.get("HF_VERSION") or hfversion.version()) + _sha(Path(__file__))).encode()
+    ).hexdigest()
+    try:
+        if json.loads(cache.read_text(encoding="utf-8")).get("clave") == clave:
+            return (
+                True,
+                "reutilizado: misma página, assets y HyperFrames que la última auditoría aprobada",
+            )
+    except (OSError, ValueError):
+        pass
+    ok, detalle = (medir or _medir_contraste)(proy, env)
+    if ok:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps({"clave": clave}), encoding="utf-8")
+    return ok, detalle
+
+
+def _medir_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
     ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
     informes, textos = [], 0
