@@ -36,7 +36,9 @@ turnos (la voz da 2.1 y no 6.3: la auditoría contaba la espera en segundo plano
 
 Cola en la nube (`omega/cola.py`, `nube/cola.yml`): corrida real el 21-nov contra una COPIA local del
 repo de estado: 834 s (signals 394, analytics-sync 42, meta-sync 56, medios 311), 3 temas con 6
-titulares cada uno, todo verde. **Sin instalar:** falta copiar `nube/cola.yml` a
+titulares cada uno, todo verde. **Instalada el 21-nov** (`net-worthy-data/.github/workflows/cola.yml`, 7 secretos): 1.ª corrida en
+GitHub 295 s, todo verde (signals 58 s, 3 temas, 8 clips). Lo que sigue es el procedimiento seguido.
+**Antes de instalar:** falta copiar `nube/cola.yml` a
 `net-worthy-data/.github/workflows/` y poner sus secretos (`YOUTUBE_API_KEY`, `PEXELS_API_KEY`,
 `YOUTUBE_TOKEN_JSON`, `META_TOKEN_JSON`, `META_APP_ID`, `META_APP_SECRET`); antes, un `estado-subir --forzar` en el PC
 (crea `data/.estado_base` y sube el primer volcado sin señales).
