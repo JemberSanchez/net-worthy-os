@@ -92,14 +92,36 @@ def _clon() -> Path:
     return dst
 
 
+def _blob(texto: str) -> str:
+    """Git blob id of a dump: names one exact version of omega.sql in the private repo's history."""
+    import hashlib
+    datos = texto.encode("utf-8")
+    return hashlib.sha1(b"blob %d\0" % len(datos) + datos).hexdigest()
+
+
+def _base() -> Path:
+    # Blob of the omega.sql the local DB was last synced with (bajar or subir). The cloud queue job
+    # (nube/cola.yml) also writes omega.sql, so both sides need to know who moved since the last sync.
+    return config.DATA_DIR / ".estado_base"
+
+
 def bajar(forzar: bool = False) -> str:
     clon = _clon()
     sql = clon / ARCHIVO
     if not sql.exists():
         return "el repo de estado aún no tiene volcado (primera vez): nada que bajar"
+    remoto = sql.read_text(encoding="utf-8")
     if config.DB_PATH.exists() and not forzar:
-        return f"{config.DB_PATH.name} ya existe en local: no la piso (usa --forzar para reemplazarla por la remota)"
-    importar(sql.read_text(encoding="utf-8"), config.DB_PATH)
+        local = _blob(exportar(config.DB_PATH))
+        if local == _blob(remoto):
+            _base().write_text(local, encoding="utf-8")
+            return "✓ base local ya al día con el repo de estado"
+        base = _base().read_text(encoding="utf-8").strip() if _base().exists() else None
+        if local != base:  # local changed since the last sync (or never synced): never overwrite it
+            return (f"{config.DB_PATH.name} tiene cambios sin subir: no la piso "
+                    "(usa --forzar para reemplazarla por la remota)")
+    importar(remoto, config.DB_PATH)
+    _base().write_text(_blob(remoto), encoding="utf-8")
     return f"✓ base restaurada desde el repo de estado ({sql.stat().st_size:,} B de volcado)"
 
 
@@ -114,12 +136,20 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
     if not ok:
         raise EstadoError(motivo)
     if local == remoto:
+        _base().write_text(_blob(local), encoding="utf-8")
         return "sin cambios: el repo de estado ya tiene esta base"
+    base = _base().read_text(encoding="utf-8").strip() if _base().exists() else None
+    # no base yet (first sync after the cloud job exists): cannot tell who moved, so do not overwrite
+    if remoto and _blob(remoto) != base and not forzar:
+        raise EstadoError("el repo de estado cambió desde tu última sincronización (la cola de la nube "
+                          "corrió en medio): subir lo pisaría. Si lo perdido es solo ingest/analytics "
+                          "(se rehacen mañana): estado-subir --forzar")
     sql.write_text(local, encoding="utf-8")
     _git("add", ARCHIVO, cwd=clon)
     _git("-c", "user.name=net-worthy-os", "-c", "user.email=net-worthy-os@users.noreply.github.com",
          "commit", "-q", "-m", mensaje, cwd=clon)
     _git("push", "-q", cwd=clon)
+    _base().write_text(_blob(local), encoding="utf-8")
     return f"✓ estado subido ({len(local):,} B)"
 
 
