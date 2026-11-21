@@ -772,18 +772,20 @@ def veredicto_gancho(g: dict, u: dict, margen: float = 0.0) -> tuple[bool, str]:
 
 
 def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
-    """--rapido: a draft render to judge by eye while the full run (high render + critic) goes on behind.
-    Draft = same 1080x1920, 30 fps and frames, 3.9 Mbps; SSIM 0.973 vs high (huang-exit). Publishing still needs
-    the critic's approval of the final MP4: this file is never published."""
+    """--rapido: the final render to judge by eye, kept with renders/render.json so the --sin-subir run that
+    follows reuses it instead of rendering again (draft was 75.0 s vs high 77.7 s, huang-resigns 20-nov).
+    Publishing still needs the critic's approval of this MP4."""
     import critico
     import medir_cuadros as mc
 
-    crudo, rap = (
-        proy / "renders" / f"{ref}-rapido-crudo.mp4",
-        proy / "renders" / f"{ref}-rapido.mp4",
+    renders = proy / "renders"
+    crudo, final, clave = (
+        renders / f"{ref}.mp4",
+        renders / f"{ref}-final.mp4",
+        clave_render(proy),
     )
     r = _run(
-        hfversion.npx("render", "--quality", "draft", "--output", str(crudo)),
+        hfversion.npx("render", "--quality", "high", "--output", str(crudo)),
         cwd=proy,
         env=env,
     )
@@ -792,14 +794,61 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
         r.returncode == 0 and crudo.exists(),
         (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
     )
-    puerta("loudnorm", *loudnorm_2pasos(crudo, rap))
+    avisar_gpu(r)
+    puerta("loudnorm", *normalizar(crudo, final))
     crudo.unlink(missing_ok=True)
+    guardar_render(renders / "render.json", clave, final)
     rub = critico.cargar_rubrica(proy)
     u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
     puerta(
-        "gancho", *veredicto_gancho(mc.gancho(mc.leer_grises(rap), u), u)
+        "gancho", *veredicto_gancho(mc.gancho(mc.leer_grises(final), u), u)
     )  # the MP4: the critic's exact limits
-    return rap
+    return final
+
+
+def avisar_gpu(r: subprocess.CompletedProcess) -> str | None:
+    """GPU the render used, warning when it is not the NVIDIA."""
+    gpu = gpu_render(r.stdout + r.stderr)
+    if gpu and "NVIDIA" not in gpu:
+        # the PC's per-app GPU preference is keyed to chrome-headless-shell.exe's path, which changes
+        # with each HyperFrames Chrome update: the render then silently drops to the iGPU (~2x slower)
+        print(
+            f"⚠ render en {gpu}, no en la NVIDIA: repetir Gráficos > Alto rendimiento "
+            "para el chrome-headless-shell.exe nuevo (~/.cache/hyperframes/chrome)"
+        )
+    return gpu
+
+
+def normalizar(crudo: Path, final: Path) -> tuple[bool, str]:
+    """Raw render -> final MP4 at -14 LUFS with its true peak guaranteed."""
+    ok, det = loudnorm_2pasos(crudo, final)
+    if ok:
+        ok, det_pico = asegurar_pico(final)
+        det = f"{det.strip().splitlines()[-1] if det.strip() else ''} · {det_pico}"
+    return ok, det
+
+
+def medir_final(final: Path) -> tuple[dict | None, dict | None]:
+    """(loudness, rhythm) of the final MP4, each decoded once and side by side; the critic reads them back.
+    None = could not measure: its gate fails, the run goes on."""
+    import medir_loudness
+    import medir_ritmo
+
+    def seguro(medir):
+        try:
+            return medir()
+        except (SystemExit, Exception) as e:  # noqa: BLE001 -- a meter that cannot read the file fails its gate, it does not end the run
+            print(f"⚠ {e!r}"[:300])
+            return None
+
+    with ThreadPoolExecutor(1) as ex:
+        loud = ex.submit(
+            seguro, lambda: medir_loudness.valores(*medir_loudness.leer(str(final)))
+        )
+        ritmo = seguro(
+            lambda: medir_ritmo.tramo_quieto(medir_ritmo.leer_frames(str(final)))
+        )
+        return loud.result(), ritmo
 
 
 def gancho_temprano(proy: Path, env: dict, u: dict) -> tuple[bool, str]:
@@ -842,12 +891,13 @@ def hoja_previa(
     return True, " ".join(hojas)
 
 
-def social_previo(proy: Path, env: dict) -> tuple[bool, str]:
-    """Carousel only: the story cuts the final MP4, which a preview does not have (an old one would be judged)."""
+def social_previo(proy: Path, env: dict, tarjeta: bool = False) -> tuple[bool, str]:
+    """Carousel only: the story cuts the final MP4, which a preview does not have (an old one would be judged).
+    tarjeta: also the story's end card (no video needed), so the story after the render only cuts."""
     import social
 
     try:
-        s = social.generar(proy, env, con_historia=False)
+        s = social.generar(proy, env, con_historia=False, con_tarjeta=tarjeta)
     except (social.SocialError, subprocess.CalledProcessError) as e:
         return False, str(e)
     return True, f"carrusel {len(s['carrusel'])} diapositivas"
@@ -924,6 +974,13 @@ def render_reutilizable(cache: Path, clave: str, final: Path) -> bool:
         return False
     c = json.loads(cache.read_text(encoding="utf-8"))
     return c.get("clave") == clave and c.get("final_sha") == _sha(final)
+
+
+def guardar_render(cache: Path, clave: str, final: Path) -> str:
+    """What render_reutilizable checks next time; returns the final's sha."""
+    sha = _sha(final)
+    cache.write_text(json.dumps({"clave": clave, "final_sha": sha}), encoding="utf-8")
+    return sha
 
 
 def critico_cacheado(proy: Path, final: Path) -> list[str] | None:
@@ -1110,68 +1167,31 @@ def producir(proy: Path) -> dict:
     reusar = render_reutilizable(cache_render, clave, final)
     # the carousel does not need the video (only the story does): it is made while the video renders
     car_ex = ThreadPoolExecutor(1)
-    car_f = car_ex.submit(social_previo, proy, env) if sb.get("social") else None
-    if not reusar:
+    car_f = car_ex.submit(social_previo, proy, env, True) if sb.get("social") else None
+    carrusel = None
+    if reusar:
+        puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
+    else:
         r = _run(
             hfversion.npx("render", "--quality", "high", "--output", str(crudo)),
             cwd=proy,
             env=env,
         )
-    # collected before a failed render gate can end the round with the carousel still writing social/
-    carrusel = car_f.result() if car_f else None
-    car_ex.shutdown()
-    if reusar:
-        puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
-    else:
+        # collected before a failed render gate can end the round with the carousel still writing social/
+        carrusel = car_f.result() if car_f else None
         puerta(
             "render",
             r.returncode == 0 and crudo.exists(),
             (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
         )
-    qa["hyperframes"]["gpu"] = None if reusar else gpu_render(r.stdout + r.stderr)
-    if qa["hyperframes"]["gpu"] and "NVIDIA" not in qa["hyperframes"]["gpu"]:
-        # the PC's per-app GPU preference is keyed to chrome-headless-shell.exe's path, which changes
-        # with each HyperFrames Chrome update: the render then silently drops to the iGPU (~2x slower)
-        print(
-            f"⚠ render en {qa['hyperframes']['gpu']}, no en la NVIDIA: repetir Gráficos > Alto rendimiento "
-            "para el chrome-headless-shell.exe nuevo (~/.cache/hyperframes/chrome)"
-        )
-    if reusar:
-        ok_ln, det_ln = True, "reutilizado"
-    else:
-        ok_ln, det_ln = loudnorm_2pasos(crudo, final)
-        if ok_ln:
-            ok_ln, det_pico = asegurar_pico(final)
-            det_ln = f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
-    puerta("loudnorm", ok_ln, det_ln)
+    qa["hyperframes"]["gpu"] = None if reusar else avisar_gpu(r)
+    puerta("loudnorm", *((True, "reutilizado") if reusar else normalizar(crudo, final)))
     crudo.unlink(missing_ok=True)  # 40-60 MB; only input of loudnorm, the final ships
-    cache_render.write_text(
-        json.dumps({"clave": clave, "final_sha": _sha(final)}), encoding="utf-8"
-    )
-    # the critic (~11 min) measures the final MP4 while the cheaper gates below do too
-    ex = ThreadPoolExecutor(1)
-    critico_f = (
-        ex.submit(critico_en_paralelo, proy, final)
-        if "--sin-critico" not in sys.argv
-        else None
-    )
-    r = _run([PY, str(RAIZ / "tools" / "medir_loudness.py"), str(final)])
-    lufs = re.search(r"integrado\s*:\s*(-?[\d.]+)", r.stdout)
-    pico = re.search(r"Pico real\s*:\s*(-?[\d.]+)", r.stdout)
-    ok = (
-        bool(lufs and pico)
-        and abs(float(lufs.group(1)) + 14) <= 1
-        and float(pico.group(1)) < -1
-    )
-    puerta(
-        "loudness",
-        ok,
-        f"{lufs.group(1) if lufs else '?'} LUFS, pico {pico.group(1) if pico else '?'} dBTP",
-        seguir=True,
-    )
-    r = _run([PY, str(RAIZ / "tools" / "medir_ritmo.py"), str(final), "--max", "2.5"])
-    puerta("ritmo", r.returncode == 0 and "✓" in r.stdout, r.stdout, seguir=True)
-    _run(
+    sha_final = guardar_render(cache_render, clave, final)
+    # the preview encode (~10 s) needs only the final: it runs beside the measurements below
+    prev_ex = ThreadPoolExecutor(1)
+    prev_f = prev_ex.submit(
+        _run,
         [
             "ffmpeg",
             "-v",
@@ -1190,7 +1210,41 @@ def producir(proy: Path) -> dict:
             "-movflags",
             "+faststart",
             str(prev),
-        ]
+        ],
+    )
+    try:
+        # measured once here and handed to the critic, which decoded both again (17.9 s, 20-nov audit)
+        loud, rr = medir_final(final)
+        final.with_suffix(".medidas.json").write_text(
+            json.dumps({"sha": sha_final, "ritmo": rr, "loud": loud}), encoding="utf-8"
+        )
+        # the critic measures the final MP4 while the cheaper steps below run
+        ex = ThreadPoolExecutor(1)
+        critico_f = (
+            ex.submit(critico_en_paralelo, proy, final)
+            if "--sin-critico" not in sys.argv
+            else None
+        )
+    finally:  # never leave the round with the carousel still writing social/
+        if (
+            reusar
+        ):  # no render to wait on: it ran beside the measurements and now the critic
+            carrusel = car_f.result() if car_f else None
+        car_ex.shutdown()
+    puerta(
+        "loudness",
+        bool(loud) and abs(loud["lufs"] + 14) <= 1 and loud["pico"] < -1,
+        f"{loud['lufs']:.2f} LUFS, pico {loud['pico']:.2f} dBTP"
+        if loud
+        else "no se pudo medir",
+        seguir=True,
+    )
+    import medir_ritmo
+
+    puerta(
+        "ritmo",
+        *(medir_ritmo.resumen(rr, 2.5) if rr else (False, "no se pudo medir")),
+        seguir=True,
     )
     pub = sb.get("publicacion") or {}
     publish = {
@@ -1257,6 +1311,8 @@ def producir(proy: Path) -> dict:
         )
         return fallos
 
+    prev_f.result()
+    prev_ex.shutdown()
     if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
         try:
             esperar_critico()  # its report feeds --auto in the same round

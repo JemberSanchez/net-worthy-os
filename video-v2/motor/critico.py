@@ -70,7 +70,10 @@ def cargar_rubrica(proy: Path, ruta: Path | None = None) -> dict:
 def umbrales(rub: dict, plan: dict) -> dict:
     """Flat thresholds; a long-form plan takes `por_tipo.largo` on top (no Shorts UI to dodge)."""
     u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
-    return {**u, **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {})}
+    return {
+        **u,
+        **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {}),
+    }
 
 
 def plan_de_html(html: str) -> dict:
@@ -1088,6 +1091,16 @@ def medir_loudness(mp4: Path) -> dict | None:
     )
 
 
+def medidas_previas(mp4: Path) -> dict:
+    """Rhythm and loudness producir's gates already took on this exact MP4 (same decode, same meters),
+    written next to it as <mp4>.medidas.json; {} when absent or for another file."""
+    f = mp4.with_suffix(".medidas.json")
+    if not f.exists():
+        return {}
+    d = json.loads(f.read_text(encoding="utf-8"))
+    return d if d.get("sha") == _sha256(mp4) else {}
+
+
 def revisar(
     proy: Path,
     mp4: Path,
@@ -1150,7 +1163,8 @@ def revisar(
     fallos += revisar_gancho(words, frames, u)
     fallos += revisar_reganchos(plan, words, u)
 
-    rr = medir_ritmo.tramo_quieto(medir_ritmo.leer_frames(str(mp4)))
+    pre = medidas_previas(mp4)
+    rr = pre.get("ritmo") or medir_ritmo.tramo_quieto(medir_ritmo.leer_frames(str(mp4)))
     med["ritmo"] = rr
     fallos += revisar_ritmo(rr, words, vs, u, plan.get("golpes") or [])
 
@@ -1171,7 +1185,7 @@ def revisar(
         medir_mezcla.tramos_de_words(words),
         umbral_db=u["voz_sobre_fondo_db"],
     )
-    loud = medir_loudness(mp4)
+    loud = pre.get("loud") or medir_loudness(mp4)
     med["mezcla"] = {k: rm[k] for k in ("mediana_db", "p10_db", "pct_tapada")} | (
         loud or {}
     )

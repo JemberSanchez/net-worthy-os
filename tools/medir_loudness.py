@@ -20,11 +20,15 @@ No toca la mezcla. El motor sigue congelado (docs/POLITICA.md): esto es una regl
 Si el gap es grande y consistente entre videos, ESO sería la limitación concreta que justifica tocar
 `construirMezcla`/`mezclarMusica` — no antes.
 """
+
 from __future__ import annotations
 
 import sys
 
-for _s in (sys.stdout, sys.stderr):     # cp1252 no tiene "⚠"/"✓"; no tumbar el cálculo por eso
+for _s in (
+    sys.stdout,
+    sys.stderr,
+):  # cp1252 no tiene "⚠"/"✓"; no tumbar el cálculo por eso
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(errors="replace")
 
@@ -32,10 +36,10 @@ OBJETIVO_LUFS = -14.0
 OBJETIVO_PICO_DBTP = -1.0
 
 
-def medir(ruta: str) -> None:
+def leer(ruta: str):
+    """(audio (muestras, canales) float64 en [-1,1], sr) de la primera pista de audio."""
     import av
     import numpy as np
-    import pyloudnorm as pyln
 
     cont = av.open(ruta)
     stream = cont.streams.audio[0]
@@ -46,26 +50,60 @@ def medir(ruta: str) -> None:
     cont.close()
     if not trozos:
         raise SystemExit("no se decodificó ningún frame de audio")
+    return np.concatenate(trozos, axis=1).T.astype(np.float64), sr
 
-    audio = np.concatenate(trozos, axis=1).T.astype(np.float64)  # (muestras, canales), ya en [-1,1]
 
-    meter = pyln.Meter(sr)
-    lufs = meter.integrated_loudness(audio)
-    pico_dbtp = 20 * np.log10(max(1e-9, float(np.abs(audio).max())))
+def pico_dbtp(audio) -> float:
+    """True peak (ITU-R BS.1770-4 anexo 2): 4x sobremuestreado. El pico de muestra se pierde los picos
+    entre muestras (un seno a sr/4 con fase de 45° queda 3 dB por debajo)."""
+    import numpy as np
+    from scipy.signal import (
+        resample_poly,
+    )  # dependencia de pyloudnorm: nada nuevo que instalar
+
+    return float(
+        20
+        * np.log10(max(1e-9, float(np.abs(resample_poly(audio, 4, 1, axis=0)).max())))
+    )
+
+
+def valores(audio, sr: int) -> dict:
+    import pyloudnorm as pyln
+
+    return {  # 2 decimals: what the printed report (and the critic, which parsed it) always carried
+        "lufs": round(float(pyln.Meter(sr).integrated_loudness(audio)), 2),
+        "pico": round(pico_dbtp(audio), 2),
+    }
+
+
+def medir(ruta: str) -> None:
+    audio, sr = leer(ruta)
+    v = valores(audio, sr)
+    lufs, pico_dbtp_ = v["lufs"], v["pico"]
 
     print(f"Archivo : {ruta}")
-    print(f"Canales : {audio.shape[1]}  ·  SR: {sr}Hz  ·  {audio.shape[0]/sr:.2f}s\n")
-    print(f"Loudness integrado : {lufs:6.2f} LUFS   (objetivo {OBJETIVO_LUFS:.0f}, YouTube/FB)")
-    print(f"Pico real           : {pico_dbtp:6.2f} dBTP  (objetivo < {OBJETIVO_PICO_DBTP:.0f})")
+    print(f"Canales : {audio.shape[1]}  ·  SR: {sr}Hz  ·  {audio.shape[0] / sr:.2f}s\n")
+    print(
+        f"Loudness integrado : {lufs:6.2f} LUFS   (objetivo {OBJETIVO_LUFS:.0f}, YouTube/FB)"
+    )
+    print(
+        f"Pico real           : {pico_dbtp_:6.2f} dBTP  (objetivo < {OBJETIVO_PICO_DBTP:.0f})"
+    )
 
     gap = lufs - OBJETIVO_LUFS
     if abs(gap) <= 1.0:
-        print(f"\n✓ Dentro de ±1 dB del objetivo ({gap:+.2f} dB). La plataforma casi no toca la mezcla.")
+        print(
+            f"\n✓ Dentro de ±1 dB del objetivo ({gap:+.2f} dB). La plataforma casi no toca la mezcla."
+        )
     else:
         direccion = "más flojo" if gap < 0 else "más fuerte"
-        print(f"\n⚠ {abs(gap):.1f} dB {direccion} que el objetivo. La plataforma lo va a re-normalizar.")
-    if pico_dbtp > OBJETIVO_PICO_DBTP:
-        print(f"⚠ El pico real supera {OBJETIVO_PICO_DBTP:.0f} dBTP: riesgo de distorsión al recodificar.")
+        print(
+            f"\n⚠ {abs(gap):.1f} dB {direccion} que el objetivo. La plataforma lo va a re-normalizar."
+        )
+    if pico_dbtp_ > OBJETIVO_PICO_DBTP:
+        print(
+            f"⚠ El pico real supera {OBJETIVO_PICO_DBTP:.0f} dBTP: riesgo de distorsión al recodificar."
+        )
 
 
 if __name__ == "__main__":
