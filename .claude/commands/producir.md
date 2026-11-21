@@ -9,14 +9,18 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 ## 0. Estado
 
-1. `bash tools/setup_nube.sh`. Si falla, para y reporta.
-2. `python -m omega.cli estado-bajar` (sin `ESTADO_REPO`, PARA: `decide` iría a ciegas). Luego `analytics-sync` y
-   `meta-sync`: "sin datos aún" es normal; un ✗ de permisos se reporta pero no para. Anota dónde cae la curva y las búsquedas.
+1. Solo en una sesión en la nube (Linux): `bash tools/setup_nube.sh`; si falla, para y reporta. En el PC no.
+2. `python -m omega.cli estado-bajar; python -m omega.cli cola` en UN comando (sin `ESTADO_REPO`, PARA). La nube
+   (`nube/cola.yml`, 10:00 UTC) ya corrió ingest, youtube-scan, signals, analytics-sync, meta-sync y decide: `cola` imprime
+   los pasos que fallaron, el resumen de analytics-sync (dónde cae la curva, búsquedas) y 3 temas con titulares, URL,
+   cifras candidatas y clips con hoja. Si la cola tiene más de 24 h o no existe: `/daily` + `analytics-sync` + `meta-sync`
+   como antes, y dilo en el resumen.
 
 ## 1. Tema
 
-3. `/daily`. Tema = ganador de `decide`, convertido en explainer (el término crudo es un QUÉ). Descarta si ya existe
-   (`ls video-v2/`) o no hay datos verificables, y dilo. Una búsqueda real de `analytics-sync` que encaje gana el empate.
+3. Tema = el 1 de la cola (el ganador de `decide`), convertido en explainer (el término crudo es un QUÉ). Descarta si ya existe
+   (`ls video-v2/`) o no hay datos verificables, pasa al siguiente de la cola, y dilo. Las cifras de la cola salen de
+   titulares: son pistas con su URL, no datos; en `cifras` va la fuente real. Una búsqueda real de `analytics-sync` que encaje gana el empate.
 
 ## 2. Guion (inglés, 85-110 palabras ≈ 27-35 s)
 
@@ -35,10 +39,13 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 ## 3. Storyboard (`video-v2/<ref>/storyboard.json`)
 
-6. Primero la voz, con solo `guion`: `python video-v2/motor/voz.py video-v2/<ref>`. Hace hasta 3 tomas; si sale con ✗, reescribe la frase que señala y repite con `--forzar`. Lista las frases: las anclas se
-   escriben contra sus palabras exactas ("—" es una palabra; "seventy-five" va con guion).
+6. Con solo `guion` en el storyboard, lanza la voz **en segundo plano** y sigue escribiendo escenas sin esperarla:
+   `python video-v2/motor/voz.py video-v2/<ref>`. Si su aviso trae ✗, reescribe la frase que señala y relánzala con
+   `--forzar`. Las anclas se escriben contra las palabras exactas del guion ("—" es una palabra; "seventy-five" va con guion).
 7. Decisiones que las puertas no toman por ti:
-   - Medios: reutiliza primero `video-v2/*/assets/` + su `creditos.json`. Una búsqueda por concepto, sin bucles:
+   - Medios: primero los clips de la cola (`cola` da su hoja ya hecha con OCR): mira la hoja, y si sirve declara
+     `{"pexels": <id>}` o `{"commons": "<File:…>"}` con `"visto": true`. Luego `video-v2/*/assets/` + su `creditos.json`.
+     Para lo que falte, una búsqueda por concepto, sin bucles:
      `python tools/imagenes_libres.py buscar "<q>"` (objetos y lugares, nunca personas ni fotos de prensa),
      `python tools/broll.py buscar pexels|commons "<q>"`. ≥3 imágenes en `imagenes`, ≥4 clips en `clips`, uno en el gancho (0-3 s).
      Sin caras reconocibles, logos ni noticias con personas: `python tools/broll.py lote video-v2/<ref>` deja `assets/clips/<n>.hoja.jpg` e imprime el
@@ -60,8 +67,11 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 **Siempre en segundo plano** (`run_in_background`): el aviso llega solo. Nada de `tail`, `sleep` ni `Monitor`.
 
-8. `python video-v2/motor/producir.py video-v2/<ref> --auto --rapido`: puertas estáticas (parecido P1, contador, anclas...),
-   build, lint, contraste, render alto y gancho medido sobre ese MP4 → `renders/<ref>-final.mp4` (~3 min; el paso 9 lo reutiliza, no vuelve a renderizar). Mira 2 fotogramas
+8. `python video-v2/motor/cadena.py video-v2/<ref>`: voz si falta y `broll.py lote` a la vez (las hojas de la cola se
+   copian, sin repetir su OCR) y luego `producir.py --auto --rapido`: puertas estáticas (parecido P1, contador, anclas...),
+   build, lint, contraste, render alto y gancho medido sobre ese MP4 → `renders/<ref>-final.mp4` (~3 min; el paso 9 lo
+   reutiliza, no vuelve a renderizar). Solo imprime fallos. Código 2 = clips sin `visto`: lista sus hojas y el texto OCR;
+   míralas, pon `visto` y relánzalo. Mira 2 fotogramas
    (gancho y un dato) y **mándaselo al usuario en cuanto exista** (SendUserFile): es la preview para opinar, no la que se publica.
    Si algo falla, agrupa los arreglos y repite. **Trinquete** (`video-v2/motor/errores.json`): si sale
    `🆕 ERROR NUEVO` o `🔁 REGRESIÓN`, primero arregla la CAUSA en el motor (imposible > prevenido antes de la voz >
@@ -79,7 +89,9 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 
 ## 5. Entregar y PARAR
 
-11. `python -m omega.cli estado-subir` y `python -m omega.cli produccion-guardar video-v2/<ref>`.
+11. En segundo plano, sin esperar su aviso para el paso 12: `python tools/entregar.py video-v2/<ref>`
+    (produccion-guardar, estado-subir y el plan de `publicar` SIN `--publicar`; imprime solo fallos y el plan).
+    Si `estado-subir` dice que el repo cambió (la cola corrió en medio), dilo: `estado-subir --forzar` pierde solo ese ingest.
 12. SendUserFile con la preview y un resumen corto: tema y por qué ganó, guion, fuentes, puertas (`renders/qa.json`), fallos del
     crítico, título y descripción. Pide la nota a ciegas (1-10 + queja con segundo). **PARA.** No publiques sin aprobación
     explícita en esta sesión.
@@ -91,5 +103,5 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
     momento) y páginas. Si una red tiene un render anterior, para: dilo al usuario, que lo borre a mano, y usa `--reemplazar <red>`.
 14. `python -m omega.cli record-dna video-v2/<ref>/adn.json`; `record-cost` con
     `{"production_ref": "<ref>", "research_hours": null, "script_hours": null, "edit_hours": null, "ai_cost_usd": null, "time_to_publish_h": null}`
-    (solo valores medidos, si no `null`); `python tools/costo_sesion.py video-v2/<ref>` (turnos y tokens de esta sesión →
-    `renders/costo.json`; meta ≤ 80 turnos, línea base 110-130); `estado-subir`.
+    (solo valores medidos, si no `null`); `python tools/costo_sesion.py video-v2/<ref>` (turnos, tokens y minutos por paso
+    de esta sesión → `renders/costo.json`; meta ≤ 80 turnos, línea base 148 y minutos en `docs/ESTADO.md`); `estado-subir`.

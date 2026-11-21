@@ -437,6 +437,11 @@ def cmd_decide() -> None:
     )
     con.commit()
 
+    if not sigstore.count_total(con):  # derived cache the state repo does not carry
+        print(
+            "Sin señales en la base (no viajan en omega.sql): regenerándolas con `signals`…"
+        )
+        cmd_signals()
     created = hypothesis_engine.generate(con, domain="content")
     print(f"Hypothesis Engine v0: {len(created)} hipótesis candidatas generadas.\n")
 
@@ -1917,6 +1922,35 @@ def cmd_estado_bajar() -> None:
         raise SystemExit(f"✗ {e}")
 
 
+def cmd_cola() -> None:
+    """Topic queue the cloud prepared (cola/actual.json of the state repo, brought by estado-bajar)."""
+    import json
+
+    from . import cola
+
+    raiz = config.DATA_DIR / ".estado" / "cola"
+    if not (raiz / "actual.json").exists():
+        raise SystemExit(
+            "sin cola: corre `estado-bajar` (o la nube aún no la preparó: nube/cola.yml)"
+        )
+    print(
+        cola.mostrar(
+            json.loads((raiz / "actual.json").read_text(encoding="utf-8")),
+            raiz / "medios",
+        )
+    )
+
+
+def cmd_cola_preparar() -> None:
+    """Cloud job (nube/cola.yml): ingest, scan, analytics, decide, media -> cola/ in the state repo."""
+    from . import cola, estado
+
+    try:
+        print(cola.preparar())
+    except estado.EstadoError as e:
+        raise SystemExit(f"✗ {e}")
+
+
 def cmd_produccion_guardar() -> None:
     """Guarda un proyecto v2 (sin MP4 ni assets regenerables) en el repo PRIVADO de estado."""
     from pathlib import Path
@@ -2033,6 +2067,8 @@ def main(argv: list[str]) -> int:
         "fotos": cmd_fotos,
         "autopsia": cmd_autopsia,
         "estado-bajar": cmd_estado_bajar,
+        "cola": cmd_cola,
+        "cola-preparar": cmd_cola_preparar,
         "estado-subir": cmd_estado_subir,
         "produccion-guardar": cmd_produccion_guardar,
         "status": cmd_status,

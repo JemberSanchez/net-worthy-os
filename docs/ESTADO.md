@@ -18,6 +18,37 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## Turnos y herramientas de /producir (21-nov, rama `claude/modest-archimedes-c779c4`)
+
+Instrumento: `tools/costo_sesion.py <proy> [--transcript X]` escribe `pasos` (minutos por paso,
+modelo vs herramienta; las esperas en segundo plano y del usuario no cuentan). Validado contra la
+auditoría del 20-nov en las mismas 7 sesiones: setup 4.8 = 4.8, sondeo 11.1 vs 10.6, 148 vs 147
+turnos (la voz da 2.1 y no 6.3: la auditoría contaba la espera en segundo plano).
+
+| Paso (mediana, 7 sesiones) | Antes (min)    | Ahora: medido por pieza, 21-nov                                      | Después en un /producir real |
+| -------------------------- | -------------- | -------------------------------------------------------------------- | ---------------------------- |
+| setup (estado+daily+sync)  | 4.8            | `estado-bajar; cola` 2 s (9 s si la nube movió la DB)                | pendiente                    |
+| medios                     | 7.4            | `lote` 13 s con las hojas de la cola vs 311 s en frío (4 clips)      | pendiente                    |
+| voz                        | 2.1 (máx 22.6) | en segundo plano mientras se escriben escenas                        | pendiente                    |
+| entregar                   | 6.8            | `tools/entregar.py` en segundo plano: guardar+subir 6 s (repo local) | pendiente                    |
+| sondeo (grep/cat + turnos) | 11.1           | `cadena.py`: voz ∥ lote → `--rapido`, solo fallos                    | pendiente                    |
+| turnos                     | 148            | —                                                                    | pendiente                    |
+
+Cola en la nube (`omega/cola.py`, `nube/cola.yml`): corrida real el 21-nov contra una COPIA local del
+repo de estado: 834 s (signals 394, analytics-sync 42, meta-sync 56, medios 311), 3 temas con 6
+titulares cada uno, todo verde. **Sin instalar:** falta copiar `nube/cola.yml` a
+`net-worthy-data/.github/workflows/` y poner sus secretos (`YOUTUBE_API_KEY`, `PEXELS_API_KEY`,
+`YOUTUBE_TOKEN_JSON`, `META_TOKEN_JSON`, `META_APP_ID`, `META_APP_SECRET`); antes, un `estado-subir --forzar` en el PC
+(crea `data/.estado_base` y sube el primer volcado sin señales).
+**Tamaño de `omega.sql` (21-nov):** `signal` era 26 de 30 MB y crecía ~2.4 MB/día (GitHub rechaza archivos
+> 100 MB: ~24 días con la cola diaria). Es caché derivada de `observed_content`: ya no viaja en el volcado
+(30.5 → 4.4 MB) y `decide` la regenera si falta (39 376 señales, idénticas a la tabla original).
+Lo que queda crece ~0.3 MB/día (`observed_content`): ~1 año hasta 100 MB. Sin eso, `/producir` cae al camino viejo (`/daily`).
+Hallazgo: los clips buscados con el término crudo son flojos (2 de 3 temas sin clip admitido; "worst
+week" trajo un discurso con persona reconocible). La hoja lo enseña y la sesión decide; la cifra de
+`lote` sí vale para cualquier clip que se reutilice. La columna "después" exige un `/producir` real con
+la cola instalada.
+
 ## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, SIN render aún
 
 - **Retención sin render (19-nov):** avisos de `construir.py`, antes → después:
