@@ -482,6 +482,11 @@ def refs_publicadas() -> list[str]:
 
 def cierres_previos(proy: Path, publicados: list[str] | None = None) -> list[str]:
     """Close types of earlier videos, newest first. Without a base: storyboard mtime of the siblings."""
+    return [tipo_cierre(g) for g in guiones_previos(proy, publicados)]
+
+
+def guiones_previos(proy: Path, publicados: list[str] | None = None) -> list[list]:
+    """Scripts (`guion`) of earlier videos, newest first, in the order cierres_previos uses."""
     orden = refs_publicadas() if publicados is None else publicados
     if not orden:
         # shortcut: mtime order, a fresh clone scrambles it; same limit as medir_parecido.puerta_repeticion
@@ -497,7 +502,7 @@ def cierres_previos(proy: Path, publicados: list[str] | None = None) -> list[str
             continue
         guion = json.loads(ruta.read_text(encoding="utf-8")).get("guion")
         if guion:
-            out.append(tipo_cierre(guion))
+            out.append(guion)
     return out
 
 
@@ -507,9 +512,11 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
     if proy.name in pub or list((proy / "renders").glob("*-final.mp4")):
         return True, "exento: vídeo anterior a la puerta o ya publicado"
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
+    gs = guiones_previos(proy, pub)
     ps = puertas(
         sb["guion"],
-        previos=cierres_previos(proy, pub),
+        previos=[tipo_cierre(g) for g in gs],
+        guiones=gs,
         tipo_video=sb.get("tipo_video", "short"),
         capitulos=sb.get("capitulos"),
     )
@@ -521,6 +528,25 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
             "G-FORMATO: falta `formato`, sin él no pasa por la puerta de edición"
         )
     return not fallan, " · ".join(fallan) or f"{len(ps)} puertas de guion OK"
+
+
+def _puerta_repite(fs: list[dict], guiones: list[list]) -> dict:
+    """E8: the repetition gate's 4-word phrases (medir_parecido), at script time instead of after the storyboard."""
+    sys.path.insert(0, str(RAIZ / "tools"))
+    import medir_parecido as mp
+
+    def cuatro(g: list) -> set[str]:
+        return mp._cuatrigramas({"guion": [x if isinstance(x, dict) else {"texto": x} for x in g]})
+
+    propio = cuatro(fs)
+    comun = sorted({q for g in guiones[: mp.VENTANA_FRASES] for q in propio & cuatro(g)})
+    return {
+        "id": "G-REPITE",
+        "ok": not comun,
+        "detalle": f"repite de los últimos {mp.VENTANA_FRASES} guiones: «{'», «'.join(comun[:3])}»"
+        if comun
+        else "sin frases de 4 palabras repetidas",
+    }
 
 
 def _puerta_capitulos(caps: list[dict] | None, n_frases: int) -> dict:
@@ -544,9 +570,11 @@ def puertas(
     previos: list[str] | None = None,
     tipo_video: str = "short",
     capitulos: list[dict] | None = None,
+    guiones: list[list] | None = None,
 ) -> list[dict]:
     """Criterios que se miden sin juicio. `frases`: textos o dicts {texto, giro?}.
     `previos`: close types of earlier videos, newest first (None = no history, nothing vetoed).
+    `guiones`: their scripts, newest first (G-REPITE; None = not checked).
     `tipo_video` "largo": long-form limits; `capitulos` [{titulo, desde: index in `frases`}]."""
     fs = [f if isinstance(f, dict) else {"texto": f} for f in frases]
     n = [len(f["texto"].split()) for f in fs]
@@ -556,6 +584,8 @@ def puertas(
     out = []
 
     out.append(_puerta_gancho(fs))
+    if guiones is not None:
+        out.append(_puerta_repite(fs, guiones))
     out.append(_puerta_tu(fs, LARGO_TU_MAX if largo else TU_PALABRA_MAX))
     if largo:
         out.append(_puerta_capitulos(capitulos, len(fs)))
@@ -676,9 +706,11 @@ def elegir(cands: list[dict], juicio: dict) -> tuple[dict, list[dict]]:
     return ranking[0], ranking
 
 
-def evaluar(cands: list[dict], previos: list[str] | None = None) -> list[dict]:
+def evaluar(
+    cands: list[dict], previos: list[str] | None = None, guiones: list[list] | None = None
+) -> list[dict]:
     for c in cands:
-        c["puertas"] = puertas(c["frases"], previos)
+        c["puertas"] = puertas(c["frases"], previos, guiones=guiones)
         c["fallos"] = sum(not p["ok"] for p in c["puertas"])
     return cands
 
@@ -876,17 +908,20 @@ def main() -> None:
         return
     datos = json.loads((proy / "guiones.json").read_text(encoding="utf-8"))
     juicio = datos.get("juicio") or {}
-    previos = cierres_previos(proy)
+    gs = guiones_previos(proy)
+    previos = [tipo_cierre(g) for g in gs]
 
     ests = evaluar(
-        [{"id": e["id"], "frases": e["frases"]} for e in datos["estructuras"]], previos
+        [{"id": e["id"], "frases": e["frases"]} for e in datos["estructuras"]],
+        previos,
+        gs,
     )
     try:
         mejor_est, rank1 = elegir(ests, juicio)
     except FaltaJuicio as e:
         _pedir_juicio(e, ests)
     est = next(e for e in datos["estructuras"] if e["id"] == mejor_est["id"])
-    variantes = evaluar(candidatos_gancho(est, datos.get("ganchos") or []), previos)
+    variantes = evaluar(candidatos_gancho(est, datos.get("ganchos") or []), previos, gs)
     try:
         ganador, rank2 = elegir(variantes, juicio)
     except FaltaJuicio as e:

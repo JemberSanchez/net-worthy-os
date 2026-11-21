@@ -356,5 +356,49 @@ class TestReglas(unittest.TestCase):
         self.assertEqual(G.frase_mitad(fs), "e f")
 
 
+
+class TestRepite(unittest.TestCase):
+    """E8 (errores.json): the repetition gate caught a repeated script only after the storyboard was built."""
+
+    @staticmethod
+    def guion(ref):
+        sb = json.loads((RAIZ / "video-v2" / ref / "storyboard.json").read_text(encoding="utf-8"))
+        return sb["guion"]
+
+    def test_formula_de_otro_guion_falla_en_la_etapa_de_guion(self):
+        # "Here's the part nobody tells you" is in 7 published scripts (fed-vs-card among them)
+        p = puerta(
+            ["Rates fell.", "Here's the part nobody tells you about cards."],
+            "G-REPITE",
+            guiones=[self.guion("fed-vs-card")],
+        )
+        self.assertFalse(p["ok"])
+        self.assertIn("part nobody tells", p["detalle"])
+
+    def test_aviso_hablado_no_cuenta_como_repeticion(self):
+        # the E8 example: «this is not advice» shared with strategy-underwater
+        nuevo = ["Gold hit a record.", "Nobody knows where it goes next. This is not advice."]
+        self.assertTrue(puerta(nuevo, "G-REPITE", guiones=[self.guion("strategy-underwater")])["ok"])
+
+    def test_una_frase_que_solo_menciona_advice_si_cuenta(self):
+        viejo = [["Buffett's best advice was to buy the whole haystack."]]
+        nuevo = ["Buffett's best advice was to buy the whole haystack."]
+        self.assertFalse(puerta(nuevo, "G-REPITE", guiones=viejo)["ok"])
+
+    def test_sin_historial_no_se_mide(self):
+        self.assertFalse(any(p["id"] == "G-REPITE" for p in G.puertas(["a b c d e."])))
+
+    def test_mas_alla_de_la_ventana_no_cuenta(self):
+        import medir_parecido as mp
+
+        relleno = [["Unrelated words here today."]] * mp.VENTANA_FRASES
+        p = puerta(
+            ["Here's the part nobody tells you."],
+            "G-REPITE",
+            guiones=relleno + [self.guion("fed-vs-card")],
+        )
+        self.assertTrue(p["ok"])
+
+
 if __name__ == "__main__":
     unittest.main()

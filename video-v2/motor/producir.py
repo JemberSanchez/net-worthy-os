@@ -737,7 +737,8 @@ def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
     """The critic's C1 dark/flat hook on the preview frames, same function and limits, before the render.
     Measured on huang-exit (12-nov, 10 frames): the snapshot reads luma +3.2 above the MP4 and contrast 6 %
     below it. Contrast is then already stricter; luma must clear the limit by GANCHO_MARGEN_LUMA so the
-    preview never passes a hook the critic fails. PROVISIONAL, n=1: re-measure on the next Shorts."""
+    preview never passes a hook the critic fails. Re-measured 21-nov on 8 Shorts (21 hook frames): +2.1 to +4.4 per
+    frame, per-video mean 2.7-3.5. No 16:9 MP4 to measure yet (huang-exit-largo never rendered): PROVISIONAL there."""
     import medir_cuadros as mc
     import numpy as np
     from PIL import Image
@@ -1016,6 +1017,17 @@ def producir(proy: Path) -> dict:
     import fuentes  # network: only here, never in construir --validar (tests stay offline)
 
     puerta("fuentes", *fuentes.puerta_fuentes(proy), seguir=True)
+    import voz
+
+    if fallo_voz := voz.fallida(
+        proy
+    ):  # a ✗ voz.py leaves a broken or stale voice.mp3 behind
+        puerta(
+            "voz",
+            False,
+            f"{fallo_voz}\n→ arregla el guion y corre voz.py --forzar",
+            seguir=True,
+        )
     if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
         raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
     if not (proy / "assets" / "voice.mp3").exists():
@@ -1024,8 +1036,6 @@ def producir(proy: Path) -> dict:
     if (
         proy.name not in puertas.ANTERIORES
     ):  # voz.py leaves its best take when none passes: it does not get built
-        import voz
-
         rotas = voz.pausas_rotas(
             json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
         )

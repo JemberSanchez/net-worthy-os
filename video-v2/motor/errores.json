@@ -8,7 +8,8 @@
     "donde": "puertas.gancho_clip_oscuro",
     "test": "test_clip_oscuro_en_el_gancho_bloquea_antes_del_render",
     "cerrado": "2026-11-18",
-    "causa": "a dark clip (raw luma < 60) chosen for the first 2 s; now blocked at validation, before any render"
+    "causa": "a dark clip (raw luma < 60) chosen for the first 2 s; now blocked at validation, before any render",
+    "nota": "recurred in huang-exit-largo (18-nov, luma 30.0 and 31.8 against 30 + 3.5): its hook clip 'placa' changed source and assets/clips/luma.json kept the old value 89.2 (the new clip measures 43.5), so the clip gate passed. broll._quitar_derivados now purges luma.json too (test_new_source_with_same_key_drops_every_cached_derivative). The 3.5 margin holds: snapshot minus MP4 hook luma re-measured on 8 Shorts / 21 frames = +2.1 to +4.4, per-video mean 2.7-3.5 (21-nov)"
   },
   {
     "id": "E2",
@@ -79,10 +80,13 @@
   {
     "id": "E8",
     "patron": "guion\\ repite\\ .+?",
-    "estado": "abierto",
+    "estado": "prevenido",
     "ejemplo": "guion repite «this is not advice» (1 frases de 4 palabras) · misma apertura: titulo · parecido recursos 0.3 con strategy-underwater (> 0.25): clip:32805742, clip:35039725, clip:35417493",
     "desde": "2026-11-15",
-    "nota": "not mechanical: script wording, opening scene and shared clips are creative choices; it is caught statically before the voice (validation, ~2 s). Closing it needs the Phase 2 compiler picking media from the reviewed library with the variety rule"
+    "donde": "guionista._puerta_repite",
+    "test": "test_formula_de_otro_guion_falla_en_la_etapa_de_guion",
+    "cerrado": "2026-11-21",
+    "causa": "the example was the spoken disclaimer 'this is not advice', required boilerplate: medir_parecido._cuatrigramas now drops sentences with 'advice'. Any other repeated 4-word formula fails G-REPITE when the script is chosen (guionista.py), before the storyboard and the voice"
   },
   {
     "id": "E9",

@@ -120,5 +120,27 @@ class RepararTest(unittest.TestCase):
         self.assertIs(r["toma"][0], m)
 
 
+class VozFallidaTest(unittest.TestCase):
+    """20 'sigue la pausa rota' and 21 'Pronunciación sin revisar' exits in the session logs (to 21-nov):
+    both leave a voice.mp3 on disk (the best broken take, or the OLD one after --forzar) that producir built."""
+
+    def test_un_fallo_con_voz_en_disco_bloquea_hasta_una_voz_limpia(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as d:
+            proy = Path(d)
+            (proy / "assets").mkdir()
+            with self.assertRaises(SystemExit):
+                V.fallar(proy, "✗ Pronunciación sin revisar, no se sintetiza")
+            self.assertIsNone(
+                V.fallida(proy)
+            )  # no voice on disk: producir synthesises it itself
+            (proy / "assets" / "voice.mp3").write_bytes(b"old take")
+            self.assertIn("Pronunciación", V.fallida(proy))
+            (proy / "assets" / V.FALLO).unlink()  # what a clean voz.py run does
+            self.assertIsNone(V.fallida(proy))
+
+
 if __name__ == "__main__":
     unittest.main()

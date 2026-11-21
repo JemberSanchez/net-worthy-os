@@ -253,7 +253,12 @@ _NUMEROS = {
 def _cuatrigramas(sb_: dict) -> set[str]:
     p = re.findall(
         r"[a-z0-9$%'.-]*[a-z0-9$%]",
-        " ".join(g["texto"] for g in sb_.get("guion") or []).lower(),
+        # spoken YMYL disclaimer ("This is not advice."): required boilerplate, not a formula (E8)
+        re.sub(
+            r"[^.!?]*\b(?:not|isn't|financial)\s+(?:financial\s+)?advice\b[^.!?]*[.!?]?",
+            " ",
+            " ".join(g["texto"] for g in sb_.get("guion") or []).lower(),
+        ),
     )
     # share a data point ("three point eight percent") is legitimate; only sentence formulas count
     return {

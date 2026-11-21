@@ -28,3 +28,6 @@ tools/.hf/
 
 # material de investigacion (206 MB: metraje, contact sheets): no va al repo
 docs/mejora/
+
+# voz.py ✗ marker (video-v2/motor/voz.py FALLO): local state, producir reads it
+voz.fallo

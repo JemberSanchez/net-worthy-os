@@ -24,6 +24,24 @@ RAIZ = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(RAIZ / "tools"), str(Path(__file__).resolve().parent)]
 PAUSA_CAPITULO_S = 0.9  # long-form: silence before each chapter (F1 decision 7)
 MAX_TOMAS = 3  # each extra take costs one synthesis + one alignment: measured in docs/CERO-ERRORES.md
+FALLO = "voz.fallo"  # assets/<FALLO>: the last run ended in ✗; producir refuses the voice on disk until a clean run
+
+
+def fallar(proy: Path, msg: str) -> None:
+    """✗ that leaves voice.mp3 behind (a broken take, or the OLD one after --forzar): mark it for producir."""
+    (proy / "assets").mkdir(parents=True, exist_ok=True)
+    (proy / "assets" / FALLO).write_text(msg, encoding="utf-8")
+    raise SystemExit(msg)
+
+
+def fallida(proy: Path) -> str | None:
+    """The last voz.py run's ✗, if it left a voice on disk that producir would build with."""
+    m = proy / "assets" / FALLO
+    return (
+        m.read_text(encoding="utf-8")
+        if m.exists() and (proy / "assets" / "voice.mp3").exists()
+        else None
+    )
 
 
 def frases_del_storyboard(sb: dict) -> list[str]:
@@ -89,6 +107,7 @@ def _a_words(palabras: list[dict]) -> list[dict]:
 def pausas_rotas(words: list[dict]) -> list[dict]:
     """V1 over the aligned words: the same function the critic runs, here before anything is built."""
     import medir_voz
+
     import puertas_final as pf
 
     u = _v1()
@@ -191,7 +210,9 @@ def reparar_frases(
         i1 = min(i1, len(palabras) - 1)
         prev = palabras[i0 - 1]["t1"] if i0 else 0.0
         sig = palabras[i1 + 1]["t0"] if i1 + 1 < len(palabras) else len(m) / sr
-        a = int(max(prev, palabras[i0]["t0"] - 0.03) * sr)  # never into the neighbour sentence
+        a = int(
+            max(prev, palabras[i0]["t0"] - 0.03) * sr
+        )  # never into the neighbour sentence
         b = min(len(m), int(min(sig, palabras[i1]["t1"] + 0.03) * sr))
         sil = silencios_internos(m[a:b], sr, lim)
         mejor = ((len(sil), sum(d for _, d in sil)), None)
@@ -214,7 +235,9 @@ def reparar_frases(
         if mejor[1] is not None:
             x, seg = mejor[1], m[a:b]
             rx = _rms_voz(x, sr)
-            x = x * (_rms_voz(seg, sr) / rx if rx else 1.0)  # same level, silences excluded
+            x = x * (
+                _rms_voz(seg, sr) / rx if rx else 1.0
+            )  # same level, silences excluded
             m = np.concatenate([m[:a], x.astype(m.dtype), m[b:]])
             rehechas.append(g.get("id"))
     if rehechas:
@@ -289,9 +312,10 @@ def main() -> None:
             sb, gv.PYTHON_KOKORO, RAIZ / "tools" / "_g2p_kokoro.py"
         )
         if dudas:
-            raise SystemExit(
-                "Pronunciación sin revisar, no se sintetiza:\n  - "
-                + "\n  - ".join(dudas)
+            fallar(
+                proy,
+                "✗ Pronunciación sin revisar, no se sintetiza:\n  - "
+                + "\n  - ".join(dudas),
             )
     frases = frases_del_storyboard(sb)
     texto = " ".join(frases)
@@ -343,10 +367,12 @@ def main() -> None:
     gv.guardar(muestras, sr, audio)
     print(f"✓ {audio.name} ({len(muestras) / sr:.2f}s)\n")
     _escribir_words(proy, r["palabras"])
+    (proy / "assets" / FALLO).unlink(missing_ok=True)
     if r["rotas"]:
-        raise SystemExit(
+        fallar(
+            proy,
             f"✗ {MAX_TOMAS} intentos por frase y sigue la pausa rota (queda la mejor). Reescribe:\n  - "
-            + "\n  - ".join(frases_a_reescribir(sb, r["palabras"], r["rotas"]))
+            + "\n  - ".join(frases_a_reescribir(sb, r["palabras"], r["rotas"])),
         )
 
 

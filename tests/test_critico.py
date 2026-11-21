@@ -296,6 +296,41 @@ class ParchesTest(unittest.TestCase):
         sb2, hechos = C.aplicar({"aviso": {"lineas": ["x"], "tam": 33}}, [f["parche"]])
         self.assertEqual((len(hechos), sb2["aviso"]["tam"]), (1, f["parche"]["valor"]))
 
+    # huang-exit-largo scene 30 (index.html plan, 19-nov): linea1 "*Six months*", golpe 148.68, scene 148.54-151.22
+    LARGO = {"aspecto": None, "escenas": [{"tipo": "revelacion", "linea1": {"texto": "*Six months*"},
+                                           "golpe": 148.68, "t0": 148.54, "t1": 151.22}]}
+
+    def test_linea1_atenuada_tras_el_golpe_deja_de_fallar(self):
+        """Real case: "SIX MONTHS" 2.22:1 read at 150.2 s, inside motor.js's planned fade. It failed (alta) and the
+        fondo_suave patch could not fix it; now the contrast check skips it."""
+        x = {"texto": "SIX MONTHS", "contraste": 2.22, "t": 150.2, "t_fin": 150.7}
+        self.assertEqual([f["criterio"] for f in C.revisar_texto({"bajo_contraste": [x]}, VS, U)], ["L1"])
+        rt = {"bajo_contraste": [x], "atenuados": C.atenuados(self.LARGO)}
+        self.assertEqual(C.revisar_texto(rt, VS, U), [])
+
+    def test_linea1_antes_del_golpe_sigue_siendo_fallo(self):
+        """anne-scheiber revelacion 3: "A PERFECT STOR" 1.99:1 at 12.5 s, BEFORE its golpe (14.22): a real fault
+        (fixed by hand with a darker clip). An unread linea1 (OCR) is never exempt."""
+        plan = C.plan_de_html((RAIZ / "video-v2" / "anne-scheiber" / "index.html").read_text(encoding="utf-8"))
+        rt = {
+            "atenuados": C.atenuados(plan),
+            "bajo_contraste": [
+                {"texto": "A PERFECT STOR", "contraste": 1.99, "t": 12.5},
+                {"texto": "A PERFECT STORY.", "contraste": 2.2, "t": 14.5},
+            ],
+            "no_leidos": [{"texto": "A perfect story.", "escena": 3, "t0": 12.0, "t1": 15.4, "parecido": 0.4}],
+        }
+        self.assertEqual([a[:2] for a in C.atenuados(plan)], [("A perfect story.", 14.22)])
+        f = C.revisar_texto(rt, VS, U)
+        self.assertEqual(sorted(str(x["t"]) for x in f), ["12.0", "12.5"])
+
+    def test_la_exencion_sigue_al_fundido_de_motor_js(self):
+        js = (RAIZ / "video-v2" / "motor" / "motor.js").read_text(encoding="utf-8")
+        self.assertEqual(C.fundido_linea1(js), {"cine": 0.55, "": 0.35})
+        sin_fundido = js.replace('P.aspecto === "cine" ? 0.55 : 0.35', 'P.aspecto === "cine" ? 1 : 1')
+        self.assertEqual(C.atenuados(self.LARGO, sin_fundido), [])
+        self.assertEqual(C.atenuados(self.LARGO, "no fade here"), [])
+
     def test_volcar_conserva_la_sangria_del_original(self):
         orig = '{\n "a": 1,\n "b": [\n  2\n ]\n}\n'
         self.assertEqual(C.volcar({"a": 1, "b": [2]}, orig), orig)
