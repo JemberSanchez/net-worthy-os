@@ -70,10 +70,7 @@ def cargar_rubrica(proy: Path, ruta: Path | None = None) -> dict:
 def umbrales(rub: dict, plan: dict) -> dict:
     """Flat thresholds; a long-form plan takes `por_tipo.largo` on top (no Shorts UI to dodge)."""
     u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
-    return {
-        **u,
-        **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {}),
-    }
+    return {**u, **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {})}
 
 
 def plan_de_html(html: str) -> dict:
@@ -446,9 +443,8 @@ def revisar_previo(
 ) -> list[dict]:
     """L1 and designed text over a document, on preview frames. Only what was sampled is judged: the full pass is
     still the critic's, on the MP4."""
-    import puertas_final as pf
-
     import medir_texto
+    import puertas_final as pf
 
     u = umbrales(rub, plan)
     vs = ventanas(plan)
