@@ -61,14 +61,14 @@ qué falla: corrige la causa, nunca un umbral. Si algo se resiste dos rondas, pa
 **Siempre en segundo plano** (`run_in_background`): el aviso llega solo. Nada de `tail`, `sleep` ni `Monitor`.
 
 8. `python video-v2/motor/producir.py video-v2/<ref> --auto --rapido`: puertas estáticas (parecido P1, contador, anclas...),
-   build, lint, contraste, render `draft` y gancho medido sobre ese MP4 → `renders/<ref>-rapido.mp4` (~3 min). Mira 2 fotogramas
+   build, lint, contraste, render alto y gancho medido sobre ese MP4 → `renders/<ref>-final.mp4` (~3 min; el paso 9 lo reutiliza, no vuelve a renderizar). Mira 2 fotogramas
    (gancho y un dato) y **mándaselo al usuario en cuanto exista** (SendUserFile): es la preview para opinar, no la que se publica.
    Si algo falla, agrupa los arreglos y repite. **Trinquete** (`video-v2/motor/errores.json`): si sale
    `🆕 ERROR NUEVO` o `🔁 REGRESIÓN`, primero arregla la CAUSA en el motor (imposible > prevenido antes de la voz >
    autoarreglo) con un test que lo reproduzca, cierra la entrada (`estado`, `donde`, `test`, `cerrado`) y solo
    entonces sigue con el vídeo. `⏳ abierto` = ya registrado: arréglalo también si tienes el contexto. `--previo` (hoja de contactos + OCR sobre documentos + carrusel) solo si dudas
    de un texto sobre documento: cuesta ~4 min.
-9. **Sin esperar a la nota**, lanza `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`: render alto, loudness, ritmo,
+9. **Sin esperar a la nota**, lanza `python video-v2/motor/producir.py video-v2/<ref> --sin-subir`: render alto (el del paso 8 si la página no cambió), loudness, ritmo,
    preview, carrusel e historia, y medidores del crítico, que sigue siendo la red final (~10 min). Imprime solo fallos, con segundo
    y escena. No sube: lo hace `publicar` en el paso 13, y solo con la aprobación del crítico sobre ESTE MP4.
 10. **Juicio** sobre `renders/critica/r0/hoja.jpg` (no fotogramas sueltos, salvo para dudar de un segundo): escribe
