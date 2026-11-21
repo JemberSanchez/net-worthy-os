@@ -400,7 +400,10 @@ def generar(
     env: dict | None = None,
     con_historia: bool = True,
     con_carrusel: bool = True,
+    con_tarjeta: bool = False,
 ) -> dict:
+    """con_tarjeta: also snapshot the story's end card, which needs no video, so the story-only call
+    after the render reuses it instead of launching the browser again."""
     from PIL import Image
 
     proy = Path(proy).resolve()
@@ -444,6 +447,27 @@ def generar(
         ),
         None,
     )
+    tarjeta, hecha = out / "_tarjeta", []
+    if h:
+        html_t = _html_tarjeta(
+            h.get("cierre", "Full story in Reels"),
+            "Full story in our Reels · @networthytv",
+        )
+        fondo_t, html_f = tarjeta / "tarjeta-fondo.jpg", tarjeta / "index.html"
+        # the card snapshotted beside the carousel (con_tarjeta) is reused only if it is this card
+        if (
+            not con_carrusel
+            and html_f.exists()
+            and fondo_t.exists()
+            and html_f.read_text(encoding="utf-8") == html_t
+            and fondo_t.read_bytes() == (render / fondos[-1]).read_bytes()
+        ):
+            hecha = sorted((tarjeta / "snapshots").glob("frame-*.png"))
+    if h and (con_tarjeta or (con_historia and final and not hecha)):
+        _preparar_dir(tarjeta)
+        shutil.copyfile(render / fondos[-1], fondo_t)
+        html_f.write_text(html_t, encoding="utf-8")
+        hecha = _snapshot(tarjeta, [0.5], env)
     if h and final and con_historia:
         import anclas
 
@@ -452,17 +476,7 @@ def generar(
             corte = min(anclas.t(words, h["hasta"]) + 0.35, 14.0)
         except anclas.AnclaError as e:
             raise SocialError(f"`social.historia.hasta`: {e}")
-        tarjeta = out / "_tarjeta"
-        _preparar_dir(tarjeta)
-        shutil.copyfile(render / fondos[-1], tarjeta / "tarjeta-fondo.jpg")
-        (tarjeta / "index.html").write_text(
-            _html_tarjeta(
-                h.get("cierre", "Full story in Reels"),
-                "Full story in our Reels · @networthytv",
-            ),
-            encoding="utf-8",
-        )
-        png = _snapshot(tarjeta, [0.5], env)[0]
+        png = hecha[0]
         historia = out / "historia.mp4"
         fc = (
             f"[0:v]trim=0:{corte:.2f},setpts=PTS-STARTPTS,fps=30,format=yuv420p[a];"
