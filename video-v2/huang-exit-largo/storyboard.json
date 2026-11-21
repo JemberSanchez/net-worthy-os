@@ -1,0 +1,2390 @@
+{
+  "ref": "huang-exit-largo",
+  "tipo_video": "largo",
+  "guion": [
+    {
+      "id": "hook",
+      "texto": "The man who co-founded the chip giant inside almost every index fund sold every single share."
+    },
+    {
+      "id": "s1",
+      "texto": "His name is Curtis Priem, and had he held on, Forbes estimates he would be worth about seventy billion dollars."
+    },
+    {
+      "id": "s2",
+      "texto": "Instead, his fortune is closer to thirty million.",
+      "giro": true
+    },
+    {
+      "id": "s3",
+      "texto": "This month its longtime boss, Jensen Huang, resigned, and the stock slid."
+    },
+    {
+      "id": "s4",
+      "texto": "In the next few minutes, we follow Priem from a college lab to near bankruptcy, past a rival that looked unbeatable, to the sale of a lifetime."
+    },
+    {
+      "id": "s5",
+      "texto": "And by the end, you will see why his choice is the same one every investor faces, including you."
+    },
+    {
+      "id": "c1",
+      "texto": "Start in nineteen eighty two, when Priem earned an electrical engineering degree from Rensselaer Polytechnic Institute."
+    },
+    {
+      "id": "s7",
+      "texto": "His first big job was at a small company in Winooski, Vermont, called Vermont Microsystems."
+    },
+    {
+      "id": "s8",
+      "texto": "There he designed the first professional graphics processor for the PC, the IBM Professional Graphics Adapter."
+    },
+    {
+      "id": "s9",
+      "texto": "In other words, before most people even owned a home computer, he was already teaching one how to draw.",
+      "giro": true
+    },
+    {
+      "id": "s10",
+      "texto": "In nineteen eighty six he moved to Sun Microsystems as a senior staff engineer."
+    },
+    {
+      "id": "s11",
+      "texto": "At Sun he developed the G X graphics chip and learned exactly how hard fast graphics could be."
+    },
+    {
+      "id": "s12",
+      "texto": "He was not alone in thinking the personal computer would soon need far more graphics power than anything on sale, especially for games."
+    },
+    {
+      "id": "s13",
+      "texto": "Three engineers met at a Denny's roadside diner in San Jose, California, and agreed to start a company."
+    },
+    {
+      "id": "s14",
+      "texto": "The three were Jensen Huang, Chris Malachowsky, and Curtis Priem."
+    },
+    {
+      "id": "s15",
+      "texto": "They agreed in late nineteen ninety two, and the company became official in nineteen ninety three."
+    },
+    {
+      "id": "s16",
+      "texto": "They called it Nvidia."
+    },
+    {
+      "id": "s17",
+      "texto": "Priem became its chief technical officer, the person responsible for what the chips could do."
+    },
+    {
+      "id": "s18",
+      "texto": "He would hold that title until two thousand three."
+    },
+    {
+      "id": "s19",
+      "texto": "But for the first few years, it was not clear the company would survive at all, and the next part of the story shows how close it came."
+    },
+    {
+      "id": "c2",
+      "texto": "The first Nvidia chip, the N V one, drew three dimensional shapes in a different way than the rest of the industry."
+    },
+    {
+      "id": "s21",
+      "texto": "Then Microsoft introduced DirectX, and announced that its new graphics software would support only triangles."
+    },
+    {
+      "id": "s22",
+      "texto": "The N V one failed to gain traction in the market.",
+      "giro": true
+    },
+    {
+      "id": "s23",
+      "texto": "Nvidia had also spent about a year working on a graphics chip for the Sega Dreamcast console."
+    },
+    {
+      "id": "s24",
+      "texto": "Then the president of Sega came in person to tell Huang that Sega had chosen another vendor.",
+      "giro": true
+    },
+    {
+      "id": "s25",
+      "texto": "But he also persuaded Sega to invest five million dollars in Nvidia anyway."
+    },
+    {
+      "id": "s26",
+      "texto": "Huang later said that money was all that kept Nvidia afloat, because the company had almost nothing else left."
+    },
+    {
+      "id": "s27",
+      "texto": "In his words, it gave them six months to live."
+    },
+    {
+      "id": "s28",
+      "texto": "In nineteen ninety six, Huang laid off over half the staff, cutting the team from one hundred people to forty."
+    },
+    {
+      "id": "s29",
+      "texto": "The survivors bet everything on one chip built for triangles, the Riva one twenty eight."
+    },
+    {
+      "id": "s30",
+      "texto": "The unofficial company motto became: our company is thirty days from going out of business."
+    },
+    {
+      "id": "s31",
+      "texto": "Huang opened internal presentations with those words for many years."
+    },
+    {
+      "id": "s32",
+      "texto": "Then the Riva shipped, and Nvidia sold about a million units within four months."
+    },
+    {
+      "id": "s33",
+      "texto": "That revenue paid for the next generation of chips, and for the first time, Nvidia had room to breathe."
+    },
+    {
+      "id": "s34",
+      "texto": "Nvidia went public in nineteen ninety nine."
+    },
+    {
+      "id": "s35",
+      "texto": "That same year it launched the GeForce two fifty six, and marketed it as the first GPU in the world."
+    },
+    {
+      "id": "s36",
+      "texto": "Here is the point that matters for your money."
+    },
+    {
+      "id": "s37",
+      "texto": "If you had looked at Nvidia in nineteen ninety six, you would have seen a company that had just laid off more than half its people."
+    },
+    {
+      "id": "s38",
+      "texto": "Nobody sane would have called that a sure thing, and most people would have kept their savings far away from it."
+    },
+    {
+      "id": "c3",
+      "texto": "And Nvidia was not even the favorite."
+    },
+    {
+      "id": "s40",
+      "texto": "The company everyone feared was Three D F X, maker of the Voodoo graphics cards."
+    },
+    {
+      "id": "s41",
+      "texto": "In the late nineties, if you played games on a PC, you probably wanted a Voodoo card, and the brand name alone sold boxes."
+    },
+    {
+      "id": "s42",
+      "texto": "In January nineteen ninety nine, the company announced that its Banshee cards had sold about one million units."
+    },
+    {
+      "id": "s43",
+      "texto": "It even bought a card maker, S T B Systems, to build its own boards."
+    },
+    {
+      "id": "s44",
+      "texto": "From the outside, it looked like the safest bet in graphics, the company with the fans, the brand, and the head start."
+    },
+    {
+      "id": "s45",
+      "texto": "Then the delays started.",
+      "giro": true
+    },
+    {
+      "id": "s46",
+      "texto": "Its next chips slipped, while Nvidia kept shipping."
+    },
+    {
+      "id": "s47",
+      "texto": "Money ran short."
+    },
+    {
+      "id": "s48",
+      "texto": "In December two thousand, Nvidia agreed to buy most of the assets of Three D F X."
+    },
+    {
+      "id": "s49",
+      "texto": "In two thousand two, what was left of the company went bankrupt.",
+      "giro": true
+    },
+    {
+      "id": "s50",
+      "texto": "Think about what that means."
+    },
+    {
+      "id": "s51",
+      "texto": "In the late nineties, a smart investor picking the winner of graphics might well have picked Three D F X."
+    },
+    {
+      "id": "s52",
+      "texto": "That investor would have watched it disappear, while the underdog it had been beating turned into a giant."
+    },
+    {
+      "id": "s53",
+      "texto": "Hindsight makes Nvidia look obvious, but at the time, the obvious pick went bust.",
+      "giro": true
+    },
+    {
+      "id": "s54",
+      "texto": "Psychologists call this hindsight bias, the feeling that you could have predicted an outcome once you already know it."
+    },
+    {
+      "id": "c4",
+      "texto": "Now back to Priem."
+    },
+    {
+      "id": "s56",
+      "texto": "In two thousand, as Nvidia pulled ahead, Priem was named Entrepreneur of the Year."
+    },
+    {
+      "id": "s57",
+      "texto": "In two thousand three, after a decade as chief technical officer, he retired."
+    },
+    {
+      "id": "s58",
+      "texto": "Over the next few years he sold his shares, and by two thousand six he had sold all of them."
+    },
+    {
+      "id": "s59",
+      "texto": "In two thousand four, he announced a forty million dollar gift to Rensselaer, the college that trained him."
+    },
+    {
+      "id": "s60",
+      "texto": "Since two thousand three he has served as a trustee of Rensselaer."
+    },
+    {
+      "id": "s61",
+      "texto": "Then Nvidia kept going."
+    },
+    {
+      "id": "s62",
+      "texto": "In two thousand twenty three it became the seventh American company to reach a one trillion dollar valuation."
+    },
+    {
+      "id": "s63",
+      "texto": "In two thousand twenty five, it became the first company in the world to pass four trillion, and then five trillion dollars."
+    },
+    {
+      "id": "s64",
+      "texto": "In late two thousand twenty three, Forbes estimated the net worth of Priem at about thirty million dollars."
+    },
+    {
+      "id": "s65",
+      "texto": "Had he kept his Nvidia shares, Forbes estimated, he would have been worth seventy billion."
+    },
+    {
+      "id": "s66",
+      "texto": "And that estimate came before the run to five trillion."
+    },
+    {
+      "id": "s67",
+      "texto": "So, the worst trade in tech history?"
+    },
+    {
+      "id": "s68",
+      "texto": "Maybe not.",
+      "giro": true
+    },
+    {
+      "id": "s69",
+      "texto": "He left with life changing money, and he gave millions of it to the college that trained him."
+    },
+    {
+      "id": "s70",
+      "texto": "Hindsight hides one detail."
+    },
+    {
+      "id": "s71",
+      "texto": "When he sold, there was no AI boom, no trillion dollar valuation, nothing but a graphics company in a brutal market."
+    },
+    {
+      "id": "s72",
+      "texto": "Every share he kept was money riding on one company, in an industry where the leader had already changed once."
+    },
+    {
+      "id": "c5",
+      "texto": "So what does this story mean for your own money?"
+    },
+    {
+      "id": "s74",
+      "texto": "First, nobody gets to sell only the losers."
+    },
+    {
+      "id": "s75",
+      "texto": "The same habit that cost Priem a fortune would have saved anyone holding Three D F X."
+    },
+    {
+      "id": "s76",
+      "texto": "You cannot know in advance which one you are holding, and neither could the people who built them."
+    },
+    {
+      "id": "s77",
+      "texto": "Second, one stock can make you rich, but it can also take everything."
+    },
+    {
+      "id": "s78",
+      "texto": "Concentration is how fortunes are made, and how they are lost, and from the inside it is very hard to tell which one is happening."
+    },
+    {
+      "id": "s79",
+      "texto": "Third, this is why so many people own the whole market through an index fund."
+    },
+    {
+      "id": "s80",
+      "texto": "If you held a broad index fund, you owned a small slice of Nvidia as it grew."
+    },
+    {
+      "id": "s81",
+      "texto": "You also owned slices of companies that failed, but they shrank out of the fund while the winners grew."
+    },
+    {
+      "id": "s82",
+      "texto": "You never had to pick Nvidia over its rival, because the fund held both and let the market sort them out."
+    },
+    {
+      "id": "s83",
+      "texto": "Fourth, today's headlines feel huge, like Jensen Huang resigning this month."
+    },
+    {
+      "id": "s84",
+      "texto": "But nobody, not even the founders, knows what the next decade looks like."
+    },
+    {
+      "id": "s85",
+      "texto": "Priem knew Nvidia better than any outside investor ever could, and he still could not see the future."
+    },
+    {
+      "id": "s86",
+      "texto": "If a co-founder could not call it, a headline will not either.",
+      "giro": true
+    },
+    {
+      "id": "s87",
+      "texto": "None of this is financial advice, and every figure here comes with a source in the description."
+    },
+    {
+      "id": "s88",
+      "texto": "Priem sold too early by one measure, and by another he simply chose enough."
+    },
+    {
+      "id": "s89",
+      "texto": "So here is my question for you."
+    },
+    {
+      "id": "s90",
+      "texto": "If you had been in his seat in two thousand three, holding every share, would you have held, or would you have sold?"
+    },
+    {
+      "id": "close",
+      "texto": "Tell me in the comments."
+    }
+  ],
+  "capitulos": [
+    {
+      "titulo": "Intro",
+      "desde": 0
+    },
+    {
+      "titulo": "Before Nvidia",
+      "desde": 6
+    },
+    {
+      "titulo": "Thirty days from dead",
+      "desde": 20
+    },
+    {
+      "titulo": "The rival everyone feared",
+      "desde": 39
+    },
+    {
+      "titulo": "The sale",
+      "desde": 55
+    },
+    {
+      "titulo": "What it means for you",
+      "desde": 73
+    }
+  ],
+  "pronuncia_ok": [
+    "Curtis",
+    "Huang",
+    "Jensen",
+    "Priem",
+    "Jose",
+    "Microsoft",
+    "Malachowsky",
+    "Winooski",
+    "Rensselaer",
+    "Polytechnic",
+    "Microsystems",
+    "DirectX",
+    "GeForce",
+    "Riva",
+    "Dreamcast",
+    "Denny's"
+  ],
+  "voz": {
+    "motor": "kokoro",
+    "voz": "am_adam"
+  },
+  "adn": {
+    "hook_type": "story",
+    "story_type": "character",
+    "cta_type": "comment",
+    "renderer_version": "v2-hyperframes"
+  },
+  "cifras": [
+    {
+      "dato": "Nvidia's RIVA 128 graphics chip",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
+      "dato": "Curtis Priem received a Bachelor of Science in electrical engineering from Rensselaer Polytechnic Institute in 1982",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "Priem designed the first professional graphics processor for the PC, the IBM Professional Graphics Adapter, at Vermont Microsystems; from 1986 to 1993 he was a senior staff engineer at Sun Microsystems (GX graphics chip)",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "Priem co-founded Nvidia with Jensen Huang and Chris Malachowsky and was its chief technical officer from 1993 to 2003; he retired in 2003 and sold all of his shares by 2006",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "In November 2023, Forbes estimated Priem's net worth at approximately $30 million; had he retained his Nvidia shares, $70 billion (shown on screen as 70, in billions of dollars)",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "In 2000 Priem was named Entrepreneur of the Year; since 2003 he has been a trustee of Rensselaer; in 2004 he announced an unrestricted gift of $40 million",
+      "fuente": "https://en.wikipedia.org/wiki/Curtis_Priem"
+    },
+    {
+      "dato": "The three co-founders agreed to start the company at a Denny's roadside diner in San Jose, California, in late 1992",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
+      "dato": "Sega persuaded its management to invest $5 million into Nvidia; this gave them six months to live",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
+      "dato": "In 1996 Huang laid off more than half of Nvidia's employees, reducing headcount from 100 to 40",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
+      "dato": "Motto: our company is thirty days from going out of business; Nvidia sold about a million RIVA 128 units within four months",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
+      "dato": "Nvidia: 1999 initial public offerings; in 2023 the seventh U.S. company to reach a US$1 trillion valuation; in 2025 the first company to surpass US$4 trillion and US$5 trillion",
+      "fuente": "https://en.wikipedia.org/wiki/Nvidia"
+    },
+    {
+      "dato": "GeForce 256, released in 1999, marketed as the world's first GPU",
+      "fuente": "https://en.wikipedia.org/wiki/GeForce_256"
+    },
+    {
+      "dato": "3dfx announced in January 1999 that its Banshee cards had sold about one million units; 3dfx acquired STB Systems",
+      "fuente": "https://en.wikipedia.org/wiki/3dfx"
+    },
+    {
+      "dato": "Nvidia acquired most of 3dfx's assets on December 15, 2000; 3dfx defunct October 15, 2002, bankrupt",
+      "fuente": "https://en.wikipedia.org/wiki/3dfx"
+    },
+    {
+      "dato": "Jensen Huang served as Nvidia's president and CEO from its founding in 1993 until his resignation in 2026",
+      "fuente": "https://en.wikipedia.org/wiki/Jensen_Huang"
+    }
+  ],
+  "aviso": {
+    "lineas": [
+      "$70B and ~$30M: Forbes estimates, Nov 2023",
+      "Not financial advice"
+    ],
+    "ventanas": [
+      [
+        "1",
+        "3"
+      ],
+      [
+        "64",
+        "67"
+      ]
+    ],
+    "final": true,
+    "placa": true,
+    "tam": 33,
+    "completo": "Not financial advice. $70 billion and about $30 million are Forbes estimates (Nov 2023); values have changed since."
+  },
+  "subtitulos": [
+    "6",
+    "89"
+  ],
+  "calientes": [
+    "Nvidia",
+    "quit",
+    "slid",
+    "seventy",
+    "thirty",
+    "worst",
+    "forty",
+    "hindsight",
+    "unbeatable",
+    "bust",
+    "losers"
+  ],
+  "musica": {
+    "oscuro": [
+      "28",
+      "31"
+    ],
+    "pista": {
+      "mood": "documental"
+    }
+  },
+  "golpes": [
+    "1:seventy",
+    "3:resigned",
+    "7:first",
+    "8:first",
+    "11:hard",
+    "13:diner",
+    "14:Priem",
+    "16:Nvidia",
+    "19:survive",
+    "19:But",
+    "22:failed",
+    "28:forty",
+    "30:thirty",
+    "34:public",
+    "39:favorite",
+    "45:delays",
+    "52:disappear",
+    "54:hindsight",
+    "58:all",
+    "59:forty",
+    "61:going",
+    "62:trillion",
+    "64:thirty",
+    "70:detail",
+    "74:losers",
+    "76:advance",
+    "77:everything",
+    "79:Third",
+    "83:huge",
+    "89:question"
+  ],
+  "sonidos": [
+    {
+      "sfx": "sala_servidores",
+      "en": "0",
+      "dur": 1.5,
+      "vol": 0.255
+    },
+    {
+      "sfx": "golpe_hondo",
+      "en": "3:slid",
+      "vol": 0.2
+    },
+    {
+      "sfx": "escaner",
+      "en": "17"
+    },
+    {
+      "sfx": "riser_viento",
+      "en": "39:and-0.7",
+      "vol": 0.3
+    },
+    {
+      "sfx": "ventana",
+      "en": "55:now-0.7",
+      "vol": 0.3
+    },
+    {
+      "sfx": "nudillo",
+      "en": "25:five"
+    },
+    {
+      "sfx": "timbal",
+      "en": "49:bankrupt",
+      "vol": 0.425
+    },
+    {
+      "sfx": "nudillo",
+      "en": "59:forty"
+    },
+    {
+      "sfx": "bombo_seco",
+      "en": "74:losers"
+    }
+  ],
+  "imagenes": {
+    "gpu": {
+      "commons": "File:GPU blade with glycol cooling (54685994424).jpg",
+      "color": true,
+      "ligero": true
+    },
+    "empac": {
+      "commons": "File:EMPACBalcony.JPG",
+      "color": true
+    },
+    "rpi": {
+      "documento": true,
+      "color": true
+    },
+    "riva": {
+      "commons": "File:Package open - NVIDIA RIVA 128 - John McMaster.jpg",
+      "color": true
+    },
+    "voodoo": {
+      "commons": "File:3dfx Voodoo 5500.jpg",
+      "color": true
+    },
+    "geforce": {
+      "commons": "File:VisionTek GeForce 256.jpg",
+      "color": true
+    },
+    "nvsign": {
+      "commons": "File:Nvidia sign.jpg",
+      "color": true
+    },
+    "dreamcast": {
+      "commons": "File:Sega-Dreamcast-Console-BR.jpg",
+      "color": true
+    },
+    "dennys": {
+      "commons": "File:Denny's Restaurant 24.jpg",
+      "color": true
+    },
+    "hq": {
+      "commons": "File:Nvidia HQ.jpg",
+      "color": true
+    },
+    "nv1": {
+      "commons": "File:Diamond Edge 3D 3400.jpg",
+      "color": true
+    },
+    "saturn": {
+      "commons": "File:Sega-Saturn-Console-Set-Mk1.png",
+      "color": true
+    },
+    "banshee": {
+      "commons": "File:3Dfx@350nm@Fixed-pipeline@Banshee@Voodoo Banshee.jpg",
+      "color": true
+    },
+    "voodoo1": {
+      "commons": "File:3Dfx@Voodoo Graphics FrontsideA.jpg",
+      "color": true
+    },
+    "h100": {
+      "commons": "File:NVIDIA H100 (极客湾Geekerwan) 011.png",
+      "color": true
+    },
+    "gtc": {
+      "commons": "File:GTC Taiwan 2016.jpg",
+      "color": true
+    },
+    "huang": {
+      "commons": "File:Jensen huang stanford 2026-04-30 025.jpg",
+      "color": true
+    },
+    "rpiunion": {
+      "commons": "File:RPI Union (Rensselaer Polytechnic Institute Union).jpg",
+      "color": true
+    }
+  },
+  "clips": {
+    "placa": {
+      "pexels": 6754824,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "nyse": {
+      "pexels": 7579943,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "pantalla": {
+      "pexels": 35475054,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "mercado": {
+      "pexels": 38736274,
+      "desde": 2,
+      "ligero": true,
+      "visto": true
+    },
+    "retro": {
+      "pexels": 8888818,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "oficina": {
+      "pexels": 5483080,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "disquete": {
+      "pexels": 20503026,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "circuito": {
+      "pexels": 7609195,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "vacia": {
+      "pexels": 5483080,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "cerrado": {
+      "pexels": 13633619,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "app": {
+      "pexels": 7578628,
+      "desde": 0,
+      "ligero": true,
+      "visto": true
+    },
+    "grafico": {
+      "pexels": 38267970,
+      "desde": 0,
+      "visto": true
+    },
+    "niebla": {
+      "pexels": 28865202,
+      "desde": 0,
+      "visto": true
+    },
+    "oficina_vacia": {
+      "pexels": 8347237,
+      "desde": 0,
+      "visto": true
+    },
+    "fichas": {
+      "pexels": 7607942,
+      "desde": 0,
+      "visto": true
+    },
+    "rotativa": {
+      "pexels": 38826405,
+      "desde": 0,
+      "visto": true
+    },
+    "tarro": {
+      "pexels": 12033695,
+      "desde": 0,
+      "visto": true
+    }
+  },
+  "pruebas": [
+    {
+      "img": "rpi",
+      "texto": "chief technical officer",
+      "en": "17",
+      "marca": "17:chief",
+      "hasta": "18"
+    }
+  ],
+  "formato": "documental-editorial",
+  "escenas": [
+    {
+      "tipo": "titulo",
+      "en": "0",
+      "fondo": {
+        "clip": "placa",
+        "opacidad": 1.0
+      },
+      "lineas": [
+        {
+          "texto": "Nvidia co-founder",
+          "en": "0",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*Sold every share*",
+          "en": "0:sold",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "1",
+      "lineas": [
+        {
+          "texto": "If he had held",
+          "en": "1",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*~$70B*",
+          "en": "1:seventy",
+          "estilo": "huge"
+        }
+      ],
+      "kicker": {
+        "texto": "Forbes estimate",
+        "en": "1"
+      },
+      "fondo": {
+        "img": "gpu",
+        "opacidad": 0.25
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "2",
+      "linea1": {
+        "texto": "His actual fortune"
+      },
+      "linea2": {
+        "texto": "*~$30M*",
+        "en": "2:thirty"
+      },
+      "golpe": "2:thirty",
+      "fondo": {
+        "clip": "oficina",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "3",
+      "lineas": [
+        {
+          "texto": "Nvidia's boss",
+          "en": "3",
+          "estilo": "mid",
+          "color": "ink"
+        },
+        {
+          "texto": "*resigned*",
+          "en": "3",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "clip": "nyse",
+        "opacidad": 0.35
+      },
+      "fondo_suave": true,
+      "posicion": "abajo"
+    },
+    {
+      "tipo": "foto",
+      "en": "3:and",
+      "clip": "pantalla",
+      "pos": "med",
+      "rotulos": [
+        {
+          "texto": "The stock *slid*",
+          "en": "3:and",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "4",
+      "clip": "retro",
+      "pos": "baj",
+      "rotulos": [
+        {
+          "texto": "A college lab",
+          "en": "4",
+          "estilo": "mid",
+          "color": "ink",
+          "top": 772,
+          "hasta": "4:lab"
+        },
+        {
+          "texto": "*Near bankruptcy*",
+          "en": "4",
+          "estilo": "big",
+          "color": "ink",
+          "top": 890,
+          "hasta": "4:lab"
+        },
+        {
+          "texto": "The sale of a lifetime",
+          "en": "4",
+          "estilo": "mid",
+          "color": "ink",
+          "top": 996,
+          "hasta": "4:lab"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "5",
+      "linea1": {
+        "texto": "His choice"
+      },
+      "linea2": {
+        "texto": "is *yours* too",
+        "en": "5:including"
+      },
+      "golpe": "5:including",
+      "fondo": {
+        "clip": "mercado",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "6:start-0.7",
+      "img": "empac",
+      "pos": "sup",
+      "kicker": {
+        "texto": "Chapter 1",
+        "en": "6:start-0.7"
+      },
+      "rotulos": [
+        {
+          "texto": "*Before Nvidia*",
+          "en": "6:start-0.7",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "6:earned"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "6:degree",
+      "lineas": [
+        {
+          "texto": "Rensselaer, *1982*",
+          "en": "6:degree",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "Electrical engineering",
+          "en": "6:degree",
+          "estilo": "mid",
+          "color": "mute"
+        }
+      ],
+      "fondo": {
+        "clip": "retro",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "7",
+      "lineas": [
+        {
+          "texto": "First stop",
+          "en": "7",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*Vermont Microsystems*",
+          "en": "7:vermont#2",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "clip": "oficina",
+        "opacidad": 0.35
+      },
+      "posicion": "arriba"
+    },
+    {
+      "tipo": "foto",
+      "en": "8",
+      "img": "gpu",
+      "kicker": {
+        "texto": "First pro graphics chip for the PC",
+        "en": "8"
+      },
+      "titulo": {
+        "texto": "*IBM PGA*",
+        "en": "8:ibm"
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "9",
+      "linea1": {
+        "texto": "Before most people owned a computer"
+      },
+      "linea2": {
+        "texto": "he taught one to *draw*",
+        "en": "9:teaching"
+      },
+      "golpe": "9:teaching",
+      "fondo": {
+        "clip": "disquete",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "10",
+      "lineas": [
+        {
+          "texto": "*1986*",
+          "en": "10",
+          "estilo": "huge"
+        },
+        {
+          "texto": "Sun Microsystems",
+          "en": "10:sun",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "Senior staff engineer",
+          "en": "10:senior",
+          "estilo": "mid",
+          "color": "mute"
+        }
+      ],
+      "fondo": {
+        "clip": "pantalla",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "11",
+      "clip": "circuito",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "The *GX* graphics chip",
+          "en": "11",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "11:and"
+        },
+        {
+          "texto": "Fast graphics are hard",
+          "en": "11",
+          "estilo": "mid",
+          "color": "mute",
+          "top": 406,
+          "hasta": "11:and"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "12",
+      "linea1": {
+        "texto": "The PC needed"
+      },
+      "linea2": {
+        "texto": "*more power*",
+        "en": "12:graphics"
+      },
+      "golpe": "12:graphics",
+      "fondo": {
+        "clip": "placa",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "13",
+      "img": "dennys",
+      "pos": "sup",
+      "kicker": {
+        "texto": "San Jose, California",
+        "en": "13"
+      },
+      "rotulos": [
+        {
+          "texto": "A *Denny's* diner",
+          "en": "13:denny's",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "13:and"
+        }
+      ]
+    },
+    {
+      "tipo": "lista",
+      "en": "14",
+      "icono": "check",
+      "items": [
+        {
+          "texto": "Jensen Huang",
+          "en": "14:jensen"
+        },
+        {
+          "texto": "Chris Malachowsky",
+          "en": "14:chris"
+        },
+        {
+          "texto": "Curtis Priem",
+          "en": "14:curtis",
+          "color": "gold"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "15",
+      "lineas": [
+        {
+          "texto": "Late *1992*: the deal",
+          "en": "15",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "*1993*: official",
+          "en": "15:official",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "hq",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "16",
+      "lineas": [
+        {
+          "texto": "*Nvidia*",
+          "en": "16",
+          "estilo": "huge"
+        }
+      ],
+      "fondo": {
+        "img": "nvsign",
+        "opacidad": 0.4
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "17",
+      "img": "rpi"
+    },
+    {
+      "tipo": "anios",
+      "en": "18",
+      "desde": 1993,
+      "hasta": 2003,
+      "cuenta": {
+        "en": "18"
+      },
+      "fin": "18:three",
+      "kicker": "Chief technical officer",
+      "hitos": [
+        [
+          1993,
+          "Co-founds Nvidia"
+        ],
+        [
+          2003,
+          "Retires"
+        ]
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "19",
+      "clip": "mercado",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "Would it *survive*?",
+          "en": "19",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "19:the#2"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "20:the-0.7",
+      "lineas": [
+        {
+          "texto": "*Thirty days from dead*",
+          "en": "20:the-0.7",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Chapter 2",
+        "en": "20:the-0.7"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "20:first",
+      "img": "nv1",
+      "kicker": {
+        "texto": "Chip one: *NV1*",
+        "en": "20:first"
+      },
+      "sub": {
+        "texto": "A different way to draw 3D",
+        "en": "20:different"
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "21",
+      "linea1": {
+        "texto": "Microsoft DirectX"
+      },
+      "linea2": {
+        "texto": "*Triangles only*",
+        "en": "21"
+      },
+      "golpe": "21",
+      "fondo": {
+        "clip": "circuito",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "22",
+      "lineas": [
+        {
+          "texto": "NV1",
+          "en": "22",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*Failed*",
+          "en": "22:failed",
+          "estilo": "huge"
+        }
+      ],
+      "fondo_suave": true,
+      "fondo": {
+        "img": "nv1",
+        "opacidad": 0.3
+      },
+      "posicion": "abajo"
+    },
+    {
+      "tipo": "foto",
+      "en": "23",
+      "img": "dreamcast",
+      "kicker": {
+        "texto": "About a year of work",
+        "en": "23:year"
+      },
+      "titulo": {
+        "texto": "Sega *Dreamcast*",
+        "en": "23:dreamcast"
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "24",
+      "linea1": {
+        "texto": "Sega's answer"
+      },
+      "linea2": {
+        "texto": "*Another vendor*",
+        "en": "24:another"
+      },
+      "golpe": "24:another",
+      "fondo": {
+        "img": "saturn",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "25",
+      "linea1": {
+        "texto": "But Sega invested"
+      },
+      "linea2": {
+        "texto": "*$5M*",
+        "en": "25:five"
+      },
+      "golpe": "25:five",
+      "fondo": {
+        "clip": "nyse",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "26",
+      "lineas": [
+        {
+          "texto": "All that kept Nvidia",
+          "en": "26",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*afloat*",
+          "en": "26:afloat",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "saturn",
+        "opacidad": 0.3
+      },
+      "posicion": "arriba"
+    },
+    {
+      "tipo": "revelacion",
+      "en": "27",
+      "linea1": {
+        "texto": "*Six months*"
+      },
+      "linea2": {
+        "texto": "to live",
+        "en": "27"
+      },
+      "golpe": "27",
+      "fondo": {
+        "clip": "vacia",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "28",
+      "clip": "vacia",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "1996 layoffs",
+          "en": "28",
+          "estilo": "mid",
+          "color": "mute",
+          "top": 300,
+          "hasta": "28:half"
+        },
+        {
+          "texto": "*100 to 40*",
+          "en": "28",
+          "estilo": "huge",
+          "top": 418,
+          "hasta": "28:half"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "29",
+      "img": "riva",
+      "titulo": {
+        "texto": "*RIVA 128*",
+        "en": "29:riva"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "30",
+      "img": "huang",
+      "pos": "sup",
+      "kicker": {
+        "texto": "Company motto",
+        "en": "30"
+      },
+      "rotulos": [
+        {
+          "texto": "“Our company is *thirty days*",
+          "en": "30:our",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "31:with"
+        },
+        {
+          "texto": "from going out of business”",
+          "en": "30:going",
+          "estilo": "mid",
+          "color": "ink",
+          "top": 498,
+          "hasta": "31:with"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "32",
+      "linea1": {
+        "texto": "*~1 million* sold"
+      },
+      "linea2": {
+        "texto": "in four months",
+        "en": "32:four"
+      },
+      "golpe": "32:four",
+      "fondo": {
+        "img": "riva",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "34",
+      "lineas": [
+        {
+          "texto": "*1999*",
+          "en": "34",
+          "estilo": "huge"
+        },
+        {
+          "texto": "Nvidia goes public",
+          "en": "34:public",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "foto",
+      "en": "35",
+      "img": "geforce",
+      "titulo": {
+        "texto": "GeForce *256*",
+        "en": "35:geforce"
+      },
+      "sub": {
+        "texto": "Marketed as the first GPU",
+        "en": "35:marketed"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "36",
+      "lineas": [
+        {
+          "texto": "The point for",
+          "en": "36",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*your money*",
+          "en": "36",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "posicion": "abajo"
+    },
+    {
+      "tipo": "revelacion",
+      "en": "37",
+      "linea1": {
+        "texto": "Nvidia, 1996"
+      },
+      "linea2": {
+        "texto": "*Half the staff laid off*",
+        "en": "37:laid"
+      },
+      "golpe": "37:laid",
+      "fondo": {
+        "clip": "oficina_vacia",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "38",
+      "clip": "app",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "Not a *sure thing*",
+          "en": "38",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "38:most"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "39:and-0.7",
+      "lineas": [
+        {
+          "texto": "*The rival everyone feared*",
+          "en": "39:and-0.7",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Chapter 3",
+        "en": "39:and-0.7"
+      },
+      "fondo": {
+        "img": "voodoo",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "40",
+      "img": "voodoo",
+      "titulo": {
+        "texto": "*3dfx* Voodoo",
+        "en": "40:voodoo"
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "41",
+      "linea1": {
+        "texto": "Late-nineties PC gaming"
+      },
+      "linea2": {
+        "texto": "*Voodoo* was the card",
+        "en": "41:wanted"
+      },
+      "golpe": "41:wanted",
+      "fondo": {
+        "img": "voodoo1",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "42",
+      "img": "banshee",
+      "kicker": {
+        "texto": "January 1999",
+        "en": "42"
+      },
+      "sub": {
+        "texto": "Banshee: *~1M sold*",
+        "en": "42:banshee"
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "43",
+      "linea1": {
+        "texto": "3dfx buys"
+      },
+      "linea2": {
+        "texto": "*STB Systems*",
+        "en": "43:systems"
+      },
+      "golpe": "43:systems"
+    },
+    {
+      "tipo": "foto",
+      "en": "44",
+      "img": "voodoo1",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "The *safest bet*?",
+          "en": "44",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "44:graphics"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "45",
+      "lineas": [
+        {
+          "texto": "*Delays*",
+          "en": "45:delays",
+          "estilo": "huge"
+        }
+      ],
+      "fondo_suave": true
+    },
+    {
+      "tipo": "titulo",
+      "en": "46",
+      "lineas": [
+        {
+          "texto": "Nvidia *kept shipping*",
+          "en": "46",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "geforce",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "47",
+      "lineas": [
+        {
+          "texto": "Money ran *short*",
+          "en": "47",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "48",
+      "lineas": [
+        {
+          "texto": "December 2000",
+          "en": "48",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "Nvidia buys *3dfx assets*",
+          "en": "48:buy",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "nvsign",
+        "opacidad": 0.3
+      },
+      "posicion": "arriba"
+    },
+    {
+      "tipo": "revelacion",
+      "en": "49",
+      "linea1": {
+        "texto": "2002"
+      },
+      "linea2": {
+        "texto": "*Bankrupt*",
+        "en": "49:bankrupt"
+      },
+      "golpe": "49:bankrupt",
+      "fondo": {
+        "clip": "cerrado",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "51",
+      "lineas": [
+        {
+          "texto": "Late-nineties smart pick",
+          "en": "51",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*3dfx*",
+          "en": "51:picked",
+          "estilo": "huge"
+        }
+      ],
+      "fondo": {
+        "img": "banshee",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "52",
+      "clip": "cerrado",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "Watched it *disappear*",
+          "en": "52",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "52:the"
+        }
+      ]
+    },
+    {
+      "tipo": "revelacion",
+      "en": "53",
+      "linea1": {
+        "texto": "Hindsight: Nvidia looks obvious"
+      },
+      "linea2": {
+        "texto": "*The favorite* went bust",
+        "en": "53"
+      },
+      "golpe": "53",
+      "fondo": {
+        "clip": "fichas",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "54",
+      "lineas": [
+        {
+          "texto": "*Hindsight bias*",
+          "en": "54:hindsight",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "Knowing the end rewrites the past",
+          "en": "54:feeling",
+          "estilo": "mid",
+          "color": "mute"
+        }
+      ],
+      "kicker": {
+        "texto": "Psychology",
+        "en": "54"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "55:now-0.7",
+      "lineas": [
+        {
+          "texto": "*The sale*",
+          "en": "55:now-0.7",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Chapter 4",
+        "en": "55:now-0.7"
+      },
+      "fondo": {
+        "img": "rpiunion",
+        "opacidad": 0.3
+      },
+      "posicion": "abajo"
+    },
+    {
+      "tipo": "revelacion",
+      "en": "56",
+      "linea1": {
+        "texto": "*2000*"
+      },
+      "linea2": {
+        "texto": "Entrepreneur of the Year",
+        "en": "56:entrepreneur"
+      },
+      "golpe": "56:entrepreneur",
+      "fondo": {
+        "img": "hq",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "anios",
+      "en": "57",
+      "desde": 2003,
+      "hasta": 2006,
+      "cuenta": {
+        "en": "57"
+      },
+      "fin": "58:six",
+      "kicker": "Priem's exit",
+      "hitos": [
+        [
+          2003,
+          "Retires"
+        ],
+        [
+          2006,
+          "Every share sold"
+        ]
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "59",
+      "lineas": [
+        {
+          "texto": "*$40M*",
+          "en": "59:forty",
+          "estilo": "huge"
+        },
+        {
+          "texto": "to his old college",
+          "en": "59:rensselaer",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Gift to Rensselaer, 2004",
+        "en": "59"
+      },
+      "fondo": {
+        "img": "empac",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "60",
+      "lineas": [
+        {
+          "texto": "Trustee since *2003*",
+          "en": "60",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "rpiunion",
+        "opacidad": 0.3
+      },
+      "posicion": "arriba"
+    },
+    {
+      "tipo": "titulo",
+      "en": "61",
+      "lineas": [
+        {
+          "texto": "Nvidia *kept going*",
+          "en": "61",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "62",
+      "lineas": [
+        {
+          "texto": "2023",
+          "en": "62",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*$1 trillion*",
+          "en": "62:trillion",
+          "estilo": "huge"
+        },
+        {
+          "texto": "7th US company",
+          "en": "62:seventh",
+          "estilo": "mid",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "h100",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "63",
+      "linea1": {
+        "texto": "2025: first to pass"
+      },
+      "linea2": {
+        "texto": "*$4T*, then *$5T*",
+        "en": "63:four"
+      },
+      "golpe": "63:four",
+      "fondo": {
+        "img": "h100",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "64",
+      "img": "gtc",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "Net worth *~$30M*",
+          "en": "64:thirty",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "65:forbes"
+        }
+      ]
+    },
+    {
+      "tipo": "contador3d",
+      "en": "65:seventy-0.15",
+      "valor": 70,
+      "prefijo": "$",
+      "llega": "65:seventy",
+      "kicker": {
+        "texto": "Had he kept his shares",
+        "en": "65"
+      },
+      "pill": {
+        "texto": "billion · Forbes est.",
+        "en": "65:seventy"
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "66",
+      "lineas": [
+        {
+          "texto": "Before the run to *$5T*",
+          "en": "66",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "img": "gtc",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "67",
+      "linea1": {
+        "texto": "Worst trade in tech history?"
+      },
+      "linea2": {
+        "texto": "*Maybe not.*",
+        "en": "68:maybe"
+      },
+      "golpe": "68:maybe"
+    },
+    {
+      "tipo": "titulo",
+      "en": "69",
+      "lineas": [
+        {
+          "texto": "Life-changing money",
+          "en": "69",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*Millions* to his college",
+          "en": "69:gave",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "clip": "tarro",
+        "opacidad": 0.35
+      },
+      "posicion": "abajo"
+    },
+    {
+      "tipo": "titulo",
+      "en": "70",
+      "lineas": [
+        {
+          "texto": "What hindsight *hides*",
+          "en": "70:hides",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo_suave": true
+    },
+    {
+      "tipo": "lista",
+      "en": "71",
+      "icono": "x",
+      "items": [
+        {
+          "texto": "No AI boom",
+          "en": "71:no"
+        },
+        {
+          "texto": "No trillion-dollar valuation",
+          "en": "71:trillion"
+        },
+        {
+          "texto": "A brutal market",
+          "en": "71:brutal"
+        }
+      ],
+      "fondo": {
+        "clip": "disquete",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "72",
+      "linea1": {
+        "texto": "One company,"
+      },
+      "linea2": {
+        "texto": "*one bet*",
+        "en": "72:riding"
+      },
+      "golpe": "72:riding",
+      "fondo": {
+        "clip": "fichas",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "73:so-0.7",
+      "lineas": [
+        {
+          "texto": "*What it means for you*",
+          "en": "73:so-0.7",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Chapter 5",
+        "en": "73:so-0.7"
+      },
+      "fondo": {
+        "clip": "tarro",
+        "opacidad": 0.35
+      },
+      "posicion": "arriba"
+    },
+    {
+      "tipo": "foto",
+      "en": "74",
+      "clip": "grafico",
+      "pos": "sup",
+      "kicker": {
+        "texto": "Lesson 1",
+        "en": "74"
+      },
+      "rotulos": [
+        {
+          "texto": "Nobody sells",
+          "en": "74:nobody",
+          "estilo": "mid",
+          "color": "mute",
+          "top": 300,
+          "hasta": "75:have"
+        },
+        {
+          "texto": "*only the losers*",
+          "en": "74:losers",
+          "estilo": "big",
+          "color": "ink",
+          "top": 418,
+          "hasta": "75:have"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "76",
+      "lineas": [
+        {
+          "texto": "You can't know",
+          "en": "76",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*in advance*",
+          "en": "76:advance",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "clip": "niebla",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "77",
+      "lineas": [
+        {
+          "texto": "One stock: *rich*",
+          "en": "77:rich",
+          "estilo": "big",
+          "color": "ink"
+        },
+        {
+          "texto": "or *everything lost*",
+          "en": "77",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Lesson 2",
+        "en": "77"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "78",
+      "clip": "grafico",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "*Concentration*",
+          "en": "78",
+          "estilo": "big",
+          "color": "ink",
+          "top": 300,
+          "hasta": "78:which"
+        },
+        {
+          "texto": "makes fortunes and breaks them",
+          "en": "78:lost",
+          "estilo": "mid",
+          "color": "mute",
+          "top": 406,
+          "hasta": "78:which"
+        }
+      ]
+    },
+    {
+      "tipo": "puntos",
+      "en": "79",
+      "n": 100,
+      "etiqueta": "firms",
+      "cuenta": {
+        "en": "79:whole"
+      },
+      "cae": {
+        "en": "81:failed",
+        "hasta": "82",
+        "texto": "Losers shrink out"
+      }
+    },
+    {
+      "tipo": "foto",
+      "en": "82",
+      "clip": "app",
+      "pos": "sup",
+      "rotulos": [
+        {
+          "texto": "You never had to",
+          "en": "82",
+          "estilo": "mid",
+          "color": "mute",
+          "top": 300,
+          "hasta": "82:both"
+        },
+        {
+          "texto": "*pick*",
+          "en": "82:pick",
+          "estilo": "huge",
+          "top": 418,
+          "hasta": "82:both"
+        }
+      ]
+    },
+    {
+      "tipo": "titulo",
+      "en": "83",
+      "lineas": [
+        {
+          "texto": "Headlines feel *huge*",
+          "en": "83:huge",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "Lesson 4",
+        "en": "83"
+      },
+      "fondo": {
+        "img": "huang",
+        "opacidad": 0.3
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "84",
+      "lineas": [
+        {
+          "texto": "Nobody knows",
+          "en": "84:nobody",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "*the next decade*",
+          "en": "84:decade",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "fondo": {
+        "clip": "niebla",
+        "opacidad": 0.35
+      },
+      "posicion": "abajo"
+    },
+    {
+      "tipo": "revelacion",
+      "en": "85",
+      "linea1": {
+        "texto": "An insider"
+      },
+      "linea2": {
+        "texto": "*couldn't see it*",
+        "en": "85:still"
+      },
+      "golpe": "85:still",
+      "fondo": {
+        "clip": "rotativa",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "revelacion",
+      "en": "86",
+      "linea1": {
+        "texto": "A co-founder couldn't call it"
+      },
+      "linea2": {
+        "texto": "*A headline won't either*",
+        "en": "86:headline"
+      },
+      "golpe": "86:headline",
+      "fondo_suave": true,
+      "fondo_opacidad": 0.6
+    },
+    {
+      "tipo": "revelacion",
+      "en": "87",
+      "linea1": {
+        "texto": "*Not financial advice*"
+      },
+      "linea2": {
+        "texto": "Sources in the description",
+        "en": "87:source"
+      },
+      "golpe": "87:source",
+      "fondo": {
+        "clip": "rotativa",
+        "opacidad": 0.35
+      }
+    },
+    {
+      "tipo": "titulo",
+      "en": "88:sold",
+      "lineas": [
+        {
+          "texto": "Too early?",
+          "en": "88:sold",
+          "estilo": "mid",
+          "color": "mute"
+        },
+        {
+          "texto": "Or *enough*?",
+          "en": "88:another",
+          "estilo": "big",
+          "color": "ink"
+        }
+      ],
+      "kicker": {
+        "texto": "My question for you",
+        "en": "89"
+      },
+      "posicion": "arriba"
+    },
+    {
+      "tipo": "cta",
+      "en": "90",
+      "a": {
+        "texto": "Held",
+        "en": "90:held"
+      },
+      "o": "or",
+      "b": {
+        "texto": "Sold",
+        "en": "90:sold"
+      },
+      "pregunta": {
+        "texto": "Would you have held every share?",
+        "en": "90"
+      },
+      "sub": "tell me in the comments",
+      "fondo": {
+        "clip": "oficina_vacia",
+        "opacidad": 0.35
+      }
+    }
+  ],
+  "miniatura": {
+    "texto": "He sold too early",
+    "fondo": "img:nvsign"
+  },
+  "publicacion": {
+    "titulo": "The Nvidia co-founder who sold every share (and why it matters for you)",
+    "descripcion": "Curtis Priem co-founded Nvidia in 1993 and was its chief technical officer until 2003. He retired and had sold all of his shares by 2006. Forbes estimated in 2023 that, had he held, he'd be worth about $70 billion; his actual fortune was about $30 million. This is the full story: the near-death years, the rival 3dfx that looked unbeatable and went bankrupt, the sale, and what it means for your own portfolio.\n\nSources: Wikipedia (Curtis Priem, Nvidia, GeForce 256, 3dfx, Jensen Huang). Not financial advice.",
+    "tags": [
+      "curtis priem",
+      "nvidia",
+      "jensen huang",
+      "nvidia stock",
+      "hindsight bias",
+      "index funds",
+      "investing",
+      "stocks",
+      "3dfx"
+    ],
+    "hashtags": [
+      "#nvidia",
+      "#investing",
+      "#stocks"
+    ],
+    "comentario": "Forbes put his what-if at $70 billion. 3dfx, the rival everyone feared in the 90s, went bankrupt. If you had been in his seat in 2003, what would you have done with the shares?"
+  },
+  "mezcla": {
+    "whoosh": 0.057,
+    "impacto": 0.15
+  }
+}

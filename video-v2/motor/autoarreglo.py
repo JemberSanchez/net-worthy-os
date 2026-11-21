@@ -99,6 +99,85 @@ def _sustituir(o, viejo: str, nuevo: str) -> int:
     return n
 
 
+def _sitios_ancla(sb: dict):
+    """(container, key, is the end of a range) of every anchor of the storyboard, as validar reads them."""
+
+    def walk(o):
+        for k, v in (
+            o.items()
+            if isinstance(o, dict)
+            else enumerate(o)
+            if isinstance(o, list)
+            else []
+        ):
+            if k == "guion":
+                continue
+            if isinstance(o, dict) and k in anclas.CLAVES and isinstance(v, str):
+                yield o, k, False
+            else:
+                yield from walk(v)
+
+    yield from walk(sb)
+    for lst in (sb.get("golpes"), (sb.get("musica") or {}).get("oscuro")):
+        yield from ((lst, i, False) for i in range(len(lst or [])))
+    for par in (sb.get("aviso") or {}).get("ventanas") or []:
+        yield from ((par, i, False) for i in range(len(par)))
+    sub = sb.get("subtitulos") or []
+    yield from ((sub, i, i == 1) for i in range(len(sub)))
+
+
+def _de_entrada(sb: dict, words: list[dict], a: str, fin: bool) -> str | None:
+    """Anchor 'K[:w[#n]][$][+s]' read with K = guion ENTRY (how 4 storyboards were written) -> sentence anchor."""
+    m = anclas._ANCLA.match(str(a).strip())
+    entradas, i = [], 0
+    for g in sb.get("guion") or []:
+        n = len(g["texto"].split())
+        entradas.append(list(range(i, i + n)))
+        i += n
+    if not m or i != len(words) or int(m.group(1)) >= len(entradas):
+        return None
+    ws, off = entradas[int(m.group(1))], m.group(5) or ""
+    if m.group(2) is None:
+        k = next(
+            k for k, f in enumerate(anclas.frases(words)) if ws[-1 if fin else 0] in f
+        )
+        return f"{k}{off}"
+    hits = [j for j in ws if anclas.norm(words[j]["text"]) == anclas.norm(m.group(2))]
+    n = int(m.group(3) or 1)
+    return (
+        ancla_de_palabra(words, hits[n - 1], bool(m.group(4))) + off
+        if len(hits) >= n
+        else None
+    )
+
+
+def frases_a_oraciones(sb: dict, words: list[dict]) -> str | None:
+    """Anchors written by guion entry when an entry holds 2+ sentences (hot-inflation, oseola-mccarty, anne-scheiber,
+    huang-exit: remapped by hand). Only when some anchor fails as a sentence anchor and EVERY one resolves as an entry
+    anchor: one typo in a sentence-anchored storyboard does not resolve that way. Rewrites `sb` in place."""
+    sitios = list(_sitios_ancla(sb))
+
+    def falla(a):
+        try:
+            anclas.t(words, str(a))
+            return False
+        except anclas.AnclaError:
+            return True
+
+    nuevos = [_de_entrada(sb, words, str(c[k]), fin) for c, k, fin in sitios]
+    if not any(falla(c[k]) for c, k, _ in sitios) or None in nuevos:
+        return None
+    cambios = 0
+    for (c, k, _), n in zip(sitios, nuevos, strict=True):
+        cambios += str(c[k]) != n
+        c[k] = n
+    return (
+        f"anclas por entrada de guion -> por oración ({cambios} cambiadas)"
+        if cambios
+        else None
+    )
+
+
 # ───────────────────────────── helpers ─────────────────────────────
 def _objetos(o):
     if isinstance(o, dict):
@@ -342,13 +421,19 @@ def _fondo_social(sb, words, p, m):
     if not 0 <= k < len(car):
         return None
     docs = {pr.get("img") for pr in sb.get("pruebas") or []}
-    cands = [f"clip:{c}@1" for c, v in (sb.get("clips") or {}).items() if v.get("visto") is True]
+    cands = [
+        f"clip:{c}@1"
+        for c, v in (sb.get("clips") or {}).items()
+        if v.get("visto") is True
+    ]
     cands += [f"img:{i}" for i in sb.get("imagenes") or {} if i not in docs]
     viejo = str(car[k].get("fondo", ""))
     claves = [c.split("@")[0] for c in cands]
     i = claves.index(viejo.split("@")[0]) + 1 if viejo.split("@")[0] in claves else 0
     usados = {str(d.get("fondo", "")).split("@")[0] for d in car}
-    nuevo = next((c for c in cands[i:] + cands[:i] if c.split("@")[0] not in usados), None)
+    nuevo = next(
+        (c for c in cands[i:] + cands[:i] if c.split("@")[0] not in usados), None
+    )
     if nuevo is None:
         return None
     car[k]["fondo"] = nuevo
@@ -400,6 +485,13 @@ def arreglar_storyboard(
 ) -> tuple[dict, list[str], list[str]]:
     """(new storyboard, what was fixed, what is left for Claude). Never mutates `sb`."""
     nuevo = copy.deepcopy(sb)
+    hechos, pendientes, hecho = [], [], {}
+    if any(e.strip().startswith("ancla ") for e in errores) and (
+        r := frases_a_oraciones(nuevo, words)
+    ):  # one cause behind every broken anchor: they are re-measured next round
+        hechos.append(r)
+        errores = [e for e in errores if not e.strip().startswith("ancla ")]
+    sb = nuevo
     p = None  # broken anchors: only the plan-free fixers can run this round
     # sounds do not move scenes, and a malformed one (ambient without `dur`) crashes plan()
     for intento in (sb, {**sb, "sonidos": []}):
@@ -408,13 +500,14 @@ def arreglar_storyboard(
             break
         except (anclas.AnclaError, KeyError, ValueError, TypeError, IndexError):
             continue
-    hechos, pendientes, hecho = [], [], {}
     for e in (x.strip() for x in errores):
         fn, m = next(
             ((fn, m) for rx, fn in CATALOGO if (m := rx.match(e))), (None, None)
         )
         clave = (fn, m.groups()) if m else None
-        if clave in hecho:  # two rules on the same target (two texts at one slide's edge): one fix
+        if (
+            clave in hecho
+        ):  # two rules on the same target (two texts at one slide's edge): one fix
             r = hecho[clave]
         else:
             r = (
@@ -438,14 +531,49 @@ def _ventanas(proy: Path):
     )
 
 
-def _aplicar_parches(sb: dict, fallos: list[dict]) -> tuple[dict, list[str], list[str]]:
+def _fondo_oscuro(proy: Path, sb: dict, k: int) -> str | None:
+    """Text still unread with the background at critico.OPACIDAD_MIN: the darkest reviewed clip under it, the fix done
+    by hand in anne-scheiber (revelacion 3, 'apt' luma 168 -> 'vela' 42). Only a clip darker than the current one."""
+    e = (sb.get("escenas") or [])[k] if k < len(sb.get("escenas") or []) else {}
+    o = e.get("fondo") if isinstance(e.get("fondo"), dict) else None
+    if e.get("tipo") == "foto" or ("fondo" in e and not (o and o.get("clip"))):
+        return None  # a photo, an image or a "clip:x@n" string background is a choice: not mechanical
+    try:
+        if _ventanas(proy)[k][0] < puertas.GANCHO_S:
+            return None  # the hook wants a BRIGHT clip (E1, _gancho_claro): never darken it
+    except (OSError, IndexError):
+        return None
+    vistos = [c for c, v in (sb.get("clips") or {}).items() if v.get("visto") is True]
+    lu = construir.lumas_clips(proy, sb, vistos)
+    actual = (o or {}).get("clip")
+    oscuro = min((c for c in lu if c != actual), key=lu.get, default=None)
+    if oscuro is None or (actual in lu and lu[oscuro] >= lu[actual]):
+        return None
+    if o is None:
+        e["fondo"] = {"clip": oscuro}
+    else:
+        o["clip"] = oscuro
+    return f"escena {k}: fondo al clip más oscuro '{oscuro}' (luma {lu[oscuro]:g}{f', antes {actual}' if actual else ''})"
+
+
+def _aplicar_parches(
+    sb: dict, fallos: list[dict], proy: Path | None = None
+) -> tuple[dict, list[str], list[str]]:
     """The critic's own closed catalog (critico.aplicar), one failure at a time so a patch that
     changes nothing (fondo_suave on a photo, opacity already at its floor) stays pending."""
     hechos, pendientes = [], []
     for f in fallos:
         nuevo, h = critico.aplicar(sb, [f["parche"]]) if f.get("parche") else (sb, [])
+        p = f.get("parche") or {}
         if h:
             sb, hechos = nuevo, hechos + h
+        elif (
+            proy is not None
+            and p.get("op") == "fondo_suave"
+            and isinstance(p.get("escena"), int)
+            and (r := _fondo_oscuro(proy, sb, p["escena"]))
+        ):
+            hechos.append(r)
         else:
             pendientes.append(critico.linea(f))
     return sb, list(dict.fromkeys(hechos)), pendientes
@@ -483,7 +611,9 @@ def _gancho_claro(proy: Path, sb: dict, words: list[dict], malo: str) -> str | N
     except (anclas.AnclaError, KeyError, ValueError, TypeError, IndexError):
         return None
     vistos = [
-        c for c, v in (sb.get("clips") or {}).items() if v.get("visto") is True and c != malo
+        c
+        for c, v in (sb.get("clips") or {}).items()
+        if v.get("visto") is True and c != malo
     ]
     lu = construir.lumas_clips(proy, sb, vistos)
     claros = [c for c in lu if lu[c] >= puertas.GANCHO_CLIP_LUMA_MIN]
@@ -528,7 +658,9 @@ def arreglar(
                 r = _gancho_claro(proy, sb, words, GANCHO_RX.match(e).group(1))
                 (h if r else pend).append(r or e)
         elif nombre == "contraste":
-            sb, h, pend = _aplicar_parches(sb, fallos_contraste(proy, sb, detalle))
+            sb, h, pend = _aplicar_parches(
+                sb, fallos_contraste(proy, sb, detalle), proy
+            )
             pend = pend or ([] if h else [f"contraste: {detalle.strip()}"])
         elif nombre == "ritmo":
             sb, h, pend = _aplicar_parches(sb, fallos_ritmo(proy, words, detalle))
@@ -542,7 +674,7 @@ def arreglar(
             if f["severidad"] not in bloquean:
                 continue
             if f.get("parche"):
-                sb, h, pend = _aplicar_parches(sb, [f])
+                sb, h, pend = _aplicar_parches(sb, [f], proy)
                 hechos, pendientes = hechos + h, pendientes + pend
             elif f["criterio"] == "V1" and " dentro de frase " in f["detalle"]:
                 voz = True  # the critic's own advice: re-synthesise, not the storyboard

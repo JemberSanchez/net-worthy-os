@@ -53,6 +53,10 @@ class CacheClipsTest(unittest.TestCase):
         (self.clips / "detalle.json").write_text(
             json.dumps({"mazo@3": 9.0, "mazo-roto@0": 5.0}), encoding="utf-8"
         )
+        # E1: huang-exit-largo's 'placa' changed source and luma.json kept the old 89.2 (new one: 43.5)
+        (self.clips / "luma.json").write_text(
+            json.dumps({"mazo@3": 89.2, "mazo-roto@0": 43.5}), encoding="utf-8"
+        )
 
         cambiados = broll.purgar_cambiados(
             {"mazo": {"pexels": 999}, "mazo-roto": {"pexels": 222}}, self.clips
@@ -71,6 +75,10 @@ class CacheClipsTest(unittest.TestCase):
         self.assertEqual(
             json.loads((self.clips / "detalle.json").read_text(encoding="utf-8")),
             {"mazo-roto@0": 5.0},
+        )
+        self.assertEqual(
+            json.loads((self.clips / "luma.json").read_text(encoding="utf-8")),
+            {"mazo-roto@0": 43.5},
         )
         fichas = json.loads((self.clips / "creditos.json").read_text(encoding="utf-8"))
         self.assertEqual([f["archivo"] for f in fichas], ["mazo-roto.src"])

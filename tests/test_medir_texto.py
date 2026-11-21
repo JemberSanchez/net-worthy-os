@@ -64,7 +64,9 @@ class TextosDeEscenaTest(unittest.TestCase):
 
 
 class AnalizarTest(unittest.TestCase):
-    ESP: ClassVar[list[dict]] = [{"texto": "No big salary", "escena": 3, "t0": 6.0, "t1": 8.0}]
+    ESP: ClassVar[list[dict]] = [
+        {"texto": "No big salary", "escena": 3, "t0": 6.0, "t1": 8.0}
+    ]
 
     def test_texto_esperado_leido(self):
         r = T.analizar([frame(6.5, linea("NO BIG SALARY"))], self.ESP)
@@ -269,6 +271,73 @@ class OcrRealTest(unittest.TestCase):
         )
 
 
+class HuellaOcrTest(unittest.TestCase):
+    """20-nov: identical HTML re-rendered drifts <= 8 per 8x8 block mean; one changed digit moves it >= 88."""
+
+    def setUp(self):
+        rng = np.random.default_rng(0)
+        self.base = rng.integers(0, 256, (1920, 1080), dtype=np.uint8)
+
+    def test_ruido_de_render_es_la_misma_imagen(self):
+        ruido = np.clip(
+            self.base.astype(np.int16)
+            + np.random.default_rng(1).integers(-8, 9, self.base.shape),
+            0,
+            255,
+        ).astype(np.uint8)
+        self.assertTrue(T.misma_imagen(T.huella(self.base), T.huella(ruido)))
+
+    def test_un_digito_cambiado_no_es_la_misma_imagen(self):
+        otro = self.base.copy()
+        otro[800:840, 500:524] = 255  # one glyph-sized patch turned white
+        self.assertFalse(T.misma_imagen(T.huella(self.base), T.huella(otro)))
+
+    def test_otro_tamano_o_sin_huella_no_reutiliza(self):
+        self.assertFalse(T.misma_imagen(T.huella(self.base), T.huella(self.base[:960])))
+        self.assertFalse(T.misma_imagen(T.huella(self.base), None))
+
+    def test_fotograma_reutilizado_no_lanza_ocr_y_remide_contraste(self):
+        import tempfile
+        import types
+        from pathlib import Path
+        from unittest import mock
+
+        import cv2
+
+        with tempfile.TemporaryDirectory() as d:
+            mp4 = str(Path(d) / "v.mp4")
+            w = cv2.VideoWriter(mp4, cv2.VideoWriter_fourcc(*"mp4v"), 30, (64, 64))
+            img = np.zeros((64, 64, 3), np.uint8)
+            img[:, 16:] = (
+                255  # black | white edge inside the box: contrast well above 1
+            )
+            for _ in range(3):
+                w.write(img)
+            w.release()
+            cap = cv2.VideoCapture(mp4)
+            gris = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2GRAY)
+            cap.release()
+            previo = {
+                0.0: (
+                    T.huella(gris),
+                    [linea("OLD", caja=(0, 0, 32, 32), contraste=1.0)],
+                )
+            }
+
+            def no_ocr(params):
+                raise AssertionError("OCR ran on a reused frame")
+
+            with mock.patch.dict(
+                sys.modules, {"rapidocr": types.SimpleNamespace(RapidOCR=no_ocr)}
+            ):
+                [(f, _, reusado)] = T._ocr_tramo(mp4, 15, (0, 3), previo)
+        self.assertTrue(reusado)
+        self.assertEqual(f["lineas"][0]["texto"], "OLD")
+        self.assertNotEqual(
+            f["lineas"][0]["contraste"], 1.0
+        )  # measured on the new pixels
+
+
 class TramosOcrTest(unittest.TestCase):
     def test_cada_muestra_cae_en_un_solo_tramo_y_se_reparten(self):
         n, paso = 1099, 15
@@ -289,6 +358,32 @@ class TramosOcrTest(unittest.TestCase):
         # 18-nov: 6 processes x onnxruntime's default 12 threads = 72 on 12 cores, OCR 163 s -> 77 s capped
         self.assertLessEqual(T.PROCESOS_OCR * T.HILOS_OCR, max(2, os.cpu_count() or 2))
         self.assertGreaterEqual(T.HILOS_OCR, 1)
+
+    def test_ocr_del_previo_lleva_el_tope_de_hilos(self):
+        # 18-nov: the preview's ocr_imagen had no cap, 5.25 -> 1.09 s/frame on huang-exit-largo (22 min on 139 frames)
+        import types
+        from unittest import mock
+
+        import medir_cuadros
+
+        visto = {}
+
+        class Falso:
+            def __init__(self, params):
+                visto.update(params)
+                raise RuntimeError("stop")
+
+        with (
+            mock.patch.dict(
+                sys.modules, {"rapidocr": types.SimpleNamespace(RapidOCR=Falso)}
+            ),
+            mock.patch.object(medir_cuadros, "_MOTOR", None),
+            self.assertRaises(RuntimeError),
+        ):
+            medir_cuadros.ocr_imagen("x.png")
+        self.assertEqual(
+            visto["EngineConfig.onnxruntime.intra_op_num_threads"], T.HILOS_OCR
+        )
 
 
 class OrdenLecturaTest(unittest.TestCase):

@@ -125,6 +125,66 @@ class AnclasTest(unittest.TestCase):
         self.assertEqual(construir.validar(nuevo, w), [])
 
 
+def por_entrada(sb: dict, words: list[dict]) -> dict:
+    """The storyboard as it was first written: anchors counted by guion ENTRY (inverse of the hand remap.py)."""
+    sb = copy.deepcopy(sb)
+    entrada, fr = [], anclas.frases(words)
+    for e, g in enumerate(sb["guion"]):
+        entrada += [e] * len(g["texto"].split())
+    for c, k, fin in list(A._sitios_ancla(sb)):
+        i, es_fin, _ = anclas.palabra(words, str(c[k]))
+        m = anclas._ANCLA.match(str(c[k]))
+        if m.group(2) is None and (
+            fin
+            or fr[int(m.group(1))][0]
+            == next(j for j, x in enumerate(entrada) if x == entrada[i])
+        ):
+            c[k] = f"{entrada[i]}{m.group(5) or ''}"
+            continue
+        ws = [j for j, x in enumerate(entrada) if x == entrada[i]]
+        w = anclas.norm(words[i]["text"])
+        n = sum(anclas.norm(words[j]["text"]) == w for j in ws if j <= i)
+        c[k] = (
+            f"{entrada[i]}:{w}"
+            + (f"#{n}" if n > 1 else "")
+            + ("$" if es_fin else "")
+            + (m.group(5) or "")
+        )
+    return sb
+
+
+def tiempos(sb: dict, words: list[dict]) -> list[float]:
+    return [anclas.t(words, str(c[k])) for c, k, _ in A._sitios_ancla(sb)]
+
+
+class FraseAOracionTest(unittest.TestCase):
+    """hot-inflation, oseola-mccarty, anne-scheiber and huang-exit were written with anchors counted by guion
+    entry and remapped by hand (remap.py in their sessions). Their committed storyboards are the hand result."""
+
+    def test_anclas_por_entrada_vuelven_a_los_mismos_segundos(self):
+        for ref in ("hot-inflation", "oseola-mccarty", "anne-scheiber", "huang-exit"):
+            with self.subTest(ref=ref):
+                _, sb, words = cargar(ref)
+                viejo = por_entrada(sb, words)
+                e = construir.validar(copy.deepcopy(viejo), words)
+                self.assertTrue(
+                    con(e, "ancla "), "the entry-anchored draft must fail the gate"
+                )
+                nuevo, hechos, pend = A.arreglar_storyboard(viejo, words, e)
+                self.assertTrue(any("por oración" in h for h in hechos), hechos)
+                self.assertFalse(con(pend, "ancla "))
+                self.assertEqual(tiempos(nuevo, words), tiempos(sb, words))
+                self.assertFalse(
+                    con(construir.validar(copy.deepcopy(nuevo), words), "ancla ")
+                )
+
+    def test_una_errata_en_anclas_por_oracion_no_renumera(self):
+        _, sb, words = cargar("anne-scheiber")
+        sb = copy.deepcopy(sb)
+        sb["golpes"][0] = "3:nonexistentword"
+        self.assertIsNone(A.frases_a_oraciones(copy.deepcopy(sb), words))
+
+
 class TiemposTest(unittest.TestCase):
     def test_borrador_hot_inflation_solo_deja_lo_no_mecanico(self):
         # real sequence: '4$', then an empty title screen 2.5 s, then three texts shown < 0.5 s
@@ -297,6 +357,49 @@ class ProyectoTemporal(unittest.TestCase):
             len(pend), 1
         )  # fondo_suave does not exist for a photo: Claude decides
         self.assertFalse(voz)
+
+    def test_fondo_en_el_suelo_pasa_al_clip_mas_oscuro(self):
+        """anne-scheiber, revelacion 3: "A PERFECT STOR" 1.99:1 over 'apt' with the background already soft; fixed by hand
+        with 'vela'. Raw lumas measured with broll.luma on its clips (21-nov)."""
+        _, sb, _ = cargar("anne-scheiber")
+        sb["escenas"][3].update(
+            fondo={"clip": "apt", "opacidad": 0.4}, fondo_suave=True, fondo_opacidad=0.3
+        )
+        carpeta = self.tmp / "anne-scheiber" / "assets" / "clips"
+        carpeta.mkdir(parents=True)
+        shutil.copy(V2 / "anne-scheiber" / "index.html", carpeta.parents[1] / "index.html")
+        lumas = {
+            "maquina": 96.4,
+            "apt": 168.1,
+            "vela": 42.3,
+            "monedas": 149.7,
+            "arena": 78.4,
+        }
+        (carpeta / "luma.json").write_text(
+            json.dumps({f"{c}@0": v for c, v in lumas.items()})
+        )
+        f = {
+            "criterio": "L1",
+            "severidad": "alta",
+            "t": 12.5,
+            "escena": 3,
+            "detalle": "x",
+            "parche": {"op": "fondo_suave", "escena": 3},
+        }
+        nuevo, hechos, pend = A._aplicar_parches(
+            copy.deepcopy(sb), [f], carpeta.parents[1]
+        )
+        self.assertEqual(nuevo["escenas"][3]["fondo"]["clip"], "vela")
+        self.assertEqual((len(hechos), pend), (1, []))
+        # already on the darkest clip: nothing mechanical left
+        _, hechos, pend = A._aplicar_parches(nuevo, [f], carpeta.parents[1])
+        self.assertEqual((hechos, len(pend)), ([], 1))
+        # never in the hook (scene 0 starts at 0 s: E1 wants it bright), never over a string background
+        for k, fondo in ((0, {"clip": "apt"}), (3, "clip:apt@3")):
+            sb2 = copy.deepcopy(sb)
+            sb2["escenas"][k].update(fondo=fondo, fondo_suave=True, fondo_opacidad=0.3)
+            g = {**f, "escena": k, "parche": {"op": "fondo_suave", "escena": k}}
+            self.assertEqual(A._aplicar_parches(sb2, [g], carpeta.parents[1])[1], [], k)
 
     def test_ritmo_golpe_en_el_tramo_quieto(self):
         w = json.loads(

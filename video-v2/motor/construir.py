@@ -236,6 +236,43 @@ def errores_seleccion(sb: dict, proy: Path) -> list[str]:
     return errores
 
 
+# px per style in the base template (.rot.big/.rot.huge; .rot.mid falls back to .mid at 104 px)
+_ROT_PX = {"mid": 104, "big": 92, "huge": 130, "mega": 230}
+ROT_ANCHO = 980  # .rot spans left/right 50 px of the 1080 px scene
+
+
+def alto_rotulo(r: dict) -> int:
+    """Estimated px height of a rotulo, wrapped lines included.
+    shortcut: Anton capitals average ~0.42 em, base theme only (validar skips `aspecto: cine`, whose
+    editorial serif is smaller); measure that theme if a cine video starts stacking tops."""
+    px = int(r.get("tam") or _ROT_PX.get(r.get("estilo", "huge"), 130))
+    letras = len(r["texto"].replace("*", ""))
+    return px * max(1, int(-(-letras * 0.42 * px // ROT_ANCHO)))
+
+
+def _rotulos_solapados(s: dict) -> list[str]:
+    """Rotulos stacked by hand with `top` that would overlap once a line wraps (E11)."""
+    rs = sorted(
+        (r for r in s.get("rotulos") or [] if "top" in r), key=lambda r: r["top"]
+    )
+    return [
+        f"rótulo {a['texto']!r} (top {a['top']}, ~{alto_rotulo(a)} px) pisa a {b['texto']!r} (top {b['top']}): baja el segundo `top`"
+        for a, b in itertools.pairwise(rs)
+        if b["top"] - a["top"] < alto_rotulo(a)
+    ]
+
+
+def bajo_el_aviso(p: dict) -> list[str]:
+    """16:9 only (E12): the YMYL notice plate sits over the bottom plate of a `foto` (kicker/sub)."""
+    return [
+        f"escena {k} (foto): su kicker/sub queda bajo la placa del aviso ({a:.1f}-{b:.1f}s): quítalo o pásalo a `rotulos`"
+        for k, s in enumerate(p["escenas"])
+        if s["tipo"] == "foto" and (s.get("kicker") or s.get("sub"))
+        for a, b in (p.get("aviso") or {}).get("ventanas") or []
+        if s["t0"] < b and a < s["t1"]
+    ]
+
+
 def validar(sb: dict, words: list[dict]) -> list[str]:
     errores = []
     esc = sb.get("escenas") or []
@@ -273,6 +310,8 @@ def validar(sb: dict, words: list[dict]) -> list[str]:
                 )
         if tipo == "foto" and bool(s.get("img")) == bool(s.get("clip")):
             errores.append(f"escena {k} (foto): lleva `img` O `clip` (uno de los dos)")
+        if sb.get("aspecto") != "cine":
+            errores += [f"escena {k} ({tipo}): {e}" for e in _rotulos_solapados(s)]
     if n3d > 1:
         errores.append("más de un `contador3d`: la capa 3D es única por vídeo")
     errores += _validar_sonidos(sb)
@@ -1199,6 +1238,8 @@ def plan(sb: dict, words: list[dict]) -> dict:
             "t0": 0.1,
             "t1": round(min(3.0, max(1.6, fin0 + 0.3)), 3),
         }
+    largo = sb.get("tipo_video") == "largo"
+    dims = (1920, 1080) if largo else (1080, 1920)
     out = {
         "D": END,
         "tema": sb.get("tema", ""),
@@ -1237,13 +1278,20 @@ def plan(sb: dict, words: list[dict]) -> dict:
         "musica_volumen": volumen_musica(sb),
         "vol_motor": volumen_motor(sb),
         "pruebas": [
-            prueba(x, j, words, fr, END) for j, x in enumerate(sb.get("pruebas") or [])
+            prueba(x, j, words, fr, END, *dims)
+            for j, x in enumerate(sb.get("pruebas") or [])
         ],
     }
+    if largo:  # short plans stay byte-identical (tests/test_formato_regresion.py)
+        out.update(tipo_video="largo", W=dims[0], H=dims[1])
     if ed:
         import sfx_libre
 
-        out["transiciones"] = trans
+        out["transiciones"] = (
+            [_escalar_tr(t, dims[0] / 1080, dims[1] / 1920) for t in trans]
+            if largo
+            else trans
+        )
         out["edicion"] = edicion.presets(ed)
         out["sonidos"] = sorted(
             out["sonidos"]
@@ -1260,6 +1308,21 @@ def plan(sb: dict, words: list[dict]) -> dict:
     return out
 
 
+def _escalar_tr(tr: dict, kx: float, ky: float) -> dict:
+    """A transition's x/y pushes are in 9:16 px; a 16:9 frame needs them scaled to clear it."""
+
+    def esc(d):
+        return {
+            k: v * kx if k == "x" else v * ky if k == "y" else v
+            for k, v in (d or {}).items()
+        }
+
+    return {
+        **tr,
+        **{k: esc(tr[k]) for k in ("sale", "entra", "reposo") if k in tr},
+    }
+
+
 PRUEBA_ANCHO_FRASE = (
     940  # px que ocupa la frase subrayada al final del empuje (de 1080)
 )
@@ -1268,7 +1331,9 @@ PRUEBA_Y = (
 )
 
 
-def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
+def prueba(
+    x: dict, j: int, words: list[dict], fr, END: float, W: int = 1080, H: int = 1920
+) -> dict:
     """LA PRUEBA (1-oct): el documento real a pantalla completa, encuadrado para que la frase
     localizada por OCR (tools/ocr_doc.py -> `_caja_n`, `_aspecto`) quede legible en la zona de
     texto; empuje de cámara hacia ella y subrayador en `marca`. Geometría pura, en px del cuadro."""
@@ -1286,12 +1351,13 @@ def prueba(x: dict, j: int, words: list[dict], fr, END: float) -> dict:
         0.52,
     ]  # sin OCR (solo validar): centro
     asp = float(x.get("_aspecto") or 1.3)
-    wd = min(3240.0, max(1080.0, PRUEBA_ANCHO_FRASE / max(0.05, x1 - x0)))
+    ancho_frase, y_frase = (PRUEBA_ANCHO_FRASE, PRUEBA_Y) if W <= H else (1400, 480)
+    wd = min(3.0 * W, max(float(W), ancho_frase / max(0.05, x1 - x0)))
     hd = wd * asp
-    izq = min(0.0, max(1080 - wd, 540 - (x0 + x1) / 2 * wd))
-    arr = PRUEBA_Y - (y0 + y1) / 2 * hd
+    izq = min(0.0, max(W - wd, W / 2 - (x0 + x1) / 2 * wd))
+    arr = y_frase - (y0 + y1) / 2 * hd
     arr = (
-        min(max(arr, 1920 - hd), 0.0) if hd >= 1920 else arr
+        min(max(arr, H - hd), 0.0) if hd >= H else arr
     )  # cubre el cuadro si el documento da
     pad_x, pad_y = 0.012 * wd, 0.25 * (y1 - y0) * hd
     caja = [
@@ -1632,9 +1698,17 @@ def _html(p: dict) -> str:
         if sr
         else ""
     )
+    largo = p.get("tipo_video") == "largo"
     rep = {
+        "__W__": str(p.get("W", 1080)),
+        "__H__": str(p.get("H", 1920)),
+        "__CSSANCHO__": (MOTOR / "plantilla-ancho.css")
+        .read_text(encoding="utf-8")
+        .rstrip()
+        if largo
+        else "",
         "__PRUEBAS__": html_pruebas(p),
-        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}".strip(),
+        "__TEMA__": f"{p['tema']} {p.get('aspecto', '')} tipo-{p['tipografia']}{' ancho' if largo else ''}".strip(),
         "__AVISOFIN__": (
             f'        <div id="avisofin"{estilo_avisofin(p["aviso"])}>{html.escape(p["aviso"]["completo"])}</div>'
             if p["aviso"].get("completo")
@@ -1747,6 +1821,8 @@ def construir(
         av["ventanas_t"] = [
             [anclas.t(words, a), anclas.t(words, b)] for a, b in av["ventanas"]
         ]
+    if sb.get("tipo_video") == "largo" and not sin_plan:
+        errores += bajo_el_aviso(plan(sb, words))
     if not solo_html:
         errores += _puertas(proy, sb, words, sin_plan, solo_validar)
         if solo_validar and not sin_contraste:

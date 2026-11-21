@@ -8,7 +8,8 @@
     "donde": "puertas.gancho_clip_oscuro",
     "test": "test_clip_oscuro_en_el_gancho_bloquea_antes_del_render",
     "cerrado": "2026-11-18",
-    "causa": "a dark clip (raw luma < 60) chosen for the first 2 s; now blocked at validation, before any render"
+    "causa": "a dark clip (raw luma < 60) chosen for the first 2 s; now blocked at validation, before any render",
+    "nota": "recurred in huang-exit-largo (18-nov, luma 30.0 and 31.8 against 30 + 3.5): its hook clip 'placa' changed source and assets/clips/luma.json kept the old value 89.2 (the new clip measures 43.5), so the clip gate passed. broll._quitar_derivados now purges luma.json too (test_new_source_with_same_key_drops_every_cached_derivative). The 3.5 margin holds: snapshot minus MP4 hook luma re-measured on 8 Shorts / 21 frames = +2.1 to +4.4, per-video mean 2.7-3.5 (21-nov)"
   },
   {
     "id": "E2",
@@ -79,10 +80,13 @@
   {
     "id": "E8",
     "patron": "guion\\ repite\\ .+?",
-    "estado": "abierto",
+    "estado": "prevenido",
     "ejemplo": "guion repite «this is not advice» (1 frases de 4 palabras) · misma apertura: titulo · parecido recursos 0.3 con strategy-underwater (> 0.25): clip:32805742, clip:35039725, clip:35417493",
     "desde": "2026-11-15",
-    "nota": "not mechanical: script wording, opening scene and shared clips are creative choices; it is caught statically before the voice (validation, ~2 s). Closing it needs the Phase 2 compiler picking media from the reviewed library with the variety rule"
+    "donde": "guionista._puerta_repite",
+    "test": "test_formula_de_otro_guion_falla_en_la_etapa_de_guion",
+    "cerrado": "2026-11-21",
+    "causa": "the example was the spoken disclaimer 'this is not advice', required boilerplate: medir_parecido._cuatrigramas now drops sentences with 'advice'. Any other repeated 4-word formula fails G-REPITE when the script is chosen (guionista.py), before the storyboard and the voice"
   },
   {
     "id": "E9",
@@ -105,5 +109,27 @@
     "test": "test_clip_oscuro_del_gancho_pasa_a_uno_visto_y_claro",
     "causa": "dark clip in the first 2 s; --auto swaps it in the hook scenes for the brightest reviewed clip with raw luma >= 60",
     "cerrado": "2026-11-18"
+  },
+  {
+    "id": "E11",
+    "patron": "\\d+(?:[.,]\\d+)?\\ textos\\ ilegibles\\ o\\ rotos:\\ content_overlap\\ \\#s\\d+(?:[.,]\\d+)?\\-r\\d+(?:[.,]\\d+)?\\ >\\ span:nth\\-of\\-type\\(\\d+(?:[.,]\\d+)?\\)\\ en\\ t≈\\d+(?:[.,]\\d+)?s:\\ ",
+    "estado": "prevenido",
+    "ejemplo": "contraste: 18 textos ilegibles o rotos: content_overlap #s33-r0 > span:nth-of-type(1) en t≈167.733s: Two text blocks overlap and may render unreadable.; content_overlap #s33-r0 > span:nth-of-type(1) e",
+    "desde": "2026-11-18",
+    "donde": "construir._rotulos_solapados",
+    "test": "test_rotulos_apilados_que_se_pisan_al_partir_linea",
+    "cerrado": "2026-11-18",
+    "causa": "foto rotulos stacked by hand with `top` assuming one line; a long line wrapped and covered the next one. validar now estimates the wrapped height and blocks it"
+  },
+  {
+    "id": "E12",
+    "patron": "\\d+(?:[.,]\\d+)?\\ textos\\ ilegibles\\ o\\ rotos:\\ text_occluded\\ \\#s\\d+(?:[.,]\\d+)?\\-kicker\\ en\\ t≈\\d+(?:[.,]\\d+)?s:\\ Text\\ is\\ hidden\\ beneath",
+    "estado": "prevenido",
+    "ejemplo": "1 textos ilegibles o rotos: text_occluded #s63-kicker en t≈325.83s: Text is hidden beneath an opaque element.",
+    "desde": "2026-11-19",
+    "donde": "construir.bajo_el_aviso",
+    "test": "test_kicker_de_foto_bajo_el_aviso_en_largo",
+    "cerrado": "2026-11-19",
+    "causa": "16:9 moves the YMYL notice plate to y 880, on top of the bottom kicker/sub plate of a `foto`; construir now blocks a foto kicker/sub inside a notice window in long-form"
   }
 ]

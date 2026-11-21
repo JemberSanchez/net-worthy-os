@@ -23,7 +23,22 @@ import construir as c
 W = [
     {"text": x, "start": i * 0.5, "end": i * 0.5 + 0.4}
     for i, x in enumerate(
-        ["He", "died", "with", "eight", "million", "dollars.", "No", "big", "salary.", "Team", "skill,", "or", "team", "time?"]
+        [
+            "He",
+            "died",
+            "with",
+            "eight",
+            "million",
+            "dollars.",
+            "No",
+            "big",
+            "salary.",
+            "Team",
+            "skill,",
+            "or",
+            "team",
+            "time?",
+        ]
     )
 ]
 
@@ -367,6 +382,37 @@ class BrollTest(unittest.TestCase):
         d = self._sb()
         d["clips"]["parque"] = {"desde": 1}
         self.assertTrue(any("declara `commons`" in e for e in c.validar(d, W)))
+
+    def test_rotulos_apilados_que_se_pisan_al_partir_linea(self):
+        # E11: huang-exit-largo s33, a 27-letter big line wrapped into two and covered the next one
+        d = self._sb()
+        d["escenas"][0]["rotulos"] = [
+            {
+                "texto": "“Our company is *thirty days*",
+                "en": "0",
+                "estilo": "big",
+                "top": 300,
+            },
+            {
+                "texto": "from going out of business”",
+                "en": "0",
+                "estilo": "mid",
+                "top": 410,
+            },
+        ]
+        self.assertTrue(any("pisa a" in e for e in c.validar(d, W)))
+        d["escenas"][0]["rotulos"][1]["top"] = 300 + c.alto_rotulo(
+            d["escenas"][0]["rotulos"][0]
+        )
+        self.assertFalse(any("pisa a" in e for e in c.validar(d, W)))
+
+    def test_kicker_de_foto_bajo_el_aviso_en_largo(self):
+        # E12: huang-exit-largo s63, the notice plate (y 880 in 16:9) covered the foto kicker
+        foto = {"tipo": "foto", "kicker": {"texto": "Forbes"}, "t0": 10.0, "t1": 15.0}
+        p = {"escenas": [foto], "aviso": {"ventanas": [[12.0, 20.0]]}}
+        self.assertEqual(len(c.bajo_el_aviso(p)), 1)
+        p["aviso"]["ventanas"] = [[16.0, 20.0]]
+        self.assertEqual(c.bajo_el_aviso(p), [])
 
     def test_plan_y_html(self):
         p = c.plan(self._sb(), W)
@@ -795,7 +841,9 @@ class PruebaTest(unittest.TestCase):
 class AvisoFinTest(unittest.TestCase):
     def test_tam_mayor_que_la_tarjeta_final_tambien_la_agranda(self):
         self.assertEqual(c.estilo_avisofin({"tam": 33}), ' style="font-size:33px"')
-        self.assertEqual(c.estilo_avisofin({"tam": 27}), "")  # never shrinks the 30 px end card
+        self.assertEqual(
+            c.estilo_avisofin({"tam": 27}), ""
+        )  # never shrinks the 30 px end card
         self.assertEqual(c.estilo_avisofin({}), "")
 
 

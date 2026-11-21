@@ -90,6 +90,32 @@ AVISO_DVIDS = (
 )
 
 
+def _mmss(t: float) -> str:
+    h, r = divmod(int(t), 3600)
+    return f"{h}:{r // 60:02d}:{r % 60:02d}" if h else f"{r // 60}:{r % 60:02d}"
+
+
+def lista_capitulos(sb: dict, words: list[dict]) -> str:
+    """YouTube chapters ("0:00 Title" per line) from the first word of each chapter's sentence.
+    YouTube ignores the list unless it starts at 0:00 and every chapter lasts >= 10 s: refuse instead."""
+    caps = sb.get("capitulos") or []
+    if not caps:
+        return ""
+    inicio, i = [], 0
+    for g in sb["guion"]:
+        inicio.append(i)
+        i += len(g["texto"].split())
+    ts = [0.0] + [words[inicio[c["desde"]]]["start"] for c in caps[1:]]
+    cortos = [
+        c["titulo"]
+        for c, a, b in zip(caps, ts, [*ts[1:], words[-1]["end"]])
+        if b - a < 10
+    ]
+    if cortos:
+        raise ValueError(f"capítulos de menos de 10 s: {cortos}")
+    return "\n".join(f"{_mmss(t)} {c['titulo']}" for c, t in zip(caps, ts))
+
+
 def descripcion(sb: dict, proy: Path) -> str:
     """Descripción para YouTube: la del storyboard + aviso YMYL + fuentes + créditos de imagen y
     de metraje (CC BY los EXIGE; PD y Pexels se citan igual). Función pura salvo la lectura de creditos.json."""
@@ -99,6 +125,9 @@ def descripcion(sb: dict, proy: Path) -> str:
         (f"{sr['nombre']} · Ep. {sr['ep']}" if sr else ""),
         pub.get("descripcion", "").strip(),
     ]
+    if sb.get("capitulos"):
+        words = json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
+        partes.append(lista_capitulos(sb, words))
     if (sb.get("aviso") or {}).get("lineas"):
         partes.append(" · ".join(sb["aviso"]["lineas"]))
     hashtags = " ".join(pub.get("hashtags", []) + ([serie_hashtag(sr)] if sr else []))
@@ -553,6 +582,18 @@ def fallos_contraste(informes: list[dict]) -> list[str]:
     return out
 
 
+def fallos_layout(informes: list[dict]) -> list[str]:
+    """Layout errors of `hyperframes check` (clipped, overflowing, occluded or unpainted text, covered canvas):
+    broken output, so they block. Its warnings and info (safe zone, overlaps) carry the decorative-layer false
+    positives measured on Grace (25-sep) and only inform."""
+    return [
+        f"{f.get('code')} {f.get('selector', '')} en t≈{f.get('time', '?')}s: {str(f.get('message', ''))[:80]}"
+        for d in informes
+        for f in (d.get("layout") or {}).get("findings") or []
+        if f.get("severity") == "error"
+    ]
+
+
 def medicion_valida(d: dict) -> tuple[bool, str]:
     """¿La pasada de `check` MIDIÓ de verdad? Sin muestras, sin textos o con error de runtime, su
     'ok' no significa nada (así pasó en falso el #7: 'Navigation timeout', 0 textos, ok=True)."""
@@ -571,7 +612,33 @@ def gpu_render(log: str) -> str | None:
     return m.group(1) if m else None
 
 
-def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
+def auditar_contraste(proy: Path, env: dict, medir=None) -> tuple[bool, str]:
+    """Contrast audit, reused when page, assets, HyperFrames and these rules match the last PASS:
+    --rapido then --sin-subir audited the same page twice (18.8 min over 33 Short runs, 20-nov)."""
+    cache = proy / "renders" / "contraste.json"
+    clave = hashlib.sha256(
+        (
+            clave_render(proy)
+            + (env.get("HF_VERSION") or hfversion.version())
+            + _sha(Path(__file__))
+        ).encode()
+    ).hexdigest()
+    try:
+        if json.loads(cache.read_text(encoding="utf-8")).get("clave") == clave:
+            return (
+                True,
+                "reutilizado: misma página, assets y HyperFrames que la última auditoría aprobada",
+            )
+    except (OSError, ValueError):
+        pass
+    ok, detalle = (medir or _medir_contraste)(proy, env)
+    if ok:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps({"clave": clave}), encoding="utf-8")
+    return ok, detalle
+
+
+def _medir_contraste(proy: Path, env: dict) -> tuple[bool, str]:
     """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
     ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
     informes, textos = [], 0
@@ -606,11 +673,11 @@ def auditar_contraste(proy: Path, env: dict) -> tuple[bool, str]:
             return False, f"la auditoría NO midió (t={ts[i : i + 5]}): {motivo}"
         informes.append(d)
         textos += d["contrast"]["checked"]
-    fallos = fallos_contraste(informes)
+    fallos = fallos_contraste(informes) + fallos_layout(informes)
     return not fallos, (
-        f"{textos} textos en {len(ts)} escenas, todos >= AA"
+        f"{textos} textos en {len(ts)} escenas, todos >= AA, sin errores de maquetación"
         if not fallos
-        else f"{len(fallos)} textos ilegibles: " + "; ".join(fallos[:5])
+        else f"{len(fallos)} textos ilegibles o rotos: " + "; ".join(fallos[:5])
     )
 
 
@@ -670,7 +737,8 @@ def gancho_previo(salida: Path, u: dict) -> tuple[bool, str]:
     """The critic's C1 dark/flat hook on the preview frames, same function and limits, before the render.
     Measured on huang-exit (12-nov, 10 frames): the snapshot reads luma +3.2 above the MP4 and contrast 6 %
     below it. Contrast is then already stricter; luma must clear the limit by GANCHO_MARGEN_LUMA so the
-    preview never passes a hook the critic fails. PROVISIONAL, n=1: re-measure on the next Shorts."""
+    preview never passes a hook the critic fails. Re-measured 21-nov on 8 Shorts (21 hook frames): +2.1 to +4.4 per
+    frame, per-video mean 2.7-3.5. No 16:9 MP4 to measure yet (huang-exit-largo never rendered): PROVISIONAL there."""
     import medir_cuadros as mc
     import numpy as np
     from PIL import Image
@@ -734,11 +802,18 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
     return rap
 
 
+def gancho_temprano(proy: Path, env: dict, u: dict) -> tuple[bool, str]:
+    """The hook gate on its own frames only (~54 s on huang-exit-largo), before contrast and OCR."""
+    salida = proy / "renders" / "gancho"
+    ok, detalle = hoja_previa(proy, env, instantes_gancho(u), salida)
+    return gancho_previo(salida, u) if ok else (False, detalle)
+
+
 def hoja_previa(
-    proy: Path, env: dict, ts: list[float] | None = None
+    proy: Path, env: dict, ts: list[float] | None = None, salida: Path | None = None
 ) -> tuple[bool, str]:
     """Frames from the built HTML: what a render would show, without the 3-4 min render."""
-    salida = proy / "renders" / "previo"
+    salida = salida or proy / "renders" / "previo"
     shutil.rmtree(
         salida, ignore_errors=True
     )  # frames of an older preview would be read as this one's
@@ -830,9 +905,11 @@ def clave_render(proy: Path) -> str:
 
 
 def clave_critico(proy: Path, final: Path) -> str:
-    """The critic reads the final MP4 and the storyboard; the carousel (`social`) is not part of it."""
+    """The critic reads the final MP4 and the storyboard; the carousel (`social`), the title/description/tags
+    (`publicacion`, checked by the static gates) and the DNA are not part of it."""
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
-    sb.pop("social", None)
+    for k in ("social", "publicacion", "adn"):
+        sb.pop(k, None)
     h = hashlib.sha256(json.dumps(sb, sort_keys=True).encode())
     for f in (MOTOR / "critico.py", MOTOR / "rubrica.json", proy / "rubrica.json"):
         h.update(
@@ -937,6 +1014,20 @@ def producir(proy: Path) -> dict:
     import guionista
 
     puerta("guion", *guionista.puerta_guion(proy), seguir=True)
+    import fuentes  # network: only here, never in construir --validar (tests stay offline)
+
+    puerta("fuentes", *fuentes.puerta_fuentes(proy), seguir=True)
+    import voz
+
+    if fallo_voz := voz.fallida(
+        proy
+    ):  # a ✗ voz.py leaves a broken or stale voice.mp3 behind
+        puerta(
+            "voz",
+            False,
+            f"{fallo_voz}\n→ arregla el guion y corre voz.py --forzar",
+            seguir=True,
+        )
     if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:
         raise SystemExit(f"✗ puertas fallidas: {', '.join(malas)}")
     if not (proy / "assets" / "voice.mp3").exists():
@@ -945,8 +1036,6 @@ def producir(proy: Path) -> dict:
     if (
         proy.name not in puertas.ANTERIORES
     ):  # voz.py leaves its best take when none passes: it does not get built
-        import voz
-
         rotas = voz.pausas_rotas(
             json.loads((proy / "assets" / "words.json").read_text(encoding="utf-8"))
         )
@@ -987,7 +1076,8 @@ def producir(proy: Path) -> dict:
             for k, v in c.items()
             if k != "nombre"
         }
-        muestreo["todos"] = sorted(set(muestreo["todos"]) | set(instantes_gancho(u)))
+        # first and alone: a dark hook found after the full preview cost ~24 min (huang-exit-largo, 18-nov)
+        puerta("gancho", *gancho_temprano(proy, env, u))
     with ThreadPoolExecutor(1) as ex:
         hoja = (
             ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
@@ -1001,9 +1091,6 @@ def producir(proy: Path) -> dict:
     if previo:
         if muestreo and ok_hoja:
             puerta("texto", *texto_previo(proy, sb, muestreo), seguir=True)
-            puerta(
-                "gancho", *gancho_previo(proy / "renders" / "previo", u), seguir=True
-            )
         if sb.get("social") and not exento:
             puerta("social", *social_previo(proy, env), seguir=True)
         if malas := [p["puerta"] for p in qa["puertas"] if not p["ok"]]:

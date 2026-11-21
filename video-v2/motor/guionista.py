@@ -38,6 +38,12 @@ CRITERIOS = ("una_idea", "bucle_abierto", "giro")
 # PROVISIONAL thresholds (docs/mejora/guion/linea_base.md): 10 scripts, 5 with >=30 measured views.
 TU_PALABRA_MAX = 19  # second 6 at 3.1 words/s; measured: median 19 words before 6 s (words.json, n=10)
 CIFRAS_MAX = 3
+# long-form (tipo_video "largo", decision 6 of F1): 8-10 min, chapters, the promise inside 30 s, no figure cap;
+# the per-chapter creative structure only warns (docs/POLITICA.md: creative issues do not block)
+LARGO_PALABRAS = (1300, 1600)
+LARGO_TU_MAX = int(30 * PALABRAS_POR_S)
+LARGO_CAPITULOS_MIN = 3
+LARGO_SOLO_AVISO = ("G-GIRO", "G-BUCLE", "G-CIERRE")
 CIERRE_VENTANA = 3  # a close type cannot repeat within the last N published videos
 
 NUMEROS = {
@@ -420,7 +426,7 @@ def _puerta_gancho(fs: list[dict]) -> dict:
     }
 
 
-def _puerta_tu(fs: list[dict]) -> dict:
+def _puerta_tu(fs: list[dict], tope: int = TU_PALABRA_MAX) -> dict:
     ps = [w.strip('.,:;?!"') for f in fs for w in _normal(f["texto"]).split()]
     pos = next(
         (
@@ -432,8 +438,8 @@ def _puerta_tu(fs: list[dict]) -> dict:
     )
     return {
         "id": "G-TU",
-        "ok": pos is not None and pos <= TU_PALABRA_MAX,
-        "detalle": f"espectador en la palabra {pos} (≤{TU_PALABRA_MAX})"
+        "ok": pos is not None and pos <= tope,
+        "detalle": f"espectador en la palabra {pos} (≤{tope})"
         if pos
         else "nunca habla del espectador",
     }
@@ -476,6 +482,11 @@ def refs_publicadas() -> list[str]:
 
 def cierres_previos(proy: Path, publicados: list[str] | None = None) -> list[str]:
     """Close types of earlier videos, newest first. Without a base: storyboard mtime of the siblings."""
+    return [tipo_cierre(g) for g in guiones_previos(proy, publicados)]
+
+
+def guiones_previos(proy: Path, publicados: list[str] | None = None) -> list[list]:
+    """Scripts (`guion`) of earlier videos, newest first, in the order cierres_previos uses."""
     orden = refs_publicadas() if publicados is None else publicados
     if not orden:
         # shortcut: mtime order, a fresh clone scrambles it; same limit as medir_parecido.puerta_repeticion
@@ -491,7 +502,7 @@ def cierres_previos(proy: Path, publicados: list[str] | None = None) -> list[str
             continue
         guion = json.loads(ruta.read_text(encoding="utf-8")).get("guion")
         if guion:
-            out.append(tipo_cierre(guion))
+            out.append(guion)
     return out
 
 
@@ -501,7 +512,14 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
     if proy.name in pub or list((proy / "renders").glob("*-final.mp4")):
         return True, "exento: vídeo anterior a la puerta o ya publicado"
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
-    ps = puertas(sb["guion"], previos=cierres_previos(proy, pub))
+    gs = guiones_previos(proy, pub)
+    ps = puertas(
+        sb["guion"],
+        previos=[tipo_cierre(g) for g in gs],
+        guiones=gs,
+        tipo_video=sb.get("tipo_video", "short"),
+        capitulos=sb.get("capitulos"),
+    )
     fallan = [f"{p['id']}: {p['detalle']}" for p in ps if not p["ok"]]
     if not sb.get(
         "formato"
@@ -512,21 +530,70 @@ def puerta_guion(proy: Path, publicados: list[str] | None = None) -> tuple[bool,
     return not fallan, " · ".join(fallan) or f"{len(ps)} puertas de guion OK"
 
 
-def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
+def _puerta_repite(fs: list[dict], guiones: list[list]) -> dict:
+    """E8: the repetition gate's 4-word phrases (medir_parecido), at script time instead of after the storyboard."""
+    sys.path.insert(0, str(RAIZ / "tools"))
+    import medir_parecido as mp
+
+    def cuatro(g: list) -> set[str]:
+        return mp._cuatrigramas({"guion": [x if isinstance(x, dict) else {"texto": x} for x in g]})
+
+    propio = cuatro(fs)
+    comun = sorted({q for g in guiones[: mp.VENTANA_FRASES] for q in propio & cuatro(g)})
+    return {
+        "id": "G-REPITE",
+        "ok": not comun,
+        "detalle": f"repite de los últimos {mp.VENTANA_FRASES} guiones: «{'», «'.join(comun[:3])}»"
+        if comun
+        else "sin frases de 4 palabras repetidas",
+    }
+
+
+def _puerta_capitulos(caps: list[dict] | None, n_frases: int) -> dict:
+    desde = [c.get("desde") for c in caps or []]
+    ok = (
+        len(desde) >= LARGO_CAPITULOS_MIN
+        and desde[0] == 0
+        and all(isinstance(d, int) and d < n_frases for d in desde)
+        and desde == sorted(set(desde))
+        and all((c.get("titulo") or "").strip() for c in caps or [])
+    )
+    return {
+        "id": "G-CAPITULOS",
+        "ok": ok,
+        "detalle": f"{len(desde)} capítulos desde {desde} (≥{LARGO_CAPITULOS_MIN}, 1.º en 0, crecientes, con título)",
+    }
+
+
+def puertas(
+    frases: list,
+    previos: list[str] | None = None,
+    tipo_video: str = "short",
+    capitulos: list[dict] | None = None,
+    guiones: list[list] | None = None,
+) -> list[dict]:
     """Criterios que se miden sin juicio. `frases`: textos o dicts {texto, giro?}.
-    `previos`: close types of earlier videos, newest first (None = no history, nothing vetoed)."""
+    `previos`: close types of earlier videos, newest first (None = no history, nothing vetoed).
+    `guiones`: their scripts, newest first (G-REPITE; None = not checked).
+    `tipo_video` "largo": long-form limits; `capitulos` [{titulo, desde: index in `frases`}]."""
     fs = [f if isinstance(f, dict) else {"texto": f} for f in frases]
     n = [len(f["texto"].split()) for f in fs]
     total = sum(n)
+    largo = tipo_video == "largo"
+    pmin, pmax = LARGO_PALABRAS if largo else (PALABRAS_MIN, PALABRAS_MAX)
     out = []
 
     out.append(_puerta_gancho(fs))
-    out.append(_puerta_tu(fs))
+    if guiones is not None:
+        out.append(_puerta_repite(fs, guiones))
+    out.append(_puerta_tu(fs, LARGO_TU_MAX if largo else TU_PALABRA_MAX))
+    if largo:
+        out.append(_puerta_capitulos(capitulos, len(fs)))
     cifras = cifras_protagonistas(" ".join(f["texto"] for f in fs))
     out.append(
         {
             "id": "G-CIFRAS",
-            "ok": len(cifras) <= CIFRAS_MAX,
+            "ok": largo or len(cifras) <= CIFRAS_MAX,
             "detalle": f"{len(cifras)} cifras dichas (≤{CIFRAS_MAX}): {'; '.join(cifras)}",
         }
     )
@@ -558,8 +625,8 @@ def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
     out.append(
         {
             "id": "G-LARGO",
-            "ok": PALABRAS_MIN <= total <= PALABRAS_MAX,
-            "detalle": f"{total} palabras ({PALABRAS_MIN}-{PALABRAS_MAX}) ≈ {total / PALABRAS_POR_S:.1f} s",
+            "ok": pmin <= total <= pmax,
+            "detalle": f"{total} palabras ({pmin}-{pmax}) ≈ {total / PALABRAS_POR_S:.1f} s",
         }
     )
 
@@ -603,6 +670,13 @@ def puertas(frases: list, previos: list[str] | None = None) -> list[dict]:
             else "la última frase no retoma la primera",
         }
     )
+    if largo:  # creative structure warns only
+        out = [
+            {**p, "ok": True, "detalle": f"aviso: {p['detalle']}"}
+            if p["id"] in LARGO_SOLO_AVISO and not p["ok"]
+            else p
+            for p in out
+        ]
     return out
 
 
@@ -632,9 +706,11 @@ def elegir(cands: list[dict], juicio: dict) -> tuple[dict, list[dict]]:
     return ranking[0], ranking
 
 
-def evaluar(cands: list[dict], previos: list[str] | None = None) -> list[dict]:
+def evaluar(
+    cands: list[dict], previos: list[str] | None = None, guiones: list[list] | None = None
+) -> list[dict]:
     for c in cands:
-        c["puertas"] = puertas(c["frases"], previos)
+        c["puertas"] = puertas(c["frases"], previos, guiones=guiones)
         c["fallos"] = sum(not p["ok"] for p in c["puertas"])
     return cands
 
@@ -832,17 +908,20 @@ def main() -> None:
         return
     datos = json.loads((proy / "guiones.json").read_text(encoding="utf-8"))
     juicio = datos.get("juicio") or {}
-    previos = cierres_previos(proy)
+    gs = guiones_previos(proy)
+    previos = [tipo_cierre(g) for g in gs]
 
     ests = evaluar(
-        [{"id": e["id"], "frases": e["frases"]} for e in datos["estructuras"]], previos
+        [{"id": e["id"], "frases": e["frases"]} for e in datos["estructuras"]],
+        previos,
+        gs,
     )
     try:
         mejor_est, rank1 = elegir(ests, juicio)
     except FaltaJuicio as e:
         _pedir_juicio(e, ests)
     est = next(e for e in datos["estructuras"] if e["id"] == mejor_est["id"])
-    variantes = evaluar(candidatos_gancho(est, datos.get("ganchos") or []), previos)
+    variantes = evaluar(candidatos_gancho(est, datos.get("ganchos") or []), previos, gs)
     try:
         ganador, rank2 = elegir(variantes, juicio)
     except FaltaJuicio as e:

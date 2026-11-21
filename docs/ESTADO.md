@@ -18,6 +18,68 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, SIN render aún
+
+- **Retención sin render (19-nov):** avisos de `construir.py`, antes → después:
+
+  | aviso                                 | antes                      | después                        |
+  | ------------------------------------- | -------------------------- | ------------------------------ |
+  | huecos sin re-gancho (> 12 s)         | 13 (peor 44 s, 73.8-117.4) | 0                              |
+  | tramos "sin nada nuevo" (> 2.5 s)     | 19                         | 0                              |
+  | % del tiempo con texto grande         | 91 %                       | 81 % (tope 70: sigue avisando) |
+  | rachas > 3 escenas con texto centrado | 4                          | 0                              |
+  | L1 contraste < 3 (previo)             | 11 (2.2-2.95:1)            | 4 (2.44-2.95:1)                |
+
+  Cómo: 22 `golpes` en palabras de giro; fondos nuevos en 16 escenas de solo texto (6 clips Pexels
+  vistos en su hoja: `grafico`, `niebla`, `oficina_vacia`, `fichas`, `rotativa`, `tarro`; foto PD
+  `rpiunion`; `grafico2` descartado: mismo metraje que `mercado`); 14 `titulo` con fondo pasan a
+  `foto` con el mismo medio a opacidad plena y `rotulos` que se van (`hasta`) ~2.8 s después;
+  `posicion` arriba/abajo en 12 títulos; `--mute: #c3cfc7` en `plantilla-ancho.css` (el `mute` de
+  `revelacion.linea1` era la causa de 9 de los 11 L1). Quedan 7 L1 de OCR en la entrada animada
+  (no cambiaron) y 4 de contraste.
+
+- Errores nuevos cerrados como prevenidos: **E11** (rótulos apilados con `top` que se pisan al
+  partir línea, `construir._rotulos_solapados`, solo tema base) y **E12** (en 16:9 la placa del
+  aviso tapa el kicker/sub de una `foto`, `construir.bajo_el_aviso`).
+- ⚠ **El previo volvió a ser lento: 24.4 min** (contraste 715 s, texto 706 s; antes 332 + 120 s).
+  Medido (19-nov, máquina libre): el OCR del previo cuesta **9.1 s de DETECCIÓN por fotograma**
+  (PP-OCRv6 det small a `limit_side_len` 1920, 2 hilos; reconocimiento 0.3 s) igual con fondo liso,
+  foto o clip: NO es el metraje nuevo. 140 fotogramas → 4.7 s/fotograma con 6 procesos (3 procesos
+  rinden casi igual: 5.5). No es la CPU frenada (176 % de rendimiento, en corriente) ni EcoQoS
+  (quitarlo: 5.57, igual). Bajar `limit_side_len` a 1280/960 acelera 2-4x pero pierde texto
+  (30 y 28 de 46 líneas): descartado. Historial: solo la corrida de 18-nov 19:36 fue rápida (texto
+  120 s ≈ 25 fotogramas, cuadra con los "24 frames" del commit 84dc90d); antes y después, 700-1400 s.
+  Suposición sin verificar: aquella corrida muestreó ~25 fotogramas y no 140. Palancas sin probar:
+  det PP-OCRv4 mobile (cambia el instrumento del crítico: validar contra el actual antes) o
+  muestrear menos. Con `--auto` (por defecto) un fallo cuesta 3 rondas: 58 min. Para medir,
+  `--sin-auto` y `PYTHONUNBUFFERED=1` (sin eso el log sale vacío hasta el final).
+
+- **Previo arreglado (18-nov, 84dc90d):** la causa no era muestrear de más sino el OCR del previo
+  (`medir_cuadros.ocr_imagen`) sin el tope de hilos de onnxruntime: 5.25 → 1.09 s/fotograma, mismo
+  texto. Previo completo **8.0 min** (contraste 332 s, texto 120 s), TODAS las puertas pasan: s76 y
+  gancho verificados. Contraste: `check` mide como mucho 5 instantes por pasada (`CONTRAST_SAMPLES = 5`
+  fijo en HyperFrames, medido: 85 `--at` → 5 muestras), ~50 s fijos cada una. Siguiente: render.
+- El previo añade el ref a `video-v2/usado.json`: revertirlo si no se publica (rompe
+  `test_todos_los_publicados_siguen_validando`).
+
+Historia anterior al arreglo:
+
+- Hecho: layout 16:9, capítulos, miniatura, puertas de layout y cifra-vs-fuente. Storyboard real
+  `video-v2/huang-exit-largo` (85 escenas, voz 441.8 s = 7.4 min, bajo el objetivo de 8-10 min).
+  Lista de capítulos OK (6, empieza en `0:00`). Miniatura 1280x720 OK, 11 s.
+- **Tiempo medido (reloj de pared):** `producir --previo --sin-subir` tarda **24.6 min** (1.ª pasada)
+  y **35.1 min** (2.ª). La puerta de contraste sola: 9.0 / 11.7 min. Luego, texto/gancho (OCR):
+  ~15-20 min. Dos previos suman ~60 min **antes** de renderizar: la regla de "ronda > 60 min = parar"
+  se cumplió sin llegar a render, loudness, pausas ni crítico. El previo escala con la duración:
+  hay que muestrear menos en vídeos largos antes de seguir.
+- Puertas duras: 19 fallos de contraste bajaron a 1 (título IBM de 4 líneas tapaba el kicker, Denny's
+  dorado sobre cartel amarillo, `linea2` de 4 líneas se salía por arriba). Pendientes sin verificar con
+  un previo: s76 `100 companies` saltaba de línea bajo la rejilla de `puntos` (ahora `firms`) y el gancho
+  con luma 31.8 < 33.5 (fondo `placa` 0.8 → 1.0).
+- Avisos L1 que siguen (⚠, no bloquean): `linea1` de `revelacion` en color `mute` lee 2.2-2.95:1 en
+  9 escenas. Quitar la atenuación en 16:9 NO lo movió (2.53 → 2.54): la causa es el color `mute`.
+  5 avisos de OCR caen en la entrada animada (frames mirados: el texto se lee).
+
 ## Fallos recurrentes imposibles por construcción (13-nov, sin commitear)
 
 Medido el 13-nov: 45 de 99 corridas fallaron (173 de 583 min). Tres defectos dejan de depender del

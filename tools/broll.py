@@ -344,8 +344,10 @@ def _quitar_derivados(k: str, carpeta: Path) -> None:
     for p in (carpeta.parent / "v").glob(f"{k}-*.mp4"):
         if tratado.match(p.name):
             p.unlink()
-    det = carpeta / "detalle.json"
-    if det.exists():
+    # luma.json too (E1): huang-exit-largo kept 'placa@2' 89.2 of the old source; the new one measures 43.5
+    for det in (carpeta / "detalle.json", carpeta / "luma.json"):
+        if not det.exists():
+            continue
         d = json.loads(det.read_text(encoding="utf-8"))
         det.write_text(
             json.dumps(

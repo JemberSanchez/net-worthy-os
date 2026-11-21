@@ -1,6 +1,13 @@
 {
   "version": "0.1-provisional",
   "estado": "PROVISIONAL: umbrales de partida, sin calibrar. Se calibran con ~10 calificaciones a ciegas del usuario (docs/RUBRICA.md).",
+  "por_tipo": {
+    "largo": {
+      "_nota": "16:9 long-form: no Shorts UI; the player's control bar covers the bottom ~8 %",
+      "zona_inferior": 0.92,
+      "zona_derecha": 1.01
+    }
+  },
   "criterios": {
     "G1": {
       "nombre": "Gancho",

@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1080, height=1920" />
+    <meta name="viewport" content="width=__W__, height=__H__" />
     <script src="assets/_motor/gsap.min.js"></script>
     <style>
       @font-face { font-family: "Anton"; src: url("assets/_motor/fonts/anton.woff2") format("woff2"); font-weight: 400; }
@@ -18,7 +18,7 @@
       @font-face { font-family: "NW Data"; src: url("assets/_motor/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
       :root { --bg: #0a1a14; --bg2: #0e241b; --ink: #f4f6f3; --gold: #d8b25a; --green: #1f9e6e; --mute: #8da298; --red: #e0533d; --red-txt: #ff6450; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+      html, body { width: __W__px; height: __H__px; overflow: hidden; background: var(--bg); }
       #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: "InterX", sans-serif; color: var(--ink); background: var(--bg); }
 
       #ground { position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 38%, #123a2a 0%, var(--bg2) 45%, var(--bg) 100%); }
@@ -100,7 +100,7 @@
       .tag { position: absolute; font-weight: 900; font-size: 34px; letter-spacing: 0.12em; text-transform: uppercase; }
 
       /* contador3d */
-      #three-layer { position: absolute; inset: 0; width: 1080px; height: 1920px; }
+      #three-layer { position: absolute; inset: 0; width: __W__px; height: __H__px; }
       .money { position: absolute; top: 300px; width: 100%; text-align: center; font-family: "Anton", sans-serif; font-size: 172px; color: var(--ink); font-variant-numeric: tabular-nums; }
 
       /* curva */
@@ -146,7 +146,7 @@
 
       /* la gráfica viva: papel claro en vez del verde oscuro de marca */
       #root.claro { --bg: #f2ecdf; --bg2: #f2ecdf; --ink: #17211c; --gold: #8a5f0a; --green: #0d6b49; --mute: #4c5a52; --red-txt: #bf2c17; }
-      #root.claro #ground { background: #f2ecdf url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='1920'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4' seed='7'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.18 0 0 0 0.11 0'/></filter><rect width='1080' height='1920' filter='url(%23p)'/></svg>"); }
+      #root.claro #ground { background: #f2ecdf url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='__W__' height='__H__'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4' seed='7'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.18 0 0 0 0.11 0'/></filter><rect width='__W__' height='__H__' filter='url(%23p)'/></svg>"); }
       #root.claro #glow, #root.claro .scrim { display: none; }
       #root.claro #brand { color: #f2ecdf; }
       .rot.huge { font-size: 130px; line-height: 1; }
@@ -232,11 +232,11 @@
       #root.cine #brand span { padding: 4px 12px; margin-left: -12px; background: rgba(8,10,10,0.62); }
       #root.cine .cg .ln { background: rgba(8,10,10,0.8); }
       #root.cine #aviso { top: 1452px; width: auto; max-width: 858px; white-space: nowrap; font-size: 26px; font-weight: 600; line-height: 1.3; padding: 3px 10px; margin-left: -10px; background: rgba(8,10,10,0.7); }
-      #avisofin { position: absolute; left: 72px; width: 858px; top: 1330px; opacity: 0; font-weight: 600; font-size: 30px; line-height: 1.34; color: #f2ecdf; padding: 10px 14px; margin-left: -14px; background: rgba(8,10,10,0.86); }
+      #avisofin { position: absolute; left: 72px; width: 858px; top: 1330px; opacity: 0; font-weight: 600; font-size: 30px; line-height: 1.34; color: #f2ecdf; padding: 10px 14px; margin-left: -14px; background: rgba(8,10,10,0.86); }__CSSANCHO__
     </style>
   </head>
   <body>
-    <div id="root" class="__TEMA__" data-composition-id="main" data-start="0" data-duration="__END__" data-width="1080" data-height="1920">
+    <div id="root" class="__TEMA__" data-composition-id="main" data-start="0" data-duration="__END__" data-width="__W__" data-height="__H__">
 __AUDIO__
 
       <div id="groundclip" class="clip" data-start="0" data-duration="__END__" data-track-index="0"><div id="ground"><div id="glow"></div></div></div>

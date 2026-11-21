@@ -1,0 +1,66 @@
+/* 16:9 long-form (tipo_video "largo", docs/LONGFORM-PLAN.md): every scene keeps its 1080x1920 layout and is
+         moved so the 9:16 safe band (y 250-1150) lands centred in the 1920x1080 frame. Offsets, not transforms:
+         GSAP animates transforms on scenes and would drop them. */
+#root.ancho .scene {
+  inset: auto;
+  left: 420px;
+  top: -190px;
+  width: 1080px;
+  height: 1920px;
+}
+/* mute #8da298 gave 2.2-2.95:1 over the long-form backgrounds (L1); same value as the editorial theme */
+#root.ancho:not(.claro) {
+  --mute: #c3cfc7;
+}
+#root.ancho .scene.papel {
+  box-shadow: 0 0 0 1200px #f2ecdf;
+}
+#root.ancho .rot.p-baj,
+#root.cine.ancho .rot.p-baj {
+  top: 1010px;
+}
+#root.ancho .graf {
+  transform: scale(0.85);
+  transform-origin: 50% 0;
+}
+#root.ancho #caps {
+  display: none;
+}
+#root.ancho #grain {
+  width: 2320px;
+  height: 1480px;
+}
+#root.ancho #glow {
+  left: 260px;
+  top: -160px;
+}
+#root.ancho #brand,
+#root.editorial.ancho #brand {
+  left: 72px;
+  width: auto;
+  top: 48px;
+  text-align: left;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+#root.ancho #serieclip {
+  top: 104px;
+  left: 72px;
+  width: auto;
+  justify-content: flex-start;
+}
+#root.ancho #aviso,
+#root.editorial.ancho #aviso,
+#root.cine.ancho #aviso {
+  left: 72px;
+  right: auto;
+  width: auto;
+  max-width: 1200px;
+  top: 880px;
+  text-align: left;
+}
+#root.ancho #avisofin {
+  left: 72px;
+  width: 1200px;
+  top: 820px;
+}
