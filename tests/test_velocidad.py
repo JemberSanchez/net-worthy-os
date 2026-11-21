@@ -128,6 +128,9 @@ class CacheTest(unittest.TestCase):
             encoding="utf-8",
         )
         self.sb["social"]["caption"] = "b"
+        # the critic never reads title, description, tags or the DNA: editing them after it must not re-run it
+        self.sb["publicacion"] = {"titulo": "New title", "tags": ["x"]}
+        self.sb["adn"] = {"hook": "y"}
         (self.proy / "storyboard.json").write_text(
             json.dumps(self.sb), encoding="utf-8"
         )
