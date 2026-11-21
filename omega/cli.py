@@ -437,6 +437,11 @@ def cmd_decide() -> None:
     )
     con.commit()
 
+    if not sigstore.count_total(con):  # derived cache the state repo does not carry
+        print(
+            "Sin señales en la base (no viajan en omega.sql): regenerándolas con `signals`…"
+        )
+        cmd_signals()
     created = hypothesis_engine.generate(con, domain="content")
     print(f"Hypothesis Engine v0: {len(created)} hipótesis candidatas generadas.\n")
 

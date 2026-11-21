@@ -202,3 +202,28 @@ class SinBaseTest(FlujoGitTest):
         _db(config.DB_PATH, 1)
         with self.assertRaises(estado.EstadoError):
             estado.subir()
+
+
+class DerivadasTest(unittest.TestCase):
+    def test_signal_no_viaja_pero_su_tabla_si(self):
+        with tempfile.TemporaryDirectory() as d:
+            a, b = Path(d, "a.sqlite"), Path(d, "b.sqlite")
+            _db(a, 3)
+            con = sqlite3.connect(a)
+            con.execute("CREATE TABLE signal (id INTEGER PRIMARY KEY, value TEXT)")
+            con.executemany("INSERT INTO signal (value) VALUES (?)", [("x" * 100,)] * 50)
+            con.commit()
+            con.close()
+            sql = estado.exportar(a)
+            self.assertNotIn('INSERT INTO "signal"', sql)
+            estado.importar(sql, b)
+            con = sqlite3.connect(b)
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM signal").fetchone()[0], 0)
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM t").fetchone()[0], 3)
+            con.close()
+
+    def test_volcado_viejo_con_senales_no_bloquea_la_subida(self):
+        viejo = "CREATE TABLE t;\n" + '\n'.join(['INSERT INTO "signal" VALUES(1);'] * 1000)
+        nuevo = "CREATE TABLE t;\n" + "x" * 10
+        previo = "\n".join(x for x in viejo.split("\n") if not estado._derivada(x))
+        self.assertTrue(estado.puede_subir(nuevo, previo)[0])

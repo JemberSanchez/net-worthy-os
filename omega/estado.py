@@ -21,6 +21,7 @@ Dos guardas, porque los dos errores posibles destruyen datos en silencio:
   - `subir` no sube una base mucho más pequeña que la remota (salvo --forzar): es la firma de una
     sesión nueva que olvidó bajar primero y subiría una base vacía encima de meses de datos.
 """
+
 from __future__ import annotations
 
 import os
@@ -31,18 +32,27 @@ from pathlib import Path
 from . import config
 
 ARCHIVO = "omega.sql"
-UMBRAL_ENCOGE = 0.5      # subir un volcado < 50 % del remoto exige --forzar
+UMBRAL_ENCOGE = 0.5  # subir un volcado < 50 % del remoto exige --forzar
 
 
 class EstadoError(RuntimeError):
     pass
 
 
+# Derived caches: rebuilt from observed_content by `signals` (which /daily and cola-preparar run
+# before decide). `signal` was 26 of 30 MB and grew ~2.4 MB/day (21-nov); GitHub rejects files > 100 MB.
+DERIVADAS = ("signal",)
+
+
+def _derivada(sentencia: str) -> bool:
+    return any(sentencia.startswith(f'INSERT INTO "{t}" ') for t in DERIVADAS)
+
+
 def exportar(db_path: Path) -> str:
-    """SQLite -> volcado SQL determinista (mismo contenido = mismo texto)."""
+    """SQLite -> volcado SQL determinista (mismo contenido = mismo texto), sin filas derivadas."""
     con = sqlite3.connect(db_path)
     try:
-        return "\n".join(con.iterdump()) + "\n"
+        return "\n".join(x for x in con.iterdump() if not _derivada(x)) + "\n"
     finally:
         con.close()
 
@@ -61,18 +71,24 @@ def importar(sql: str, db_path: Path) -> None:
     tmp.replace(db_path)
 
 
-def puede_subir(local: str, remoto: str | None, forzar: bool = False) -> tuple[bool, str]:
+def puede_subir(
+    local: str, remoto: str | None, forzar: bool = False
+) -> tuple[bool, str]:
     """Guarda contra subir una base vacía/recortada encima de la buena. Función pura."""
     if forzar or not remoto:
         return True, "ok"
     if len(local) < len(remoto) * UMBRAL_ENCOGE:
-        return False, (f"el volcado local ({len(local):,} B) es menos de la mitad del remoto ({len(remoto):,} B): "
-                       "¿sesión nueva que no hizo `estado-bajar`? No subo. Si es intencionado: --forzar")
+        return False, (
+            f"el volcado local ({len(local):,} B) es menos de la mitad del remoto ({len(remoto):,} B): "
+            "¿sesión nueva que no hizo `estado-bajar`? No subo. Si es intencionado: --forzar"
+        )
     return True, "ok"
 
 
 def _git(*args: str, cwd: Path) -> str:
-    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(
+        ["git", *args], check=False, cwd=cwd, capture_output=True, text=True
+    )
     if r.returncode != 0:
         raise EstadoError(f"git {' '.join(args)} falló: {r.stderr.strip()[-400:]}")
     return r.stdout
@@ -81,8 +97,10 @@ def _git(*args: str, cwd: Path) -> str:
 def _clon() -> Path:
     url = os.environ.get("ESTADO_REPO")
     if not url:
-        raise EstadoError("falta ESTADO_REPO (URL del repo PRIVADO de datos, p. ej. "
-                          "https://github.com/<usuario>/net-worthy-data.git)")
+        raise EstadoError(
+            "falta ESTADO_REPO (URL del repo PRIVADO de datos, p. ej. "
+            "https://github.com/<usuario>/net-worthy-data.git)"
+        )
     dst = config.DATA_DIR / ".estado"
     if (dst / ".git").exists():
         _git("pull", "--ff-only", "-q", cwd=dst)
@@ -95,6 +113,7 @@ def _clon() -> Path:
 def _blob(texto: str) -> str:
     """Git blob id of a dump: names one exact version of omega.sql in the private repo's history."""
     import hashlib
+
     datos = texto.encode("utf-8")
     return hashlib.sha1(b"blob %d\0" % len(datos) + datos).hexdigest()
 
@@ -117,9 +136,13 @@ def bajar(forzar: bool = False) -> str:
             _base().write_text(local, encoding="utf-8")
             return "✓ base local ya al día con el repo de estado"
         base = _base().read_text(encoding="utf-8").strip() if _base().exists() else None
-        if local != base:  # local changed since the last sync (or never synced): never overwrite it
-            return (f"{config.DB_PATH.name} tiene cambios sin subir: no la piso "
-                    "(usa --forzar para reemplazarla por la remota)")
+        if (
+            local != base
+        ):  # local changed since the last sync (or never synced): never overwrite it
+            return (
+                f"{config.DB_PATH.name} tiene cambios sin subir: no la piso "
+                "(usa --forzar para reemplazarla por la remota)"
+            )
     importar(remoto, config.DB_PATH)
     _base().write_text(_blob(remoto), encoding="utf-8")
     return f"✓ base restaurada desde el repo de estado ({sql.stat().st_size:,} B de volcado)"
@@ -132,7 +155,11 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
     sql = clon / ARCHIVO
     local = exportar(config.DB_PATH)
     remoto = sql.read_text(encoding="utf-8") if sql.exists() else None
-    ok, motivo = puede_subir(local, remoto, forzar)
+    # an older dump may still carry derived rows: compare like with like
+    previo = (
+        "\n".join(x for x in remoto.split("\n") if not _derivada(x)) if remoto else None
+    )
+    ok, motivo = puede_subir(local, previo, forzar)
     if not ok:
         raise EstadoError(motivo)
     if local == remoto:
@@ -141,13 +168,24 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
     base = _base().read_text(encoding="utf-8").strip() if _base().exists() else None
     # no base yet (first sync after the cloud job exists): cannot tell who moved, so do not overwrite
     if remoto and _blob(remoto) != base and not forzar:
-        raise EstadoError("el repo de estado cambió desde tu última sincronización (la cola de la nube "
-                          "corrió en medio): subir lo pisaría. Si lo perdido es solo ingest/analytics "
-                          "(se rehacen mañana): estado-subir --forzar")
+        raise EstadoError(
+            "el repo de estado cambió desde tu última sincronización (la cola de la nube "
+            "corrió en medio): subir lo pisaría. Si lo perdido es solo ingest/analytics "
+            "(se rehacen mañana): estado-subir --forzar"
+        )
     sql.write_text(local, encoding="utf-8")
     _git("add", ARCHIVO, cwd=clon)
-    _git("-c", "user.name=net-worthy-os", "-c", "user.email=net-worthy-os@users.noreply.github.com",
-         "commit", "-q", "-m", mensaje, cwd=clon)
+    _git(
+        "-c",
+        "user.name=net-worthy-os",
+        "-c",
+        "user.email=net-worthy-os@users.noreply.github.com",
+        "commit",
+        "-q",
+        "-m",
+        mensaje,
+        cwd=clon,
+    )
     _git("push", "-q", cwd=clon)
     _base().write_text(_blob(local), encoding="utf-8")
     return f"✓ estado subido ({len(local):,} B)"
@@ -161,12 +199,31 @@ def subir(forzar: bool = False, mensaje: str = "estado: volcado diario") -> str:
 # imágenes, música generada ni los assets comunes del motor.
 # Clips de vídeo: ni el crudo (assets/clips/*.src) ni el tratado (assets/v/) — pesan MB y se
 # regeneran desde `clips` del storyboard; los créditos sí viajan.
-EXCLUIR_PROD = ("renders/", "snapshots/", ".hyperframes/", "node_modules/", "assets/_motor/", "assets/img/",
-                "assets/clips/", "assets/v/", "social/_render/", "social/_tarjeta/", "assets/musica/",
-                "assets/sfx/")
-EXCLUIR_ARCH = ("music-bed.wav", "historia.mp4")   # la historia se regenera del render (pesa MB)
-INCLUIR_SIEMPRE = ("assets/img/creditos.json", "assets/clips/creditos.json", "assets/musica/creditos.json",
-                   "assets/sfx/creditos.json", "renders/qa.json")
+EXCLUIR_PROD = (
+    "renders/",
+    "snapshots/",
+    ".hyperframes/",
+    "node_modules/",
+    "assets/_motor/",
+    "assets/img/",
+    "assets/clips/",
+    "assets/v/",
+    "social/_render/",
+    "social/_tarjeta/",
+    "assets/musica/",
+    "assets/sfx/",
+)
+EXCLUIR_ARCH = (
+    "music-bed.wav",
+    "historia.mp4",
+)  # la historia se regenera del render (pesa MB)
+INCLUIR_SIEMPRE = (
+    "assets/img/creditos.json",
+    "assets/clips/creditos.json",
+    "assets/musica/creditos.json",
+    "assets/sfx/creditos.json",
+    "renders/qa.json",
+)
 
 
 def archivos_produccion(proy: Path) -> list[Path]:
@@ -176,13 +233,16 @@ def archivos_produccion(proy: Path) -> list[Path]:
         if not f.is_file():
             continue
         rel = f.relative_to(proy).as_posix()
-        if rel in INCLUIR_SIEMPRE or not (rel.startswith(EXCLUIR_PROD) or f.name in EXCLUIR_ARCH):
+        if rel in INCLUIR_SIEMPRE or not (
+            rel.startswith(EXCLUIR_PROD) or f.name in EXCLUIR_ARCH
+        ):
             out.append(Path(rel))
     return out
 
 
 def guardar_produccion(proy: Path, mensaje: str | None = None) -> str:
     import shutil
+
     proy = Path(proy).resolve()
     if not (proy / "storyboard.json").exists():
         raise EstadoError(f"{proy} no es un proyecto v2 (falta storyboard.json)")
@@ -197,7 +257,16 @@ def guardar_produccion(proy: Path, mensaje: str | None = None) -> str:
     _git("add", "-A", "producciones", cwd=clon)
     if not _git("status", "--porcelain", cwd=clon).strip():
         return f"sin cambios: producciones/{proy.name} ya estaba guardada"
-    _git("-c", "user.name=net-worthy-os", "-c", "user.email=net-worthy-os@users.noreply.github.com",
-         "commit", "-q", "-m", mensaje or f"produccion: {proy.name}", cwd=clon)
+    _git(
+        "-c",
+        "user.name=net-worthy-os",
+        "-c",
+        "user.email=net-worthy-os@users.noreply.github.com",
+        "commit",
+        "-q",
+        "-m",
+        mensaje or f"produccion: {proy.name}",
+        cwd=clon,
+    )
     _git("push", "-q", cwd=clon)
     return f"✓ producciones/{proy.name} guardada ({len(archivos)} archivos)"

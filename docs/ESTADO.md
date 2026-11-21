@@ -38,8 +38,12 @@ Cola en la nube (`omega/cola.py`, `nube/cola.yml`): corrida real el 21-nov contr
 repo de estado: 834 s (signals 394, analytics-sync 42, meta-sync 56, medios 311), 3 temas con 6
 titulares cada uno, todo verde. **Sin instalar:** falta copiar `nube/cola.yml` a
 `net-worthy-data/.github/workflows/` y poner sus secretos (`YOUTUBE_API_KEY`, `PEXELS_API_KEY`,
-`YOUTUBE_TOKEN_JSON`, `META_TOKEN_JSON`, `META_APP_ID`, `META_APP_SECRET`); antes, un `estado-subir` en el PC
-para que exista `data/.estado_base`. Sin eso, `/producir` cae al camino viejo (`/daily`).
+`YOUTUBE_TOKEN_JSON`, `META_TOKEN_JSON`, `META_APP_ID`, `META_APP_SECRET`); antes, un `estado-subir --forzar` en el PC
+(crea `data/.estado_base` y sube el primer volcado sin señales).
+**Tamaño de `omega.sql` (21-nov):** `signal` era 26 de 30 MB y crecía ~2.4 MB/día (GitHub rechaza archivos
+> 100 MB: ~24 días con la cola diaria). Es caché derivada de `observed_content`: ya no viaja en el volcado
+(30.5 → 4.4 MB) y `decide` la regenera si falta (39 376 señales, idénticas a la tabla original).
+Lo que queda crece ~0.3 MB/día (`observed_content`): ~1 año hasta 100 MB. Sin eso, `/producir` cae al camino viejo (`/daily`).
 Hallazgo: los clips buscados con el término crudo son flojos (2 de 3 temas sin clip admitido; "worst
 week" trajo un discurso con persona reconocible). La hoja lo enseña y la sesión decide; la cifra de
 `lote` sí vale para cualquier clip que se reutilice. La columna "después" exige un `/producir` real con
