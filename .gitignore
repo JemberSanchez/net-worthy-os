@@ -9,6 +9,7 @@ venv/
 docs/guiones/PREVIEW-*.jpg
 # exportaciones de render (voz + video): artefactos, no fuente — no inflar el repo
 *.mp4
+*.huellas.npz
 /renders/
 *.MP3
 docs/guiones/*.mp3
