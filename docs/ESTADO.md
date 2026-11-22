@@ -59,6 +59,12 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
   texto. Previo completo **8.0 min** (contraste 332 s, texto 120 s), TODAS las puertas pasan: s76 y
   gancho verificados. Contraste: `check` mide como mucho 5 instantes por pasada (`CONTRAST_SAMPLES = 5`
   fijo en HyperFrames, medido: 85 `--at` → 5 muestras), ~50 s fijos cada una. Siguiente: render.
+- **Contraste por píxel DESCARTADO (22-nov):** sustituir `check` (589 s) por
+  `medir_texto.contraste_caja` sobre los fotogramas del previo (OCR de 85 en 28 s) no da el mismo
+  veredicto: `check` aprobó los 244 textos; el píxel suspende 4 de 122 líneas diseñadas a 3:1 (SIX
+  MONTHS 2.44, LATE-NINETIES PC 2.86, MICROSOFT DIRECTX 2.97, THE PC NEEDED 2.98) y el usuario los lee
+  bien en el fotograma entero. p95/p5 subestima el texto grande tenue; bajar el umbral para que cuadre
+  con n=4 sería ajustar a ojo. `check --json` no da razón ni caja por texto (solo totales).
 - El previo añade el ref a `video-v2/usado.json`: revertirlo si no se publica (rompe
   `test_todos_los_publicados_siguen_validando`).
 
