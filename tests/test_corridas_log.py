@@ -89,6 +89,9 @@ class CorridasTest(unittest.TestCase):
             linea = json.loads(reg.read_text(encoding="utf-8"))
         self.assertNotIn("reglas", linea)
         self.assertTrue(linea["previo"])
+        self.assertTrue(
+            linea["auto"]
+        )  # the closed-error ratchet skips autoarreglo errors without it
 
 
 class ResumenTest(unittest.TestCase):

@@ -806,7 +806,7 @@
       "tipo": "titulo",
       "en": "0",
       "fondo": {
-        "clip": "placa",
+        "clip": "circuito",
         "opacidad": 1.0
       },
       "lineas": [
@@ -1138,15 +1138,15 @@
       "icono": "check",
       "items": [
         {
-          "texto": "Jensen Huang",
+          "texto": "Huang",
           "en": "14:jensen"
         },
         {
-          "texto": "Chris Malachowsky",
+          "texto": "Malachowsky",
           "en": "14:chris"
         },
         {
-          "texto": "Curtis Priem",
+          "texto": "Priem",
           "en": "14:curtis",
           "color": "gold"
         }
@@ -1272,7 +1272,7 @@
       },
       "golpe": "21",
       "fondo": {
-        "clip": "circuito",
+        "clip": "placa",
         "opacidad": 0.35
       }
     },

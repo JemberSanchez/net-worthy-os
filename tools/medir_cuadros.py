@@ -200,24 +200,13 @@ def cortados(frames: list[dict], es_disenada, u: dict) -> list[dict]:
 
 def ocr_imagen(ruta: Path) -> dict:
     """OCR of one still, in the same shape as medir_texto.ocr_frames."""
-    import logging
-
     import cv2
     import medir_texto
-    from rapidocr import RapidOCR
 
-    logging.getLogger("RapidOCR").setLevel(logging.ERROR)
     global _MOTOR  # loading the model costs seconds per slide
-    # same thread cap as the critic's OCR: the preview runs PROCESOS_OCR of these in parallel
-    _MOTOR = _MOTOR or RapidOCR(
-        params={
-            "Global.log_level": "error",
-            "Det.limit_type": "max",
-            "Det.limit_side_len": 1920,
-            "EngineConfig.onnxruntime.intra_op_num_threads": medir_texto.HILOS_OCR,
-            "EngineConfig.onnxruntime.inter_op_num_threads": 1,
-        }
-    )
+    _MOTOR = (
+        _MOTOR or medir_texto.motor_ocr()
+    )  # the critic's OCR, so the preview reads as the MP4 will
     motor = _MOTOR
     bgr = cv2.imread(str(ruta))
     h, w = bgr.shape[:2]

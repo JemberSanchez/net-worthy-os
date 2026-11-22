@@ -36,7 +36,10 @@ av>=18.0,<19                 # tools/medir_loudness.py: decodifica el audio del 
 # tests/test_dependencias_audio.py (verificado: 18.0.0 y 18.1.0 OK, 19.0.2 rompe).
 scenedetect>=0.7.1           # tools/analizar_video.py: cortes de plano (PySceneDetect)
 opencv-python>=5.0           # tools/analizar_video.py (optical flow), tools/profundidad.py (remap 2.5D)
-onnxruntime>=1.18            # tools/profundidad.py: Depth Anything V2 Small (ONNX, Apache-2.0) en CPU
+onnxruntime>=1.18; sys_platform != "win32"   # tools/profundidad.py: Depth Anything V2 Small (ONNX, Apache-2.0) en CPU
+# Windows: the same package with the GPU (DirectML) as well, so the critic's OCR runs 21x faster with the same
+# lines (medir_texto.gpu_ocr). Never both: they install the same `onnxruntime` module.
+onnxruntime-directml>=1.24.4; sys_platform == "win32"
 rapidocr>=3.4               # tools/ocr_doc.py (rapidocr_onnxruntime no tiene wheel para 3.14): localizar la frase a subrayar en documentos reales (Apache-2.0)
 soundfile>=0.14              # tools/generar_voz.py: lee el WAV que devuelve el subproceso de Kokoro
 

@@ -60,7 +60,7 @@ class CacheTest(unittest.TestCase):
         llamadas = []
 
         def medir(ok):
-            return lambda p, e: (llamadas.append(1), (ok, "medido"))[1]
+            return lambda p, e, ya: (llamadas.append(1), (ok, "medido", []))[1]
 
         env = {"HF_VERSION": "1.0"}
         self.assertFalse(producir.auditar_contraste(self.proy, env, medir(False))[0])
@@ -81,6 +81,58 @@ class CacheTest(unittest.TestCase):
             cambio()
             producir.auditar_contraste(self.proy, env, medir(True))
         self.assertEqual(len(llamadas), 4)
+
+    def test_contraste_salta_solo_los_fotogramas_ya_aprobados_byte_a_byte(self):
+        (self.proy / "index.html").write_text(
+            '<section id="s0" class="clip scene" data-start="0.000" data-duration="2.000">'
+            '<section id="s1" class="clip scene" data-start="2.000" data-duration="2.000">',
+            encoding="utf-8",
+        )
+        cuadros = self.proy / "renders" / "previo"
+        cuadros.mkdir()
+        for i, t in enumerate((1.2, 3.2)):
+            (cuadros / f"frame-0{i}-at-{t}s.png").write_bytes(b"px")
+        vistos = []
+
+        def medir(ok, bien):
+            return lambda p, e, ya: (vistos.append(set(ya)), (ok, "m", bien))[1]
+
+        env = {"HF_VERSION": "1.0"}
+        # s0 fails, s1 passes: the next audit skips only s1
+        producir.auditar_contraste(self.proy, env, medir(False, [3.2]), cuadros)
+        producir.auditar_contraste(self.proy, env, medir(True, [1.2]), cuadros)
+        with (self.proy / "index.html").open("a", encoding="utf-8") as f:
+            f.write("<i>s1 edited</i>")  # a new page, so the whole-page reuse misses
+        (cuadros / "frame-01-at-3.2s.png").write_bytes(b"otro")
+        producir.auditar_contraste(self.proy, env, medir(True, []), cuadros)
+        env["HF_VERSION"] = "1.1"  # other rules: nothing reused
+        producir.auditar_contraste(self.proy, env, medir(True, []), cuadros)
+        self.assertEqual(vistos, [set(), {3.2}, {1.2}, set()])
+
+    def test_contraste_con_la_hoja_en_paralelo_guarda_lo_aprobado(self):
+        from concurrent.futures import Future
+
+        (self.proy / "index.html").write_text(
+            '<section id="s0" class="clip scene" data-start="0.000" data-duration="2.000">',
+            encoding="utf-8",
+        )
+        cuadros = self.proy / "renders" / "previo"
+        cuadros.mkdir()
+        (cuadros / "frame-00-at-1.2s.png").write_bytes(b"px")
+        hoja, vistos = Future(), []
+        hoja.set_result((True, "hoja"))
+        env = {"HF_VERSION": "1.0"}
+
+        def medir(ya):
+            vistos.append(set(ya))
+            return False, "m", [1.2]  # fails elsewhere: no whole-page reuse
+
+        producir.auditar_contraste(
+            self.proy, env, lambda p, e, ya: medir(ya), cuadros, hoja
+        )
+        self.assertTrue(producir.aprobados_contraste(self.proy, env)[2])
+        producir.auditar_contraste(self.proy, env, lambda p, e, ya: medir(ya), cuadros)
+        self.assertEqual(vistos, [set(), {1.2}])
 
     def test_mismo_html_y_assets_reutiliza_el_render(self):
         self.assertTrue(self.reutiliza())

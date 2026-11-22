@@ -324,6 +324,41 @@ def esperados_de_proyecto(proy: Path) -> list[dict]:
 PROCESOS_OCR = max(1, min(6, (os.cpu_count() or 2) // 2))
 # onnxruntime defaults to every core per session: 6 x 12 threads on 12 cores made OCR 163 s, capped 77 s (18-nov)
 HILOS_OCR = max(1, (os.cpu_count() or 2) // PROCESOS_OCR)
+PROCESOS_OCR_GPU = 3  # 172 preview frames: 170 s with 1, 51 s with 2, 39.5 s with 3 (22-nov)
+
+
+def gpu_ocr() -> bool:
+    """DirectML (onnxruntime-directml, Windows) is installed. Same model and detection limit on the GPU: 0.33 vs
+    6.99 s/frame, the same lines and boxes within 1 px (huang-exit-largo preview frames, 22-nov)."""
+    try:
+        import onnxruntime
+    except ImportError:
+        return False
+    return "DmlExecutionProvider" in onnxruntime.get_available_providers()
+
+
+def procesos_ocr() -> int:
+    return PROCESOS_OCR_GPU if gpu_ocr() else PROCESOS_OCR
+
+
+def motor_ocr():
+    """The one RapidOCR every measurement reads with: PP-OCRv6 det at 1920 px (lighter detectors miss real
+    faults, 19-nov), on the GPU when DirectML is there, else HILOS_OCR CPU threads."""
+    import logging
+
+    from rapidocr import RapidOCR
+
+    logging.getLogger("RapidOCR").setLevel(logging.ERROR)
+    p = {
+        "Global.log_level": "error",
+        "Det.limit_type": "max",
+        "Det.limit_side_len": 1920,
+        "EngineConfig.onnxruntime.intra_op_num_threads": HILOS_OCR,
+        "EngineConfig.onnxruntime.inter_op_num_threads": 1,
+    }
+    if gpu_ocr():
+        p["EngineConfig.onnxruntime.use_dml"] = True
+    return RapidOCR(params=p)
 
 
 def tramos(n: int, paso: int, partes: int) -> list[tuple[int, int]]:
@@ -371,7 +406,6 @@ def _ocr_tramo(
     """[(frame, fingerprint, reused)]. A frame whose fingerprint matches the previous render's at the same t keeps
     that frame's text and boxes; contrast is always re-measured on the new pixels (a colour-only fix
     barely moves the fingerprint)."""
-    import logging
 
     import cv2
 
@@ -397,19 +431,7 @@ def _ocr_tramo(
         if viejo is not None and reusado:
             lin = [{**l, "contraste": contraste_caja(rgb, l["caja"])} for l in viejo[1]]
         else:
-            if motor is None:
-                from rapidocr import RapidOCR
-
-                logging.getLogger("RapidOCR").setLevel(logging.ERROR)
-                motor = RapidOCR(
-                    params={
-                        "Global.log_level": "error",
-                        "Det.limit_type": "max",
-                        "Det.limit_side_len": 1920,
-                        "EngineConfig.onnxruntime.intra_op_num_threads": HILOS_OCR,
-                        "EngineConfig.onnxruntime.inter_op_num_threads": 1,
-                    }
-                )
+            motor = motor or motor_ocr()
             res = motor(rgb)
             lin = []
             for caja, txt, conf in (
@@ -465,7 +487,7 @@ def ocr_frames(mp4: Path, fps: float = 2.0) -> list[dict]:
     from concurrent.futures import ProcessPoolExecutor
 
     # one RapidOCR per process, HILOS_OCR threads each: identical text to one process (12-nov, 18-nov)
-    ts = tramos(n, paso, PROCESOS_OCR)
+    ts = tramos(n, paso, procesos_ocr())
     ts[-1] = (
         ts[-1][0],
         10**9,

@@ -55,10 +55,14 @@ class TestRegistro(unittest.TestCase):
                 dia = datetime.fromtimestamp(x["t"]).date().isoformat()
                 for r in errores.reglas_de(x):
                     e = errores.entrada_de(r, self.registro)
-                    if e and e["estado"] != "abierto" and dia > e["cerrado"]:
-                        regresiones.append(
-                            f"{e['id']} {f.parent.parent.name} {dia}: {r[:80]}"
-                        )
+                    if not e or e["estado"] == "abierto" or dia <= e["cerrado"]:
+                        continue
+                    # an autoarreglo fix only runs with --auto; runs logged before 22-nov lack the flag
+                    if e["estado"] == "autoarreglo" and x.get("auto") is not True:
+                        continue
+                    regresiones.append(
+                        f"{e['id']} {f.parent.parent.name} {dia}: {r[:80]}"
+                    )
         self.assertEqual(regresiones, [])
 
 

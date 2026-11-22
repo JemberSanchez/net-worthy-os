@@ -606,42 +606,113 @@ def medicion_valida(d: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+# NVENC encoding: 84 vs 134 s on huang-exit, SSIM 0.992 / PSNR 49.6 dB against the CPU encode, above the
+# 0.986 of two CPU renders of the same page (22-nov). Without an NVIDIA GPU, PRODUCIR_SIN_GPU=1.
+RENDER_GPU = () if os.environ.get("PRODUCIR_SIN_GPU") else ("--gpu",)
+
+
 def gpu_render(log: str) -> str | None:
     """GPU Chrome rendered on, from HyperFrames' probe line (renderer vendor="Google Inc. (NVIDIA)")."""
     m = re.search(r'renderer vendor="Google Inc\. \(([^)]+)\)', log)
     return m.group(1) if m else None
 
 
-def auditar_contraste(proy: Path, env: dict, medir=None) -> tuple[bool, str]:
-    """Contrast audit, reused when page, assets, HyperFrames and these rules match the last PASS:
-    --rapido then --sin-subir audited the same page twice (18.8 min over 33 Short runs, 20-nov)."""
-    cache = proy / "renders" / "contraste.json"
-    clave = hashlib.sha256(
-        (
-            clave_render(proy)
-            + (env.get("HF_VERSION") or hfversion.version())
-            + _sha(Path(__file__))
-        ).encode()
-    ).hexdigest()
+def fotogramas(salida: Path, instantes: list[float]) -> dict[float, Path]:
+    """{t: snapshot frame} for the wanted instants (the file name carries the second)."""
+    out = {}
+    for f in sorted(salida.glob("frame-*.png")):
+        t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
+        if any(abs(t - x) < 0.011 for x in instantes):
+            out[t] = f
+    return out
+
+
+def aprobados_contraste(proy: Path, env: dict) -> tuple[str, dict, set[str]]:
+    """(rules key, last cache, frames that passed under these rules)."""
+    reglas = (env.get("HF_VERSION") or hfversion.version()) + _sha(Path(__file__))
     try:
-        if json.loads(cache.read_text(encoding="utf-8")).get("clave") == clave:
-            return (
-                True,
-                "reutilizado: misma página, assets y HyperFrames que la última auditoría aprobada",
-            )
+        viejo = json.loads(
+            (proy / "renders" / "contraste.json").read_text(encoding="utf-8")
+        )
     except (OSError, ValueError):
-        pass
-    ok, detalle = (medir or _medir_contraste)(proy, env)
-    if ok:
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_text(json.dumps({"clave": clave}), encoding="utf-8")
+        viejo = {}
+    return (
+        reglas,
+        viejo,
+        set(viejo.get("instantes") or []) if viejo.get("reglas") == reglas else set(),
+    )
+
+
+def auditar_contraste(
+    proy: Path, env: dict, medir=None, cuadros: Path | None = None, hoja=None
+) -> tuple[bool, str]:
+    """Contrast audit, reused when page, assets, HyperFrames and these rules match the last PASS:
+    --rapido then --sin-subir audited the same page twice (18.8 min over 33 Short runs, 20-nov).
+    With the preview's snapshot frames (`cuadros`), each instant whose frame is byte-identical to one that
+    already passed is not measured again: 5 of the 6 huang-exit-largo previews re-audited all 85 scenes after
+    fixing one or two (330-1920 s each, 18/19-nov)."""
+    cache = proy / "renders" / "contraste.json"
+    reglas, viejo, aprobados = aprobados_contraste(proy, env)
+    clave = hashlib.sha256((clave_render(proy) + reglas).encode()).hexdigest()
+    if viejo.get("clave") == clave:
+        return (
+            True,
+            "reutilizado: misma página, assets y HyperFrames que la última auditoría aprobada",
+        )
+    ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
+
+    def huellas() -> dict[float, str]:
+        # keyed by the audit's own instant: the file name's second only matches it within 0.011 s
+        return (
+            {
+                min(ts, key=lambda x: abs(x - t)): f"{t}|{_sha(f)}"
+                for t, f in fotogramas(cuadros, ts).items()
+            }
+            if cuadros
+            else {}
+        )
+
+    # `hoja`: the snapshot still running beside the audit (nothing approved to skip yet); its frames are
+    # only hashed afterwards, so the next preview can skip what passed
+    antes = {} if hoja else huellas()
+    ok, detalle, bien = (medir or _medir_contraste)(
+        proy, env, {t for t, h in antes.items() if h in aprobados}
+    )
+    hu = huellas() if hoja and hoja.result()[0] else antes
+    # snapshots are byte-identical for the same page (5/5 frames, 22-nov): same pixels, same verdict
+    aprobados |= {hu[t] for t in bien if t in hu}
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(
+        json.dumps(
+            {
+                "clave": clave if ok else None,
+                "reglas": reglas,
+                "instantes": sorted(aprobados),
+            }
+        ),
+        encoding="utf-8",
+    )
     return ok, detalle
 
 
-def _medir_contraste(proy: Path, env: dict) -> tuple[bool, str]:
-    """WCAG AA en TODAS las escenas. `check` usa como mucho 5 instantes por pasada: se hacen varias."""
-    ts = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
-    informes, textos = [], 0
+HILOS_CHECK = 3  # whole long-form audit: 622 s with 3, 631 with 6, 579 with 9 (22-nov): the CPU is the limit, not this
+
+
+def _medir_contraste(
+    proy: Path, env: dict, ya: set[float] | frozenset[float] = frozenset()
+) -> tuple[bool, str, list[float]]:
+    """WCAG AA en TODAS las escenas salvo las de `ya` (aprobadas con los mismos píxeles). `check` usa como
+    mucho 5 instantes por pasada y tarda lo mismo con 1 que con 5 (59 vs 47 s, 22-nov): se hacen varias.
+    Devuelve también los instantes de las pasadas aprobadas."""
+    todos = instantes_escena((proy / "index.html").read_text(encoding="utf-8"))
+    ts = [t for t in todos if t not in ya]
+    if not ts:
+        return (
+            True,
+            f"{len(todos)} escenas reutilizadas: mismos fotogramas ya aprobados",
+            [],
+        )
+    informes, textos, bien = [], 0, []
 
     def pasada(i: int) -> subprocess.CompletedProcess:
         # --timeout: con 10 s (defecto) el #7 (3D + 18 capas) no llegaba a cargar y la auditoría
@@ -661,23 +732,35 @@ def _medir_contraste(proy: Path, env: dict) -> tuple[bool, str]:
             env=env,
         )
 
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(HILOS_CHECK) as ex:
         pasadas = list(ex.map(pasada, range(0, len(ts), 5)))
     for i, r in zip(range(0, len(ts), 5), pasadas, strict=True):
         try:
             d = json.loads(r.stdout)
         except json.JSONDecodeError:
-            return False, "check no devolvió JSON: " + (r.stderr or r.stdout)[-300:]
+            return (
+                False,
+                "check no devolvió JSON: " + (r.stderr or r.stdout)[-300:],
+                bien,
+            )
         ok_medida, motivo = medicion_valida(d)
         if not ok_medida:
-            return False, f"la auditoría NO midió (t={ts[i : i + 5]}): {motivo}"
+            return False, f"la auditoría NO midió (t={ts[i : i + 5]}): {motivo}", bien
         informes.append(d)
         textos += d["contrast"]["checked"]
+        if not fallos_contraste([d]) + fallos_layout([d]):
+            bien += ts[i : i + 5]
     fallos = fallos_contraste(informes) + fallos_layout(informes)
-    return not fallos, (
-        f"{textos} textos en {len(ts)} escenas, todos >= AA, sin errores de maquetación"
-        if not fallos
-        else f"{len(fallos)} textos ilegibles o rotos: " + "; ".join(fallos[:5])
+    nuevas = f"{len(ts)} de {len(todos)} escenas medidas"
+    return (
+        not fallos,
+        (
+            f"{textos} textos en {nuevas}, todos >= AA, sin errores de maquetación"
+            if not fallos
+            else f"{len(fallos)} textos ilegibles o rotos ({nuevas}): "
+            + "; ".join(fallos[:5])
+        ),
+        bien,
     )
 
 
@@ -688,15 +771,11 @@ def ocr_previo(salida: Path, instantes: list[float]) -> list[dict]:
     import medir_cuadros
     import medir_texto
 
-    quiere = {}
-    for f in sorted(salida.glob("frame-*.png")):
-        t = float(re.search(r"-at-([\d.]+)s", f.name).group(1))
-        if any(abs(t - x) < 0.011 for x in instantes):
-            quiere[t] = f
+    quiere = fotogramas(salida, instantes)
     if len(quiere) <= 1:  # a process pool would only add start-up
         return [{"t": t, **medir_cuadros.ocr_imagen(f)} for t, f in quiere.items()]
     # one RapidOCR per process, as the critic's ocr_frames (same model and detection limit)
-    with ProcessPoolExecutor(min(medir_texto.PROCESOS_OCR, len(quiere))) as ex:
+    with ProcessPoolExecutor(min(medir_texto.procesos_ocr(), len(quiere))) as ex:
         lecturas = list(ex.map(medir_cuadros.ocr_imagen, quiere.values()))
     return [{"t": t, **r} for t, r in zip(quiere, lecturas, strict=True)]
 
@@ -782,7 +861,9 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
         proy / "renders" / f"{ref}-rapido.mp4",
     )
     r = _run(
-        hfversion.npx("render", "--quality", "draft", "--output", str(crudo)),
+        hfversion.npx(
+            "render", *RENDER_GPU, "--quality", "draft", "--output", str(crudo)
+        ),
         cwd=proy,
         env=env,
     )
@@ -1068,14 +1149,20 @@ def producir(proy: Path) -> dict:
         }
         # first and alone: a dark hook found after the full preview cost ~24 min (huang-exit-largo, 18-nov)
         puerta("gancho", *gancho_temprano(proy, env, u))
-    with ThreadPoolExecutor(1) as ex:
-        hoja = (
-            ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
-            if previo
-            else None
-        )
-        puerta("contraste", *auditar_contraste(proy, env), seguir=previo)
-        if hoja:
+    cuadros = proy / "renders" / "previo"
+    if not previo:
+        puerta("contraste", *auditar_contraste(proy, env))
+    elif aprobados_contraste(proy, env)[2]:
+        # frames first: the audit skips every scene whose frame already passed byte for byte
+        ok_hoja, detalle = hoja_previa(proy, env, muestreo and muestreo["todos"])
+        puerta("hoja", ok_hoja, detalle, seguir=True)
+        c = auditar_contraste(proy, env, cuadros=cuadros if ok_hoja else None)
+        puerta("contraste", *c, seguir=True)
+    else:  # nothing to skip: frames and audit side by side (234 + 622 s serial, 22-nov)
+        with ThreadPoolExecutor(1) as ex:
+            hoja = ex.submit(hoja_previa, proy, env, muestreo and muestreo["todos"])
+            c = auditar_contraste(proy, env, cuadros=cuadros, hoja=hoja)
+            puerta("contraste", *c, seguir=True)
             ok_hoja, detalle = hoja.result()
             puerta("hoja", ok_hoja, detalle, seguir=True)
     if previo:
@@ -1103,7 +1190,9 @@ def producir(proy: Path) -> dict:
     car_f = car_ex.submit(social_previo, proy, env) if sb.get("social") else None
     if not reusar:
         r = _run(
-            hfversion.npx("render", "--quality", "high", "--output", str(crudo)),
+            hfversion.npx(
+                "render", *RENDER_GPU, "--quality", "high", "--output", str(crudo)
+            ),
             cwd=proy,
             env=env,
         )
@@ -1321,6 +1410,7 @@ def registrar_corrida(
         "s": round(time.time() - t0),
         "previo": "--previo" in argv,
         "rapido": "--rapido" in argv,
+        "auto": "--sin-auto" not in argv,
         "fallo": fallo,
     }
     if reglas := reglas_fallidas(detalles):
