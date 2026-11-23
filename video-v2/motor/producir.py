@@ -609,6 +609,9 @@ def medicion_valida(d: dict) -> tuple[bool, str]:
 # NVENC encoding: 84 vs 134 s on huang-exit, SSIM 0.992 / PSNR 49.6 dB against the CPU encode, above the
 # 0.986 of two CPU renders of the same page (22-nov). Without an NVIDIA GPU, PRODUCIR_SIN_GPU=1.
 RENDER_GPU = () if os.environ.get("PRODUCIR_SIN_GPU") else ("--gpu",)
+# auto drops to 1 worker when its calibration sees slow frames: huang-exit-largo 1680 s with 1, 846 s with 4,
+# same SSIM vs CPU but 6 of 13288 frames caught an animation one step late (user accepted, 23-nov)
+RENDER_GPU += ("--workers", "4")
 
 
 def gpu_render(log: str) -> str | None:

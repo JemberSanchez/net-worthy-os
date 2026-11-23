@@ -73,7 +73,7 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **`--gpu --workers 4` medido (23-nov):** **846 s** (-50 % vs 1 worker; captura a disco 753 s).
   SSIM 0.9916 igual, pero 6 de 13288 fotogramas (330.3-330.5 s, PSNR mín. 31.5 dB vs 46.5) muestran
   la píldora "BILLION · FORBES EST." aún borrosa (estado anterior de su entrada): el "starvation" que
-  la calibración temía existe, aquí 0.2 s. NO adoptado en `producir.py`: decisión del usuario.
+  la calibración temía existe, aquí 0.2 s. Adoptado en `producir.py` (RENDER_GPU) con OK del usuario.
 - **Crítico `--solo-revisar` medido (22-nov, OCR DirectML, MP4 crudo):** **940 s**. `medir_ritmo.leer_frames`
   322 s, OCR 288 s (887 fotogramas, 0.32 s c/u), `medir_parecido` 82, loudness 78,
   `revisar_audio` 72, `leer_grises` 34, resto < 25. Antes (OCR en CPU) sin medir; suposición con
