@@ -81,6 +81,14 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **`medir_ritmo.leer_frames` 323 → 54 s (23-nov):** `grab()` sin convertir los fotogramas que no se
   muestrean + blur a 270 px de ancho en vez de a 1080p. `max_s`/`desde_s` idénticos en 6 vídeos (5
   Shorts + el long-form); `pct_quieto` ±0.5 pt, 5 cruces del umbral en ~3100 comparaciones.
+- **OCR sin clasificador de ángulo 288 → 234 s, y MÁS correcto (23-nov):** `Global.use_cls: False`.
+  El cls giraba 70 de 886 fotogramas a basura ("WOULD IT SURVIVE?" → "WOUS SUIES"): un L1 falso
+  (escena 3) desaparece, los otros 6 fallos idénticos. ⚠ `motor(img, use_cls=...)` por llamada se
+  queda pegado al motor: comparar con dos motores. Descartado con datos: reusar OCR entre fotogramas
+  consecutivos (solo 29/885 iguales) y 1 fps (7 → 11 fallos, falsos en entradas animadas).
+- **`medir_parecido.hashes_video` 94.8 → 42.3 s:** `grab()` en saltados, 443 hashes idénticos.
+- No se reproducen: loudness 8.8 s aislado (no 78); Whisper 32 s por transcripción igual con
+  0/8/12 hilos (`revisar_audio` = 2 transcripciones). Siguiente: `/producir` completo con `--workers 4`.
 - El previo añade el ref a `video-v2/usado.json`: revertirlo si no se publica (rompe
   `test_todos_los_publicados_siguen_validando`).
 

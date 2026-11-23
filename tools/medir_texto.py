@@ -324,7 +324,9 @@ def esperados_de_proyecto(proy: Path) -> list[dict]:
 PROCESOS_OCR = max(1, min(6, (os.cpu_count() or 2) // 2))
 # onnxruntime defaults to every core per session: 6 x 12 threads on 12 cores made OCR 163 s, capped 77 s (18-nov)
 HILOS_OCR = max(1, (os.cpu_count() or 2) // PROCESOS_OCR)
-PROCESOS_OCR_GPU = 3  # 172 preview frames: 170 s with 1, 51 s with 2, 39.5 s with 3 (22-nov)
+PROCESOS_OCR_GPU = (
+    3  # 172 preview frames: 170 s with 1, 51 s with 2, 39.5 s with 3 (22-nov)
+)
 
 
 def gpu_ocr() -> bool:
@@ -351,6 +353,9 @@ def motor_ocr():
     logging.getLogger("RapidOCR").setLevel(logging.ERROR)
     p = {
         "Global.log_level": "error",
+        # rendered text is never upside down; the angle classifier flipped 70 of 886 frames into garbage
+        # ("NVIDIA'S BOSS" -> "NVIIS S.IOIS", a false L1) and cost 288 -> 234 s (huang-exit-largo, 23-nov)
+        "Global.use_cls": False,
         "Det.limit_type": "max",
         "Det.limit_side_len": 1920,
         "EngineConfig.onnxruntime.intra_op_num_threads": HILOS_OCR,

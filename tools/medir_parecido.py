@@ -58,16 +58,18 @@ def hashes_video(mp4: Path, fps: float = 1.0) -> list[int]:
 
     cap = cv2.VideoCapture(str(mp4))
     paso = max(1, round((cap.get(cv2.CAP_PROP_FPS) or 30.0) / fps))
-    out, i = [], 0
-    while True:
+    out = []
+    for i in itertools.count():
+        if i % paso:
+            if not cap.grab():  # skipped frames are not converted
+                break
+            continue
         ok, fr = cap.read()
         if not ok:
             break
-        if i % paso == 0:
-            g = cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY)
-            if float(g.std()) >= STD_MIN:
-                out.append(dhash(g))
-        i += 1
+        g = cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY)
+        if float(g.std()) >= STD_MIN:
+            out.append(dhash(g))
     cap.release()
     cache.write_text(json.dumps({"clave": clave, "hashes": out}), encoding="utf-8")
     return out
