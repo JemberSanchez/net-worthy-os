@@ -68,9 +68,12 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Render medido (22-nov, `--quality high`, 443 s de vídeo):** CPU **1953 s** vs `--gpu` (NVENC)
   **1680 s** (-14 %); SSIM 0.9916 / PSNR 49.8 dB GPU contra CPU (como el Short: 0.992). El cuello
   es la captura (CPU 1870 s, GPU 1522 s de captura) con **1 worker**: la calibración de HyperFrames
-  mide p95 2034 ms/fotograma y baja `auto` de 4 a 1 ("compositor starvation"). Palanca sin probar:
-  qué escenas cuestan 2 s/fotograma o forzar `--workers`. `--start/--end` falla aquí
-  (`PLAN_TOO_LARGE`, plan 2.98 GiB > 2 GiB): no hay tramo barato.
+  mide p95 2034 ms/fotograma y baja `auto` de 4 a 1 ("compositor starvation"). `--start/--end` falla
+  aquí (`PLAN_TOO_LARGE`, plan 2.98 GiB > 2 GiB): no hay tramo barato.
+- **`--gpu --workers 4` medido (23-nov):** **846 s** (-50 % vs 1 worker; captura a disco 753 s).
+  SSIM 0.9916 igual, pero 6 de 13288 fotogramas (330.3-330.5 s, PSNR mín. 31.5 dB vs 46.5) muestran
+  la píldora "BILLION · FORBES EST." aún borrosa (estado anterior de su entrada): el "starvation" que
+  la calibración temía existe, aquí 0.2 s. NO adoptado en `producir.py`: decisión del usuario.
 - **Crítico `--solo-revisar` medido (22-nov, OCR DirectML, MP4 crudo):** **940 s**. `medir_ritmo.leer_frames`
   322 s, OCR 288 s (887 fotogramas, 0.32 s c/u), `medir_parecido` 82, loudness 78,
   `revisar_audio` 72, `leer_grises` 34, resto < 25. Antes (OCR en CPU) sin medir; suposición con
