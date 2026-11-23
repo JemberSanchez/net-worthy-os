@@ -77,7 +77,10 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Crítico `--solo-revisar` medido (22-nov, OCR DirectML, MP4 crudo):** **940 s**. `medir_ritmo.leer_frames`
   322 s, OCR 288 s (887 fotogramas, 0.32 s c/u), `medir_parecido` 82, loudness 78,
   `revisar_audio` 72, `leer_grises` 34, resto < 25. Antes (OCR en CPU) sin medir; suposición con
-  4.7 s/fotograma: ~70 min solo de OCR. Siguiente palanca: `leer_frames` (decodifica todo en Python).
+  4.7 s/fotograma: ~70 min solo de OCR.
+- **`medir_ritmo.leer_frames` 323 → 54 s (23-nov):** `grab()` sin convertir los fotogramas que no se
+  muestrean + blur a 270 px de ancho en vez de a 1080p. `max_s`/`desde_s` idénticos en 6 vídeos (5
+  Shorts + el long-form); `pct_quieto` ±0.5 pt, 5 cruces del umbral en ~3100 comparaciones.
 - El previo añade el ref a `video-v2/usado.json`: revertirlo si no se publica (rompe
   `test_todos_los_publicados_siguen_validando`).
 
