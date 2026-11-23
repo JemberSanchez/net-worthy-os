@@ -18,7 +18,7 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
-## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, SIN render aún
+## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, render medido 22-nov (sin publicar)
 
 - **Retención sin render (19-nov):** avisos de `construir.py`, antes → después:
 
@@ -65,6 +65,16 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
   MONTHS 2.44, LATE-NINETIES PC 2.86, MICROSOFT DIRECTX 2.97, THE PC NEEDED 2.98) y el usuario los lee
   bien en el fotograma entero. p95/p5 subestima el texto grande tenue; bajar el umbral para que cuadre
   con n=4 sería ajustar a ojo. `check --json` no da razón ni caja por texto (solo totales).
+- **Render medido (22-nov, `--quality high`, 443 s de vídeo):** CPU **1953 s** vs `--gpu` (NVENC)
+  **1680 s** (-14 %); SSIM 0.9916 / PSNR 49.8 dB GPU contra CPU (como el Short: 0.992). El cuello
+  es la captura (CPU 1870 s, GPU 1522 s de captura) con **1 worker**: la calibración de HyperFrames
+  mide p95 2034 ms/fotograma y baja `auto` de 4 a 1 ("compositor starvation"). Palanca sin probar:
+  qué escenas cuestan 2 s/fotograma o forzar `--workers`. `--start/--end` falla aquí
+  (`PLAN_TOO_LARGE`, plan 2.98 GiB > 2 GiB): no hay tramo barato.
+- **Crítico `--solo-revisar` medido (22-nov, OCR DirectML, MP4 crudo):** **940 s**. `medir_ritmo.leer_frames`
+  322 s, OCR 288 s (887 fotogramas, 0.32 s c/u), `medir_parecido` 82, loudness 78,
+  `revisar_audio` 72, `leer_grises` 34, resto < 25. Antes (OCR en CPU) sin medir; suposición con
+  4.7 s/fotograma: ~70 min solo de OCR. Siguiente palanca: `leer_frames` (decodifica todo en Python).
 - El previo añade el ref a `video-v2/usado.json`: revertirlo si no se publica (rompe
   `test_todos_los_publicados_siguen_validando`).
 
