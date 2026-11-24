@@ -18,6 +18,26 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## Render por escena (23-nov, medido en `huang-exit-largo`, HF 0.9.86): SÍ funciona, con recorte
+
+Paso 1 de `docs/PLAN-VELOCIDAD.md`. Diseño propuesto (pendiente de OK): sección "Render por escena"
+de ese archivo. Medido sobre una copia del proyecto (rama f1, `index.html` del 22-nov):
+
+| medida                                                    | resultado                                                                                                                                                         |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| render completo `--gpu --workers 4 --quality high`        | **15m 56s** reloj (capture 13m14s; fijos: compile 33 + extract 78 + audio 105 s)                                                                                  |
+| `--start/--end` nativo sobre `index.html`                 | **falla siempre**: `PLAN_TOO_LARGE` (3.48 GiB > tope 2 GiB, no expuesto en la CLI). Planifica la película entera (64 clips, 63 s de extract) para cualquier tramo |
+| recortar la página (quitar recursos fuera del tramo)      | quitar `<section>` rompe `motor.js` (`puntos`: `appendChild` de null). Quitar solo `<video>`/`<audio>` fuera del tramo: funciona                                  |
+| 1 escena recortada (s10, 6.6 s; s11, 5.8 s)               | **1m 44s y 2m 14s** reloj (HF: 1m32s, 2m02s). ~60-70 s fijos (audio 41 s, probe 9 s, npx ~12 s) + captura                                                         |
+| fidelidad escena vs completo (198 frames)                 | SSIM medio 0.990 (mín 0.989), PSNR 46.8 dB. Diferencia de codificador: el tramo ignora `--gpu` y sale en libx264 8.7 Mbps; el completo es h264_nvenc 15.7 Mbps    |
+| unir s10+s11 por stream copy                              | 372 frames exactos (198+174), sin salto en el corte (SSIM 0.9892 → 0.9904 en el frame 1589), audio idéntico (error rel. 0.0000, desfase constante 12 ms)          |
+| empalmar el tramo en el MP4 completo (re-codificar nvenc) | **43 s**; 13288 frames (= completo); zonas sin tocar SSIM 0.9959 (mín 0.9916); cortes sin salto                                                                   |
+
+Conclusión: un parche de 1 escena pasa de ~16 min a **~2.5-3 min** (tramo ~1m45-2m15 + empalme 43 s).
+Los tramos usan `[round(a·fps), round(b·fps))`: tramos contiguos encajan sin huecos ni duplicados.
+`--resume` de HF NO sirve de caché: reusa segmentos solo con el mismo `planHash` (misma página).
+Scripts del experimento (`recortar.py`, `comparar.py`): carpeta de notas de la sesión, no en el repo.
+
 ## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, render medido 22-nov (sin publicar)
 
 - **Retención sin render (19-nov):** avisos de `construir.py`, antes → después:
