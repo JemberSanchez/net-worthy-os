@@ -1969,6 +1969,7 @@ def construir(
 
 IGNORAR = (
     "renders/",
+    "_tramo.html",  # producir's per-scene page (tramos.py), left behind only if a render is killed
     "snapshots/",
     ".hyperframes/",
     "node_modules/",

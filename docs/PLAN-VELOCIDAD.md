@@ -67,51 +67,44 @@ Objetivo A: corridas fallidas de **28 % a < 10 %**; Short de ~10 corridas a **�
 Metas: máquina por Short **57 → ≤ 25 min**; largo **60-80 → ≤ 35 min**; tu tiempo diario **< 15 min**.
 Todas son PROVISIONALES hasta medirlas en la tanda real.
 
-## Render por escena: diseño (PROPUESTA, pendiente de tu OK)
+## Render por escena: IMPLEMENTADO (24-nov, `video-v2/motor/tramos.py`)
 
-Medición que lo respalda: `docs/ESTADO.md`, "Render por escena" (23-nov). Un parche de 1 escena:
-~16 min → ~2.5-3 min en el largo.
+Medición: `docs/ESTADO.md`, "Render por escena". Parche de 1 escena en el largo: **175 s** de reloj
+contra 13-21 min del completo; fuera del tramo, igual que dos completos entre sí.
 
-**Idea:** no guardar 85 trozos. Guardar el último render bueno (`<ref>-final.mp4` + su `index.html`)
-y, tras un parche, re-renderizar solo las ventanas que cambiaron y empalmarlas.
+Cómo funciona, en la puerta `render` de `producir.py` (`render_por_tramos`), cuando la página cambió:
 
-1. **Qué cambió (diff, no hash por escena).** `window.PLAN` (en `index.html`) lleva las listas con
-   tiempos (`escenas`, `words`, `fotos`, `sonidos`, `transiciones`, `golpes`, ...). Se comparan la página
-   nueva y la del último render entrada por entrada: cada entrada nueva o distinta marca su intervalo
-   de tiempo; lo mismo para los elementos con `data-start` del DOM y para cada asset cuyo hash cambió
-   (marca las ventanas donde se usa). **Cualquier otra diferencia** (escalares del PLAN, `motor.js`,
-   CSS, una entrada sin tiempo deducible) → render completo, como hoy. Conservador a propósito.
-2. **Ventanas.** Cada intervalo sucio se amplía a escenas enteras (`[inicio_i, inicio_{i+1})`, que ya
-   cubre el solape de 0.02 s de las transiciones) y se funden las contiguas.
-3. **Render del tramo.** Copia de la página quitando `<video>`/`<audio>` que no tocan la ventana (el
-   resto del DOM se queda: `motor.js` lo necesita) + `hyperframes render -c <copia> --start a --end b`.
-4. **Empalme.** ffmpeg: completo anterior `[0, a)` + tramos + completo `[b, fin)`, re-codificado con
-   h264_nvenc (43 s medidos), mismo `--quality`. Audio: el del completo anterior por stream copy si
-   ningún `<audio>`/`sonidos` cambió; si cambió, empalmar también el audio en PCM con el del tramo
-   (medido idéntico, desfase fijo de 12 ms a compensar) y codificar AAC una vez.
-5. **Dónde entra.** Solo en la puerta `render` de `producir.py` (líneas ~1189-1212): hoy es
-   `render_reutilizable` (todo o nada); pasa a todo / nada / tramos. `render.json` guarda además la
-   copia de `index.html` del render bueno. El crítico no cambia: sus rondas ya llaman a
-   `producir.py --sin-subir --sin-critico`, así que heredan el ahorro. `qa.json` registra
-   `render: {modo: "tramos", ventanas: [...], s}`.
-6. **Red de seguridad.** Tras empalmar, SSIM de los frames a ±3 de cada corte contra el render anterior
-   en la parte NO tocada (medido: ≥ 0.99); si baja de 0.98, render completo. Y el crítico vuelve a medir
-   el MP4 final entero, como siempre.
+1. **Qué cambió.** Compara `index.html` con la copia del último render bueno
+   (`renders/render-index.html`) y los hashes de los assets (`render.json`). Cada elemento con
+   `data-start` ocupa una línea (así lo escribe construir): una línea distinta marca su intervalo. En
+   `window.PLAN`, cada entrada de lista distinta marca el suyo (`t0/t1/start/end/en/t/marca/dur`). Un
+   asset cambiado marca dónde se usa. **Render completo** si cambia cualquier otra cosa (CSS, `motor.js`,
+   un escalar del PLAN, una entrada sin tiempo como `calientes`), **cualquier audio** (`<audio>`,
+   `sonidos`, `sfx_mezcla`, volúmenes, voz), otra versión de HyperFrames, o el final ya no es el del
+   último render. El motivo se imprime (`· render completo: ...`).
+2. **Ventanas.** Intervalo ±1 s → escenas enteras, contiguas fundidas. Más de 8 ventanas o más de la
+   mitad de la película → completo.
+3. **Tramo.** Página copiada sin `<audio>` y sin `<video>` fuera de la ventana (`renders/` no cuenta
+   para el tope de 2 GiB de HF: comprobado con el final de 878 MB dentro) + `render -c _tramo.html
+   --start --end`.
+4. **Empalme.** Final anterior + tramos, re-codificado con h264_nvenc (libx264 con `PRODUCIR_SIN_GPU`);
+   audio copiado del final anterior, ya normalizado, así que no se repite loudnorm. Se comprueba el
+   número de frames de cada tramo y del resultado; cualquier fallo → render completo.
 
-**Riesgos y límites (medidos o declarados):**
+`--completo` lo fuerza. El crítico no cambia: sus rondas llaman a `producir.py --sin-subir
+--sin-critico` y heredan el ahorro.
 
-- Cada tramo paga ~60-70 s fijos (audio 41 s, probe 9 s, npx 12 s). 5 escenas sueltas ≈ 5 × 1m45s: aún
-  la mitad que un completo. Con > ~8 ventanas sueltas compensa el completo (umbral PROVISIONAL).
-- El tramo ignora `--gpu` (sale libx264) y su captura BeginFrame falla y reintenta en screenshot (~3 s).
-  No afecta al resultado: el empalme re-codifica con nvenc.
-- Re-codificar el completo pierde un poco (SSIM 0.996 en lo no tocado, PSNR 53 dB): invisible, pero
-  se acumula si se empalma ronda tras ronda. Máx. 2 rondas del crítico → máx. 2 generaciones.
-- Medido solo en el largo. En un Short (~60 s) el completo dura poco: el ahorro será menor; medirlo.
-- Sin medir: quitar también el audio de la copia (ahorraría ~41 s por tramo) cuando el audio no cambió.
+**Cambios frente a la propuesta:** con audio cambiado no se empalma el PCM, se hace el completo (más
+simple, y el audio hay que normalizarlo entero). Sin la "red de seguridad" de SSIM en los cortes: los
+cortes caen en bordes de escena, donde la imagen cambia de todos modos, así que esa medida no detecta
+nada; la red real es el crítico, que vuelve a medir el MP4 entero.
 
-**Implementación estimada:** ~150 líneas en `producir.py` (diff de PLAN/DOM, recorte, empalme) + tests
-del diff con dos páginas de juguete. Hecho = una ronda real del crítico con parche de 1-2 escenas en el
-largo: minutos medidos y SSIM en los cortes.
+**Límites:**
+
+- Cada tramo paga ~60-70 s fijos. 8 ventanas ≈ un completo (umbral PROVISIONAL).
+- Cada empalme re-codifica: máx. 2 rondas del crítico → máx. 2 generaciones (SSIM 0.996 por pasada).
+- Sin medir: un Short (el completo dura poco, ahorrará menos) y una ronda real del crítico de punta a
+  punta (lo medido es la función sobre un parche simulado: texto de s40 + `fondo.opacidad`).
 
 ## Fuera de este plan (a propósito)
 

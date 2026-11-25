@@ -971,20 +971,102 @@ def _sha(ruta: Path) -> str:
         return hashlib.file_digest(f, "sha256").hexdigest()
 
 
-def clave_render(proy: Path) -> str:
-    """What the render depends on: the built page and every asset it can load. Raw clips (*.src, up to
-    hundreds of MB) by name and size; the rest by content.
+def huellas_assets(proy: Path) -> dict[str, str]:
+    """Every asset the page can load: raw clips (*.src, up to hundreds of MB) by size, the rest by content.
     shortcut: a raw clip replaced by another of the exact same size is missed; hash it too if that bites."""
+    return {
+        f.relative_to(proy).as_posix(): (
+            f":{f.stat().st_size}" if f.suffix == ".src" else _sha(f)
+        )
+        for f in sorted((proy / "assets").rglob("*"))
+        if f.is_file()
+    }
+
+
+def clave_render(proy: Path, huellas: dict[str, str] | None = None) -> str:
+    """What the render depends on: the built page and every asset it can load."""
     h = hashlib.sha256((proy / "index.html").read_bytes())
-    for f in sorted((proy / "assets").rglob("*")):
-        if f.is_file():
-            rel = f.relative_to(proy).as_posix()
-            h.update(
-                f"{rel}:{f.stat().st_size}".encode()
-                if f.suffix == ".src"
-                else (rel + _sha(f)).encode()
-            )
+    for rel, huella in (huellas or huellas_assets(proy)).items():
+        h.update((rel + huella).encode())
     return h.hexdigest()
+
+
+def render_por_tramos(
+    proy: Path, env: dict, final: Path, cache: Path, huellas: dict[str, str]
+) -> str | None:
+    """Re-render only the scenes whose page changed since the last good render and splice them into its
+    final MP4 (tramos.py). The gate's detail on success; None (reason printed) when the whole film must
+    render: no previous render, another HyperFrames, a change it cannot place in time, or a failed span."""
+    import tramos
+
+    previa = cache.with_name("render-index.html")
+    if "--completo" in sys.argv or not (
+        cache.exists() and final.exists() and previa.exists()
+    ):
+        return None
+    c = json.loads(cache.read_text(encoding="utf-8"))
+    if (
+        "assets" not in c
+        or c.get("final_sha") != _sha(final)
+        or c.get("hf") != (env.get("HF_VERSION") or hfversion.version())
+    ):
+        return None
+    nuevo = (proy / "index.html").read_text(encoding="utf-8")
+    try:  # a page this diff does not expect must cost a whole render, never the production
+        spans, motivo = tramos.cambios(
+            previa.read_text(encoding="utf-8"), nuevo, c["assets"], huellas
+        )
+        ventanas = None
+        if spans is not None:
+            ventanas, motivo = tramos.ventanas(spans, tramos._plan(nuevo)[0])
+    except (KeyError, ValueError, TypeError) as e:  # JSONDecodeError is a ValueError
+        ventanas, motivo = None, f"diff fallido: {e!r}"
+    if ventanas is None:
+        print(f"· render completo: {motivo}")
+        return None
+    t0, partes = time.time(), []
+    carpeta, pagina = proy / "renders" / "tramos", proy / "_tramo.html"
+    carpeta.mkdir(exist_ok=True)
+    try:
+        for a, b in ventanas:
+            pagina.write_text(tramos.recortar(nuevo, a, b), encoding="utf-8")
+            out = carpeta / f"{a:.3f}-{b:.3f}.mp4"
+            r = _run(
+                hfversion.npx(
+                    "render",
+                    "-c",
+                    pagina.name,
+                    *RENDER_GPU,
+                    "--quality",
+                    "high",
+                    "--start",
+                    str(a),
+                    "--end",
+                    str(b),
+                    "--output",
+                    str(out),
+                ),
+                cwd=proy,
+                env=env,
+            )
+            if r.returncode or not out.exists():
+                print(f"· render completo: el tramo {a}-{b} falló: {r.stderr[-200:]}")
+                return None
+            partes.append((a, b, out))
+        nuevo_final = final.with_name(final.stem + ".tramos.mp4")
+        ok, det = tramos.empalmar(
+            final, partes, tramos.fps_de(nuevo), nuevo_final, "--gpu" in RENDER_GPU
+        )
+        if not ok:
+            nuevo_final.unlink(missing_ok=True)
+            print(f"· render completo: empalme fallido: {det}")
+            return None
+        nuevo_final.replace(final)
+    finally:
+        pagina.unlink(missing_ok=True)
+        shutil.rmtree(carpeta, ignore_errors=True)
+    lista = ", ".join(f"{a:.1f}-{b:.1f}" for a, b in ventanas)
+    return f"tramos {lista} s: {det} en {time.time() - t0:.0f} s"
 
 
 def clave_critico(proy: Path, final: Path) -> str:
@@ -1186,12 +1268,16 @@ def producir(proy: Path) -> dict:
         renders / f"{ref}-final.mp4",
         renders / f"{ref}-preview.mp4",
     )
-    cache_render, clave = renders / "render.json", clave_render(proy)
+    huellas = huellas_assets(proy)
+    cache_render, clave = renders / "render.json", clave_render(proy, huellas)
     reusar = render_reutilizable(cache_render, clave, final)
     # the carousel does not need the video (only the story does): it is made while the video renders
     car_ex = ThreadPoolExecutor(1)
     car_f = car_ex.submit(social_previo, proy, env) if sb.get("social") else None
-    if not reusar:
+    tramo = (
+        None if reusar else render_por_tramos(proy, env, final, cache_render, huellas)
+    )
+    if not reusar and not tramo:
         r = _run(
             hfversion.npx(
                 "render", *RENDER_GPU, "--quality", "high", "--output", str(crudo)
@@ -1204,13 +1290,17 @@ def producir(proy: Path) -> dict:
     car_ex.shutdown()
     if reusar:
         puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
+    elif tramo:
+        puerta("render", True, tramo)
     else:
         puerta(
             "render",
             r.returncode == 0 and crudo.exists(),
             (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
         )
-    qa["hyperframes"]["gpu"] = None if reusar else gpu_render(r.stdout + r.stderr)
+    qa["hyperframes"]["gpu"] = (
+        None if reusar or tramo else gpu_render(r.stdout + r.stderr)
+    )
     if qa["hyperframes"]["gpu"] and "NVIDIA" not in qa["hyperframes"]["gpu"]:
         # the PC's per-app GPU preference is keyed to chrome-headless-shell.exe's path, which changes
         # with each HyperFrames Chrome update: the render then silently drops to the iGPU (~2x slower)
@@ -1220,6 +1310,10 @@ def producir(proy: Path) -> dict:
         )
     if reusar:
         ok_ln, det_ln = True, "reutilizado"
+    elif (
+        tramo
+    ):  # no audio changed: the spliced final keeps the old, already normalised track
+        ok_ln, det_ln = True, "audio del render anterior"
     else:
         ok_ln, det_ln = loudnorm_2pasos(crudo, final)
         if ok_ln:
@@ -1227,8 +1321,17 @@ def producir(proy: Path) -> dict:
             det_ln = f"{det_ln.strip().splitlines()[-1] if det_ln.strip() else ''} · {det_pico}"
     puerta("loudnorm", ok_ln, det_ln)
     crudo.unlink(missing_ok=True)  # 40-60 MB; only input of loudnorm, the final ships
+    shutil.copyfile(proy / "index.html", cache_render.with_name("render-index.html"))
     cache_render.write_text(
-        json.dumps({"clave": clave, "final_sha": _sha(final)}), encoding="utf-8"
+        json.dumps(
+            {
+                "clave": clave,
+                "final_sha": _sha(final),
+                "hf": env.get("HF_VERSION") or hfversion.version(),
+                "assets": huellas,
+            }
+        ),
+        encoding="utf-8",
     )
     # the critic (~11 min) measures the final MP4 while the cheaper gates below do too
     ex = ThreadPoolExecutor(1)

@@ -20,8 +20,8 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 
 ## Render por escena (23-nov, medido en `huang-exit-largo`, HF 0.9.86): SÍ funciona, con recorte
 
-Paso 1 de `docs/PLAN-VELOCIDAD.md`. Diseño propuesto (pendiente de OK): sección "Render por escena"
-de ese archivo. Medido sobre una copia del proyecto (rama f1, `index.html` del 22-nov):
+Paso 1 de `docs/PLAN-VELOCIDAD.md`. **Implementado el 24-nov** (`video-v2/motor/tramos.py`, puerta
+`render` de `producir.py`; cómo funciona: sección "Render por escena" de ese archivo). Medido sobre una copia del proyecto (rama f1, `index.html` del 22-nov):
 
 | medida                                                    | resultado                                                                                                                                                         |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -37,6 +37,20 @@ Conclusión: un parche de 1 escena pasa de ~16 min a **~2.5-3 min** (tramo ~1m45
 Los tramos usan `[round(a·fps), round(b·fps))`: tramos contiguos encajan sin huecos ni duplicados.
 `--resume` de HF NO sirve de caché: reusa segmentos solo con el mismo `planHash` (misma página).
 Scripts del experimento (`recortar.py`, `comparar.py`): carpeta de notas de la sesión, no en el repo.
+
+Prueba de la implementación (24-nov): parche simulado en s40 (texto + `fondo.opacidad`) →
+`render_por_tramos` eligió el tramo 200.2-213.7 s (s40 ± vecinas) y tardó **175 s** de reloj en total.
+SSIM por frame sobre 13288 frames, audio idéntico (err. 0.0000) en todos:
+
+| comparación                                    | fuera del tramo | escena s40 |
+| ---------------------------------------------- | --------------- | ---------- |
+| suelo: dos completos de la MISMA página        | 0.9941          | 0.9929     |
+| empalme vs completo de la página parcheada     | 0.9934          | 0.9885     |
+| empalme vs original sin parche                 | 0.9958          | 0.9813     |
+
+Fuera del tramo, el empalme queda en el suelo de ruido: el render completo tampoco es exacto contra sí
+mismo. En s40 se parece más a la verdad que al original: el parche entró. Lo que falta hasta 0.9929 es
+libx264 contra nvenc. Ese día el completo tardó 12m55s y 20m45s (mismo PC).
 
 ## F1 long-form (18-nov, rama `claude/f1-longform-35b6f4`): previo en verde, render medido 22-nov (sin publicar)
 
