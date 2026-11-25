@@ -992,11 +992,18 @@ def clave_render(proy: Path, huellas: dict[str, str] | None = None) -> str:
 
 
 def render_por_tramos(
-    proy: Path, env: dict, final: Path, cache: Path, huellas: dict[str, str]
-) -> str | None:
+    proy: Path,
+    env: dict,
+    final: Path,
+    crudo: Path,
+    cache: Path,
+    huellas: dict[str, str],
+) -> tuple[str, bool] | None:
     """Re-render only the scenes whose page changed since the last good render and splice them into its
-    final MP4 (tramos.py). The gate's detail on success; None (reason printed) when the whole film must
-    render: no previous render, another HyperFrames, a change it cannot place in time, or a failed span."""
+    final MP4 (tramos.py). (the gate's detail, whether the audio changed) on success: with new audio the
+    result is written to `crudo` for loudnorm, else straight to `final`. None (reason printed) when the
+    whole film must render: no previous render, another HyperFrames, a change it cannot place in time,
+    or a failed span."""
     import tramos
 
     previa = cache.with_name("render-index.html")
@@ -1013,29 +1020,33 @@ def render_por_tramos(
         return None
     nuevo = (proy / "index.html").read_text(encoding="utf-8")
     try:  # a page this diff does not expect must cost a whole render, never the production
-        spans, motivo = tramos.cambios(
+        spans, motivo, audio = tramos.cambios(
             previa.read_text(encoding="utf-8"), nuevo, c["assets"], huellas
         )
-        ventanas = None
-        if spans is not None:
+        ventanas: list[tuple[float, float]] | None = None
+        if spans:
             ventanas, motivo = tramos.ventanas(spans, tramos._plan(nuevo)[0])
+        elif spans is not None:
+            ventanas, motivo = ([], "") if audio else (None, "sin cambios visibles")
     except (KeyError, ValueError, TypeError) as e:  # JSONDecodeError is a ValueError
-        ventanas, motivo = None, f"diff fallido: {e!r}"
+        ventanas, motivo, audio = None, f"diff fallido: {e!r}", False
     if ventanas is None:
         print(f"· render completo: {motivo}")
         return None
-    t0, partes = time.time(), []
-    carpeta, pagina = proy / "renders" / "tramos", proy / "_tramo.html"
+    t0, partes, fps = time.time(), [], tramos.fps_de(nuevo)
+    carpeta, espejo = proy / "renders" / "tramos", tramos.espejo(proy)
     carpeta.mkdir(exist_ok=True)
     try:
         for a, b in ventanas:
-            pagina.write_text(tramos.recortar(nuevo, a, b), encoding="utf-8")
+            (espejo / "_tramo.html").write_text(
+                tramos.recortar(nuevo, a, b), encoding="utf-8"
+            )
             out = carpeta / f"{a:.3f}-{b:.3f}.mp4"
             r = _run(
                 hfversion.npx(
                     "render",
                     "-c",
-                    pagina.name,
+                    "_tramo.html",
                     *RENDER_GPU,
                     "--quality",
                     "high",
@@ -1046,27 +1057,53 @@ def render_por_tramos(
                     "--output",
                     str(out),
                 ),
-                cwd=proy,
+                cwd=espejo,
                 env=env,
             )
             if r.returncode or not out.exists():
-                print(f"· render completo: el tramo {a}-{b} falló: {r.stderr[-200:]}")
+                print(f"· render completo: el tramo {a}-{b} falló: {(r.stdout + r.stderr)[-400:]}")
                 return None
             partes.append((a, b, out))
-        nuevo_final = final.with_name(final.stem + ".tramos.mp4")
-        ok, det = tramos.empalmar(
-            final, partes, tramos.fps_de(nuevo), nuevo_final, "--gpu" in RENDER_GPU
-        )
-        if not ok:
-            nuevo_final.unlink(missing_ok=True)
-            print(f"· render completo: empalme fallido: {det}")
-            return None
-        nuevo_final.replace(final)
+        video, det = final, "sin cambios de imagen"
+        if partes:
+            video = carpeta / "empalme.mp4"
+            ok, det = tramos.empalmar(final, partes, fps, video, "--gpu" in RENDER_GPU)
+            if not ok:
+                print(f"· render completo: empalme fallido: {det}")
+                return None
+        if audio:
+            # the mix is time-based: 1 fps captures ~1/30 of the frames for the same track
+            pista = carpeta / "audio.mp4"
+            r = _run(
+                hfversion.npx(
+                    "render",
+                    *RENDER_GPU,
+                    "--fps",
+                    "1",
+                    "--quality",
+                    "high",
+                    "--output",
+                    str(pista),
+                ),
+                cwd=espejo,
+                env=env,
+            )
+            if r.returncode or not pista.exists():
+                print(f"· render completo: el audio a 1 fps falló: {(r.stdout + r.stderr)[-400:]}")
+                return None
+            ok, det_a = tramos.con_audio(video, pista, fps, crudo)
+            if not ok:
+                crudo.unlink(missing_ok=True)
+                print(f"· render completo: {det_a}")
+                return None
+            det = f"{det} + {det_a}"
+        else:
+            video.replace(final)
     finally:
-        pagina.unlink(missing_ok=True)
+        shutil.rmtree(espejo, ignore_errors=True)
         shutil.rmtree(carpeta, ignore_errors=True)
-    lista = ", ".join(f"{a:.1f}-{b:.1f}" for a, b in ventanas)
-    return f"tramos {lista} s: {det} en {time.time() - t0:.0f} s"
+    lista = ", ".join(f"{a:.1f}-{b:.1f}" for a, b in ventanas) or "ninguno"
+    return f"tramos {lista} s: {det} en {time.time() - t0:.0f} s", audio
 
 
 def clave_critico(proy: Path, final: Path) -> str:
@@ -1275,7 +1312,9 @@ def producir(proy: Path) -> dict:
     car_ex = ThreadPoolExecutor(1)
     car_f = car_ex.submit(social_previo, proy, env) if sb.get("social") else None
     tramo = (
-        None if reusar else render_por_tramos(proy, env, final, cache_render, huellas)
+        None
+        if reusar
+        else render_por_tramos(proy, env, final, crudo, cache_render, huellas)
     )
     if not reusar and not tramo:
         r = _run(
@@ -1291,7 +1330,7 @@ def producir(proy: Path) -> dict:
     if reusar:
         puerta("render", True, "reutilizado: mismo HTML y assets que el último render")
     elif tramo:
-        puerta("render", True, tramo)
+        puerta("render", True, tramo[0])
     else:
         puerta(
             "render",
@@ -1310,9 +1349,8 @@ def producir(proy: Path) -> dict:
         )
     if reusar:
         ok_ln, det_ln = True, "reutilizado"
-    elif (
-        tramo
-    ):  # no audio changed: the spliced final keeps the old, already normalised track
+    elif tramo and not tramo[1]:
+        # no audio changed: the spliced final keeps the old, already normalised track
         ok_ln, det_ln = True, "audio del render anterior"
     else:
         ok_ln, det_ln = loudnorm_2pasos(crudo, final)

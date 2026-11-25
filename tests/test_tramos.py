@@ -53,7 +53,7 @@ def pagina(
 
 
 def tramos(viejo, nuevo, av=None, an=None):
-    spans, motivo = T.cambios(viejo, nuevo, av or {}, an or {})
+    spans, motivo, _ = T.cambios(viejo, nuevo, av or {}, an or {})
     if spans is None:
         return None, motivo
     plan, _ = T._plan(nuevo)
@@ -80,19 +80,24 @@ class CambiosTest(unittest.TestCase):
         )  # scene 4 (4-5) +-1 s -> scenes 3, 4, 5 merged
 
     def test_cambios_sin_tiempo_piden_el_completo(self):
-        for nuevo, motivo in [
-            (pagina(css="body{color:red}"), "sin tiempo"),
-            (pagina(audio_vol="0.7"), "audio"),
-        ]:
-            v, m = tramos(pagina(), nuevo)
-            self.assertIsNone(v)
-            self.assertIn(motivo, m)
+        v, m = tramos(pagina(), pagina(css="body{color:red}"))
+        self.assertIsNone(v)
+        self.assertIn("sin tiempo", m)
         viejo = pagina().replace(
             '"calientes": ["Nvidia"]', '"calientes": ["Nvidia", "AMD"]'
         )
         self.assertIn("PLAN.calientes", tramos(pagina(), viejo)[1])
-        viejo = pagina().replace('"musica_volumen": 0.5', '"musica_volumen": 0.4')
-        self.assertIn("audio", tramos(pagina(), viejo)[1])
+        # fin_voz also drives motor.js visuals: not an audio-only key
+        nuevo = pagina().replace('"golpes"', '"fin_voz": 8.5, "golpes"')
+        self.assertIn("PLAN.fin_voz", tramos(pagina(), nuevo)[1])
+
+    def test_cambio_solo_de_audio_no_marca_escenas(self):
+        for nuevo in [
+            pagina(audio_vol="0.7"),
+            pagina().replace('"musica_volumen": 0.5', '"musica_volumen": 0.4'),
+        ]:
+            self.assertEqual(T.cambios(pagina(), nuevo, {}, {}), ([], "", True))
+        self.assertFalse(T.cambios(pagina(), pagina(s1="Adiós"), {}, {})[2])
 
     def test_asset_cambiado_marca_donde_se_ve_y_si_no_se_sabe_pide_el_completo(self):
         largo = [{"t0": float(i), "t1": float(i + 1)} for i in range(9)]
@@ -101,7 +106,9 @@ class CambiosTest(unittest.TestCase):
         self.assertEqual(
             tramos(p, p, av, {**av, "assets/v/a.mp4": "2"})[0], [(5.0, 9.0)]
         )  # the video shows 6-9
-        self.assertIn("audio", tramos(p, p, av, {**av, "assets/voice.mp3": "2"})[1])
+        self.assertEqual(
+            T.cambios(p, p, av, {**av, "assets/voice.mp3": "2"}), ([], "", True)
+        )
         self.assertIn("no sé dónde", tramos(p, p, av, {**av, "assets/x.png": "2"})[1])
         # used in the CSS too: the whole film, even though a scene line also names it
         p = pagina(escenas=largo, css="body{background:url(assets/img/fondo.jpg)}")
@@ -111,12 +118,16 @@ class CambiosTest(unittest.TestCase):
             "toda la película", tramos(p, p, av, {"assets/img/fondo.jpg": "2"})[1]
         )
 
-    def test_listas_que_no_son_eventos_y_audio_anidado_piden_el_completo(self):
+    def test_listas_que_no_son_eventos_piden_el_completo_y_audio_anidado_marca_ambos(
+        self,
+    ):
         viejo = pagina().replace('"golpes"', '"subtitulos": [2.0, 4.0], "golpes"')
         nuevo = viejo.replace("[2.0, 4.0]", "[2.0, 8.0]")  # a range, not two points
         self.assertIn("PLAN.subtitulos", tramos(viejo, nuevo)[1])
         nuevo = pagina(s1='Hola<audio src="assets/sfx/x.wav" data-start="4"></audio>')
-        self.assertIn("audio", tramos(pagina(), nuevo)[1])
+        # the scene line changed too: its span AND the audio
+        spans, _, audio = T.cambios(pagina(), nuevo, {}, {})
+        self.assertEqual((set(spans), audio), ({(3.0, 6.0)}, True))
 
     def test_sin_cambios_no_hay_tramos(self):
         self.assertEqual(tramos(pagina(), pagina()), (None, "sin cambios visibles"))
@@ -231,6 +242,55 @@ class EmpalmarTest(unittest.TestCase):
         )
         self.assertFalse(ok)
         self.assertIn("45 frames", det)
+
+    def test_con_audio_pone_la_pista_nueva_cortada_al_video(self):
+        video = self.color("v.mp4", "blue", 3)
+        # a 1 fps render rounds the film up to whole seconds: the track runs past the video
+        fuente = self.color("a.mp4", "red", 4, audio=True)
+        salida = self.tmp / "m.mp4"
+        ok, det = T.con_audio(video, fuente, 30, salida)
+        self.assertTrue(ok, det)
+        self.assertEqual(T.n_frames(salida), 90)
+        self.assertFalse(self.rojo(salida, 10))  # the video stays the old one
+        dur = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=duration",
+                "-of",
+                "csv=p=0",
+                str(salida),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        self.assertAlmostEqual(float(dur), 3.0, delta=0.05)
+
+
+class EspejoTest(unittest.TestCase):
+    def test_copia_enlazada_sin_renders(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            proy = tmp / "ref"
+            (proy / "assets" / "v").mkdir(parents=True)
+            (proy / "renders" / "critica").mkdir(parents=True)
+            (proy / "index.html").write_text("<html>", encoding="utf-8")
+            (proy / "assets" / "v" / "a.mp4").write_bytes(b"x")
+            (proy / "renders" / "critica" / "r0.mp4").write_bytes(b"y")
+            dst = T.espejo(proy)
+            self.assertTrue((dst / "index.html").exists())
+            self.assertTrue(
+                (dst / "assets" / "v" / "a.mp4").samefile(proy / "assets/v/a.mp4")
+            )
+            self.assertFalse((dst / "renders").exists())
+            self.assertEqual(T.espejo(proy), dst)  # a leftover mirror is rebuilt
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":
