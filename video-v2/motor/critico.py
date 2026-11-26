@@ -1506,7 +1506,7 @@ def bucle(
     final = None
     if final_unico and mejor is not None:
         t = time.monotonic()
-        final, _, log = render(proy)  # producir's own gates (loudness, ritmo) check it
+        final, _, log = render(proy, "--sin-contraste")  # contrast was measured on the boceto
         tiempos["render_final_s"] = round(time.monotonic() - t)
         if final is None:
             print(

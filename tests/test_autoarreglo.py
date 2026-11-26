@@ -366,7 +366,7 @@ class BucleProducirTest(unittest.TestCase):
     def falla(self, veces):
         llamadas = []
 
-        def falso(proy):
+        def falso(proy, **kw):
             llamadas.append(proy)
             producir.DETALLES.clear()
             if len(llamadas) <= veces:
@@ -415,8 +415,8 @@ class BucleProducirTest(unittest.TestCase):
         )
         llamadas = []
 
-        def falso(proy):
-            llamadas.append(proy)
+        def falso(proy, **kw):
+            llamadas.append(kw.get("boceto", False))
             producir.DETALLES.clear()
             fallos = [{"id": "M1"}] if len(llamadas) <= veces else []
             inf.write_text(json.dumps({"fallos": fallos}), encoding="utf-8")
@@ -447,11 +447,21 @@ class BucleProducirTest(unittest.TestCase):
                 self.assertEqual(producir.producir_auto(self.tmp), {"ok": True})
         finally:
             producir._run = orig_run
-        self.assertEqual(len(llamadas), 3)
+        # 3 rounds on the boceto, then the one full render
+        self.assertEqual(llamadas, [True, True, True, False])
         self.assertEqual(
             recibido[0], ({}, {"fallos": [{"id": "M1"}]}, ("alta", "media"))
         )
         self.assertEqual(len(voces), 1)  # voice is re-synthesized at most once per run
+
+    def test_pendiente_renderiza_el_final_y_sigue_avisando(self):
+        llamadas = self.critico_falla(99)
+        A.arreglar = lambda *a, **k: ([], ["M1 sin arreglo"], False)
+        with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+            producir.producir_auto(self.tmp)
+        self.assertEqual(
+            llamadas, [True, False]
+        )  # one boceto, then the video to review
 
     def test_informe_viejo_del_critico_no_cuenta(self):
         llamadas = self.critico_falla(0)
@@ -459,8 +469,10 @@ class BucleProducirTest(unittest.TestCase):
         inf.write_text('{"fallos": [{"id": "M1"}]}', encoding="utf-8")
         llamadas.clear()
 
-        def falso(proy):  # the critic did not run this round: the old informe stays
-            llamadas.append(proy)
+        def falso(
+            proy, **kw
+        ):  # the critic did not run this round: the old informe stays
+            llamadas.append(kw.get("boceto", False))
             producir.DETALLES.clear()
             return {"ok": True}
 
@@ -469,7 +481,7 @@ class BucleProducirTest(unittest.TestCase):
         A.arreglar = lambda *a, **k: self.fail("a stale informe must not be fixed")
         with redirect_stdout(io.StringIO()):
             self.assertEqual(producir.producir_auto(self.tmp), {"ok": True})
-        self.assertEqual(len(llamadas), 1)
+        self.assertEqual(llamadas, [True, False])
 
 
 if __name__ == "__main__":

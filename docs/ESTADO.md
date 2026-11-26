@@ -40,6 +40,11 @@ Contra el r0 del 22-nov (HF 0.9.86, otra EQ de música): 24 de 37; esos 37 ya no
 M1 de loudness/pico desaparecen: el loudnorm actual da -14.4 LUFS / -1.85 dBTP).
 Siguiente (sin medir): boceto en `--quality high` para quitar la diferencia de codificador en los casos al filo.
 
+**`/producir` (`--auto`) igual, 25-nov, SIN PROBAR con render:** las rondas de autoarreglo miden el boceto
+(con su crítico) y el render completo va una vez al final, sin auditoría de contraste (el crítico la midió
+en los píxeles del boceto; `--sin-contraste` hace lo mismo a mano). Si queda algo pendiente, igual renderiza
+el final para revisarlo y sale con error. Antes: hasta 4 renders completos (`RONDAS_AUTO = 3`).
+
 **Render lento = GPU:** desde el 21-nov HF usa Chrome `win64-158.0.8127.88`, sin `GpuPreference=2` en
 `HKCU\Software\Microsoft\DirectX\UserGpuPreferences`: el render cayó a la Intel (31m51s vs ~16).
 Añadida a mano el 25-nov; se repetirá con cada Chrome nuevo de HF.

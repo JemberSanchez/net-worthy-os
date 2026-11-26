@@ -212,7 +212,7 @@ class AutoConCriticoParaleloTest(unittest.TestCase):
         inf.parent.mkdir(parents=True)
         llamadas, recibido = [], []
 
-        def falso(proy):
+        def falso(proy, **kw):
             llamadas.append(proy)
             producir.DETALLES.clear()
             inf.write_text('{"rondas": [{"fallos": []}]}', encoding="utf-8")

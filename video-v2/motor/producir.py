@@ -858,8 +858,9 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
     """--rapido: a draft render to judge by eye while the full run (high render + critic) goes on behind.
     Draft = same 1080x1920, 30 fps and frames, 3.9 Mbps; SSIM 0.973 vs high (huang-exit). Publishing still needs
     the critic's approval of the final MP4: this file is never published."""
-    import critico
     import medir_cuadros as mc
+
+    import critico
 
     crudo, rap = (
         proy / "renders" / f"{ref}-rapido-crudo.mp4",
@@ -1202,7 +1203,7 @@ def critico_en_paralelo(proy: Path, final: Path) -> tuple[list[str], float, bool
     return fallos, round(time.monotonic() - t, 1), False
 
 
-def producir(proy: Path) -> dict:
+def producir(proy: Path, boceto: bool = False, contraste: bool = True) -> dict:
     proy = proy.resolve()
     sb = json.loads((proy / "storyboard.json").read_text(encoding="utf-8"))
     ref = sb.get("ref") or proy.name
@@ -1315,18 +1316,24 @@ def producir(proy: Path) -> dict:
         }
         # first and alone: a dark hook found after the full preview cost ~24 min (huang-exit-largo, 18-nov)
         puerta("gancho", *gancho_temprano(proy, env, u))
-    if "--boceto" in sys.argv:
+    if boceto or "--boceto" in sys.argv:
         # no contrast gate: the critic measures contrast on the boceto's own pixels
         bos = render_boceto(proy, ref, env, puerta)
         qa["final"] = str(bos)
+        if "--sin-critico" not in sys.argv:  # --auto reads its informe.json to patch
+            _, qa["critico_s"], qa["critico_reutilizado"] = critico_en_paralelo(
+                proy, bos
+            )
         (renders / "qa.json").write_text(
             json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(f"✓ boceto en {sum(p['s'] for p in qa['puertas']):.0f} s · {bos}")
         return qa
     cuadros = proy / "renders" / "previo"
+    # a page the critic already measured on its boceto skips the ~5-10 min audit before the final render
     if not previo:
-        puerta("contraste", *auditar_contraste(proy, env))
+        if contraste and "--sin-contraste" not in sys.argv:
+            puerta("contraste", *auditar_contraste(proy, env))
     elif aprobados_contraste(proy, env)[2]:
         # frames first: the audit skips every scene whose frame already passed byte for byte
         ok_hoja, detalle = hoja_previa(proy, env, muestreo and muestreo["todos"])
@@ -1631,16 +1638,39 @@ def registrar_corrida(
 
 
 def producir_auto(proy: Path, critico_: bool = True) -> dict:
-    """--auto: mechanical fixes BEFORE the same gates, never instead of them. Each round runs the
-    whole production; a failed gate or a blocking critic fault goes to autoarreglo; whatever it
-    cannot fix stops the loop and is printed for Claude."""
+    """--auto: mechanical fixes BEFORE the same gates, never instead of them. With the critic on, the
+    rounds measure a 10 fps boceto and the full render runs ONCE at the end (each full round cost ~16 min
+    on huang-exit-largo); its own critic then measures the file that ships, with no further round."""
+    boceto = critico_ and not {"--rapido", "--boceto"} & set(sys.argv)
+    if not boceto:
+        return _rondas_auto(proy, critico_, False)
+    pendiente = None
+    try:
+        _rondas_auto(proy, critico_, True)
+    except SystemExit as e:
+        if not PENDIENTES:
+            raise  # a gate or a crash with nothing pending: the final would stop the same way
+        pendiente = e  # left for a person: render anyway so there is a video to review
+    t0 = time.time()
+    try:
+        qa = producir(
+            proy, contraste=False
+        )  # the critic measured contrast on the boceto's pixels
+    finally:
+        RONDAS.append(ronda_medida(proy / "renders" / "qa.json", t0))
+    if pendiente is not None:
+        raise pendiente
+    return qa
+
+
+def _rondas_auto(proy: Path, critico_: bool, boceto: bool) -> dict:
     import autoarreglo
 
     bloquean, voz_rehecha = ("alta",), False
     for ronda in range(RONDAS_AUTO + 1):
         t0, fallo, qa = time.time(), None, None
         try:
-            qa = producir(proy)
+            qa = producir(proy, boceto=boceto)
         except SystemExit as e:
             fallo = e
         RONDAS.append(ronda_medida(proy / "renders" / "qa.json", t0))
