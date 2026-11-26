@@ -614,6 +614,32 @@ RENDER_GPU = () if os.environ.get("PRODUCIR_SIN_GPU") else ("--gpu",)
 # auto drops to 1 worker when its calibration sees slow frames: huang-exit-largo 1680 s with 1, 846 s with 4,
 # same SSIM vs CPU but 6 of 13288 frames caught an animation one step late (user accepted, 23-nov)
 RENDER_GPU += ("--workers", "4")
+HF_CHROME = Path.home() / ".cache" / "hyperframes" / "chrome"
+GPU_PREFS = r"Software\Microsoft\DirectX\UserGpuPreferences"
+
+
+def preferir_nvidia(
+    cache: Path = HF_CHROME,
+    clave: str = GPU_PREFS,
+) -> list[str]:
+    """Sets Windows' per-app "High performance" GPU on every HyperFrames Chrome; returns the ones it set.
+    The preference is keyed to the exe path, which changes with each Chrome update: huang-exit-largo
+    rendered on the iGPU on 25-nov (render 1921 s vs ~850 s) because nobody had set it for the new build."""
+    if os.name != "nt" or "--gpu" not in RENDER_GPU:
+        return []
+    import winreg
+
+    puestos = []
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, clave) as k:
+        for exe in sorted(cache.rglob("chrome-headless-shell.exe")):
+            try:
+                valor = winreg.QueryValueEx(k, str(exe))[0]
+            except FileNotFoundError:
+                valor = ""
+            if "GpuPreference=2" not in valor:
+                winreg.SetValueEx(k, str(exe), 0, winreg.REG_SZ, "GpuPreference=2;")
+                puestos.append(str(exe))
+    return puestos
 
 
 def gpu_render(log: str) -> str | None:
@@ -858,9 +884,8 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
     """--rapido: a draft render to judge by eye while the full run (high render + critic) goes on behind.
     Draft = same 1080x1920, 30 fps and frames, 3.9 Mbps; SSIM 0.973 vs high (huang-exit). Publishing still needs
     the critic's approval of the final MP4: this file is never published."""
-    import medir_cuadros as mc
-
     import critico
+    import medir_cuadros as mc
 
     crudo, rap = (
         proy / "renders" / f"{ref}-rapido-crudo.mp4",
@@ -1213,6 +1238,8 @@ def producir(proy: Path, boceto: bool = False, contraste: bool = True) -> dict:
     )  # one production, one version: children inherit it
     todo = {**os.environ, **env}
     hfversion.alinear_core(todo.get("HF_CORE"))
+    for exe in preferir_nvidia():
+        print(f"GPU: Alto rendimiento puesto para {exe}")
     qa: dict = {
         "ref": ref,
         "hyperframes": {

@@ -111,3 +111,16 @@ nada; la red real es el crítico, que vuelve a medir el MP4 entero.
 - Bajar la calidad del render o del OCR (`limit_side_len`, detector más ligero): ya se midió que
   pierde texto (19-nov).
 - Renderizar en la nube: sin medir; solo si la tanda en tu PC no cabe.
+
+## Medido 26-nov: Short real con boceto + render único (ac516e3)
+
+`huang-resigns`, `producir.py --sin-subir --forzar`, HF 0.9.99, GPU **NVIDIA**: **326 s** de punta a
+punta con carrusel e historia (antes: mediana 631 s). Render 153 s, crítico 135 s, social 57 s, lint
+14 s, build 11 s; el contraste repetido ya no corre. Termina con 1 pendiente (C2 "toca el borde",
+aviso del OCR) que no bloquea el render.
+
+GPU: el largo del 25-nov cayó en la Intel (render 1921 s) porque la preferencia "Alto rendimiento" de
+Windows va por ruta del `chrome-headless-shell.exe`, y cambia con cada Chrome de HyperFrames.
+`producir.preferir_nvidia()` la pone sola antes de cada producción.
+
+Sin medir: el largo con este código y la tanda (`refs/heads/claude/lote`, sin unir).

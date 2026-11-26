@@ -105,7 +105,9 @@ class MedicionValidaTest(unittest.TestCase):
 class BloquesAdnTest(unittest.TestCase):
     W: ClassVar[list] = [
         {"text": x, "start": i * 1.0, "end": i * 1.0 + 0.8}
-        for i, x in enumerate(["Hi", "there.", "Big", "news!", "It", "works.", "The", "end."])
+        for i, x in enumerate(
+            ["Hi", "there.", "Big", "news!", "It", "works.", "The", "end."]
+        )
     ]
 
     def test_duracion_real_y_tecnica(self):
@@ -281,11 +283,37 @@ class GpuRenderTest(unittest.TestCase):
         )  # dropped to the iGPU
         self.assertIsNone(producir.gpu_render("rendered in 1m 56s"))
 
+    @unittest.skipUnless(os.name == "nt", "Windows registry")
+    def test_pone_alto_rendimiento_solo_al_chrome_que_no_lo_tiene(self):
+        import winreg
+
+        clave = r"Software\net-worthy-os-test\UserGpuPreferences"
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            viejo, nuevo = (
+                tmp / v / "chrome-headless-shell.exe" for v in ("win64-1", "win64-2")
+            )
+            for exe in (viejo, nuevo):
+                exe.parent.mkdir(parents=True)
+                exe.write_bytes(b"")
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, clave) as k:
+                winreg.SetValueEx(k, str(viejo), 0, winreg.REG_SZ, "GpuPreference=2;")
+            self.assertEqual(producir.preferir_nvidia(tmp, clave), [str(nuevo)])
+            self.assertEqual(producir.preferir_nvidia(tmp, clave), [])  # idempotent
+        finally:
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, clave)
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, r"Software\net-worthy-os-test")
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 class GanchoPrevioTest(unittest.TestCase):
     """C1 (dark hook) was found only by the critic on the MP4 (huang-exit, 12-nov): one render run lost."""
 
-    U: ClassVar[dict] = {"gancho_s": 2.0, "gancho_luma_min": 30, "gancho_contraste_min": 25}
+    U: ClassVar[dict] = {
+        "gancho_s": 2.0,
+        "gancho_luma_min": 30,
+        "gancho_contraste_min": 25,
+    }
 
     def _frames(self, d: Path, alto: int) -> None:
         import numpy as np
