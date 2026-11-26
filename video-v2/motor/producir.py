@@ -15,6 +15,8 @@ Encadena (cada paso es una puerta: si falla, se para y sale con código 1):
 Por defecto (`--auto`, implícito desde el 18-nov; `--sin-auto` lo apaga): antes de cada repetición aplica
 SOLO arreglos mecánicos (autoarreglo.py) y vuelve a pasar las MISMAS puertas, hasta RONDAS_AUTO veces;
 para e imprime lo que no es mecánico.
+`--boceto`: puertas + build + render a 10 fps (draft) + loudnorm, sin contraste: lo que mide el crítico
+antes del render final (`critico.py`). Nunca se publica.
 `--previo` para antes del render: puertas + una hoja de contactos por escena (<1 min). Sin `--sin-critico`,
 al final corre los medidores del crítico. Solo imprime fallos, con segundo y escena; todo queda en
 `renders/qa.json` (puertas, con su duración) y `renders/corridas.jsonl` (una línea por corrida).
@@ -885,6 +887,44 @@ def render_rapido(proy: Path, ref: str, env: dict, puerta) -> Path:
     return rap
 
 
+FPS_BOCETO = 10  # every frame the critic samples (OCR 2 fps, ritmo/cuadros 5 fps, parecido 1 fps)
+
+
+def render_boceto(proy: Path, ref: str, env: dict, puerta) -> Path:
+    """--boceto: the page at FPS_BOCETO plus the full, normalised mix, for the critic BEFORE the one
+    final render. The meters pick frame round(i * FPS_BOCETO / fps): the same instants as at 30 fps."""
+    crudo, bos = (
+        proy / "renders" / f"{ref}-boceto-crudo.mp4",
+        proy / "renders" / f"{ref}-boceto.mp4",
+    )
+    r = _run(
+        hfversion.npx(
+            "render",
+            *RENDER_GPU,
+            "--fps",
+            str(FPS_BOCETO),
+            "--quality",
+            "draft",
+            "--output",
+            str(crudo),
+        ),
+        cwd=proy,
+        env=env,
+    )
+    puerta(
+        "render",
+        r.returncode == 0 and crudo.exists(),
+        (re.findall(r"rendered in [^\n]+", r.stdout) or [r.stderr[-300:]])[0],
+    )
+    ok, det = loudnorm_2pasos(crudo, bos)
+    if ok:  # same chain as the final: the critic's loudness check must see what ships
+        ok, det_pico = asegurar_pico(bos)
+        det = f"{det.strip().splitlines()[-1] if det.strip() else ''} · {det_pico}"
+    puerta("loudnorm", ok, det)
+    crudo.unlink(missing_ok=True)
+    return bos
+
+
 def gancho_temprano(proy: Path, env: dict, u: dict) -> tuple[bool, str]:
     """The hook gate on its own frames only (~54 s on huang-exit-largo), before contrast and OCR."""
     salida = proy / "renders" / "gancho"
@@ -1061,7 +1101,9 @@ def render_por_tramos(
                 env=env,
             )
             if r.returncode or not out.exists():
-                print(f"· render completo: el tramo {a}-{b} falló: {(r.stdout + r.stderr)[-400:]}")
+                print(
+                    f"· render completo: el tramo {a}-{b} falló: {(r.stdout + r.stderr)[-400:]}"
+                )
                 return None
             partes.append((a, b, out))
         video, det = final, "sin cambios de imagen"
@@ -1089,7 +1131,9 @@ def render_por_tramos(
                 env=env,
             )
             if r.returncode or not pista.exists():
-                print(f"· render completo: el audio a 1 fps falló: {(r.stdout + r.stderr)[-400:]}")
+                print(
+                    f"· render completo: el audio a 1 fps falló: {(r.stdout + r.stderr)[-400:]}"
+                )
                 return None
             ok, det_a = tramos.con_audio(video, pista, fps, crudo)
             if not ok:
@@ -1271,6 +1315,15 @@ def producir(proy: Path) -> dict:
         }
         # first and alone: a dark hook found after the full preview cost ~24 min (huang-exit-largo, 18-nov)
         puerta("gancho", *gancho_temprano(proy, env, u))
+    if "--boceto" in sys.argv:
+        # no contrast gate: the critic measures contrast on the boceto's own pixels
+        bos = render_boceto(proy, ref, env, puerta)
+        qa["final"] = str(bos)
+        (renders / "qa.json").write_text(
+            json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(f"✓ boceto en {sum(p['s'] for p in qa['puertas']):.0f} s · {bos}")
+        return qa
     cuadros = proy / "renders" / "previo"
     if not previo:
         puerta("contraste", *auditar_contraste(proy, env))
@@ -1554,6 +1607,7 @@ def registrar_corrida(
         "s": round(time.time() - t0),
         "previo": "--previo" in argv,
         "rapido": "--rapido" in argv,
+        "boceto": "--boceto" in argv,
         "auto": "--sin-auto" not in argv,
         "fallo": fallo,
     }

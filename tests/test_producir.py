@@ -387,3 +387,14 @@ class LoudnessMedidoTest(unittest.TestCase):
         self.assertTrue(ok, det)
         self.assertLessEqual(abs(lufs - producir.LUFS_OBJ), 0.8)
         self.assertLessEqual(tp, producir.TP_MAX)
+
+
+class TestBoceto(unittest.TestCase):
+    def test_boceto_holds_every_frame_the_critic_samples(self):
+        # the meters take frame round(i * fps_video / fps): exact only when fps divides FPS_BOCETO
+        sys.path.insert(0, str(Path(producir.RAIZ) / "tools"))
+        import medir_cuadros
+        import medir_ritmo
+
+        for fps in (2, 1, medir_cuadros.FPS, medir_ritmo.FPS_MUESTREO):
+            self.assertEqual(producir.FPS_BOCETO % fps, 0, fps)

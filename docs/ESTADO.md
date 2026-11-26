@@ -18,6 +18,32 @@ Si este archivo y la realidad discrepan, gana la realidad (`git log`, la DB): co
 - **Queja abierta:** el piloto `interest-vs-defense` "se ve mucho más simple": 0 clips, 0 imágenes,
   0 cortes (auditoría del 3-nov, `docs/mejora/auditoria.md`; `docs/mejora/` está gitignored, solo local).
 
+## Crítico antes del render (25-nov, `huang-exit-largo`, HF 0.9.96): boceto a 10 fps
+
+`critico.py` sin `--mp4`: cada ronda mide un **boceto** (`producir.py --boceto`: render 10 fps draft +
+loudnorm, sin contraste) y el render completo va UNA vez al final. 10 fps contiene exactamente los
+cuadros que muestrean los medidores (OCR 2, ritmo/cuadros 5, parecido 1 fps; test `TestBoceto`).
+Publicar sigue exigiendo el crítico sobre el MP4 final (`--mp4 <final> --solo-revisar`): sin cambio.
+
+| paso (1 corrida, `--rondas 0`)                   | medido                                        |
+| ------------------------------------------------ | --------------------------------------------- |
+| sin MP4: G2 re-ganchos / V1 voz / Whisper limpia | 0.0 s (5 fallos) / 0.6 s (4) / 21.7 s         |
+| boceto (puertas + build + render 10 fps + loud.) | **681 s**                                     |
+| crítico sobre el boceto                          | **195 s**                                     |
+| render final (puertas + contraste 310 s + HF)    | 2417 s: HF 31m51s en la **Intel** (ver abajo) |
+| crítico sobre el final (solo para validar)       | ~5 min                                        |
+
+Fidelidad, boceto vs final de la MISMA página: **26 de 32 fallos iguales**. Distintos: 4+4 A1 "escuchar"
+(una sola medida de Whisper, el propio informe lo marca dudoso), L1 "DREAMCAST" 2.98:1 solo en el final
+(umbral 3.0, al filo), un C1 (84.2 s) solo en el boceto, el mismo M1 (~188-191 s) en escena 36 vs 37.
+Contra el r0 del 22-nov (HF 0.9.86, otra EQ de música): 24 de 37; esos 37 ya no son la referencia (sus 2
+M1 de loudness/pico desaparecen: el loudnorm actual da -14.4 LUFS / -1.85 dBTP).
+Siguiente (sin medir): boceto en `--quality high` para quitar la diferencia de codificador en los casos al filo.
+
+**Render lento = GPU:** desde el 21-nov HF usa Chrome `win64-158.0.8127.88`, sin `GpuPreference=2` en
+`HKCU\Software\Microsoft\DirectX\UserGpuPreferences`: el render cayó a la Intel (31m51s vs ~16).
+Añadida a mano el 25-nov; se repetirá con cada Chrome nuevo de HF.
+
 ## Render por escena (23-nov, medido en `huang-exit-largo`, HF 0.9.86): SÍ funciona, con recorte
 
 Paso 1 de `docs/PLAN-VELOCIDAD.md`. **Implementado el 24-nov** (`video-v2/motor/tramos.py`, puerta
@@ -42,11 +68,11 @@ Prueba de la implementación (24-nov): parche simulado en s40 (texto + `fondo.op
 `render_por_tramos` eligió el tramo 200.2-213.7 s (s40 ± vecinas) y tardó **175 s** de reloj en total.
 SSIM por frame sobre 13288 frames, audio idéntico (err. 0.0000) en todos:
 
-| comparación                                    | fuera del tramo | escena s40 |
-| ---------------------------------------------- | --------------- | ---------- |
-| suelo: dos completos de la MISMA página        | 0.9941          | 0.9929     |
-| empalme vs completo de la página parcheada     | 0.9934          | 0.9885     |
-| empalme vs original sin parche                 | 0.9958          | 0.9813     |
+| comparación                                | fuera del tramo | escena s40 |
+| ------------------------------------------ | --------------- | ---------- |
+| suelo: dos completos de la MISMA página    | 0.9941          | 0.9929     |
+| empalme vs completo de la página parcheada | 0.9934          | 0.9885     |
+| empalme vs original sin parche             | 0.9958          | 0.9813     |
 
 Fuera del tramo, el empalme queda en el suelo de ruido: el render completo tampoco es exacto contra sí
 mismo. En s40 se parece más a la verdad que al original: el parche entró. Lo que falta hasta 0.9929 es

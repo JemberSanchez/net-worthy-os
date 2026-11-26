@@ -35,6 +35,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 MOTOR = Path(__file__).resolve().parent
@@ -70,7 +71,10 @@ def cargar_rubrica(proy: Path, ruta: Path | None = None) -> dict:
 def umbrales(rub: dict, plan: dict) -> dict:
     """Flat thresholds; a long-form plan takes `por_tipo.largo` on top (no Shorts UI to dodge)."""
     u = {k: v for c in rub["criterios"].values() for k, v in c.items() if k != "nombre"}
-    return {**u, **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {})}
+    return {
+        **u,
+        **(rub.get("por_tipo") or {}).get(plan.get("tipo_video") or "short", {}),
+    }
 
 
 def plan_de_html(html: str) -> dict:
@@ -283,7 +287,9 @@ def revisar_texto(rt: dict, vs: list[tuple[float, float]], u: dict) -> list[dict
     return out
 
 
-def textos_previstos(sb: dict, plan: dict, words: list[dict]) -> tuple[list[dict], list[dict]]:
+def textos_previstos(
+    sb: dict, plan: dict, words: list[dict]
+) -> tuple[list[dict], list[dict]]:
     """L1: texts of each scene, the disclaimer lines in their windows and each document's highlighted phrase, with
     the captions added as design. A document's phrase is printed on the document (`doc`), not put by the video."""
     import anclas
@@ -328,7 +334,9 @@ def textos_previstos(sb: dict, plan: dict, words: list[dict]) -> tuple[list[dict
     return esperados, diseno
 
 
-def _tramo_visible(t0: float, t1: float, tapas: list[tuple[float, float]]) -> tuple[float, float]:
+def _tramo_visible(
+    t0: float, t1: float, tapas: list[tuple[float, float]]
+) -> tuple[float, float]:
     """Longest part of a text's window not under a full-screen document; the whole window if it is all under one."""
     tramos, ini = [], t0
     for a, b in sorted(tapas):
@@ -340,7 +348,9 @@ def _tramo_visible(t0: float, t1: float, tapas: list[tuple[float, float]]) -> tu
     return mejor if mejor[1] - mejor[0] >= 0.3 else (t0, t1)
 
 
-def muestreo_previo(sb: dict, plan: dict, words: list[dict], de_escena: list[float]) -> dict:
+def muestreo_previo(
+    sb: dict, plan: dict, words: list[dict], de_escena: list[float]
+) -> dict:
     """Which frames to snapshot and read before the render. The MP4 is read at 2 fps; a preview has few frames, and
     judged by scene window 4 of 24 texts in jesse-livermore read as unread (they entered after the scene's frame).
     So each text gets its own window, and a frame inside it where it is on screen and past its entrance. Documents
@@ -352,13 +362,30 @@ def muestreo_previo(sb: dict, plan: dict, words: list[dict], de_escena: list[flo
     ocr: list[float] = []
     for t0, t1 in tapas:
         d = t1 - t0
-        dentro = [round(t0 + 0.5 * k, 2) for k in range(1, int(d * 2) + 1) if t0 + 0.5 * k < t1 - 0.1]
-        ocr += dentro if len(dentro) >= 2 else [round(t0 + d * 0.5, 2), round(t0 + d * 0.85, 2)]
+        dentro = [
+            round(t0 + 0.5 * k, 2)
+            for k in range(1, int(d * 2) + 1)
+            if t0 + 0.5 * k < t1 - 0.1
+        ]
+        ocr += (
+            dentro
+            if len(dentro) >= 2
+            else [round(t0 + d * 0.5, 2), round(t0 + d * 0.85, 2)]
+        )
     textos = []
     for e in textos_previstos(sb, plan, words)[0]:
         if isinstance(e["escena"], int) and not e.get("doc"):
-            propias = puertas._textos(plan["escenas"][e["escena"]]) if e["escena"] < len(plan["escenas"]) else []
-            casa = [x for x in propias if medir_texto.norm(x[0].replace("*", "")) == medir_texto.norm(e["texto"])]
+            propias = (
+                puertas._textos(plan["escenas"][e["escena"]])
+                if e["escena"] < len(plan["escenas"])
+                else []
+            )
+            casa = [
+                x
+                for x in propias
+                if medir_texto.norm(x[0].replace("*", ""))
+                == medir_texto.norm(e["texto"])
+            ]
             if not casa:
                 continue  # shortcut: a text the plan rewrites has no known window; the MP4 still reads it
             e = {**e, "t0": casa[0][1], "t1": casa[0][2]}
@@ -373,7 +400,9 @@ def muestreo_previo(sb: dict, plan: dict, words: list[dict], de_escena: list[flo
     return {"textos": textos, "ocr": ocr, "todos": sorted(set(de_escena) | set(ocr))}
 
 
-def revisar_previo(sb: dict, plan: dict, words: list[dict], frames: list[dict], rub: dict) -> list[dict]:
+def revisar_previo(
+    sb: dict, plan: dict, words: list[dict], frames: list[dict], rub: dict
+) -> list[dict]:
     """L1 and designed text over a document, on preview frames. Only what was sampled is judged: the full pass is
     still the critic's, on the MP4."""
     import medir_texto
@@ -383,9 +412,13 @@ def revisar_previo(sb: dict, plan: dict, words: list[dict], frames: list[dict], 
     vs = ventanas(plan)
     textos = muestreo_previo(sb, plan, words, [])["textos"]
     diseno = textos_previstos(sb, plan, words)[1]
-    rt = medir_texto.analizar(frames, textos, {k: u[k] for k in medir_texto.UMBRALES if k in u}, diseno=diseno)
+    rt = medir_texto.analizar(
+        frames, textos, {k: u[k] for k in medir_texto.UMBRALES if k in u}, diseno=diseno
+    )
     rt.update(lineas_aviso(plan.get("aviso") or {}))
-    return revisar_texto(rt, vs, u) + pf.sobre_documento(frames, diseno, plan, vs, u, fallo, escena_en)
+    return revisar_texto(rt, vs, u) + pf.sobre_documento(
+        frames, diseno, plan, vs, u, fallo, escena_en
+    )
 
 
 def esperados_aviso(av: dict, fin: float) -> list[dict]:
@@ -395,7 +428,10 @@ def esperados_aviso(av: dict, fin: float) -> list[dict]:
     esp = [(texto, a, b) for a, b in av.get("ventanas") or [] for texto in lineas]
     if av.get("final") is not None:
         t0 = av["final"] + 0.4  # tras su fundido
-        esp += [(texto, t0, fin) for texto in ([av["completo"]] if av.get("completo") else lineas)]
+        esp += [
+            (texto, t0, fin)
+            for texto in ([av["completo"]] if av.get("completo") else lineas)
+        ]
     return [{"texto": x, "escena": "aviso", "t0": a, "t1": b} for x, a, b in esp]
 
 
@@ -956,7 +992,9 @@ def aplicar(sb: dict, parches: list[dict]) -> tuple[dict, list[str]]:
                     hechos.append(
                         f"escena {p['escena']}: fondo más tenue (opacidad {e['fondo_opacidad']})"
                     )
-        elif op == "quitar_caliente" and p.get("palabra") in (sb.get("calientes") or []):
+        elif op == "quitar_caliente" and p.get("palabra") in (
+            sb.get("calientes") or []
+        ):
             sb["calientes"].remove(p["palabra"])
             hechos.append(f"'{p['palabra']}' fuera de calientes (ilegible en su color)")
         elif op == "set" and SET_PERMITIDO.match(str(p.get("ruta", ""))):
@@ -1063,7 +1101,9 @@ def revisar(
         diseno=diseno,
     )
     rt["bajo_contraste"] = medir_texto.confirmar_contraste(
-        rt["bajo_contraste"], medir_texto.ocr_en(mp4), u.get("contraste_min", medir_texto.UMBRALES["contraste_min"])
+        rt["bajo_contraste"],
+        medir_texto.ocr_en(mp4),
+        u.get("contraste_min", medir_texto.UMBRALES["contraste_min"]),
     )
     rt.update(lineas_aviso(av))
     med["texto"] = {k: rt[k] for k in ("leidos_pct", "esperados", "n_frames")}
@@ -1112,7 +1152,9 @@ def revisar(
     voz = voz_de_la_mezcla(proy, sb)
     fallos += pf.revisar_audio(sb, mp4, voz, rm, vs, u, fallo, escena_en)
     fallos += pf.pausas_sin_puntuacion(rv, vs, u, fallo, escena_en)
-    fallos += pf.revisar_cuadros(medir_cuadros.leer_grises(mp4), frames, vs, u, fallo, escena_en)
+    fallos += pf.revisar_cuadros(
+        medir_cuadros.leer_grises(mp4), frames, vs, u, fallo, escena_en
+    )
     fallos += pf.revisar_cajas(frames, diseno, plan, vs, u, fallo, escena_en)
     fallos += revisar_datos(sb, rt)
     rp = medir_parecido.medir(proy, mp4=mp4)
@@ -1226,7 +1268,9 @@ def preparar_juicio(
     import juicio_lista
 
     lista = juicio_lista.checklist(sb, plan)
-    (dir_ / "checklist.json").write_text(json.dumps(lista, ensure_ascii=False), encoding="utf-8")
+    (dir_ / "checklist.json").write_text(
+        json.dumps(lista, ensure_ascii=False), encoding="utf-8"
+    )
     esc = "\n".join(
         f"- {k} `{e['tipo']}` {a:.2f}-{b:.2f}s"
         for k, (e, (a, b)) in enumerate(zip(sb.get("escenas") or [], ventanas(plan)))
@@ -1292,10 +1336,17 @@ def linea(f: dict) -> str:
     )
 
 
-def render(proy: Path) -> tuple[Path | None, dict, str]:
+def render(proy: Path, *extra: str) -> tuple[Path | None, dict, str]:
     """producir.py SIN subir (las rondas del crítico nunca salen de la máquina)."""
     r = subprocess.run(
-        [PY, str(MOTOR / "producir.py"), str(proy), "--sin-subir", "--sin-critico"],
+        [
+            PY,
+            str(MOTOR / "producir.py"),
+            str(proy),
+            "--sin-subir",
+            "--sin-critico",
+            *extra,
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -1345,8 +1396,14 @@ def bucle(
     sb_f = proy / "storyboard.json"
     original = sb_f.read_text(encoding="utf-8")
     qa: dict = {}
+    # no MP4 given: every round measures a 10 fps boceto (same sampled frames, same mix) and the
+    # full render runs ONCE, after the loop (huang-exit-largo: ~16 min per full render, 22-nov)
+    final_unico = mp4 is None
+    tiempos: dict[str, float] = {}
+    t0 = time.monotonic()
     if mp4 is None:
-        mp4, qa, log = render(proy)
+        mp4, qa, log = render(proy, "--boceto")
+        tiempos["boceto_r0_s"] = round(time.monotonic() - t0)
     else:
         # MP4 dado: el index.html y el qa.json del proyecto deben ser los de ESE vídeo
         html_f = proy / "index.html"
@@ -1378,6 +1435,7 @@ def bucle(
             )
             res = {"fallos": fallos, "medidas": {}, "puntuacion": None}
         else:
+            t = time.monotonic()
             res = revisar(
                 proy,
                 foto["mp4"],
@@ -1387,6 +1445,7 @@ def bucle(
                 sb=sb,
                 html=foto["html"],
             )
+            tiempos[f"critico_r{r}_s"] = round(time.monotonic() - t)
             preparar_juicio(proy, foto["mp4"], sb, plan, res["fallos"], dir_ / f"r{r}")
         ronda = {
             "ronda": r,
@@ -1431,7 +1490,11 @@ def bucle(
         ronda["parches"] = hechos
         sb_f.write_text(volcar(sb2, original), encoding="utf-8")
         print("→ parches: " + "; ".join(hechos))
-        mp4, qa, log = render(proy)
+        t = time.monotonic()
+        mp4, qa, log = render(proy, *(("--boceto",) if final_unico else ()))
+        tiempos[f"{'boceto' if final_unico else 'render'}_r{r + 1}_s"] = round(
+            time.monotonic() - t
+        )
         if mp4 is None:
             print(
                 f"  (render de la ronda {r + 1} parado en una puerta: {log.strip().splitlines()[-1] if log.strip() else '?'})"
@@ -1440,6 +1503,25 @@ def bucle(
         mejor is not None
     ):  # el proyecto queda con el storyboard de la mejor ronda medida
         sb_f.write_text(mejor["storyboard"], encoding="utf-8")
+    final = None
+    if final_unico and mejor is not None:
+        t = time.monotonic()
+        final, _, log = render(proy)  # producir's own gates (loudness, ritmo) check it
+        tiempos["render_final_s"] = round(time.monotonic() - t)
+        if final is None:
+            print(
+                f"✗ render final parado: {log.strip().splitlines()[-1] if log.strip() else '?'}"
+            )
+        else:
+            # the one fast check: the final is the very page the critic measured
+            medida = (dir_ / f"r{mejor['ronda']}.index.html").read_bytes()
+            renderizada = (proy / "renders" / "render-index.html").read_bytes()
+            tiempos["misma_pagina"] = medida == renderizada
+            if medida != renderizada:
+                print(
+                    "✗ el render final no es la página medida: vuelve a pasar el crítico con --mp4"
+                )
+    tiempos["total_s"] = round(time.monotonic() - t0)
     con_juicio = [
         h["ronda"]
         for h in historia
@@ -1451,6 +1533,9 @@ def bucle(
         "rondas": historia,
         "elegida": mejor["ronda"] if mejor else None,
         "mp4_elegido": str(mejor["mp4"]) if mejor and mejor["mp4"] else None,
+        # publishing still needs this exact file reviewed: critico.py --mp4 <final> --solo-revisar
+        "final": str(final) if final else None,
+        "tiempos": tiempos,
         "juicio": f"rondas {con_juicio}"
         if con_juicio
         else "pendiente (solo medidores)",
@@ -1479,12 +1564,18 @@ def veredicto(ronda: dict, bloquean: list[str], con_juicio: bool) -> dict:
     """Passes publication: no blocking failure (rubrica `severidad_bloquea`) and someone looked at THIS file."""
     malos = [f for f in ronda["fallos"] if f.get("severidad") in bloquean]
     if malos:
-        motivo = f"{len(malos)} fallos que bloquean: " + "; ".join(linea(f) for f in malos[:3])
+        motivo = f"{len(malos)} fallos que bloquean: " + "; ".join(
+            linea(f) for f in malos[:3]
+        )
     elif not con_juicio:
         motivo = "falta el juicio completo sobre este archivo (renders/critica/rN/juicio.json con su `mp4_sha256` y todo el checklist de juicio.md)"
     else:
         motivo = "ok"
-    return {"aprobado": not malos and con_juicio, "motivo": motivo, "bloqueantes": malos}
+    return {
+        "aprobado": not malos and con_juicio,
+        "motivo": motivo,
+        "bloqueantes": malos,
+    }
 
 
 def juicio_de(dir_ronda: Path, sha: str) -> bool:
